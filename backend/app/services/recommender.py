@@ -1,0 +1,307 @@
+"""Serviço de Recomendação híbrido (pacote 3.4 da EAP / ator secundário do DCU).
+
+Fluxo (Diagrama de Atividades):
+  1. Consulta histórico e preferências do usuário.
+  2. Sem dados  -> mídias em alta (cold start).
+     Com dados  -> compara o perfil com os atributos do catálogo (conteúdo)
+                   e reforça com preferências de usuários semelhantes (colaborativo).
+  3. Remove descartados e já registrados e devolve o feed com o motivo de cada sugestão.
+
+Variante A/B: grupo A = híbrido (conteúdo + colaborativo); grupo B = só conteúdo.
+"""
+
+from __future__ import annotations
+
+from collections import Counter, defaultdict
+from dataclasses import dataclass
+
+import numpy as np
+from scipy import sparse
+from scipy.sparse.linalg import norm as sparse_norm
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList, UserPreference
+
+# Pesos dos sinais (explícitos e implícitos) no perfil do usuário
+W_SEEN_NO_RATING = 0.6  # "Já vi" sem nota: gostou moderadamente
+W_LIST = 0.5  # watchlist / listas (implícito)
+W_DISMISS = -0.7  # "Não me interesso" (explícito negativo)
+W_PREF_GENRE = 1.0  # gêneros escolhidos no onboarding
+
+POPULARITY_BONUS = 0.1
+DIVERSITY_PENALTY = 0.85  # multiplicador a cada repetição do gênero principal no topo
+
+
+@dataclass
+class Recommendation:
+    media: Media
+    score: float
+    reason: str
+    strategy: str  # hybrid | content | trending
+
+
+# ---------------------------------------------------------------- utilidades
+def _tok(prefix: str, value: str) -> str:
+    return f"{prefix}:{value.strip().lower().replace(' ', '_')}"
+
+
+def media_tokens(m: Media) -> str:
+    """Transforma os atributos de uma mídia em 'palavras' para o TF-IDF."""
+    toks: list[str] = []
+    for g in m.genres or []:
+        toks += [_tok("g", g)] * 2  # gênero pesa mais
+    toks += [_tok("t", t) for t in m.tags or []]
+    toks += [_tok("c", c) for c in m.creators or []]
+    if m.year:
+        toks.append(f"d:{(m.year // 10) * 10}")
+    toks.append(f"type:{m.type}")
+    return " ".join(toks)
+
+
+def rating_weight(rating: float | None) -> float:
+    if rating is None:
+        return W_SEEN_NO_RATING
+    return (rating - 2.5) / 2.5  # 0.5 -> -0.8 ... 5.0 -> +1.0
+
+
+def user_signals(db: Session, user_id: int) -> dict[int, float]:
+    """Mapa media_id -> peso, combinando diário, listas e descartes."""
+    signals: dict[int, float] = {}
+    for media_id in db.scalars(
+        select(ListItem.media_id).join(UserList).where(UserList.user_id == user_id)
+    ):
+        signals[media_id] = W_LIST
+    for media_id in db.scalars(select(Dismissed.media_id).where(Dismissed.user_id == user_id)):
+        signals[media_id] = W_DISMISS
+    for media_id, rating in db.execute(
+        select(DiaryEntry.media_id, DiaryEntry.rating).where(DiaryEntry.user_id == user_id)
+    ):
+        signals[media_id] = rating_weight(rating)  # o diário tem prioridade
+    return signals
+
+
+def excluded_ids(db: Session, user_id: int) -> set[int]:
+    """Itens que não devem aparecer no feed: já registrados, descartados ou na watchlist."""
+    ids = set(db.scalars(select(DiaryEntry.media_id).where(DiaryEntry.user_id == user_id)))
+    ids |= set(db.scalars(select(Dismissed.media_id).where(Dismissed.user_id == user_id)))
+    ids |= set(
+        db.scalars(
+            select(ListItem.media_id)
+            .join(UserList)
+            .where(UserList.user_id == user_id, UserList.is_watchlist.is_(True))
+        )
+    )
+    return ids
+
+
+def _minmax(x: np.ndarray) -> np.ndarray:
+    if x.size == 0:
+        return x
+    lo, hi = float(x.min()), float(x.max())
+    if hi - lo < 1e-9:
+        return np.zeros_like(x)
+    return (x - lo) / (hi - lo)
+
+
+# ---------------------------------------------------------------- cold start
+def trending(
+    db: Session,
+    media_type: str | None = None,
+    limit: int = 20,
+    exclude: set[int] | None = None,
+) -> list[Recommendation]:
+    """Mídias em alta: popularidade do catálogo + quantidade de registros na plataforma."""
+    exclude = exclude or set()
+    q = select(Media)
+    if media_type:
+        q = q.where(Media.type == media_type)
+    items = [m for m in db.scalars(q) if m.id not in exclude]
+    if not items:
+        return []
+    counts = dict(
+        db.execute(select(DiaryEntry.media_id, func.count()).group_by(DiaryEntry.media_id)).all()
+    )
+    pop = np.array([m.popularity for m in items], dtype=float) / 100.0
+    cnt = _minmax(np.array([counts.get(m.id, 0) for m in items], dtype=float))
+    score = 0.7 * pop + 0.3 * cnt
+    order = np.argsort(-score)[:limit]
+    return [
+        Recommendation(items[i], float(score[i]), "Em alta no CineMatch", "trending") for i in order
+    ]
+
+
+# ---------------------------------------------------------------- híbrido
+def recommend(
+    db: Session,
+    user: User,
+    media_type: str | None = None,
+    limit: int = 20,
+) -> tuple[str, list[Recommendation]]:
+    """Gera o feed do usuário. Retorna (estratégia, recomendações)."""
+    signals = user_signals(db, user.id)
+    pref_genres = list(
+        db.scalars(select(UserPreference.genre).where(UserPreference.user_id == user.id))
+    )
+    exclude = excluded_ids(db, user.id)
+
+    # Nó de decisão do DA: possui histórico ou preferências?
+    if not signals and not pref_genres:
+        return "trending", trending(db, media_type, limit, exclude)
+
+    catalog: list[Media] = list(db.scalars(select(Media).order_by(Media.id)))
+    if not catalog:
+        return "trending", []
+    index = {m.id: i for i, m in enumerate(catalog)}
+
+    # --- Conteúdo: perfil do usuário x atributos do catálogo (TF-IDF + cosseno)
+    vectorizer = TfidfVectorizer(token_pattern=r"[^ ]+", lowercase=False)
+    X = vectorizer.fit_transform([media_tokens(m) for m in catalog])  # linhas já normalizadas (L2)
+
+    sig_rows = [(index[mid], w) for mid, w in signals.items() if mid in index]
+    profile = sparse.csr_matrix((1, X.shape[1]))
+    for row, w in sig_rows:
+        profile = profile + w * X[row]
+    pref_vec = None
+    if pref_genres:
+        pref_vec = vectorizer.transform([" ".join(_tok("g", g) for g in pref_genres)])
+        profile = profile + W_PREF_GENRE * pref_vec
+
+    norm = sparse_norm(profile)
+    if norm < 1e-9:
+        return "trending", trending(db, media_type, limit, exclude)
+    content = np.asarray((X @ profile.T).todense()).ravel() / norm  # cosseno em [-1, 1]
+
+    # --- Colaborativo item-item: "quem curtiu X também curtiu Y"
+    use_collab = user.ab_group == "A"
+    collab = np.zeros(len(catalog))
+    item_sim = None
+    if use_collab and sig_rows:
+        item_sim = _item_similarity(db, index, len(catalog))
+        if item_sim is not None:
+            rows = np.array([r for r, _ in sig_rows])
+            ws = np.array([w for _, w in sig_rows])
+            collab = (ws @ item_sim[rows]) / (np.abs(ws).sum() + 1e-9)
+            if not np.any(collab):
+                use_collab = False
+        else:
+            use_collab = False
+
+    # --- Combinação híbrida (alpha alto quando há pouco histórico)
+    candidates = [
+        i
+        for i, m in enumerate(catalog)
+        if m.id not in exclude and (media_type is None or m.type == media_type)
+    ]
+    if not candidates:
+        return ("hybrid" if use_collab else "content"), []
+    cand = np.array(candidates)
+    c_norm = _minmax(content[cand])
+    if use_collab:
+        alpha = 0.8 if len(sig_rows) < 5 else 0.5
+        cf_norm = _minmax(collab[cand])
+        strategy = "hybrid"
+    else:
+        alpha, cf_norm, strategy = 1.0, np.zeros(len(cand)), "content"
+    pop = np.array([catalog[i].popularity for i in cand]) / 100.0
+    final = alpha * c_norm + (1 - alpha) * cf_norm + POPULARITY_BONUS * pop
+
+    # --- Diversidade: penaliza repetição do gênero principal no topo do feed
+    picked: list[tuple[int, float, int]] = []  # (pos em cand, score ajustado, idx catálogo)
+    remaining = set(range(len(cand)))
+    genre_count: Counter[str] = Counter()
+    while remaining and len(picked) < limit:
+        best, best_score = None, -np.inf
+        for pos in remaining:
+            g = (catalog[cand[pos]].genres or ["?"])[0]
+            s = final[pos] * (DIVERSITY_PENALTY ** genre_count[g])
+            if s > best_score:
+                best, best_score = pos, s
+        remaining.discard(best)
+        genre_count[(catalog[cand[best]].genres or ["?"])[0]] += 1
+        picked.append((best, float(best_score), int(cand[best])))
+
+    recs: list[Recommendation] = []
+    for pos, score, ci in picked:
+        reason = _reason(
+            ci,
+            catalog,
+            X,
+            sig_rows,
+            pref_genres,
+            pref_vec,
+            item_sim if use_collab else None,
+            content_share=alpha * c_norm[pos],
+            collab_share=(1 - alpha) * cf_norm[pos],
+        )
+        recs.append(Recommendation(catalog[ci], score, reason, strategy))
+
+    # Completa com mídias em alta se faltarem itens
+    if len(recs) < limit:
+        have = exclude | {r.media.id for r in recs}
+        recs += trending(db, media_type, limit - len(recs), have)
+    return strategy, recs
+
+
+def _item_similarity(db: Session, index: dict[int, int], n_items: int) -> np.ndarray | None:
+    """Matriz item x item (cosseno) a partir das interações de todos os usuários."""
+    per_user: dict[int, dict[int, float]] = defaultdict(dict)
+    for uid, mid in db.execute(select(UserList.user_id, ListItem.media_id).join(ListItem)):
+        per_user[uid][mid] = W_LIST
+    for uid, mid, rating in db.execute(
+        select(DiaryEntry.user_id, DiaryEntry.media_id, DiaryEntry.rating)
+    ):
+        per_user[uid][mid] = rating_weight(rating)
+    if len(per_user) < 2:
+        return None
+    rows, cols, vals = [], [], []
+    for u, (uid, items) in enumerate(per_user.items()):
+        for mid, w in items.items():
+            if mid in index:
+                rows.append(u)
+                cols.append(index[mid])
+                vals.append(w)
+    R = sparse.csr_matrix((vals, (rows, cols)), shape=(len(per_user), n_items))
+    col_norm = np.sqrt(np.asarray(R.multiply(R).sum(axis=0)).ravel())
+    col_norm[col_norm == 0] = 1.0
+    Rn = R @ sparse.diags(1.0 / col_norm)
+    sim = np.asarray((Rn.T @ Rn).todense())
+    np.fill_diagonal(sim, 0.0)
+    return sim
+
+
+def _reason(
+    ci: int,
+    catalog: list[Media],
+    X,
+    sig_rows: list[tuple[int, float]],
+    pref_genres: list[str],
+    pref_vec,
+    item_sim: np.ndarray | None,
+    content_share: float,
+    collab_share: float,
+) -> str:
+    """Explica a sugestão a partir do item do histórico que mais contribuiu."""
+    positives = [(r, w) for r, w in sig_rows if w > 0]
+
+    if item_sim is not None and collab_share > content_share and positives:
+        r, _ = max(positives, key=lambda rw: rw[1] * item_sim[rw[0], ci])
+        if item_sim[r, ci] > 0:
+            return f"Quem curtiu {catalog[r].title} também curtiu"
+
+    best_item, best_val = None, 0.0
+    for r, w in positives:
+        val = w * float(X[r].multiply(X[ci]).sum())
+        if val > best_val:
+            best_item, best_val = r, val
+    pref_val = float(pref_vec.multiply(X[ci]).sum()) * W_PREF_GENRE if pref_vec is not None else 0.0
+
+    if best_item is not None and best_val >= pref_val:
+        return f"Porque você curtiu {catalog[best_item].title}"
+    matching = [g for g in pref_genres if g in (catalog[ci].genres or [])]
+    if matching:
+        return f"Porque você gosta de {matching[0]}"
+    if best_item is not None:
+        return f"Porque você curtiu {catalog[best_item].title}"
+    return "Combina com o seu perfil"
