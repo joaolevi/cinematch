@@ -199,6 +199,62 @@ class TmdbCatalogProvider:
         self._client.close()
 
 
+def enrich_catalog(db, provider: TmdbCatalogProvider, only_missing_posters: bool = True) -> dict:
+    """Procura no TMDB cada título do catálogo (mock/manual) por tipo + título + ano.
+
+    Quando encontra, o registro passa a ser do TMDB e ganha pôster, sinopse oficial e gêneros mapeados,
+    mantendo as tags e criadores que já tinha. Títulos não encontrados ficam como estão.
+    """
+    from sqlalchemy import select
+
+    from ..models import Media
+    from .catalog import title_key
+
+    rows = [
+        m for m in db.scalars(select(Media).where(Media.source != "tmdb"))
+        if not (only_missing_posters and m.poster_url)
+    ]
+    taken = set(db.scalars(select(Media.external_id).where(Media.source == "tmdb")))
+
+    def best_match(m: Media) -> ExternalTitle | None:
+        tmdb_type = TYPE_TO_TMDB[m.type]
+        year_param = "year" if tmdb_type == "movie" else "first_air_date_year"
+        params = {"query": m.title, **({year_param: m.year} if m.year else {})}
+        results = provider._get(f"/search/{tmdb_type}", **params).get("results", [])
+        if not results and m.year:  # tenta sem o ano
+            results = provider._get(f"/search/{tmdb_type}", query=m.title).get("results", [])
+        key = title_key(m.type, m.title, None)[1]
+        for r in results[:5]:
+            t = provider._from_item(r, tmdb_type)
+            if not t:
+                continue
+            same_year = m.year is None or (t["year"] is not None and abs(t["year"] - m.year) <= 1)
+            same_title = title_key(m.type, t["title"], None)[1] == key
+            if same_year and (same_title or r is results[0]):
+                return t
+        return None
+
+    with ThreadPoolExecutor(max_workers=provider.max_workers) as pool:
+        matches = list(pool.map(best_match, rows))
+
+    enriched = not_found = conflicts = 0
+    for m, t in zip(rows, matches):
+        if t is None:
+            not_found += 1
+            continue
+        if t["external_id"] in taken:  # já existe outro registro com esse título do TMDB
+            conflicts += 1
+            continue
+        taken.add(t["external_id"])
+        m.source, m.external_id = "tmdb", t["external_id"]
+        m.poster_url = t["poster_url"] or m.poster_url
+        m.overview = t["overview"] or m.overview
+        m.genres = t["genres"] or m.genres
+        enriched += 1
+    db.commit()
+    return {"checked": len(rows), "enriched": enriched, "not_found": not_found, "conflicts": conflicts}
+
+
 class StaticProvider:
     """Embrulha uma lista pronta de títulos (ex.: um único título importado) como provider."""
 

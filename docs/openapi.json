@@ -1281,6 +1281,31 @@
         }
       }
     },
+    "/admin/tmdb/enrich": {
+      "post": {
+        "tags": [
+          "administração"
+        ],
+        "summary": "Tmdb Enrich",
+        "description": "Procura no TMDB os títulos do catálogo sem pôster (ex.: os do mock) e completa com dados oficiais.",
+        "operationId": "tmdb_enrich_admin_tmdb_enrich_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/admin/tmdb/search": {
       "get": {
         "tags": [

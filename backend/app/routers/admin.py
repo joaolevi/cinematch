@@ -25,7 +25,7 @@ from ..schemas import (
     TmdbImportOut,
 )
 from ..services.catalog import MockCatalogProvider, sync_catalog, title_key
-from ..services.tmdb import StaticProvider, TmdbCatalogProvider, TmdbError
+from ..services.tmdb import StaticProvider, TmdbCatalogProvider, TmdbError, enrich_catalog
 from ..services.metrics import acceptance_metrics
 
 router = APIRouter(prefix="/admin", tags=["administração"], dependencies=[Depends(require_admin)])
@@ -89,6 +89,18 @@ def sync_external_catalog(
     tmdb = tmdb_provider(pages)
     try:
         return sync_catalog(db, tmdb, source="tmdb")
+    except TmdbError as e:
+        raise HTTPException(status_code=e.status_code, detail=str(e))
+    finally:
+        tmdb.close()
+
+
+@router.post("/tmdb/enrich")
+def tmdb_enrich(db: Session = Depends(get_db)):
+    """Procura no TMDB os títulos do catálogo sem pôster (ex.: os do mock) e completa com dados oficiais."""
+    tmdb = tmdb_provider()
+    try:
+        return enrich_catalog(db, tmdb)
     except TmdbError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e))
     finally:

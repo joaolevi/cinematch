@@ -11,6 +11,7 @@ from app.routers import admin as admin_router
 from app.services.catalog import MockCatalogProvider, sync_catalog, title_key
 from app.services.tmdb import (
     StaticProvider,
+    enrich_catalog,
     TmdbCatalogProvider,
     TmdbError,
     map_genres,
@@ -51,6 +52,15 @@ def fake_tmdb(request: httpx.Request) -> httpx.Response:
     }
     if path in routes:
         return httpx.Response(200, json=routes[path])
+    if path == "/search/movie":  # usado no enriquecimento do catálogo
+        q = request.url.params.get("query", "")
+        if q == "Matrix":
+            return httpx.Response(200, json={"results": [
+                {"id": 603, "title": "Matrix", "release_date": "1999-03-31", "overview": "Neo descobre...",
+                 "poster_path": "/matrix.jpg", "genre_ids": [28, 878], "popularity": 90, "vote_average": 8.2}]})
+        return httpx.Response(200, json={"results": []})
+    if path == "/search/tv":
+        return httpx.Response(200, json={"results": []})
     return httpx.Response(404, json={"status_message": "not found"})
 
 
@@ -157,3 +167,21 @@ def test_admin_tmdb_without_key_returns_400(client, admin_headers, monkeypatch):
     # sem chave, o modo automático cai no mock
     r = client.post("/admin/sync", headers=admin_headers)
     assert r.status_code == 200 and r.json()["provider"] == "Mock TMDB"
+
+
+def test_enrich_catalog_adds_posters_keeping_tags(db):
+    matrix = db.query(Media).filter(Media.title == "Matrix").one()
+    tags_before, creators_before = list(matrix.tags), list(matrix.creators)
+    result = enrich_catalog(db, make_provider())
+    assert result["enriched"] == 1 and result["checked"] > 100
+    db.refresh(matrix)
+    assert matrix.source == "tmdb" and matrix.external_id == "movie-603"
+    assert matrix.poster_url.endswith("/matrix.jpg") and matrix.overview == "Neo descobre..."
+    assert matrix.tags == tags_before and matrix.creators == creators_before
+    # rodar de novo não refaz quem já tem pôster
+    assert enrich_catalog(db, make_provider())["enriched"] == 0
+
+
+def test_admin_enrich_route(client, admin_headers, fake_admin_provider):
+    r = client.post("/admin/tmdb/enrich", headers=admin_headers)
+    assert r.status_code == 200 and r.json()["enriched"] == 1

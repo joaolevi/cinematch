@@ -11,3 +11,8 @@ backend/*.db-journal
 .vscode/
 .idea/
 .DS_Store
+
+# Node (demo-front)
+node_modules/
+demo-front/dist/
+*.tsbuildinfo

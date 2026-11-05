@@ -78,7 +78,7 @@ def _get_or_create_user(db: Session, name: str, email: str, password: str, **kw)
 
 def create_demo_accounts(db: Session) -> None:
     _get_or_create_user(db, "Administrador", ADMIN_EMAIL, ADMIN_PASSWORD, role="admin", ab_group="A")
-    _get_or_create_user(db, "Usuário Demo", DEMO_EMAIL, DEMO_PASSWORD, ab_group="A")
+    _get_or_create_user(db, "Visitante", DEMO_EMAIL, DEMO_PASSWORD, ab_group="A")
     db.commit()
 
 

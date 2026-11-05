@@ -40,6 +40,7 @@ Contas de demonstração: `admin@cinematch.dev / admin123`, `demo@cinematch.dev 
 | `POST /admin/sync` | Sincronizar catálogo externo | `provider` (`auto`\|`tmdb`\|`mock`), `pages` |
 | `GET /admin/tmdb/search` | Buscar no TMDB | `q`, `type` → lista com `media_id` se já estiver no catálogo |
 | `POST /admin/tmdb/import` | Importar um título do TMDB | `{type, tmdb_id}` |
+| `POST /admin/tmdb/enrich` | Completar títulos sem pôster com dados do TMDB | → `{checked, enriched, not_found, conflicts}` |
 | `GET /admin/reviews` · `PATCH /admin/reviews/{id}` | Moderação | `hidden`; corpo `{hidden: bool}` |
 | `GET /admin/metrics` | Taxa de aceitação A/B | — |
 
@@ -56,7 +57,9 @@ Contas de demonstração: `admin@cinematch.dev / admin123`, `demo@cinematch.dev 
 }
 ```
 
-`poster_url` é `null` para títulos do mock: desenhe um placeholder (ex.: gradiente com o título).
+`poster_url` pode ser `null` (títulos do mock não enriquecidos ou sem pôster no TMDB): desenhe um
+placeholder (ex.: gradiente com o título). Exibir dados do TMDB exige o crédito:
+*"Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB."*
 
 ## Fluxo principal (Diagrama de Atividades)
 

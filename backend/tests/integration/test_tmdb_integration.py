@@ -167,3 +167,19 @@ def test_recommendations_use_tmdb_catalog(client, db, admin_headers):
     assert any(i["media"]["source"] == "tmdb" for i in feed["items"])
     rated_titles = {m.title for m in tmdb_titles[:3]}
     assert any(any(t in i["reason"] for t in rated_titles) for i in feed["items"])
+
+
+def test_enrich_mock_catalog_with_real_posters(client, db, admin_headers):
+    mock_count = db.query(Media).filter(Media.source == "mock").count()
+    r = client.post("/admin/tmdb/enrich", headers=admin_headers)
+    assert r.status_code == 200, r.text
+    res = r.json()
+    assert res["checked"] == mock_count
+    assert res["enriched"] >= mock_count * 0.8, res  # a grande maioria é encontrada no TMDB
+
+    db.expire_all()
+    ext_ids = [m.external_id for m in db.query(Media).filter(Media.source == "tmdb")]
+    assert len(ext_ids) == len(set(ext_ids)), "o mesmo título do TMDB ligado a dois registros"
+    cdd = db.query(Media).filter(Media.title == "Cidade de Deus").one()
+    assert cdd.external_id == "movie-598" and cdd.poster_url.startswith("https://image.tmdb.org/")
+    assert cdd.creators == ["Fernando Meirelles"]  # dados do mock preservados

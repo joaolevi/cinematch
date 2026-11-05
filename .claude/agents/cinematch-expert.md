@@ -70,7 +70,9 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
     já existe em origem de prioridade menor (`manual < mock < tmdb`), o registro é **promovido** (merge),
     nunca duplicado; origem igual/maior → `skipped`.
 - **Admin TMDB:** `POST /admin/sync?provider=auto|tmdb|mock&pages=N`, `GET /admin/tmdb/search`,
-  `POST /admin/tmdb/import {type, tmdb_id}`.
+  `POST /admin/tmdb/import {type, tmdb_id}`, `POST /admin/tmdb/enrich` (`enrich_catalog`: busca cada título
+  sem pôster por tipo+título+ano, promove para `tmdb` mantendo tags/criadores). `scripts.seed --tmdb`
+  faz sync + enrich. `./demo.sh --reset` sobe API + `demo-front/` com esse banco.
 - **Seed** (`app/seed.py`): catálogo mock, `admin@cinematch.dev/admin123`, `demo@cinematch.dev/demo123`,
   30 usuários sintéticos de 6 personas (`terror`, `scifi`, `animacao`, `romance`, `crime`, `comedia`;
   `persona.N@seed.cinematch.dev`, senha `senha123`) e simulação A/B.

@@ -10,7 +10,13 @@ O CineMatch une as duas coisas: **um diário** + **um recomendador** que combina
 
 Este repositório tem a **API (backend)**, com integração real com o **TMDB**. O frontend oficial está a
 cargo de outro integrante e consome esta API. O guia para ele está em [`docs/API.md`](docs/API.md).
-Em [`demo-front/`](demo-front/) há um **protótipo de interface só para apresentação**.
+Em [`demo-front/`](demo-front/) há um **protótipo de interface só para apresentação**:
+
+```bash
+./demo.sh --reset    # recria o banco (mock + TMDB) e sobe API + interface → http://localhost:5173
+```
+
+![Protótipo de interface](demo-front/screenshots/feed.png)
 
 ---
 
@@ -79,7 +85,10 @@ o catálogo mockado. Para recriar do zero: `cd backend && python -m scripts.seed
 - **TMDB (real):** com `CINEMATCH_TMDB_API_KEY` no `.env`, o admin pode:
   - `POST /admin/sync?provider=tmdb&pages=2`: importa filmes e séries populares no Brasil, com
     pôster, sinopse em português, diretor/criadores e palavras-chave;
-  - `GET /admin/tmdb/search?q=...` + `POST /admin/tmdb/import`: busca e importa um título específico.
+  - `GET /admin/tmdb/search?q=...` + `POST /admin/tmdb/import`: busca e importa um título específico;
+  - `POST /admin/tmdb/enrich`: procura no TMDB os títulos do mock e completa com pôster e sinopse
+    oficiais (145 de 147 encontrados), mantendo tags e diretores.
+- `python -m scripts.seed --tmdb` recria o banco já com os populares do TMDB e o mock enriquecido.
 - Os gêneros do TMDB são convertidos para o mesmo vocabulário do mock, e um título que já existe
   no mock (mesmo tipo, título e ano) é **atualizado com os dados do TMDB em vez de duplicado**.
 - Tudo passa pela interface `CatalogProvider` (`services/catalog.py`, `services/tmdb.py`).
@@ -112,16 +121,16 @@ Diagrama de Atividades do pitch:
 
 ```bash
 cd backend
-python -m pytest -q                    # todos (49)
-python -m pytest -q -m "not integration"   # só offline (37): é o que roda no CI
-python -m pytest -q -m integration     # só integração real com TMDB + banco (12, precisa da chave)
+python -m pytest -q                    # todos (52)
+python -m pytest -q -m "not integration"   # só offline (39): é o que roda no CI
+python -m pytest -q -m integration     # só integração real com TMDB + banco (13, precisa da chave)
 ```
 
 - **Offline:** acesso, diário, listas, feed, cold start, A/B, admin, métricas e o provider do TMDB com
   respostas simuladas (`httpx.MockTransport`).
 - **Integração** (`tests/integration/`): chamam a API real do TMDB e verificam normalização em português,
-  sincronização persistida no banco, idempotência, deduplicação com o mock, busca/importação e o
-  recomendador usando títulos do TMDB. São puladas automaticamente se não houver chave.
+  sincronização persistida no banco, idempotência, deduplicação com o mock, busca/importação,
+  enriquecimento do mock e o recomendador usando títulos do TMDB. São puladas automaticamente se não houver chave.
 
 ---
 
@@ -135,6 +144,7 @@ cinematch/
 │   ├── scripts/seed.py # recria o banco
 │   └── tests/          # pytest (+ integration/ com o TMDB real)
 ├── demo-front/         # protótipo de interface para apresentação (não é o front oficial)
+├── demo.sh             # sobe API + demo-front
 ├── docs/               # PLANO.md, API.md, openapi.json, pitch
 ├── .claude/agents/     # agente do Claude Code especialista no projeto
 └── dev.sh
