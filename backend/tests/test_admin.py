@@ -8,9 +8,9 @@ def test_admin_routes_require_admin(client, user_headers):
 
 def test_sync_external_catalog_is_idempotent(client, admin_headers):
     before = client.get("/media", headers=admin_headers).json()["total"]
-    first = client.post("/admin/sync", headers=admin_headers).json()
+    first = client.post("/admin/sync", params={"provider": "mock"}, headers=admin_headers).json()
     assert first["created"] == first["fetched"] > 0
-    second = client.post("/admin/sync", headers=admin_headers).json()
+    second = client.post("/admin/sync", params={"provider": "mock"}, headers=admin_headers).json()
     assert second["created"] == 0
     after = client.get("/media", headers=admin_headers).json()["total"]
     assert after == before + first["created"]

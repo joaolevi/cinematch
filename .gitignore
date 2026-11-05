@@ -6,13 +6,8 @@ __pycache__/
 backend/*.db
 backend/*.db-journal
 
-# Node
-node_modules/
-frontend/dist/
-
 # Env / IDE
 .env
 .vscode/
 .idea/
 .DS_Store
-*.tsbuildinfo

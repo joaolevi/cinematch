@@ -13,8 +13,8 @@
 4. Rode os testes antes de subir:
    ```bash
    cd backend && python -m pytest -q
-   cd frontend && npm run build
    ```
+   Os testes de integração com o TMDB rodam só se você tiver a chave no `.env`. Sem chave, eles são pulados.
 5. `git push -u origin feat/nome-curto` e abra um **Pull Request** para a `main`, com `Closes #N`
    na descrição.
 6. Peça revisão de pelo menos uma pessoa da equipe. Só faça merge com o **CI verde**.
@@ -30,8 +30,9 @@
 - Backend: Python 3.11+, FastAPI, SQLAlchemy 2. Regras de domínio em `app/crud.py` e `app/services/`;
   os routers só validam a entrada e chamam essas funções.
 - Novas rotas precisam de teste em `backend/tests/`.
-- Frontend: componentes funcionais em TypeScript; chamadas HTTP **só** por `src/api.ts`;
-  estilos com Tailwind usando as cores do tema (`bg-surface`, `text-accent`, …).
+- Mudou rotas ou schemas? Atualize `docs/API.md` e regenere `docs/openapi.json` (comando no `CLAUDE.md`):
+  é o contrato que o frontend usa.
+- **Nunca** commite a chave do TMDB nem o `.env`. O repositório é público.
 - Textos da interface em português.
 - Se mudar o modelo de dados, rode `python -m scripts.seed` para recriar o banco local (não há migrações).
 

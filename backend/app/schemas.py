@@ -232,6 +232,30 @@ class SyncOut(BaseModel):
     fetched: int
     created: int
     updated: int
+    merged: int = 0  # títulos que já existiam (ex.: no mock) e foram promovidos para esta origem
+    skipped: int = 0
+
+
+class ExternalTitleOut(BaseModel):
+    external_id: str
+    type: str
+    title: str
+    year: int | None
+    overview: str
+    poster_url: str | None
+    genres: list[str]
+    popularity: float
+    media_id: int | None = None  # preenchido se o título já está no catálogo
+
+
+class TmdbImportIn(BaseModel):
+    type: MediaType
+    tmdb_id: int = Field(gt=0)
+
+
+class TmdbImportOut(BaseModel):
+    media: MediaOut
+    result: SyncOut
 
 
 class VariantMetrics(BaseModel):

@@ -61,7 +61,7 @@ class Media(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     type: Mapped[str] = mapped_column(String(10), index=True)  # movie | series ('album' no incremento 2)
-    source: Mapped[str] = mapped_column(String(20), default="manual")  # mock | manual
+    source: Mapped[str] = mapped_column(String(20), default="manual")  # mock | tmdb | manual
     external_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     title: Mapped[str] = mapped_column(String(255), index=True)
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)

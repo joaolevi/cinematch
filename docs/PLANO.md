@@ -4,10 +4,12 @@
 > Objetivo: um **protótipo utilizável** que implemente as *core functions* do Diagrama de Casos de Uso
 > e o fluxo do Diagrama de Atividades, com interface web para interação. Não é produto final.
 >
-> **Decisões fechadas:** repositório público `joaolevi/cinematch` · catálogo **mockado** (sem TMDB real) ·
+> **Decisões fechadas:** repositório público `joaolevi/cinematch` · catálogo **mockado** + **TMDB real opcional** ·
 > execução **apenas local** (sem deploy) · **filmes e séries** neste incremento; álbuns ficam para depois.
 >
-> **Status (2026-11-05):** Estágios 1–3 implementados — backend, recomendador, frontend, admin, 25 testes e CI.
+> **Status (2026-11-05):** backend completo (API, recomendador, admin, métricas A/B), **integração real com o TMDB**
+> e 49 testes (37 offline + 12 de integração). O **frontend oficial passou para outro integrante**: o contrato
+> está em `docs/API.md`/`docs/openapi.json`. `demo-front/` é apenas um protótipo para apresentação.
 
 ---
 
@@ -268,3 +270,5 @@ Eu implemento a base completa; cada aluno pode assumir issues de melhoria via br
 2. **Catálogo:** mockado em JSON (sem TMDB real), atrás de uma interface substituível.
 3. **Execução:** apenas local, sem deploy.
 4. **Álbuns:** próximo incremento (fica como issue no backlog).
+5. **Frontend:** feito por outro integrante, fora deste repositório (decidido em 2026-11-05).
+6. **TMDB:** integração real adicionada (chave só no `.env`), mantendo o mock como fallback offline.
