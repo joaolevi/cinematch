@@ -1,11 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
 import Poster from "../components/Poster";
 import SeenModal from "../components/SeenModal";
 import { StarsDisplay } from "../components/Stars";
 import { colorFor, formatDate, formatRating, plural } from "../format";
 import type { MediaDetail, UserList } from "../types";
+
+function PeopleLinks({ names }: { names: string[] }) {
+  return (
+    <dd>
+      {names.map((name, position) => (
+        <span key={name}>
+          {position > 0 && ", "}
+          <Link to={`/buscar?pessoa=${encodeURIComponent(name)}`} className="hover:text-accent hover:underline">
+            {name}
+          </Link>
+        </span>
+      ))}
+    </dd>
+  );
+}
 
 export default function MediaPage() {
   const { id } = useParams();
@@ -78,9 +93,14 @@ export default function MediaPage() {
               {media.genres.map((g) => {
                 const color = colorFor(g);
                 return (
-                  <span key={g} className="chip" style={{ color, borderColor: `${color}66`, backgroundColor: `${color}14` }}>
+                  <Link
+                    key={g}
+                    to={`/buscar?genero=${encodeURIComponent(g)}`}
+                    className="chip transition hover:brightness-125"
+                    style={{ color, borderColor: `${color}66`, backgroundColor: `${color}14` }}
+                  >
                     {g}
-                  </span>
+                  </Link>
                 );
               })}
               {media.tags.map((t) => (
@@ -95,13 +115,13 @@ export default function MediaPage() {
               {media.creators.length > 0 && (
                 <div className="flex gap-3">
                   <dt className="w-16 shrink-0 text-muted">{media.type === "movie" ? "Direção" : "Criação"}</dt>
-                  <dd>{media.creators.join(", ")}</dd>
+                  <PeopleLinks names={media.creators} />
                 </div>
               )}
               {media.actors.length > 0 && (
                 <div className="flex gap-3">
                   <dt className="w-16 shrink-0 text-muted">Elenco</dt>
-                  <dd>{media.actors.join(", ")}</dd>
+                  <PeopleLinks names={media.actors} />
                 </div>
               )}
             </dl>

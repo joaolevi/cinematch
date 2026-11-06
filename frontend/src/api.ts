@@ -104,7 +104,7 @@ export const api = {
   // Mídias
   genres: () => request<string[]>("/media/genres"),
   facets: (genre: string[]) => request<{ decades: number[]; creators: string[] }>("/media/facets", { query: { genre } }),
-  search: (query: { q?: string; type?: MediaType | ""; genre?: string; sort?: MediaSort; limit?: number; offset?: number }) =>
+  search: (query: { q?: string; type?: MediaType | ""; genre?: string; person?: string; sort?: MediaSort; limit?: number; offset?: number }) =>
     request<{ items: Media[]; total: number }>("/media", { query }),
   trending: (type?: MediaType, limit = 20) =>
     request<Media[]>("/media/trending", { query: { type, limit } }),

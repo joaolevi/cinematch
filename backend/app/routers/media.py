@@ -22,9 +22,10 @@ MIN_TITLES_PER_DECADE = 3
 
 @router.get("", response_model=MediaPage)
 def search_media(
-    q: str | None = Query(default=None, description="Trecho do título, criador ou tag"),
+    q: str | None = Query(default=None, description="Trecho do título, criador, ator ou tag"),
     type: MediaType | None = None,
     genre: str | None = None,
+    person: str | None = Query(default=None, description="Nome exato de um diretor, criador ou ator"),
     sort: str = Query(default="popularity", pattern="^(popularity|title|year)$"),
     limit: int = Query(default=24, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -36,6 +37,9 @@ def search_media(
         items = [m for m in items if m.type == type]
     if genre:
         items = [m for m in items if genre in (m.genres or [])]
+    if person:
+        wanted = search_text(person.strip())
+        items = [m for m in items if wanted in {search_text(n) for n in (m.creators or []) + (m.actors or [])}]
     if q:
         needle = search_text(q.strip())
         items = [
@@ -43,6 +47,7 @@ def search_media(
             for m in items
             if needle in search_text(m.title)
             or any(needle in search_text(c) for c in m.creators or [])
+            or any(needle in search_text(a) for a in m.actors or [])
             or any(needle in search_text(t) for t in m.tags or [])
         ]
     if sort == "title":
