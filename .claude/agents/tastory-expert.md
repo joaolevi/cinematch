@@ -31,6 +31,7 @@ de forma didática e prefira soluções simples e legíveis a soluções "espert
 | Buscar mídias | 2.3 | `routers/media.py` |
 | Registrar consumo, Avaliar («extend», nota opcional) | 2.2 | `routers/diary.py`, `crud.upsert_diary` |
 | Gerenciar listas (watchlist "Quero ver") | 2.2 | `routers/lists.py` |
+| Ver a Comunidade | 2.3 | `routers/community.py` |
 | Ver / Descartar recomendação | 2.3 | `routers/recommendations.py` |
 | Gerar recomendações («extend» condicional) | 3.4 | `services/recommender.py` |
 | Gerenciar catálogo, Moderar avaliações | 2.4 | `routers/admin.py` |

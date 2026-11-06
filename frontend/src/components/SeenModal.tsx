@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { localDate } from "../format";
 import type { Media } from "../types";
 import { StarsInput } from "./Stars";
 
@@ -6,12 +7,6 @@ const QUICK_DATES = [
   { label: "Hoje", daysAgo: 0 },
   { label: "Ontem", daysAgo: 1 },
 ];
-
-function localDate(daysAgo = 0): string {
-  const day = new Date();
-  day.setDate(day.getDate() - daysAgo);
-  return new Date(day.getTime() - day.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-}
 
 /** Modal do "Já vi": registra o consumo com nota em estrelas e resenha opcionais. */
 export default function SeenModal({

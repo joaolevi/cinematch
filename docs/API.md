@@ -40,6 +40,8 @@ Contas de demonstração: `admin@tastory.dev / admin123`, `demo@tastory.dev / de
 | `POST /recommendations/{media_id}/feedback` | Botões do feed | `{action: "want"\|"seen"\|"dismiss", rating?, review?, consumed_at?}` |
 | `POST /recommendations/impressions` | Avisa quais títulos do feed apareceram na tela. É isso que conta como exibido | `{items: [{media_id, strategy, score}]}` (até 100) |
 | `DELETE /recommendations/{media_id}/feedback` | Desfazer o "Não me interesso" | — |
+| `GET /community` | Página Comunidade: registros de "Já vi" de todas as pessoas, do mais recente ao mais antigo | `limit`, `offset` → `{items: [{id, user_name, media, rating, review, consumed_at, created_at}], total}` |
+| `GET /community/reviewers` | Quem mais escreve resenhas | `limit` → `[{name, titles, reviews}]` |
 | `GET /health` | Confere se a API está no ar (sem login) | — |
 | `POST /admin/media` · `PATCH`/`DELETE /admin/media/{id}` | Gerenciar catálogo | campos de mídia |
 | `POST /admin/sync` | Sincronizar catálogo externo | `provider` (`auto`\|`tmdb`\|`mock`), `pages` |

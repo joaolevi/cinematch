@@ -1219,6 +1219,122 @@
         }
       }
     },
+    "/community": {
+      "get": {
+        "tags": [
+          "comunidade"
+        ],
+        "summary": "Community",
+        "operationId": "community_community_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/community/reviewers": {
+      "get": {
+        "tags": [
+          "comunidade"
+        ],
+        "summary": "Reviewers",
+        "description": "Quem mais escreveu resenhas. Resenhas ocultas pela moderação não contam.",
+        "operationId": "reviewers_community_reviewers_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 5,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewerOut"
+                  },
+                  "title": "Response Reviewers Community Reviewers Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/media": {
       "post": {
         "tags": [
@@ -1814,6 +1930,92 @@
           "created_at"
         ],
         "title": "AdminReviewOut"
+      },
+      "CommunityEntryOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review"
+          },
+          "consumed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_name",
+          "media",
+          "rating",
+          "review",
+          "consumed_at",
+          "created_at"
+        ],
+        "title": "CommunityEntryOut"
+      },
+      "CommunityPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CommunityEntryOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "CommunityPage"
       },
       "DiaryIn": {
         "properties": {
@@ -3099,6 +3301,29 @@
           "created_at"
         ],
         "title": "ReviewOut"
+      },
+      "ReviewerOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "titles": {
+            "type": "integer",
+            "title": "Titles"
+          },
+          "reviews": {
+            "type": "integer",
+            "title": "Reviews"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "titles",
+          "reviews"
+        ],
+        "title": "ReviewerOut"
       },
       "SyncOut": {
         "properties": {

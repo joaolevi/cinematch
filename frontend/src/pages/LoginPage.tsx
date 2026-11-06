@@ -70,6 +70,9 @@ export default function LoginPage() {
               minLength={mode === "register" ? 6 : 1}
               maxLength={mode === "register" ? 72 : undefined}
             />
+            {mode === "register" && (
+              <p className="text-xs text-muted">O que você marcar como Já vi fica visível para quem tem conta.</p>
+            )}
             {error && <p className="text-sm text-red-300">{error}</p>}
             <button className="btn-primary w-full" disabled={busy}>
               {busy ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}

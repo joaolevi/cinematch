@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./auth";
 import Layout from "./components/Layout";
 import AboutPage from "./pages/AboutPage";
 import AdminPage from "./pages/AdminPage";
+import CommunityPage from "./pages/CommunityPage";
 import DiaryPage from "./pages/DiaryPage";
 import FeedPage from "./pages/FeedPage";
 import ListsPage from "./pages/ListsPage";
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="media/:id" element={<MediaPage />} />
             <Route path="diario" element={<DiaryPage />} />
             <Route path="listas" element={<ListsPage />} />
+            <Route path="comunidade" element={<CommunityPage />} />
             <Route path="sobre" element={<AboutPage />} />
             <Route path="admin" element={<RequireAuth admin><AdminPage /></RequireAuth>} />
           </Route>

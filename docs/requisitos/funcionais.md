@@ -24,6 +24,7 @@ As situações abaixo consideram o código da branch `homol`, que ainda não sub
 | RF09 | Ver o feed "Para você", com filtro por tipo, novas sugestões ao rolar a página e opção de trocar as sugestões | Atende | Deve |
 | RF10 | Reagir a uma sugestão com Quero ver, Já vi ou Não me interesso | Atende | Deve |
 | RF19 | Ver no diário o top 10 dos títulos mais amados e o dos mais odiados | Atende | Deve |
+| RF20 | Ver a página Comunidade, com os registros mais recentes de todas as pessoas (pessoa, título, nota, resenha e quando a pessoa viu) e com quem mais escreve resenhas | Atende | Deve |
 
 ## Inteligência
 
@@ -75,3 +76,4 @@ Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backen
 | RF17 | Pitch; PLANO §2 | 4.2 | `services/metrics.py` | `test_admin.py` |
 | RF18 | EAP 2.0 | 2.1 a 2.4 | `frontend/` | Sem testes automatizados; fluxo testado no navegador |
 | RF19 | Pedido da GP, 06/11 | 2.2 | `frontend/src/pages/DiaryPage.tsx` | Sem testes automatizados; fluxo testado no navegador |
+| RF20 | Pedido da GP, 06/11 | 2.3 | `routers/community.py`, `frontend/src/pages/CommunityPage.tsx` | `test_community.py` |

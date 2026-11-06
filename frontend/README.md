@@ -26,7 +26,7 @@ Abra http://localhost:5173.
    personalizadas e **explicadas** ("Porque você curtiu …").
 4. **Já vi** em uma sugestão → dê estrelas e escreva uma resenha → aparece no **Diário**, que também mostra o
    top 10 dos mais amados e dos mais odiados. **Quero ver** → vai para **Listas → Quero ver**. **✕** → some do
-   feed e não volta. Ao rolar a página, o feed traz novas sugestões.
+   feed e não volta. Ao rolar a página, o feed traz novas sugestões. A **Comunidade** mostra o que as pessoas registraram.
 5. Saia e entre como **admin** (`admin@tastory.dev` / `admin123`):
    - **Painel**: taxa de aceitação, com a explicação do grupo A (híbrido) e do B (só conteúdo);
    - **Catálogo → Buscar no TMDB**: procure um filme (ex.: *O Agente Secreto*) e clique **+ Importar**;

@@ -4,7 +4,7 @@ import { api } from "../api";
 import Poster from "../components/Poster";
 import SeenModal from "../components/SeenModal";
 import { StarsDisplay } from "../components/Stars";
-import { formatDate, formatRating, genreColor, plural } from "../format";
+import { colorFor, formatDate, formatRating, plural } from "../format";
 import type { MediaDetail, UserList } from "../types";
 
 export default function MediaPage() {
@@ -76,7 +76,7 @@ export default function MediaPage() {
             <h1 className="mt-1 text-4xl font-extrabold">{media.title}</h1>
             <div className="mt-3 flex flex-wrap gap-2">
               {media.genres.map((g) => {
-                const color = genreColor(g);
+                const color = colorFor(g);
                 return (
                   <span key={g} className="chip" style={{ color, borderColor: `${color}66`, backgroundColor: `${color}14` }}>
                     {g}

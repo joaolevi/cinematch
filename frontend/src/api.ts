@@ -1,5 +1,6 @@
 import type {
   AdminReview,
+  CommunityEntry,
   DiaryEntry,
   ExternalTitle,
   Feed,
@@ -11,6 +12,7 @@ import type {
   MediaType,
   Metrics,
   Recommendation,
+  Reviewer,
   SyncResult,
   User,
   UserList,
@@ -134,6 +136,9 @@ export const api = {
   feed: (type?: MediaType, limit = 20, exclude: number[] = []) =>
     request<Feed>("/recommendations", { query: { type, limit, exclude: exclude.map(String) } }),
   undoDismiss: (media_id: number) => request<void>(`/recommendations/${media_id}/feedback`, { method: "DELETE" }),
+  community: (limit: number, offset: number) =>
+    request<{ items: CommunityEntry[]; total: number }>("/community", { query: { limit, offset } }),
+  reviewers: () => request<Reviewer[]>("/community/reviewers"),
   impressions: (items: Recommendation[]) =>
     request<void>("/recommendations/impressions", {
       method: "POST",

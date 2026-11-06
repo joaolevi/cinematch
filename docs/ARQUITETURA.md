@@ -191,6 +191,8 @@ Estes requisitos ficam fora do MVP.
 | RFF06 | Recuperar a senha e verificar o e-mail | Não implementado |
 | RFF07 | Excluir a própria conta e os dados pessoais | Não implementado |
 | RFF08 | Ver a página de perfil, com a história do gosto ([#16](https://github.com/joaolevi/cinematch/issues/16)) | Não implementado |
+| RFF10 | Seguir e deixar de seguir pessoas, e filtrar a Comunidade por quem sigo | Não implementado: precisa de uma tabela nova |
+| RFF11 | Escolher quem vê meus registros: todos, quem me segue ou ninguém | Não implementado: no MVP, todo mundo vê todo mundo |
 | RFF09 | Receber recomendações cruzadas entre filmes e música | Evolução, depende de dados da plataforma |
 
 ### Não funcionais
