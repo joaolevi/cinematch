@@ -14,7 +14,7 @@ if [ ! -x .venv/bin/python ]; then
     echo "Falha ao criar o venv. No Ubuntu/Debian/WSL rode: sudo apt install python3-venv"; exit 1; }
 fi
 .venv/bin/pip install -q -r backend/requirements.txt
-[ -d demo-front/node_modules ] || (cd demo-front && npm install)
+[ -d frontend/node_modules ] || (cd frontend && npm install)
 
 if [ "${1:-}" = "--reset" ]; then
   echo ">> Recriando banco (mock + TMDB)..."
@@ -23,7 +23,7 @@ fi
 
 trap 'kill 0' EXIT INT TERM
 (cd backend && ../.venv/bin/uvicorn app.main:app --port 8000) &
-(cd demo-front && npm run dev -- --host 127.0.0.1) &
+(cd frontend && npm run dev -- --host 127.0.0.1) &
 sleep 2
 echo ""
 echo ">> Interface: http://localhost:5173   (demo@cinematch.dev / demo123 · admin@cinematch.dev / admin123)"

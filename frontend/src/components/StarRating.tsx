@@ -1,19 +1,25 @@
 import { useId, useState } from "react";
 
+const AMBER = "#fbbf24";
+
+export function formatRating(v: number): string {
+  return `${v.toFixed(1).replace(".", ",")} ★`;
+}
+
 function Star({ fill }: { fill: 0 | 0.5 | 1 }) {
   const id = `half${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
     <svg viewBox="0 0 24 24" className="h-full w-full">
       <defs>
         <linearGradient id={id}>
-          <stop offset="50%" stopColor="#5ff5e8" />
+          <stop offset="50%" stopColor={AMBER} />
           <stop offset="50%" stopColor="transparent" />
         </linearGradient>
       </defs>
       <path
         d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"
-        fill={fill === 1 ? "#5ff5e8" : fill === 0.5 ? `url(#${id})` : "transparent"}
-        stroke="#5ff5e8"
+        fill={fill === 1 ? AMBER : fill === 0.5 ? `url(#${id})` : "transparent"}
+        stroke={AMBER}
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
@@ -42,7 +48,7 @@ export function StarsDisplay({ value, size = 16 }: { value: number | null; size?
 }
 
 /** Entrada de nota: clicar na metade esquerda da estrela dá meia estrela. */
-export function StarsInput({
+export default function StarRating({
   value,
   onChange,
   size = 32,
@@ -57,7 +63,7 @@ export function StarsInput({
     <div className="flex items-center gap-3">
       <div className="flex" onMouseLeave={() => setHover(null)}>
         {[0, 1, 2, 3, 4].map((i) => (
-          <span key={i} className="relative cursor-pointer" style={{ width: size, height: size }}>
+          <span key={i} className="relative" style={{ width: size, height: size }}>
             <Star fill={fillFor(shown, i)} />
             <button
               type="button"
@@ -76,9 +82,9 @@ export function StarsInput({
           </span>
         ))}
       </div>
-      <span className="w-10 text-sm text-muted">{value != null ? value.toFixed(1) : "—"}</span>
+      <span className="w-10 text-sm text-muted">{value != null ? value.toFixed(1).replace(".", ",") : "—"}</span>
       {value != null && (
-        <button type="button" className="text-xs text-muted underline hover:text-accent" onClick={() => onChange(null)}>
+        <button type="button" className="text-xs text-muted underline hover:text-star" onClick={() => onChange(null)}>
           limpar
         </button>
       )}

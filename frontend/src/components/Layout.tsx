@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../auth";
+import { useAuth } from "../auth/AuthContext";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-1.5 text-sm font-medium transition ${
@@ -38,16 +38,9 @@ export default function Layout() {
             <NavLink to="/listas" className={linkClass}>
               Listas
             </NavLink>
-            {user?.role === "admin" && (
-              <NavLink to="/admin" className={linkClass}>
-                Admin
-              </NavLink>
-            )}
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
-            <span className="hidden text-muted sm:inline">
-              {user?.name} <span className="chip ml-1 px-2 py-0.5">grupo {user?.ab_group}</span>
-            </span>
+            <span className="hidden text-muted sm:inline">{user?.name}</span>
             <button
               className="btn-ghost px-3 py-1.5"
               onClick={() => {

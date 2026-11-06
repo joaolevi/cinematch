@@ -1,19 +1,16 @@
 import { useState } from "react";
-import type { Media } from "../types";
+import type { Media } from "../api/types";
+import { titleHues } from "../lib/visual";
 
-function hash(text: string): number {
-  let h = 0;
-  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
+type PosterMedia = Pick<Media, "title" | "poster_url"> & Partial<Pick<Media, "type" | "year">>;
 
-/** Pôster gerado a partir do título (o catálogo é mockado e não tem imagens). */
+/** Pôster do catálogo; sem imagem (ou se quebrar), gera um a partir do título. */
 export default function Poster({
   media,
   className = "",
   compact = false,
 }: {
-  media: Media;
+  media: PosterMedia;
   className?: string;
   compact?: boolean;
 }) {
@@ -29,9 +26,7 @@ export default function Poster({
       />
     );
   }
-  const h = hash(media.title);
-  const hue = h % 360;
-  const hue2 = (hue + 40 + (h % 80)) % 360;
+  const [hue, hue2] = titleHues(media.title);
   return (
     <div
       className={`relative flex aspect-[2/3] w-full flex-col justify-end overflow-hidden rounded-lg p-3 ${className}`}
@@ -46,17 +41,19 @@ export default function Poster({
         </span>
       ) : (
         <>
-      <span className="absolute top-2 left-2 rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/80 uppercase">
-        {media.type === "movie" ? "Filme" : "Série"}
-      </span>
-      <span
-        className="pointer-events-none absolute -top-4 -right-3 text-[96px] leading-none font-extrabold text-white/10 select-none"
-        aria-hidden
-      >
-        {media.title.charAt(0)}
-      </span>
-      <p className="line-clamp-3 text-sm leading-tight font-bold text-white drop-shadow">{media.title}</p>
-      {media.year && <p className="text-xs text-white/70">{media.year}</p>}
+          {media.type && (
+            <span className="absolute top-2 left-2 rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/80">
+              {media.type === "movie" ? "Filme" : "Série"}
+            </span>
+          )}
+          <span
+            className="pointer-events-none absolute -top-4 -right-3 text-[96px] leading-none font-extrabold text-white/10 select-none"
+            aria-hidden
+          >
+            {media.title.charAt(0)}
+          </span>
+          <p className="line-clamp-3 text-sm leading-tight font-bold text-white drop-shadow">{media.title}</p>
+          {media.year && <p className="text-xs text-white/70">{media.year}</p>}
         </>
       )}
     </div>

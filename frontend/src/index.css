@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0d10;
+  --color-surface: #13171c;
+  --color-surface-2: #1b2128;
+  --color-line: #2a323c;
+  --color-muted: #8b97a5;
+  --color-accent: #5ff5e8; /* azul-turquesa da marca */
+  --color-star: #fbbf24; /* estrelas em âmbar */
+  --color-want: #8b5cf6; /* "Quero ver" em violeta */
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-slate-100 antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-line bg-surface;
+  }
+  .btn-primary,
+  .btn-ghost,
+  .btn-want {
+    @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-accent text-bg hover:brightness-110;
+  }
+  .btn-want {
+    @apply bg-want text-white hover:bg-violet-500;
+  }
+  .btn-ghost {
+    @apply border border-line text-slate-200 hover:border-accent/60 hover:text-accent;
+  }
+  .input {
+    @apply w-full rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-slate-100 placeholder:text-muted focus:border-accent focus:outline-none;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full border border-line bg-surface-2 px-3 py-1 text-xs text-slate-300;
+  }
+}
