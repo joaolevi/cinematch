@@ -1,11 +1,11 @@
 # Escopo do MVP
 
-> **Versão 10, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
+> **Versão 11, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
-A API cobre os 13 casos de uso do pitch para filmes e séries. Os 61 testes offline e os 13 com o TMDB real
+A API cobre os 13 casos de uso do pitch para filmes e séries. Os 62 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
 credenciais estão prontas, mas aguardam merge. Falta criar a branch `homol`, publicar o sistema, ajustar o design,
 fazer a homologação e preparar a demonstração.
@@ -137,6 +137,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | D11 | O sistema roda em Docker, com API, interface e PostgreSQL (RNF19) | Sophia (GP) | 06/11 |
 | D12 | O sistema será publicado no servidor do Vinicius, sem custo | Sophia (GP) | 06/11 |
 | D14 | Os vizinhos do MovieLens 32M substituem os usuários inventados nos filmes, com a opção desligada por padrão | Sophia (GP) | 06/11 |
+| D15 | O teste A/B continua no sistema, mas no MVP mostra que a medição funciona. A evidência de qualidade vem do teste com o MovieLens, e a homologação é ilustrativa | Sophia (GP) | 06/11 |
 | D13 | O onboarding pergunta gêneros, épocas, diretores e títulos, em três passos. Palavras-chave ficam de fora, porque são termos crus e muitos em inglês | Sophia (GP) | 06/11 |
 | D10 | As tarefas entram na branch `homol`, o QA testa ali, e a `main` só recebe a versão aprovada ([CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões)) | Sophia (GP) | 06/11 |
 
@@ -163,7 +164,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | Risco | Efeito | Resposta | Responsável |
 |---|---|---|---|
 | O design não ficar pronto a tempo | Interface funcional, mas sem o acabamento planejado | A interface atual já cobre o fluxo completo; priorizar o que aparece na demonstração | Lara |
-| O painel do A/B não favorece o híbrido | Na simulação, A tem 65,0% e B tem 66,7%, mas ela não serve para essa comparação. Com dados reais do MovieLens, A supera B | Apresentar o painel como simulação do mecanismo de medição e usar o teste com o MovieLens como evidência exploratória | Bárbara |
+| Painel do A/B lido como conclusão | Na simulação, A tem 65,0% e B tem 66,7%, mas ela não serve para essa comparação. Com dados reais do MovieLens, A supera B | O painel avisa de onde vêm os números; na apresentação, usar o teste com o MovieLens como evidência exploratória | Bárbara |
 | Séries com sugestões fracas | Sem dados reais, as séries dependem só do conteúdo e aparecem títulos obscuros | Avaliar as rotas do TMDB e, se preciso, dar mais peso à popularidade | Bárbara |
 | Publicar com as credenciais do repositório | Qualquer pessoa entra como administrador | Tratar o RNF12 como condição para publicar | Sophia |
 | O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir em 09/11 e, se preciso, apresentar localmente | Vinicius |

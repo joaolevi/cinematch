@@ -144,8 +144,8 @@ Diagrama de Atividades do pitch:
 
 ```bash
 cd backend
-python -m pytest -q                    # todos (74)
-python -m pytest -q -m "not integration"   # só offline (61): é o que roda no CI
+python -m pytest -q                    # todos (75)
+python -m pytest -q -m "not integration"   # só offline (62): é o que roda no CI
 python -m pytest -q -m integration     # só integração real com TMDB + banco (13, precisa da chave)
 ```
 
