@@ -110,3 +110,9 @@ def test_queries_do_not_grow_with_items(client, user_headers):
     add(ids[2:])
     assert count_queries(client, "/diary", user_headers) == diary_before
     assert count_queries(client, "/lists", user_headers) == lists_before
+
+
+def test_search_ignores_accents(client, user_headers):
+    for query in ("chefao", "CHEFÃO"):
+        items = client.get("/media", params={"q": query}, headers=user_headers).json()["items"]
+        assert "O Poderoso Chefão" in [m["title"] for m in items]

@@ -53,6 +53,12 @@ SOURCE_PRIORITY = {"manual": 0, "mock": 1, "tmdb": 2}
 _FIELDS = ("type", "title", "year", "overview", "poster_url", "genres", "tags", "creators", "popularity")
 
 
+def search_text(text: str) -> str:
+    """Prepara um texto para busca, sem diferenciar acentos nem maiúsculas."""
+    decomposed = unicodedata.normalize("NFD", text)
+    return "".join(ch for ch in decomposed if not unicodedata.combining(ch)).casefold()
+
+
 def title_key(media_type: str, title: str, year: int | None) -> tuple[str, str, int | None]:
     """Chave para reconhecer o mesmo título vindo de origens diferentes (ex.: mock e TMDB)."""
     norm = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode().lower()

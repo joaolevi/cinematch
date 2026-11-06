@@ -9,6 +9,7 @@ from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList
 from ..schemas import MediaDetailOut, MediaOut, MediaPage, MediaType, MyStatus, ReviewOut
+from ..services.catalog import search_text
 from ..services.recommender import trending as trending_service
 
 router = APIRouter(prefix="/media", tags=["mídias"])
@@ -31,16 +32,16 @@ def search_media(
     if genre:
         items = [m for m in items if genre in (m.genres or [])]
     if q:
-        needle = q.strip().lower()
+        needle = search_text(q.strip())
         items = [
             m
             for m in items
-            if needle in m.title.lower()
-            or any(needle in c.lower() for c in m.creators or [])
-            or any(needle in t.lower() for t in m.tags or [])
+            if needle in search_text(m.title)
+            or any(needle in search_text(c) for c in m.creators or [])
+            or any(needle in search_text(t) for t in m.tags or [])
         ]
         # títulos que começam com o termo vêm primeiro
-        items.sort(key=lambda m: (not m.title.lower().startswith(needle), -m.popularity))
+        items.sort(key=lambda m: (not search_text(m.title).startswith(needle), -m.popularity))
     elif sort == "title":
         items.sort(key=lambda m: m.title.lower())
     elif sort == "year":
