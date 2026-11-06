@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from .. import crud
 from ..auth import get_current_user
@@ -12,9 +12,12 @@ from ..schemas import ListIn, ListItemIn, ListOut
 
 router = APIRouter(prefix="/lists", tags=["listas"])
 
+# Carrega itens e títulos juntos, sem uma consulta por item
+WITH_ITEMS = selectinload(UserList.items).selectinload(ListItem.media)
+
 
 def _own_list(db: Session, user: User, list_id: int) -> UserList:
-    lst = db.get(UserList, list_id)
+    lst = db.get(UserList, list_id, options=[WITH_ITEMS])
     if lst is None or lst.user_id != user.id:
         raise HTTPException(status_code=404, detail="Lista não encontrada")
     return lst
@@ -26,6 +29,7 @@ def my_lists(db: Session = Depends(get_db), user: User = Depends(get_current_use
     db.commit()
     return db.scalars(
         select(UserList)
+        .options(WITH_ITEMS)
         .where(UserList.user_id == user.id)
         .order_by(UserList.is_watchlist.desc(), UserList.created_at)
     ).all()

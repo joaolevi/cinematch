@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from .. import crud
 from ..auth import get_current_user
@@ -24,6 +24,7 @@ def _own_entry(db: Session, user: User, entry_id: int) -> DiaryEntry:
 def my_diary(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return db.scalars(
         select(DiaryEntry)
+        .options(selectinload(DiaryEntry.media))
         .where(DiaryEntry.user_id == user.id)
         .order_by(DiaryEntry.consumed_at.desc().nulls_last(), DiaryEntry.created_at.desc())
     ).all()

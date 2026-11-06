@@ -1,3 +1,7 @@
+from sqlalchemy import event
+
+from app.db import engine
+
 from .conftest import media_id_by_title
 
 
@@ -75,3 +79,34 @@ def test_onboarding_keeps_existing_rating(client, user_headers):
     r = client.put("/me/preferences", json={"genres": [], "liked_media_ids": [mid]}, headers=user_headers)
     assert r.status_code == 200
     assert client.get("/diary", headers=user_headers).json()[0]["rating"] == 1
+
+
+def count_queries(client, path, headers) -> int:
+    statements = []
+
+    def record(_conn, _cursor, statement, *_args):
+        statements.append(statement)
+
+    event.listen(engine, "before_cursor_execute", record)
+    try:
+        assert client.get(path, headers=headers).status_code == 200
+    finally:
+        event.remove(engine, "before_cursor_execute", record)
+    return len(statements)
+
+
+def test_queries_do_not_grow_with_items(client, user_headers):
+    ids = [m["id"] for m in client.get("/media", params={"limit": 12}, headers=user_headers).json()["items"]]
+    lst = client.post("/lists", json={"name": "Grande"}, headers=user_headers).json()
+
+    def add(media_ids):
+        for mid in media_ids:
+            client.post("/diary", json={"media_id": mid}, headers=user_headers)
+            client.post(f"/lists/{lst['id']}/items", json={"media_id": mid}, headers=user_headers)
+
+    add(ids[:2])
+    diary_before = count_queries(client, "/diary", user_headers)
+    lists_before = count_queries(client, "/lists", user_headers)
+    add(ids[2:])
+    assert count_queries(client, "/diary", user_headers) == diary_before
+    assert count_queries(client, "/lists", user_headers) == lists_before
