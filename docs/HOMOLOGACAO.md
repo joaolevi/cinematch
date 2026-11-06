@@ -2,8 +2,8 @@
 
 > Responsável: Antonio. Parte do [MVP](MVP.md). Issue: [#14](https://github.com/joaolevi/cinematch/issues/14).
 
-Em 09/11, as 6 pessoas da equipe usam o sistema publicado, com contas novas, para gerar dados reais e achar problemas antes
-da apresentação.
+Em 09/11, até 12h, cada uma das 6 pessoas da equipe usa o sistema publicado por conta própria, com uma conta nova, para gerar
+dados reais e achar problemas antes da apresentação. Leva cerca de 10 minutos.
 
 Esta é a homologação do MVP (decisão D4). A homologação com pessoas de fora da equipe ficou para depois da entrega, por causa do
 prazo. Como a equipe conhece o sistema, o resultado é ilustrativo (decisão D15). Na apresentação, chame de teste interno.

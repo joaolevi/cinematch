@@ -27,7 +27,7 @@ Contas de demonstração: `admin@tastory.dev / admin123`, `demo@tastory.dev / de
 | `GET /media` | Busca/listagem | `q`, `type` (`movie`\|`series`), `genre`, `sort` (`popularity`\|`title`\|`year`; em `popularity`, com `q`, os títulos que começam com o termo vêm primeiro; em `year`, títulos de anos futuros ficam no fim), `limit`, `offset` → `{items, total}` |
 | `GET /media/genres` | Lista de gêneros (para filtros/onboarding) | — |
 | `GET /media/facets` | Décadas e criadores do catálogo, para o onboarding | `genre` (pode repetir), `limit` |
-| `GET /media/trending` | Em alta (sem login) | `type`, `limit` |
+| `GET /media/trending` | Em alta (sem login). Como o feed, só traz títulos do TMDB com sinopse, pôster e nome legível | `type`, `limit` |
 | `GET /media/{id}` | Detalhe + elenco (`actors`) + média de notas + resenhas + `my_status` | — |
 | `GET /diary` | Diário do usuário (mais recente primeiro) | — |
 | `POST /diary` | "Já vi". Sem `consumed_at`, o registro fica sem data | `{media_id, rating?: 0.5–5 (passo 0.5), review?, consumed_at?: "AAAA-MM-DD"}` |

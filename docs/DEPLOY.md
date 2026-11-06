@@ -18,6 +18,9 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up --build 
 O sistema não sobe sem essas variáveis e, em produção, recusa o segredo e as senhas públicas do repositório. As portas
 ficam acessíveis só dentro do servidor, e o `.env.production` não vai para o git.
 
+Use uma [chave própria do TMDB](https://www.themoviedb.org/settings/api), que é gratuita. Envie a senha de admin só para a Sophia e o
+Antonio, em mensagem privada.
+
 Durante os testes, publique a branch `homol`. Na entrega, depois que ela subir para a `main`, publique a `main` e repita
 o teste do fluxo completo.
 
@@ -34,7 +37,7 @@ métricas vazio, pronto para contar só interações reais. Em teste, a carga le
 
 ## 3. Carregar as recomendações de filmes
 
-Opcional, mas é o que mais melhora as sugestões. Baixe o [MovieLens 32M](https://grouplens.org/datasets/movielens/32m/), que
+É o que mais melhora as sugestões, e deve ser ligado na publicação (D14). Baixe o [MovieLens 32M](https://grouplens.org/datasets/movielens/32m/), que
 fica fora do repositório, e rode depois da carga inicial:
 
 ```bash
@@ -115,12 +118,13 @@ docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db 
 
 ## Plano B
 
-Se a URL pública falhar, o sistema roda em uma máquina local, com o mesmo banco. Prepare tudo em 08/11, enquanto há internet.
+Se a URL pública falhar, o sistema roda em uma máquina local, com o mesmo banco. Prepare tudo em 08/11, enquanto há internet. A
+escolha entre deploy e execução local sai no domingo (08/11), às 20h (D17).
 
 **1. Gere uma cópia do banco.** No servidor, use o comando de backup da seção 5. Sem servidor, faça a carga das seções 2 e 3 em
 qualquer máquina com a chave do TMDB. O arquivo tem e-mails e senhas criptografadas, então não o envie para o git nem para grupos.
 
-**2. Prepare a máquina da demonstração.** Precisa de internet só nesta etapa, para baixar as imagens:
+**2. Prepare a máquina da demonstração, que é o notebook da Sophia.** Precisa de internet só nesta etapa, para baixar as imagens:
 
 ```bash
 git clone https://github.com/joaolevi/cinematch.git && cd cinematch
@@ -148,5 +152,5 @@ A interface fica em http://localhost:5173. As senhas são as do banco copiado.
 o título.
 
 Testado em 06/11/2026: restaurar e subir levou 5 s, com a imagem já construída. Cadastro, onboarding, feed, Quero ver e painel
-funcionaram sem a chave do TMDB e com as imagens bloqueadas no navegador. **Falta testar com o Wi-Fi desligado na máquina da
-demonstração.**
+funcionaram sem a chave do TMDB e com as imagens bloqueadas no navegador. Também funcionou com o Wi-Fi desligado, no
+notebook da Sophia.

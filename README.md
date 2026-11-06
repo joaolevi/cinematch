@@ -143,7 +143,9 @@ Diagrama de Atividades do pitch:
    - **Combinação:** `α·conteúdo + (1−α)·colaborativo + 0,1·popularidade`, com `α = 0,8` para quem tem
      pouco histórico e `0,5` depois. Com o MovieLens, `α = 0,2` nos filmes e `1` nas séries, que não têm esses
      dados. O grupo B usa `α = 1` (só conteúdo).
-4. **Filtra** já registrados, descartados e itens da watchlist; aplica **diversidade** de gênero no topo.
+4. **Filtra** já registrados, descartados, itens da watchlist e títulos do TMDB sem sinopse, pôster ou nome legível;
+   aplica **diversidade** de gênero no topo. Nas séries, a popularidade pesa `1`, mas só muda quais séries
+   ocupam os lugares delas no feed.
 5. **Explica** cada sugestão a partir do item do histórico que mais contribuiu.
 
 ---
@@ -153,8 +155,8 @@ Diagrama de Atividades do pitch:
 ```bash
 cd backend
 pip install -r requirements-dev.txt   # o dev.sh instala só o necessário para rodar a API
-python -m pytest -q                    # todos (98): é o que roda no CI, onde os 13 de integração são pulados
-python -m pytest -q -m "not integration"   # só offline (85)
+python -m pytest -q                    # todos (101): é o que roda no CI, onde os 13 de integração são pulados
+python -m pytest -q -m "not integration"   # só offline (88)
 python -m pytest -q -m integration     # só integração real com TMDB + banco (13, precisa da chave)
 ```
 

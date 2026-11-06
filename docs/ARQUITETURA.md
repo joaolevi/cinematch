@@ -8,7 +8,7 @@
 | ID | Decisão | Motivo | Quem aprovou |
 |---|---|---|---|
 | D7 | Filmes e séries são recomendados juntos; música é recomendada separadamente | Filmes e séries já compartilham gêneros, diretores e dados. Cruzar com música exige pessoas que consomem as duas coisas, e ainda não temos esses dados | Sophia (GP), 06/11 |
-| D8 | O MVP mantém o cálculo atual; a mudança de arquitetura fica para depois de 10/11. A única exceção é a tabela de vizinhos do MovieLens (D14), já pronta | Com o catálogo atual, o feed responde em milissegundos, e trocar agora colocaria a entrega em risco | Sophia (GP), 06/11 |
+| D8 | O MVP mantém o cálculo atual; a mudança de arquitetura fica para depois de 10/11. As exceções são a tabela de vizinhos do MovieLens (D14) e o ajuste nas séries (D16) | Com o catálogo atual, o feed responde em milissegundos, e trocar agora colocaria a entrega em risco | Sophia (GP), 06/11 |
 | D14 | Os vizinhos do MovieLens 32M substituem os usuários inventados nos filmes, com a opção desligada por padrão | Foi a maior melhora medida, e a opção desligada protege a entrega | Sophia (GP), 06/11 |
 
 A recomendação cruzada entre filmes e música fica como evolução: o diário unificado vai gerar esses dados com o tempo.
@@ -145,11 +145,14 @@ animação:
 - **Peso 1:** títulos conhecidos e ainda parecidos com o perfil, como *Better Call Saul* e *Como Eu Conheci Sua Mãe*.
 - **Peso 2:** a lista perde a relação com o perfil: quem gosta de comédia recebe *Sherlock* e *Os 100*.
 
-**Sugestão para a Bárbara decidir:** usar peso 1 só nas séries, que é uma mudança de uma linha. A rota do TMDB fica como
-próximo passo, porque precisa de uma carga nova na tabela de vizinhos. Isso ajusta a D8 e deve entrar no controle de mudanças.
+**Decisão (D16):** usar peso 1 só para escolher quais séries ocupam os lugares delas no feed. Aplicar o peso direto na nota
+aumentava a parte de séries: quem só gostava de filmes passava de 7 para 17 séries em 36 sugestões. Assim, os filmes e os lugares
+das séries continuam iguais. A rota do TMDB fica como próximo passo, porque precisa de uma carga nova na tabela de vizinhos.
 
-O catálogo também tem 158 títulos sem tradução, com o nome em outro alfabeto, como 논스톱. Eles vêm assim do TMDB e pioram a
-impressão do feed, mesmo quando a sugestão faz sentido.
+O catálogo também tem 849 títulos sem sinopse em português e 153 com o nome em outro alfabeto, como 논스톱. Eles vêm assim do TMDB
+e pioravam a impressão do feed, então o feed só sugere títulos com sinopse, pôster e nome legível (RN20). Isso mantém 3.102 dos
+3.957 títulos, e a busca continua mostrando todos. Cortar por popularidade não serve, porque tiraria lançamentos com poucos votos,
+e filtrar por palavra-chave também não, porque "adult" aparece em títulos como *Os Simpsons*.
 
 ### Fontes avaliadas
 
