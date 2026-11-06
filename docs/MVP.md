@@ -95,10 +95,10 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 ### Dom 08/11
 
 - **Vinicius:** publicar a interface e configurar o CORS.
-- **Antonio:** testar `dev.sh` e `demo.sh`; preparar o plano B local e testar de ponta a ponta.
+- **Antonio:** testar `dev.sh` e `demo.sh`.
 - **Bárbara:** preparar a explicação do resultado do A/B; validar as recomendações com o MovieLens.
 - **Lara:** fazer os ajustes finais no front, até 20h.
-- **Sophia:** decidir entre deploy e execução local, às 20h.
+- **Sophia:** decidir entre deploy e execução local, às 20h, e, se for usar o plano B, restaurar no notebook a cópia do banco.
 
 ### Seg 09/11
 
@@ -183,5 +183,5 @@ Nenhuma decisão pendente em 06/11/2026.
 | Servidor fora do ar | Queda de energia ou de internet na casa do Vinicius derruba o sistema | Conferir a URL antes da apresentação e manter a execução local como plano B | Vinicius |
 | Exposição da rede doméstica | Um site público pode abrir um caminho para a rede da casa | Usar túnel com HTTPS e não abrir portas no roteador | Vinicius |
 | Teste interno só com quem conhece o sistema | Problemas de uso podem passar despercebidos, e a taxa não permite conclusão | Chamar de teste interno na apresentação e tratar o resultado como ilustrativo. Sem deploy, fazer o teste em uma só máquina, porque as métricas ficam em um único banco | Antonio |
-| Sem internet na demo | Títulos sem pôster real | O sistema local mostra um pôster gerado no lugar da imagem ([plano B](DEPLOY.md#plano-b)); testar esse cenário antes | Antonio |
+| Sem internet na demo | Títulos sem pôster real | O sistema local mostra um pôster gerado no lugar da imagem ([plano B](DEPLOY.md#plano-b)). Testado em 06/11, com o Wi-Fi desligado | Antonio |
 | Título procurado fora do catálogo | Com cerca de 3.950 títulos, a maioria aparece, mas o catálogo ainda não cobre tudo | Importar pelo painel de admin os títulos que faltarem | Antonio |

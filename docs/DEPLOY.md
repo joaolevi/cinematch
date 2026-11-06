@@ -152,5 +152,5 @@ A interface fica em http://localhost:5173. As senhas são as do banco copiado.
 o título.
 
 Testado em 06/11/2026: restaurar e subir levou 5 s, com a imagem já construída. Cadastro, onboarding, feed, Quero ver e painel
-funcionaram sem a chave do TMDB e com as imagens bloqueadas no navegador. **Falta testar com o Wi-Fi desligado na máquina da
-demonstração.**
+funcionaram sem a chave do TMDB e com as imagens bloqueadas no navegador. Também funcionou com o Wi-Fi desligado, no
+notebook da Sophia.
