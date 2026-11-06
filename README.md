@@ -105,6 +105,16 @@ Se o `.env` tiver `TASTORY_TMDB_API_KEY`, o Docker usa essa chave.
   no mock (mesmo tipo, título e ano) é **atualizado com os dados do TMDB em vez de duplicado**.
 - Tudo passa pela interface `CatalogProvider` (`services/catalog.py`, `services/tmdb.py`).
 
+### Como obter a chave do TMDB
+
+É grátis para uso não comercial, desde que o TMDB seja creditado, e a interface já mostra esse crédito.
+
+1. Crie uma conta em [themoviedb.org](https://www.themoviedb.org/signup) e confirme o e-mail.
+2. No computador, abra [Configurações > API](https://www.themoviedb.org/settings/api), solicite a chave e aceite os termos.
+3. Copie o **API Read Access Token**, o código longo que começa com `eyJ`. A API Key também funciona.
+4. Rode `cp .env.example .env` e preencha `TASTORY_TMDB_API_KEY=` no `.env`.
+5. Para confirmar, rode `cd backend && python -m pytest -q -m integration`.
+
 > 🔐 A chave do TMDB fica **só no `.env`**, que está no `.gitignore`. Nunca a coloque no código.
 
 ---
