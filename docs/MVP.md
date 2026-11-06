@@ -26,7 +26,7 @@ corretamente. O benefício do recomendador será avaliado depois, com dados reai
 - Testes para as quatro rotas descobertas (RNF06).
 - Três ajustes para o sistema publicado: tamanho dos campos (RNF16), consultas do diário e das listas (RNF17) e versões fixas das dependências (RNF18).
 - Catálogo ampliado com o TMDB (RF15b), para os colegas encontrarem os títulos na homologação.
-- Deploy da API e da interface (RNF11 a RNF18), com a execução local como plano B ([guia](DEPLOY.md)).
+- Deploy da API e da interface (RNF11 a RNF19), com a execução local como plano B ([guia](DEPLOY.md)).
 - Homologação com 5 a 10 colegas ([#14](https://github.com/joaolevi/cinematch/issues/14)).
 - Interface definida (decisão [D2](#decisões)) e demonstração ensaiada.
 
@@ -85,6 +85,7 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 - **Vinicius:** escolher a hospedagem; incluir o driver PostgreSQL; fixar as versões das dependências (RNF18).
 - **Antonio:** testes das rotas descobertas.
 - **Lara:** informar o estado do front oficial.
+- **Levi:** criar a branch `homol` no GitHub.
 
 ### Sáb 07/11
 
@@ -111,7 +112,7 @@ Nesta ordem:
 4. **Bárbara:** analisar a taxa de aceitação da homologação.
 5. **Levi:** conduzir o ensaio e preparar o plano B em vídeo ou prints ([#15](https://github.com/joaolevi/cinematch/issues/15)).
 6. **Sophia:** decidir entre deploy e execução local.
-7. **Levi:** congelar a `main`.
+7. **Levi:** com a aprovação do Antonio, subir a `homol` para a `main`.
 
 ### Ter 10/11
 
@@ -139,6 +140,8 @@ Nesta ordem:
 | D7 | Filmes e séries são recomendados juntos; música, separadamente ([arquitetura](ARQUITETURA.md#decisões)) | Sophia (GP) | 06/11 |
 | D8 | O MVP mantém o cálculo atual do recomendador | Sophia (GP) | 06/11 |
 | D9 | O nome do produto é Tastory, inclusive no código | Sophia (GP) | 06/11 |
+| D11 | O sistema roda em Docker, com API, interface e PostgreSQL (RNF19) | Sophia (GP) | 06/11 |
+| D10 | As tarefas entram na branch `homol`, o QA testa ali, e a `main` só recebe a versão aprovada ([CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões)) | Sophia (GP) | 06/11 |
 
 ## Controle de mudanças
 

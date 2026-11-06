@@ -68,6 +68,18 @@ uvicorn app.main:app --reload
 Na primeira execução o banco SQLite (`backend/tastory.db`) é criado e populado automaticamente com
 o catálogo mockado. Para recriar do zero: `cd backend && python -m scripts.seed`.
 
+### Com Docker
+
+Sobe a API, a interface e o PostgreSQL com um comando. Pré-requisito: Docker.
+
+```bash
+docker compose up --build    # API em :8000 e interface em :5173
+docker compose down          # para tudo e mantém os dados
+docker compose down -v       # para tudo e apaga o banco
+```
+
+Se o `.env` tiver `TASTORY_TMDB_API_KEY`, o Docker usa essa chave.
+
 ### Contas de demonstração
 
 | Perfil | E-mail | Senha |
@@ -152,7 +164,7 @@ cinematch/
 
 ## 🤝 Como contribuir
 
-Veja [CONTRIBUTING.md](CONTRIBUTING.md). Resumo: crie uma branch a partir da `main`, faça commits
+Veja [CONTRIBUTING.md](CONTRIBUTING.md). Resumo: crie uma branch a partir da `homol`, faça commits
 pequenos, abra um Pull Request vinculado à issue (`Closes #N`) e espere o CI ficar verde.
 
 ## 🗺️ Próximos incrementos

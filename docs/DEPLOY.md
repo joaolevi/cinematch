@@ -1,6 +1,6 @@
 # Guia para o deploy
 
-> Responsável: Vinicius. Parte do [MVP](MVP.md). Os requisitos estão em [nao-funcionais.md](requisitos/nao-funcionais.md) (RNF11 a RNF18).
+> Responsável: Vinicius. Parte do [MVP](MVP.md). Os requisitos estão em [nao-funcionais.md](requisitos/nao-funcionais.md) (RNF11 a RNF19).
 
 **Antes de publicar:** cumpra o RNF12. Hoje a senha de admin está pública no repositório, então qualquer
 pessoa conseguiria entrar como administrador.
@@ -15,6 +15,19 @@ Os pontos abaixo foram verificados em 05/11/2026 numa cópia local com PostgreSQ
   verificação de saúde é `/health`.
 - **Memória:** a API usou cerca de 170 MB.
 - **Versões:** fixar as versões em `requirements.txt` antes de publicar (RNF18). Sem isso, uma nova instalação pode trazer versões diferentes das testadas.
+
+## Docker
+
+O `docker-compose.yml` é só para uso local, porque as senhas dele não valem para produção. Para publicar, use os dois
+`Dockerfile` e configure as variáveis abaixo na hospedagem:
+
+- **API:** `backend/Dockerfile`, que usa a porta da variável `PORT`, quando ela existir.
+- **Interface:** `demo-front/Dockerfile`, com o argumento de build `VITE_API_URL` apontando para a API publicada.
+
+## Branch publicada
+
+Durante os testes, publique a `homol`. Na entrega, depois que ela subir para a `main`, aponte a hospedagem para a `main`
+e repita o teste do fluxo completo.
 
 ## Variáveis de ambiente
 

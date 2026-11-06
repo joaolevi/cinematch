@@ -31,6 +31,7 @@ precisa da confirmação da equipe.
 | RNF15 | O CORS libera apenas a origem do front publicado | Deploy | Configurável por `TASTORY_CORS_ORIGINS` |
 | RNF16 | Entrada acima do limite devolve erro de validação (422), não erro 500 | Revisão de 06/11 | **Não atende:** no PostgreSQL, gênero com 70 caracteres e pôster com 600 geram erro 500; no SQLite dos testes, o erro não aparece |
 | RNF17 | Diário e listas não fazem uma consulta ao banco por item | Revisão de 06/11 | **Não atende:** cerca de 100 consultas para 100 itens |
+| RNF19 | O sistema sobe em Docker com um comando, com API, interface e PostgreSQL | Decisão de 06/11 | Atende localmente: fluxo completo testado no navegador, e os dados continuam depois de reiniciar |
 | RNF18 | Dependências com versões fixas | Revisão de 06/11 | **Não atende:** `requirements.txt` usa `>=`, e o bcrypt 5 foi instalado sem aviso, o que expôs a RN02 |
 
 ## Rastreabilidade
@@ -55,3 +56,4 @@ precisa da confirmação da equipe.
 | RNF16 | 3.2 | Enviar campos acima do limite no PostgreSQL e confirmar o erro 422 |
 | RNF17 | 3.2 | Contar as consultas de `GET /diary` e `GET /lists` |
 | RNF18 | 4.3 | Instalar em ambiente limpo e conferir as versões |
+| RNF19 | 4.3 | Rodar `docker compose up --build` e testar o fluxo completo |
