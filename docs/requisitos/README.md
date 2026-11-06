@@ -15,7 +15,7 @@ já construído, por isso cada um registra a situação atual.
 | Arquivo | Conteúdo |
 |---|---|
 | [funcionais.md](funcionais.md) | 19 requisitos funcionais, por pacote do DCU, com rastreabilidade |
-| [regras-de-negocio.md](regras-de-negocio.md) | 19 regras de negócio, com rastreabilidade |
+| [regras-de-negocio.md](regras-de-negocio.md) | 20 regras de negócio, com rastreabilidade |
 | [nao-funcionais.md](nao-funcionais.md) | 19 requisitos não funcionais, gerais e de deploy, com a forma de verificar |
 
 ## Legendas
