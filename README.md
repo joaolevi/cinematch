@@ -42,7 +42,7 @@ recomendador **híbrido**; os do **grupo B**, só o **baseado em conteúdo**.
 
 ## 🚀 Como rodar (local)
 
-Pré-requisito: **Python 3.11+**.
+Pré-requisitos: **Python 3.12+** e, para o `demo.sh`, **Node.js 22**.
 
 ```bash
 git clone https://github.com/joaolevi/cinematch.git
@@ -129,12 +129,15 @@ Diagrama de Atividades do pitch:
 2. **Sem dados → mídias em alta** (popularidade do catálogo + títulos mais registrados na plataforma).
 3. **Com dados → híbrido:**
    - **Conteúdo:** cada título vira um vetor TF‑IDF de gêneros, tags, criadores, década e tipo. O perfil do
-     usuário é a soma ponderada dos títulos com que interagiu (nota → `(nota − 2,5)/2,5`, watchlist `+0,5`,
-     descarte `−0,7`, gêneros do onboarding `+1`). O score é a similaridade de cosseno.
+     usuário é a soma ponderada dos títulos com que interagiu (nota → `(nota − 2,5)/2,5`, já vi sem nota `+0,6`,
+     listas `+0,5`, descarte `−0,7`; gêneros, épocas e criadores do onboarding `+1`). O score é a similaridade
+     de cosseno.
    - **Colaborativo (item‑item):** similaridade de cosseno entre títulos na matriz usuário × título, ou seja,
-     *"quem curtiu X também curtiu Y"*.
+     *"quem curtiu X também curtiu Y"*. Com `TASTORY_USE_EXTERNAL_NEIGHBORS=true`, os filmes usam os vizinhos
+     calculados com o MovieLens 32M, e os usuários simulados deixam de contar.
    - **Combinação:** `α·conteúdo + (1−α)·colaborativo + 0,1·popularidade`, com `α = 0,8` para quem tem
-     pouco histórico e `0,5` depois. O grupo B usa `α = 1` (só conteúdo).
+     pouco histórico e `0,5` depois. Com o MovieLens, `α = 0,2` nos filmes e `1` nas séries, que não têm esses
+     dados. O grupo B usa `α = 1` (só conteúdo).
 4. **Filtra** já registrados, descartados e itens da watchlist; aplica **diversidade** de gênero no topo.
 5. **Explica** cada sugestão a partir do item do histórico que mais contribuiu.
 
@@ -144,8 +147,9 @@ Diagrama de Atividades do pitch:
 
 ```bash
 cd backend
-python -m pytest -q                    # todos (75)
-python -m pytest -q -m "not integration"   # só offline (62): é o que roda no CI
+pip install -r requirements-dev.txt   # o dev.sh instala só o necessário para rodar a API
+python -m pytest -q                    # todos (93): é o que roda no CI, onde os 13 de integração são pulados
+python -m pytest -q -m "not integration"   # só offline (80)
 python -m pytest -q -m integration     # só integração real com TMDB + banco (13, precisa da chave)
 ```
 
@@ -164,11 +168,12 @@ cinematch/
 ├── backend/
 │   ├── app/            # main, models, schemas, auth, crud, seed, routers/, services/ (recommender, catalog, tmdb, metrics)
 │   ├── data/           # catálogos mockados (JSON)
-│   ├── scripts/seed.py # recria o banco
+│   ├── scripts/        # seed, avaliação do recomendador e importação do MovieLens
 │   └── tests/          # pytest (+ integration/ com o TMDB real)
 ├── frontend/           # interface (React, TypeScript e Tailwind)
 ├── demo.sh             # sobe API + interface
-├── docs/               # PLANO.md, API.md, openapi.json, pitch
+├── docker-compose.yml  # API, interface e PostgreSQL (docker-compose.prod.yml é o da publicação)
+├── docs/               # MVP, requisitos/, ENTREGAS, ARQUITETURA, DEPLOY, HOMOLOGACAO, API, openapi.json, pitch
 ├── .claude/agents/     # agente do Claude Code especialista no projeto
 └── dev.sh
 ```

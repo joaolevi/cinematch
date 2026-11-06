@@ -12,12 +12,12 @@ A coluna Situação mostra o que foi verificado em 05 e 06/11/2026.
 | RNF02 | A chave do TMDB fica só no `.env`, fora do git | CLAUDE.md | Atende: `.env` está no `.gitignore` |
 | RNF03 | Senhas guardadas com bcrypt; rotas protegidas exigem JWT | PLANO §3 | Atende |
 | RNF04 | Textos e documentação em português | CLAUDE.md | Sem auditoria completa |
-| RNF05 | `docs/openapi.json` reflete as rotas reais | CONTRIBUTING | Atende: as 33 rotas coincidem com a aplicação |
-| RNF06 | Testes offline verdes, e toda rota tem teste | CLAUDE.md | 62 testes offline e 13 de integração passam; sem teste: `GET /media/trending`, `GET /media/genres`, `GET /me/preferences` e `GET /health`. CI não consultado |
-| RNF07 | Compatível com Python 3.11+ | README | Rodou em 3.13.5; o CI usa 3.12 |
+| RNF05 | `docs/openapi.json` reflete as rotas reais | CONTRIBUTING | Atende: as 35 rotas coincidem com a aplicação |
+| RNF06 | Testes offline verdes, e toda rota tem teste | CLAUDE.md | Atende: 80 testes offline e 13 de integração passam, e as quatro rotas que faltavam ganharam teste. CI ainda não rodou nessas branches |
+| RNF07 | Compatível com Python 3.12+ | README | Rodou em 3.13.5; o CI e o Docker usam 3.12. As versões fixas do numpy e do scipy não instalam em Python mais antigo |
 | RNF08 | A interface exibe o crédito do TMDB | `docs/API.md` | Atende: o aviso e o logo estão na página Sobre, como o TMDB exige |
 | RNF09 | O feed responde em até 1 s na máquina da demo | Aprovado em 06/11 | Atende: cerca de 115 ms com 3.966 títulos, no Docker |
-| RNF10 | Coletar só nome, e-mail e histórico; na homologação, aceitar e-mail fictício e avisar que os dados ficam em um servidor externo | Aprovado em 06/11 | Aplicar no roteiro da homologação |
+| RNF10 | Coletar só nome, e-mail e histórico; na homologação, aceitar e-mail fictício e avisar que os dados ficam em um servidor externo | Aprovado em 06/11 | O aviso e o e-mail fictício estão no [roteiro da homologação](../HOMOLOGACAO.md); falta aplicar na sessão |
 
 ## Deploy
 
@@ -26,12 +26,12 @@ A coluna Situação mostra o que foi verificado em 05 e 06/11/2026.
 | RNF11 | API e interface publicadas em URL pública com HTTPS | Decisão de 05/11; [#21](https://github.com/joaolevi/cinematch/issues/21) | Não iniciado: o sistema já roda em Docker, e a publicação será no servidor do Vinicius |
 | RNF12 | Em produção não há credencial publicada: segredo JWT próprio e senhas fora do repositório | Deploy | Atende: com `TASTORY_ENV=production`, a API e o seed recusam o segredo e as senhas públicas |
 | RNF13 | Os dados sobrevivem a reinícios, com PostgreSQL | [#21](https://github.com/joaolevi/cinematch/issues/21) | Atende localmente: roda em PostgreSQL 16 no Docker, e os dados continuam depois de reiniciar |
-| RNF14 | Em produção, o painel conta só interações reais | Deploy | **Não atende por padrão:** o auto-seed grava a simulação A/B. Ver o [guia de deploy](../DEPLOY.md) |
+| RNF14 | Em produção, o painel conta só interações reais | Deploy | Atende: em produção o auto-seed fica desligado, e o `seed --no-sim` deixa o painel zerado. Ver o [guia de deploy](../DEPLOY.md) |
 | RNF15 | O CORS libera apenas a origem do front publicado | Deploy | Configurável por `TASTORY_CORS_ORIGINS` |
 | RNF16 | Entrada acima do limite devolve erro de validação (422), não erro 500 | Revisão de 06/11 | Atende: conferido no PostgreSQL |
 | RNF17 | Diário e listas não fazem uma consulta ao banco por item | Revisão de 06/11 | Atende: o número de consultas não cresce com os itens |
 | RNF19 | O sistema sobe em Docker com um comando, com API, interface e PostgreSQL | Decisão de 06/11 | Atende localmente: fluxo completo testado no navegador, e os dados continuam depois de reiniciar |
-| RNF18 | Dependências com versões fixas | Revisão de 06/11 | **Não atende:** `requirements.txt` usa `>=`, e o bcrypt 5 foi instalado sem aviso, o que expôs a RN02 |
+| RNF18 | Dependências com versões fixas | Revisão de 06/11 | Atende: `requirements.txt` e `requirements-dev.txt` fixam as versões com `==`, e o `package-lock.json` fixa as do front |
 
 ## Rastreabilidade
 

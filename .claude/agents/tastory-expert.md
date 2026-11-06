@@ -19,8 +19,9 @@ de forma didática e prefira soluções simples e legíveis a soluções "espert
 - **Este repositório = API e interface.** A interface fica em `frontend/`, e o contrato, em `docs/API.md` e
   `docs/openapi.json`.
 - **Fora do escopo:** álbuns/MusicBrainz (incremento 2) e recursos sociais.
-- Documentos: `docs/PLANO.md` (plano e decisões), `docs/API.md` (guia da API),
-  `docs/pitch-tastory.pdf` (pitch com DCU, DA, EAP, RACI, PRINCE2).
+- Documentos: `docs/MVP.md` (escopo e decisões), `docs/requisitos/`, `docs/ENTREGAS.md` (equipe e critérios),
+  `docs/ARQUITETURA.md` (sistema final e evidências), `docs/DEPLOY.md`, `docs/HOMOLOGACAO.md`, `docs/API.md` e
+  `docs/pitch-tastory.pdf` (DCU, DA, EAP, RACI, PRINCE2). `docs/PLANO.md` é histórico.
 
 ## Rastreabilidade (DCU → EAP → código)
 
@@ -41,24 +42,30 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
 
 ## Arquitetura (`backend/app`)
 
-- FastAPI + SQLAlchemy 2 + SQLite. `main.py` cria as tabelas e faz o *auto-seed* se o catálogo estiver
+- FastAPI + SQLAlchemy 2, com SQLite no `dev.sh` e PostgreSQL no Docker e em produção. `main.py` cria as tabelas e faz o *auto-seed* se o catálogo estiver
   vazio. Auth JWT (PyJWT) + bcrypt em `auth.py`. `config.py` lê variáveis `TASTORY_*` e carrega o `.env`
   da raiz. Regras de domínio reutilizáveis em `crud.py`; routers finos.
-- **Modelo** (`models.py`): `User`(role, ab_group, is_synthetic, onboarded), `UserPreference`, `Media`
-  (type movie|series, source mock|tmdb|manual, external_id, genres/tags/creators em JSON, popularity 0–100,
+- **Modelo** (`models.py`): `User`(role, ab_group, is_synthetic, onboarded), `UserPreference`, `UserInterest`
+  (décadas e criadores do onboarding), `ItemNeighbor` (vizinhos do MovieLens), `Media`
+  (type movie|series, source mock|tmdb|manual, external_id, genres/tags/creators/actors em JSON, popularity 0–100,
   poster_url), `DiaryEntry` (rating 0,5–5 opcional, review, review_hidden, from_onboarding),
   `UserList`/`ListItem` (is_watchlist), `RecEvent` (shown|want|seen|dismiss + variant), `Dismissed`.
   Sem migrações: mudou o modelo → `python -m scripts.seed`.
 - **Recomendador** (`services/recommender.py`):
-  1. `user_signals`: diário (peso `(nota−2,5)/2,5`, sem nota `0,6`), listas `0,5`, descartes `−0,7`.
+  1. `user_signals`: diário (peso `(nota−2,5)/2,5`, sem nota `0,6`), listas `0,5`, descartes `−0,7`;
+     preferências do onboarding (gêneros, décadas e criadores) somam `1,0`.
   2. Sem sinais nem preferências → `trending()` (0,7·popularidade + 0,3·registros na plataforma).
   3. Conteúdo: TF‑IDF sobre tokens `g:` gênero (peso 2), `t:` tag, `c:` criador, `d:` década, `type:`;
      perfil = soma ponderada + gêneros do onboarding; cosseno.
-  4. Colaborativo (só grupo A): similaridade item‑item na matriz usuário×título de todos os usuários.
-  5. `α = 0,8` com < 5 sinais, senão `0,5`; + `0,1·popularidade`; penalidade de diversidade `0,85^n`;
+  4. Colaborativo (só grupo A): similaridade item‑item na matriz usuário×título de todos os usuários. Com
+     `TASTORY_USE_EXTERNAL_NEIGHBORS=true`, usa `item_neighbors` (MovieLens 32M), carregada por
+     `scripts.import_movielens`.
+  5. `α = 0,8` com < 5 sinais, senão `0,5`; com MovieLens, `0,2` nos filmes e `1` nas séries; + `0,1·popularidade`; penalidade de diversidade `0,85^n`;
      exclui registrados, descartados e watchlist; completa com trending.
-  6. `_reason` gera "Porque você curtiu X", "Quem curtiu X também curtiu", "Porque você gosta de G".
-- **Impressões:** `GET /recommendations` grava `shown` uma única vez por (usuário, título).
+  6. `_reason` gera "Porque você curtiu X", "Quem curtiu X também curtiu", "Porque você gosta de G" e os
+     motivos por época e criador, variando o título citado.
+- **Impressões:** `GET /recommendations` grava `shown` uma única vez por (usuário, título). O parâmetro `exclude`
+  traz os próximos títulos ao rolar, e o que foi carregado também conta como exibido.
 - **Catálogo** (`services/catalog.py`): interface `CatalogProvider.fetch_titles()`.
   - `MockCatalogProvider`: `data/seed_catalog.json` (153, carregado no seed) e
     `data/mock_external_catalog.json` (45 extras).
@@ -71,7 +78,8 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
     nunca duplicado; origem igual/maior → `skipped`.
 - **Admin TMDB:** `POST /admin/sync?provider=auto|tmdb|mock&pages=N`, `GET /admin/tmdb/search`,
   `POST /admin/tmdb/import {type, tmdb_id}`, `POST /admin/tmdb/enrich` (`enrich_catalog`: busca cada título
-  sem pôster por tipo+título+ano, promove para `tmdb` mantendo tags/criadores). `scripts.seed --tmdb`
+  sem pôster por tipo+título+ano, promove para `tmdb` mantendo tags/criadores; se o TMDB já trouxe o título
+  com outro nome, `merge_media` junta os dois). `scripts.seed --tmdb`
   faz sync + enrich. `./demo.sh --reset` sobe API + `frontend/` com esse banco.
 - **Seed** (`app/seed.py`): catálogo mock, `admin@tastory.dev/admin123`, `demo@tastory.dev/demo123`,
   30 usuários sintéticos de 6 personas (`terror`, `scifi`, `animacao`, `romance`, `crime`, `comedia`;
@@ -89,7 +97,8 @@ Antes de commitar, confira `git status` e garanta que `.env` não está listado.
   `media_id_by_title()`. O banco de teste é isolado e já vem com o catálogo mock + contas demo.
 - `tests/test_tmdb_unit.py`: TMDB simulado com `httpx.MockTransport` (roda no CI).
 - `tests/integration/`: TMDB **real** + API + banco, marcados `integration`, pulados sem chave.
-- Comandos: `cd backend && ../.venv/bin/python -m pytest -q` (ou `-m "not integration"` / `-m integration`).
+- Comandos: `.venv/bin/pip install -r backend/requirements-dev.txt`, uma vez, e depois
+  `cd backend && ../.venv/bin/python -m pytest -q` (ou `-m "not integration"` / `-m integration`).
 
 ## Como trabalhar
 
@@ -102,4 +111,5 @@ Antes de commitar, confira `git status` e garanta que `.env` não está listado.
 6. Commits e PRs em português, pequenos (`feat:`, `fix:`, `docs:`, `test:`), vinculados à issue
    (`Closes #N`). Nunca faça push direto na `main` sem o usuário pedir.
 7. Ao revisar PRs de colegas, aponte bugs concretos e explique o porquê de forma gentil e didática.
-8. Se um pedido sair do escopo (ex.: álbuns, deploy), avise e sugira registrar como issue do incremento 2.
+8. Se um pedido sair do escopo (ex.: álbuns), avise e sugira registrar como issue do incremento 2. O deploy faz
+   parte do MVP: veja `docs/DEPLOY.md`.

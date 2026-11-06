@@ -12,6 +12,7 @@
    `feat: adiciona filtro por década na busca`, `fix: corrige nota média no detalhe`.
 4. Rode os testes antes de subir:
    ```bash
+   pip install -r backend/requirements-dev.txt   # uma vez: instala o pytest
    cd backend && python -m pytest -q
    ```
    Os testes de integração com o TMDB rodam só se você tiver a chave no `.env`. Sem chave, eles são pulados.
@@ -46,7 +47,7 @@ git push origin homologacao-09-11
 
 ## Convenções
 
-- Backend: Python 3.11+, FastAPI, SQLAlchemy 2. Regras de domínio em `app/crud.py` e `app/services/`;
+- Backend: Python 3.12+, FastAPI, SQLAlchemy 2. Regras de domínio em `app/crud.py` e `app/services/`;
   os routers só validam a entrada e chamam essas funções.
 - Novas rotas precisam de teste em `backend/tests/`.
 - Mudou rotas ou schemas? Atualize `docs/API.md` e regenere `docs/openapi.json` (comando no `CLAUDE.md`):

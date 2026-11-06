@@ -1,8 +1,8 @@
 # Tastory: contexto para o Claude Code
 
 Protótipo acadêmico (UFAL, Gerência de Projeto 2026.2): API de diário de filmes/séries + recomendador
-híbrido, com integração real ao TMDB. Plano em `docs/PLANO.md`; guia da API em `docs/API.md`;
-pitch em `docs/pitch-tastory.pdf`. Para tarefas maiores, use o agente `.claude/agents/tastory-expert.md`.
+híbrido, com integração real ao TMDB. Guia da API em `docs/API.md`; pitch em `docs/pitch-tastory.pdf`;
+`docs/PLANO.md` é histórico. Para tarefas maiores, use o agente `.claude/agents/tastory-expert.md`.
 
 A interface fica em `frontend/`, sob responsabilidade da Lara. Mudanças nela precisam respeitar o contrato
 de `docs/API.md`. O escopo atual está em `docs/MVP.md`, e os requisitos, em `docs/requisitos/`.
@@ -11,7 +11,8 @@ de `docs/API.md`. O escopo atual está em `docs/MVP.md`, e os requisitos, em `do
 
 - Subir a API: `./dev.sh` (http://localhost:8000/docs) · recriar banco: `./dev.sh --reset`
 - Subir tudo com PostgreSQL: `docker compose up --build` (interface em http://localhost:5173)
-- Testes: `cd backend && ../.venv/bin/python -m pytest -q`
+- Testes: `.venv/bin/pip install -r backend/requirements-dev.txt`, uma vez, e depois
+  `cd backend && ../.venv/bin/python -m pytest -q`
   (`-m "not integration"` = offline; `-m integration` = TMDB real, precisa da chave no `.env`)
 - Recriar banco: `cd backend && ../.venv/bin/python -m scripts.seed`
 - Mudou rotas/schemas? Regere `docs/openapi.json`:

@@ -27,7 +27,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production exec api py
 ```
 
 **Esse comando apaga todas as tabelas**, então nunca o execute com usuários reais no banco. O `--no-sim` deixa o painel de
-métricas vazio, pronto para contar só interações reais. Em teste, a carga levou cerca de 1,5 minuto e gerou 3.966 títulos, 3.923 com pôster.
+métricas vazio, pronto para contar só interações reais. Em teste, a carga levou cerca de 1,5 minuto e gerou cerca de 3.950 títulos, quase todos com pôster.
 
 ## 3. Carregar as recomendações de filmes
 
@@ -74,4 +74,49 @@ docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db 
 
 - Confirme se o processador do servidor é x86 ou ARM. As imagens são construídas no próprio servidor.
 - Acesse a URL antes de começar. Queda de energia ou de internet derruba o sistema.
-- **Plano B:** rode `docker compose up --build` em uma máquina local.
+- Se o deploy falhar, siga o plano B abaixo.
+
+## Apagar uma conta
+
+Use para a conta de teste antes da homologação e para quem pedir a exclusão. O diário, as listas e os eventos da pessoa saem junto:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db psql -U tastory tastory -c "delete from users where email = 'pessoa@teste.com'"
+```
+
+## Plano B
+
+Se a URL pública falhar, o sistema roda em uma máquina local, com o mesmo banco. Prepare tudo em 08/11, enquanto há internet.
+
+**1. Gere uma cópia do banco.** No servidor, use o comando de backup da seção 5. Sem servidor, faça a carga das seções 2 e 3 em
+qualquer máquina com a chave do TMDB. O arquivo tem e-mails e senhas criptografadas, então não o envie para o git nem para grupos.
+
+**2. Prepare a máquina da demonstração.** Precisa de internet só nesta etapa, para baixar as imagens:
+
+```bash
+git clone https://github.com/joaolevi/cinematch.git && cd cinematch
+git checkout homol
+docker compose build
+```
+
+**3. Restaure o banco antes de subir a API.** Se a API subir antes, ela cria dados de exemplo no banco vazio:
+
+```bash
+docker compose up -d --wait db
+docker compose exec -T db psql -q -U tastory tastory < backup.sql
+```
+
+**4. Suba o sistema**, sem a chave do TMDB, que não é usada no feed:
+
+```bash
+TASTORY_USE_EXTERNAL_NEIGHBORS=true docker compose up -d
+```
+
+A interface fica em http://localhost:5173. As senhas são as do banco copiado.
+
+**Sem internet:** tudo funciona, menos a importação pelo TMDB. Os pôsteres não carregam, e a interface mostra um pôster gerado com
+o título.
+
+Testado em 06/11/2026: restaurar e subir levou 5 s, com a imagem já construída. Cadastro, onboarding, feed, Quero ver e painel
+funcionaram sem a chave do TMDB e com as imagens bloqueadas no navegador. **Falta testar com o Wi-Fi desligado na máquina da
+demonstração.**

@@ -1044,6 +1044,21 @@
               "default": 20,
               "title": "Limit"
             }
+          },
+          {
+            "name": "exclude",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "description": "Títulos que já estão na tela, para trazer os próximos",
+              "default": [],
+              "title": "Exclude"
+            },
+            "description": "Títulos que já estão na tela, para trazer os próximos"
           }
         ],
         "responses": {
@@ -1111,6 +1126,45 @@
                 "schema": {}
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "recomendações"
+        ],
+        "summary": "Undo Dismiss",
+        "description": "Desfaz o \"Não me interesso\".",
+        "operationId": "undo_dismiss_recommendations__media_id__feedback_delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -2015,6 +2069,18 @@
               }
             ],
             "title": "Review"
+          },
+          "consumed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumed At"
           }
         },
         "type": "object",
@@ -2218,6 +2284,13 @@
             "type": "number",
             "title": "Popularity"
           },
+          "actors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Actors"
+          },
           "avg_rating": {
             "anyOf": [
               {
@@ -2258,6 +2331,7 @@
           "tags",
           "creators",
           "popularity",
+          "actors",
           "avg_rating",
           "ratings_count",
           "reviews",
@@ -2706,6 +2780,18 @@
               }
             ],
             "title": "Rating"
+          },
+          "consumed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumed At"
           },
           "in_watchlist": {
             "type": "boolean",

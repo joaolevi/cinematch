@@ -2,7 +2,7 @@
 
 > [Voltar ao índice](README.md) · A ligação com código e testes está no fim deste arquivo.
 
-As regras RN02, RN12, RN13, RN14 e RN16 foram corrigidas em 06/11/2026 na branch `fix/regras-do-mvp`, ainda sem merge.
+As regras RN02, RN12, RN13, RN14 e RN16 foram corrigidas em 06/11/2026 e aguardam merge nas branches da cadeia que termina em `feat/descartar-e-qualidade`.
 RN12, RN13 e RN14 foram aprovadas por Sophia (GP) em 05/11/2026.
 
 ## Conta e acesso
@@ -41,6 +41,12 @@ RN12, RN13 e RN14 foram aprovadas por Sophia (GP) em 05/11/2026.
 | RN15 | O mesmo título vindo de origens diferentes não é duplicado (prioridade: TMDB, mock, manual) | Atende |
 | RN16 | A busca ignora acentos | Atende |
 
+## Diário
+
+| ID | Regra | Situação |
+|---|---|---|
+| RN17 | O top 10 dos mais amados usa notas a partir de 3,5, e o dos mais odiados, notas abaixo de 3. Assim, quem só dá notas altas não vê títulos bons entre os odiados | Atende |
+
 ## Rastreabilidade
 
 Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backend/tests/`.
@@ -63,3 +69,4 @@ Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backen
 | RN14 | `routers/auth.py`, `crud.py` | `test_diary_lists.py` |
 | RN15 | `services/catalog.py` | `test_tmdb_unit.py` |
 | RN16 | `routers/media.py`, `services/catalog.py` | `test_diary_lists.py` |
+| RN17 | `frontend/src/pages/DiaryPage.tsx` | Sem teste automatizado; conferida no navegador |

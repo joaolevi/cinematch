@@ -2,7 +2,7 @@
 
 > [Voltar ao índice](README.md) · A ligação com código e testes está no fim deste arquivo.
 
-As situações abaixo já consideram as correções da branch `fix/regras-do-mvp`, ainda sem merge.
+As situações abaixo já consideram as correções que aguardam merge nas branches da cadeia que termina em `feat/descartar-e-qualidade`.
 
 ## Acesso
 
@@ -17,12 +17,13 @@ As situações abaixo já consideram as correções da branch `fix/regras-do-mvp
 | ID | Requisito | Situação | MVP |
 |---|---|---|---|
 | RF04 | Buscar por título, criador ou tag, filtrar por tipo e gênero e ordenar | Atende | Deve |
-| RF05 | Ver o detalhe de um título: dados, nota média, resenhas e status do usuário | Atende | Deve |
-| RF06 | Registrar que viu um título, com data, e editar ou apagar o registro | Atende | Deve |
+| RF05 | Ver o detalhe de um título: dados, elenco, nota média, resenhas e status do usuário | Atende | Deve |
+| RF06 | Registrar que viu um título, com data opcional, e editar ou apagar o registro | Atende | Deve |
 | RF07 | Dar nota e escrever resenha, ambas opcionais | Atende | Deve |
 | RF08 | Criar, renomear e excluir listas, incluir e remover títulos e usar a watchlist "Quero ver" | Atende | Deve |
-| RF09 | Ver o feed "Para você", com filtro por tipo | Atende | Deve |
+| RF09 | Ver o feed "Para você", com filtro por tipo e novas sugestões ao rolar a página | Atende | Deve |
 | RF10 | Reagir a uma sugestão com Quero ver, Já vi ou Não me interesso | Atende | Deve |
+| RF19 | Ver no diário o top 10 dos títulos mais amados e o dos mais odiados | Atende | Deve |
 
 ## Inteligência
 
@@ -57,7 +58,7 @@ Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backen
 | RF01 | DCU: Cadastrar Conta | 2.1, 3.2 | `routers/auth.py` | `test_auth.py` |
 | RF02 | DCU: Fazer Login | 2.1, 3.2 | `routers/auth.py`, `auth.py` | `test_auth.py` |
 | RF03 | DCU: Definir Preferências Iniciais | 2.1 | `routers/auth.py` | `test_recommendations.py` |
-| RF04 | DCU: Buscar Mídias | 2.3 | `routers/media.py` | `test_diary_lists.py` (gênero e ordenação sem teste) |
+| RF04 | DCU: Buscar Mídias | 2.3 | `routers/media.py` | `test_diary_lists.py` |
 | RF05 | PLANO §8 | 2.3 | `routers/media.py` | `test_diary_lists.py` |
 | RF06 | DCU: Registrar Consumo | 2.2 | `routers/diary.py`, `crud.py` | `test_diary_lists.py` |
 | RF07 | DCU: Avaliar Mídia | 2.2 | `routers/diary.py` | `test_diary_lists.py` |
@@ -73,3 +74,4 @@ Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backen
 | RF16 | DCU: Moderar Avaliações | 2.4 | `routers/admin.py` | `test_admin.py` |
 | RF17 | Pitch; PLANO §2 | 4.2 | `services/metrics.py` | `test_admin.py` |
 | RF18 | EAP 2.0 | 2.1 a 2.4 | `frontend/` | Sem testes automatizados; fluxo testado no navegador |
+| RF19 | Pedido da GP, 06/11 | 2.2 | `frontend/src/pages/DiaryPage.tsx` | Sem testes automatizados; fluxo testado no navegador |

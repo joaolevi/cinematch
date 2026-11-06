@@ -1,11 +1,11 @@
 # Escopo do MVP
 
-> **Versão 11, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
-> Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md) e [arquitetura e sistema final](ARQUITETURA.md).
+> **Versão 14, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
+> Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [homologação](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
-A API cobre os 13 casos de uso do pitch para filmes e séries. Os 62 testes offline e os 13 com o TMDB real
+A API cobre os 13 casos de uso do pitch para filmes e séries. Os 80 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
 credenciais estão prontas, mas aguardam merge. Falta criar a branch `homol`, publicar o sistema, ajustar o design,
 fazer a homologação e preparar a demonstração.
@@ -30,10 +30,7 @@ corretamente. O benefício do recomendador será avaliado depois, com dados reai
 - Deploy da API e da interface (RNF11 a RNF19), com a execução local como plano B ([guia](DEPLOY.md)).
 - Homologação com 5 a 10 colegas ([#14](https://github.com/joaolevi/cinematch/issues/14)).
 - Interface em `frontend/`, com o design revisado pela Lara, e demonstração ensaiada.
-
-## Se houver tempo
-
-- Busca que ignora acentos (RN16).
+- Busca que ignora acentos (RN16), que estava em "se houver tempo" e já foi feita.
 
 ## Fora do MVP
 
@@ -132,7 +129,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | D5 | Cargos da equipe, em [ENTREGAS.md](ENTREGAS.md#equipe) | Equipe | 06/11 |
 | D6 | O Sponsor do pitch é o Professor Rafael, professor da disciplina | Sophia (GP) | 06/11 |
 | D7 | Filmes e séries são recomendados juntos; música, separadamente ([arquitetura](ARQUITETURA.md#decisões)) | Sophia (GP) | 06/11 |
-| D8 | O MVP mantém o cálculo atual do recomendador | Sophia (GP) | 06/11 |
+| D8 | O MVP mantém o cálculo atual do recomendador. A única exceção é a tabela de vizinhos do MovieLens (D14), já pronta | Sophia (GP) | 06/11 |
 | D9 | O nome do produto é Tastory, inclusive no código | Sophia (GP) | 06/11 |
 | D11 | O sistema roda em Docker, com API, interface e PostgreSQL (RNF19) | Sophia (GP) | 06/11 |
 | D12 | O sistema será publicado no servidor do Vinicius, sem custo | Sophia (GP) | 06/11 |
@@ -158,6 +155,9 @@ Nenhuma decisão pendente em 06/11/2026.
 | 06/11 | Entram no MVP três ajustes para o sistema publicado (RNF16 a RNF18) | Revisão com foco no sistema final | Sophia (GP) |
 | 06/11 | O sistema passa a se chamar Tastory em vez de CineMatch | Unificar o nome do pitch, do Trello e do código | Sophia (GP) |
 | 06/11 | O TMDB real (RF15b) passa de opcional a obrigatório, com catálogo ampliado | Na homologação, a pessoa só encontra títulos que estão no catálogo | Sophia (GP) |
+| 06/11 | O detalhe do título ganha "Não me interesso", com opção de desfazer | Na listagem o botão já existia, e faltava no detalhe | Sophia (GP) |
+| 06/11 | O detalhe mostra o elenco, e a data do "Já vi" passa a ser opcional, com atalhos para hoje e ontem | Pedido da GP ao testar o sistema: a data preenchida sozinha podia ficar errada | Sophia (GP) |
+| 06/11 | Entram no MVP o top 10 do diário (RF19, RN17), novas sugestões ao rolar o feed e a escolha da ordem na busca | Pedido da GP ao testar o sistema. A busca já pedia ordenação no RF04, mas a tela não oferecia | Sophia (GP) |
 
 ## Riscos
 
@@ -165,11 +165,11 @@ Nenhuma decisão pendente em 06/11/2026.
 |---|---|---|---|
 | O design não ficar pronto a tempo | Interface funcional, mas sem o acabamento planejado | A interface atual já cobre o fluxo completo; priorizar o que aparece na demonstração | Lara |
 | Painel do A/B lido como conclusão | Na simulação, A tem 65,0% e B tem 66,7%, mas ela não serve para essa comparação. Com dados reais do MovieLens, A supera B | O painel avisa de onde vêm os números; na apresentação, usar o teste com o MovieLens como evidência exploratória | Bárbara |
-| Séries com sugestões fracas | Sem dados reais, as séries dependem só do conteúdo e aparecem títulos obscuros | Avaliar as rotas do TMDB e, se preciso, dar mais peso à popularidade | Bárbara |
+| Séries com sugestões fracas | Sem dados reais, as séries dependem só do conteúdo e aparecem títulos obscuros | Avaliação feita ([arquitetura](ARQUITETURA.md#séries-sem-dados-reais)): falta a Bárbara decidir o peso da popularidade nas séries | Bárbara |
 | Publicar com as credenciais do repositório | Qualquer pessoa entra como administrador | Tratar o RNF12 como condição para publicar | Sophia |
 | O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir em 09/11 e, se preciso, apresentar localmente | Vinicius |
 | Servidor fora do ar | Queda de energia ou de internet na casa do Vinicius derruba o sistema | Conferir a URL antes da apresentação e manter a execução local como plano B | Vinicius |
 | Exposição da rede doméstica | Um site público pode abrir um caminho para a rede da casa | Usar túnel com HTTPS e não abrir portas no roteador | Vinicius |
 | Homologação com poucas pessoas | Com 5 a 10 colegas, a taxa não permite conclusão | Tratar o resultado como ilustrativo. Sem deploy, fazer a sessão em uma só máquina, porque as métricas ficam em um único banco | Antonio |
-| Sem internet na demo | Títulos sem pôster real | Usar o catálogo mock, que funciona offline, e testar esse cenário antes | Antonio |
-| Título procurado fora do catálogo | Com 3.966 títulos, a maioria aparece, mas o catálogo ainda não cobre tudo | Importar pelo painel de admin os títulos que faltarem | Antonio |
+| Sem internet na demo | Títulos sem pôster real | O sistema local mostra um pôster gerado no lugar da imagem ([plano B](DEPLOY.md#plano-b)); testar esse cenário antes | Antonio |
+| Título procurado fora do catálogo | Com cerca de 3.950 títulos, a maioria aparece, mas o catálogo ainda não cobre tudo | Importar pelo painel de admin os títulos que faltarem | Antonio |

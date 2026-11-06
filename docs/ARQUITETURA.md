@@ -8,7 +8,7 @@
 | ID | Decisão | Motivo | Quem aprovou |
 |---|---|---|---|
 | D7 | Filmes e séries são recomendados juntos; música é recomendada separadamente | Filmes e séries já compartilham gêneros, diretores e dados. Cruzar com música exige pessoas que consomem as duas coisas, e ainda não temos esses dados | Sophia (GP), 06/11 |
-| D8 | O MVP mantém o cálculo atual; a mudança de arquitetura fica para depois de 10/11 | Com o catálogo atual, o feed responde em milissegundos, e trocar agora colocaria a entrega em risco | Sophia (GP), 06/11 |
+| D8 | O MVP mantém o cálculo atual; a mudança de arquitetura fica para depois de 10/11. A única exceção é a tabela de vizinhos do MovieLens (D14), já pronta | Com o catálogo atual, o feed responde em milissegundos, e trocar agora colocaria a entrega em risco | Sophia (GP), 06/11 |
 | D14 | Os vizinhos do MovieLens 32M substituem os usuários inventados nos filmes, com a opção desligada por padrão | Foi a maior melhora medida, e a opção desligada protege a entrega | Sophia (GP), 06/11 |
 
 A recomendação cruzada entre filmes e música fica como evolução: o diário unificado vai gerar esses dados com o tempo.
@@ -113,6 +113,43 @@ O modelo de texto não melhora o resultado e exige bibliotecas pesadas, então f
 
 **Limites:** os testes usam pessoas e filmes do MovieLens, e o usuário do teste pode aparecer na base 32M. Nada disso mede
 séries. No sistema real, 1.438 dos 1.985 filmes do catálogo têm vizinhos: os demais são recentes ou não estão na base.
+
+O `backend/scripts/evaluate_recommender.py` reproduz só a comparação principal. As variações com ALS, modelo de texto e
+usuários inventados foram testes pontuais e não estão no repositório.
+
+### Séries sem dados reais
+
+O MovieLens não tem séries, então testamos alternativas para elas. Como também não há avaliações públicas de séries, o teste
+usa filmes como indicador, sem a parte colaborativa do MovieLens. A popularidade do teste vem das avaliações do próprio
+MovieLens, e não do TMDB, o que favorece esse fator. Mesmas 589 pessoas, em NDCG@20:
+
+| Peso da popularidade | Só conteúdo | Rota do TMDB | Conteúdo + rota do TMDB |
+|---|---|---|---|
+| 0,1, como hoje | 0,020 | 0,037 | 0,040 |
+| 0,5 | 0,048 | 0,051 | 0,065 |
+| 1 | 0,073 | 0,067 | 0,085 |
+| 2 | 0,090 | 0,084 | 0,095 |
+| 4 | 0,091 | 0,088 | 0,092 |
+
+A rota é a `/recommendations` do TMDB, que cobriu 3.561 dos 3.636 filmes. A `/similar` ficou um pouco abaixo (0,034 sozinha,
+0,038 com o conteúdo), e as duas ficam em 29% a 32% de acerto. A popularidade sozinha dá 0,083.
+
+**Conclusões:** o que mais pesa é a popularidade, e aumentar o peso resolve boa parte do problema sem dado novo. A rota do
+TMDB soma pouco quando a popularidade já pesa bastante, mas devolve listas coerentes: Breaking Bad traz Better Call Saul,
+Narcos e Snowfall.
+
+O número não conta tudo, porque essa métrica favorece títulos populares. No catálogo real, com perfis de drama, comédia e
+animação:
+
+- **Peso 0,1:** títulos obscuros, como *SOKO Köln* e *Arli$$*.
+- **Peso 1:** títulos conhecidos e ainda parecidos com o perfil, como *Better Call Saul* e *Como Eu Conheci Sua Mãe*.
+- **Peso 2:** a lista perde a relação com o perfil: quem gosta de comédia recebe *Sherlock* e *Os 100*.
+
+**Sugestão para a Bárbara decidir:** usar peso 1 só nas séries, que é uma mudança de uma linha. A rota do TMDB fica como
+próximo passo, porque precisa de uma carga nova na tabela de vizinhos. Isso ajusta a D8 e deve entrar no controle de mudanças.
+
+O catálogo também tem 158 títulos sem tradução, com o nome em outro alfabeto, como 논스톱. Eles vêm assim do TMDB e pioram a
+impressão do feed, mesmo quando a sugestão faz sentido.
 
 ### Fontes avaliadas
 
