@@ -2,7 +2,7 @@
 
 > [Voltar ao índice](README.md) · A ligação com código e testes está no fim deste arquivo.
 
-As situações abaixo já consideram as correções que aguardam merge nas branches da cadeia que termina em `feat/descartar-e-qualidade`.
+As situações abaixo consideram o código da branch `homol`, que ainda não subiu para a `main`.
 
 ## Acesso
 

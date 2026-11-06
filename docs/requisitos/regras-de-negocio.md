@@ -2,7 +2,7 @@
 
 > [Voltar ao índice](README.md) · A ligação com código e testes está no fim deste arquivo.
 
-As regras RN02, RN12, RN13, RN14 e RN16 foram corrigidas em 06/11/2026 e aguardam merge nas branches da cadeia que termina em `feat/descartar-e-qualidade`.
+As regras RN02, RN12, RN13, RN14 e RN16 foram corrigidas em 06/11/2026 e estão na branch `homol`, que ainda não subiu para a `main`.
 RN12, RN13 e RN14 foram aprovadas por Sophia (GP) em 05/11/2026.
 
 ## Conta e acesso

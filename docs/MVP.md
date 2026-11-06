@@ -1,14 +1,14 @@
 # Escopo do MVP
 
-> **Versão 16, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
+> **Versão 17, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [homologação](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
 A API cobre os 13 casos de uso do pitch para filmes e séries. Os 85 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
-credenciais estão prontas, mas aguardam merge. Falta criar a branch `homol`, publicar o sistema, ajustar o design,
-fazer a homologação e preparar a demonstração.
+credenciais estão na branch `homol`, com o CI passando. Falta o QA testar a `homol`, publicar o sistema, ajustar o
+design, fazer a homologação e preparar a demonstração.
 
 ## Objetivo
 
@@ -67,7 +67,7 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 - [ ] Admin sincroniza o mock, edita e remove títulos e oculta resenhas; resenha oculta e editada continua oculta.
 - [ ] O painel mostra a taxa total e por grupo, sempre entre 0% e 100%.
 - [ ] Depois de clonar, um único comando (`./dev.sh`) sobe a API, sem chave de API.
-- [ ] Testes offline verdes e CI verde.
+- [x] Testes offline verdes e CI verde.
 - [ ] Sistema publicado em URL com HTTPS e sem credencial pública, ou decisão registrada de apresentar localmente.
 - [ ] Homologação feita com 5 a 10 colegas, com o resultado registrado na issue [#14](https://github.com/joaolevi/cinematch/issues/14).
 - [ ] Demo ensaiada do início ao fim, com plano B em vídeo ou prints.
@@ -169,6 +169,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | Painel do A/B lido como conclusão | Na simulação, A tem 65,0% e B tem 66,7%, mas ela não serve para essa comparação. Com dados reais do MovieLens, A supera B | O painel avisa de onde vêm os números; na apresentação, usar o teste com o MovieLens como evidência exploratória | Bárbara |
 | Séries com sugestões fracas | Sem dados reais, as séries dependem só do conteúdo e aparecem títulos obscuros | Avaliação feita ([arquitetura](ARQUITETURA.md#séries-sem-dados-reais)): falta a Bárbara decidir o peso da popularidade nas séries | Bárbara |
 | Publicar com as credenciais do repositório | Qualquer pessoa entra como administrador | Tratar o RNF12 como condição para publicar | Sophia |
+| Mudança no banco depois da publicação | O projeto não tem migrations: uma coluna nova derruba a busca e o feed até alguém ajustar o banco | Não mudar os modelos até a entrega. Se for inevitável, seguir o [guia](DEPLOY.md#atualizar-o-sistema-publicado) | Sophia |
 | O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir em 09/11 e, se preciso, apresentar localmente | Vinicius |
 | Servidor fora do ar | Queda de energia ou de internet na casa do Vinicius derruba o sistema | Conferir a URL antes da apresentação e manter a execução local como plano B | Vinicius |
 | Exposição da rede doméstica | Um site público pode abrir um caminho para a rede da casa | Usar túnel com HTTPS e não abrir portas no roteador | Vinicius |

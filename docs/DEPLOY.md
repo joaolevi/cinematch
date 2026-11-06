@@ -30,7 +30,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production exec api py
 ```
 
 **Esse comando apaga todas as tabelas**, então nunca o execute com usuários reais no banco. O `--no-sim` deixa o painel de
-métricas vazio, pronto para contar só interações reais. Em teste, a carga levou cerca de 1,5 minuto e gerou cerca de 3.950 títulos, quase todos com pôster.
+métricas vazio, pronto para contar só interações reais. Em teste, a carga levou cerca de 2 minutos e gerou cerca de 3.950 títulos, quase todos com pôster.
 
 ## 3. Carregar as recomendações de filmes
 
@@ -67,11 +67,37 @@ Antes da homologação e da entrega:
 docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db pg_dump -U tastory tastory > backup-$(date +%F).sql
 ```
 
-Para restaurar, em um banco vazio:
+Para restaurar, deixe só o banco no ar. **O `down -v` apaga o banco atual.** Com a API no ar, ela cria as tabelas vazias
+antes, e a restauração fica incompleta: em teste, voltaram os títulos e as contas, mas o diário e os eventos sumiram.
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db psql -U tastory tastory < backup.sql
+docker compose -f docker-compose.prod.yml --env-file .env.production down -v
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d --wait db
+docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db psql -q -U tastory tastory < backup.sql
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d
 ```
+
+## Atualizar o sistema publicado
+
+Para publicar uma nova versão, rode `git pull` e `make prod-up`. Os dados continuam no banco, desde que você não use `down -v`
+nem `make prod-seed`.
+
+O projeto não tem migrations. Ao subir, a API cria as tabelas que faltam, mas **não altera as que já existem**:
+
+| Mudança no código | O que acontece | O que fazer |
+|---|---|---|
+| Nada nos modelos | Atualiza normalmente | Só publicar |
+| Tabela nova | A API cria sozinha | Só publicar |
+| Coluna nova em tabela existente | A API sobe, mas busca e feed dão erro 500 | Fazer backup, rodar o `ALTER TABLE` e publicar |
+
+Exemplo de coluna nova, sempre com valor padrão, para a versão antiga continuar funcionando:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db psql -U tastory tastory -c "alter table media add column exemplo json not null default '[]'"
+```
+
+Depois da carga inicial, evite mudar `backend/app/models.py` até a entrega. Nunca use `make prod-seed` para resolver erro de
+banco, porque ele apaga as contas e o histórico.
 
 ## Antes de apresentar
 
