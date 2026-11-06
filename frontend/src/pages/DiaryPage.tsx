@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import MediaCard from "../components/MediaCard";
 import Poster from "../components/Poster";
 import SeenModal from "../components/SeenModal";
 import { StarsDisplay } from "../components/Stars";
@@ -121,38 +122,25 @@ export default function DiaryPage() {
         {groups.map(([label, list]) => (
           <section key={label}>
             <h2 className="text-sm font-semibold tracking-wider text-accent uppercase">{label}</h2>
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-6">
               {list.map((e) => (
-                <div key={e.id} className="card flex items-center gap-4 p-3">
-                  <Link to={`/media/${e.media.id}`} className="w-12 shrink-0">
-                    <Poster media={e.media} compact />
-                  </Link>
-                  <div className="min-w-0 flex-1">
-                    <Link to={`/media/${e.media.id}`} className="font-semibold hover:text-accent">
-                      {e.media.title}
-                    </Link>{" "}
-                    <span className="text-xs text-muted">{e.media.year}</span>
-                    <div className="mt-1 flex items-center gap-3">
-                      <StarsDisplay value={e.rating} size={14} />
-                      {e.consumed_at && (
-                        <span className="text-xs text-muted">
-                          {formatDate(e.consumed_at)}
-                        </span>
-                      )}
-                    </div>
-                    {e.review && (
-                      <p className="mt-1 line-clamp-2 text-sm text-slate-300">
-                        {e.review_hidden && <span className="mr-1 text-xs text-red-300">[oculta pela moderação]</span>}
-                        {e.review}
-                      </p>
-                    )}
+                <MediaCard key={e.id} media={e.media}>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <StarsDisplay value={e.rating} size={13} />
+                    {e.consumed_at && <span className="text-xs text-muted">{formatDate(e.consumed_at)}</span>}
                   </div>
-                  <div className="flex shrink-0 gap-2">
-                    <button className="btn-ghost px-3 py-1 text-xs" onClick={() => setEditing(e)}>
+                  {e.review && (
+                    <p className="mt-1 line-clamp-2 text-xs text-slate-300" title={e.review}>
+                      {e.review_hidden && <span className="mr-1 text-red-300">[oculta pela moderação]</span>}
+                      {e.review}
+                    </p>
+                  )}
+                  <div className="mt-auto grid grid-cols-2 gap-1 pt-2">
+                    <button className="btn-ghost px-1 py-1 text-[11px]" onClick={() => setEditing(e)}>
                       Editar
                     </button>
                     <button
-                      className="btn-danger px-3 py-1 text-xs"
+                      className="btn-danger px-1 py-1 text-[11px]"
                       onClick={async () => {
                         if (confirm(`Remover "${e.media.title}" do diário?`)) {
                           await api.deleteDiary(e.id);
@@ -163,7 +151,7 @@ export default function DiaryPage() {
                       Remover
                     </button>
                   </div>
-                </div>
+                </MediaCard>
               ))}
             </div>
           </section>
