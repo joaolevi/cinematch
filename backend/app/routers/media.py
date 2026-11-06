@@ -1,6 +1,7 @@
 """Buscar Mídias, detalhe e mídias em alta."""
 
 from collections import Counter
+from datetime import date
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, or_, select
@@ -47,7 +48,8 @@ def search_media(
     if sort == "title":
         items.sort(key=lambda m: search_text(m.title))
     elif sort == "year":
-        items.sort(key=lambda m: (-(m.year or 0), -m.popularity))
+        this_year = date.today().year  # o que ainda não estreou fica no fim da lista
+        items.sort(key=lambda m: ((m.year or 0) > this_year, -(m.year or 0), -m.popularity))
     elif q:
         # títulos que começam com o termo vêm primeiro
         items.sort(key=lambda m: (not search_text(m.title).startswith(needle), -m.popularity))

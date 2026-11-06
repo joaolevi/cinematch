@@ -18,7 +18,7 @@ router = APIRouter(prefix="/recommendations", tags=["recomendações"])
 def feed(
     type: MediaType | None = None,
     limit: int = Query(default=20, ge=1, le=50),
-    exclude: list[int] = Query(default=[], description="Títulos que já estão na tela, para trazer os próximos"),
+    exclude: list[int] = Query(default=[], description="Títulos que já foram mostrados, para trazer outros"),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):

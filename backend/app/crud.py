@@ -84,7 +84,7 @@ def add_onboarding_like(db: Session, user: User, media_id: int) -> None:
         select(DiaryEntry).where(DiaryEntry.user_id == user.id, DiaryEntry.media_id == media_id)
     )
     if entry is None:
-        upsert_diary(db, user, media_id, rating=4.5, from_onboarding=True)
+        upsert_diary(db, user, media_id, from_onboarding=True)
 
 
 def undo_dismiss(db: Session, user: User, media_id: int) -> None:

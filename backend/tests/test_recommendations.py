@@ -183,6 +183,27 @@ def test_undo_dismiss_brings_title_back(client, admin_headers, user_headers):
     assert client.get("/admin/metrics", headers=admin_headers).json()["overall"]["dismiss"] == 0
 
 
+def test_onboarding_title_has_no_rating_but_counts_as_liked(client, user_headers, db):
+    mid = media_id_by_title(client, user_headers, "Matrix")
+    client.put(
+        "/me/preferences",
+        json={"genres": [], "decades": [], "creators": [], "liked_media_ids": [mid]},
+        headers=user_headers,
+    )
+
+    entry = client.get("/diary", headers=user_headers).json()[0]
+    assert entry["from_onboarding"] and entry["rating"] is None
+    detail = client.get(f"/media/{mid}", headers=user_headers).json()
+    assert detail["ratings_count"] == 0  # não entra na média do título
+
+    user_id = client.get("/me", headers=user_headers).json()["id"]
+    assert recommender.user_signals(db, user_id)[mid] == recommender.W_ONBOARDING_LIKE
+
+    # se a pessoa der uma nota depois, vale a nota
+    client.patch(f"/diary/{entry['id']}", json={"rating": 1}, headers=user_headers)
+    assert recommender.user_signals(db, user_id)[mid] < 0
+
+
 def test_feed_brings_next_titles_without_repeating(client, user_headers, db):
     def feed(exclude):
         r = client.get("/recommendations", params={"limit": 5, "exclude": exclude}, headers=user_headers)

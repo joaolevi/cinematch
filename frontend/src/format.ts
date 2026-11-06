@@ -3,6 +3,8 @@ export const formatRating = (value: number) =>
 
 export const formatDate = (isoDate: string) => new Date(`${isoDate}T12:00:00`).toLocaleDateString("pt-BR");
 
+export const isUpcoming = (year: number | null) => year != null && year > new Date().getFullYear();
+
 export const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
 const GENRE_COLORS = ["#5ff5e8", "#b69cff", "#ff8a7a", "#ffc857", "#7cc7ff", "#ff9ed8", "#a8e66b"];

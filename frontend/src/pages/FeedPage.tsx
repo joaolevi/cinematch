@@ -29,6 +29,7 @@ export default function FeedPage() {
   const bottom = useRef<HTMLDivElement>(null);
   const fetching = useRef(false);
   const latestLoad = useRef(0); // respostas de um filtro antigo são ignoradas
+  const alreadyShown = useRef(new Set<number>()); // tudo o que apareceu desde o último recomeço
 
   const load = useCallback(async () => {
     const thisLoad = ++latestLoad.current;
@@ -38,7 +39,10 @@ export default function FeedPage() {
     setMoreFailed(false);
     try {
       const first = await api.feed(type || undefined, PAGE);
-      if (thisLoad === latestLoad.current) setFeed(first);
+      if (thisLoad === latestLoad.current) {
+        alreadyShown.current = new Set(first.items.map((i) => i.media.id));
+        setFeed(first);
+      }
     } catch (e) {
       if (thisLoad === latestLoad.current) setError((e as Error).message);
     } finally {
@@ -53,14 +57,14 @@ export default function FeedPage() {
   const loadMore = useCallback(async () => {
     if (!feed || fetching.current) return;
     const thisLoad = latestLoad.current;
-    const onScreen = feed.items.map((i) => i.media.id);
     fetching.current = true;
     setLoadingMore(true);
     setMoreFailed(false);
     try {
-      const next = await api.feed(type || undefined, PAGE, onScreen);
+      const next = await api.feed(type || undefined, PAGE, [...alreadyShown.current]);
       if (thisLoad !== latestLoad.current) return;
-      const fresh = next.items.filter((i) => !onScreen.includes(i.media.id));
+      const fresh = next.items.filter((i) => !alreadyShown.current.has(i.media.id));
+      fresh.forEach((i) => alreadyShown.current.add(i.media.id));
       if (fresh.length === 0) setHasMore(false);
       else setFeed((f) => (f ? { ...f, items: [...f.items, ...fresh] } : f));
     } catch {
@@ -70,6 +74,29 @@ export default function FeedPage() {
       setLoadingMore(false);
     }
   }, [feed, type]);
+
+  async function swap() {
+    const thisLoad = ++latestLoad.current;
+    setLoading(true);
+    setError(null);
+    setMoreFailed(false);
+    try {
+      const next = await api.feed(type || undefined, PAGE, [...alreadyShown.current]);
+      if (thisLoad !== latestLoad.current) return;
+      if (next.items.length === 0) {
+        await load(); // acabaram os títulos novos: recomeça do início
+        return;
+      }
+      next.items.forEach((i) => alreadyShown.current.add(i.media.id));
+      setFeed(next);
+      setHasMore(true);
+      window.scrollTo(0, 0);
+    } catch (e) {
+      if (thisLoad === latestLoad.current) setError((e as Error).message);
+    } finally {
+      if (thisLoad === latestLoad.current) setLoading(false);
+    }
+  }
 
   useEffect(() => {
     const target = bottom.current;
@@ -104,7 +131,7 @@ export default function FeedPage() {
           <h1 className="text-3xl font-bold">Para você, {user?.name.split(" ")[0]}</h1>
           {feed && <p className="mt-1 text-sm text-muted">{STRATEGY_LABEL[feed.strategy]}</p>}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {(["", "movie", "series"] as const).map((t) => (
             <button
               key={t}
@@ -114,8 +141,8 @@ export default function FeedPage() {
               {t === "" ? "Tudo" : t === "movie" ? "Filmes" : "Séries"}
             </button>
           ))}
-          <button className="btn-ghost px-3 py-1.5" onClick={load} title="Gerar novamente">
-            ↻
+          <button className="btn-ghost px-3 py-1.5" disabled={loading} onClick={swap}>
+            ↻ Trocar sugestões
           </button>
         </div>
       </div>
@@ -164,7 +191,7 @@ export default function FeedPage() {
         </div>
       )}
       {feed && !hasMore && !loading && (
-        <p className="mt-8 text-center text-muted">Você viu tudo por aqui! Clique em ↻ para receber novas sugestões.</p>
+        <p className="mt-8 text-center text-muted">Você viu tudo por aqui! Clique em Trocar sugestões para recomeçar.</p>
       )}
 
       {seenTarget && (
