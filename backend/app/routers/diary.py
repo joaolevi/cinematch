@@ -55,7 +55,6 @@ def update_entry(
         entry.rating = fields["rating"]
     if "review" in fields:
         entry.review = (fields["review"] or "").strip() or None
-        entry.review_hidden = False
     if "consumed_at" in fields:
         entry.consumed_at = fields["consumed_at"]
     db.commit()

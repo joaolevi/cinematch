@@ -78,3 +78,19 @@ def test_acceptance_ignores_titles_not_shown(client, admin_headers, user_headers
     overall = client.get("/admin/metrics", headers=admin_headers).json()["overall"]
     assert overall["want"] == 0
     assert overall["acceptance_rate"] == 0.0
+
+
+def test_edit_keeps_moderated_review_hidden(client, admin_headers, user_headers):
+    mid = media_id_by_title(client, user_headers, "Matrix")
+    entry = client.post(
+        "/diary", json={"media_id": mid, "review": "texto ofensivo"}, headers=user_headers
+    ).json()
+    client.patch(f"/admin/reviews/{entry['id']}", json={"hidden": True}, headers=admin_headers)
+
+    r = client.patch(f"/diary/{entry['id']}", json={"review": "ofensivo de novo"}, headers=user_headers)
+    assert r.json()["review_hidden"] is True
+    assert client.get(f"/media/{mid}", headers=user_headers).json()["reviews"] == []
+
+    client.patch(f"/admin/reviews/{entry['id']}", json={"hidden": False}, headers=admin_headers)
+    reviews = client.get(f"/media/{mid}", headers=user_headers).json()["reviews"]
+    assert reviews[0]["review"] == "ofensivo de novo"
