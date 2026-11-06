@@ -1,7 +1,7 @@
 """Schemas Pydantic de entrada e saída da API."""
 
 from datetime import date, datetime
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -50,7 +50,7 @@ class TokenOut(BaseModel):
 
 # ---------- Preferências ----------
 class PreferencesIn(BaseModel):
-    genres: list[str] = []
+    genres: list[Annotated[str, Field(max_length=60)]] = []
     liked_media_ids: list[int] = []
 
 
@@ -80,7 +80,7 @@ class MediaIn(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     year: int | None = Field(default=None, ge=1880, le=2100)
     overview: str = ""
-    poster_url: str | None = None
+    poster_url: str | None = Field(default=None, max_length=500)
     genres: list[str] = []
     tags: list[str] = []
     creators: list[str] = []
@@ -92,7 +92,7 @@ class MediaUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     year: int | None = Field(default=None, ge=1880, le=2100)
     overview: str | None = None
-    poster_url: str | None = None
+    poster_url: str | None = Field(default=None, max_length=500)
     genres: list[str] | None = None
     tags: list[str] | None = None
     creators: list[str] | None = None

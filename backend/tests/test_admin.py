@@ -94,3 +94,8 @@ def test_edit_keeps_moderated_review_hidden(client, admin_headers, user_headers)
     client.patch(f"/admin/reviews/{entry['id']}", json={"hidden": False}, headers=admin_headers)
     reviews = client.get(f"/media/{mid}", headers=user_headers).json()["reviews"]
     assert reviews[0]["review"] == "ofensivo de novo"
+
+
+def test_poster_url_above_limit_is_rejected(client, admin_headers):
+    payload = {"type": "movie", "title": "Filme", "poster_url": "http://a/" + "x" * 500}
+    assert client.post("/admin/media", json=payload, headers=admin_headers).status_code == 422

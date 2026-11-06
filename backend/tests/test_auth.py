@@ -47,3 +47,9 @@ def test_password_limit_is_72_bytes(client):
     assert client.post("/auth/register", json={**payload, "password": "a" * 73}).status_code == 422
     assert client.post("/auth/register", json={**payload, "password": "é" * 37}).status_code == 422
     assert client.post("/auth/register", json={**payload, "password": "a" * 72}).status_code == 201
+
+
+def test_genre_above_limit_is_rejected(client):
+    headers = register(client, email="genero@teste.com")
+    r = client.put("/me/preferences", json={"genres": ["x" * 61]}, headers=headers)
+    assert r.status_code == 422
