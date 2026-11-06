@@ -9,10 +9,10 @@ import unicodedata
 from pathlib import Path
 from typing import Protocol, TypedDict
 
-from sqlalchemy import select
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
-from ..models import Media
+from ..models import DiaryEntry, Dismissed, ListItem, Media, RecEvent
 
 
 class ExternalTitle(TypedDict, total=False):
@@ -25,6 +25,7 @@ class ExternalTitle(TypedDict, total=False):
     genres: list[str]
     tags: list[str]
     creators: list[str]
+    actors: list[str]
     popularity: float
 
 
@@ -49,7 +50,7 @@ class MockCatalogProvider:
 # Origem com dados mais confiáveis "promove" um título igual de origem inferior
 SOURCE_PRIORITY = {"manual": 0, "mock": 1, "tmdb": 2}
 
-_FIELDS = ("type", "title", "year", "overview", "poster_url", "genres", "tags", "creators", "popularity")
+_FIELDS = ("type", "title", "year", "overview", "poster_url", "genres", "tags", "creators", "actors", "popularity")
 
 
 def search_text(text: str) -> str:
@@ -63,6 +64,21 @@ def title_key(media_type: str, title: str, year: int | None) -> tuple[str, str, 
     norm = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode().lower()
     norm = "".join(ch for ch in norm if ch.isalnum())
     return (media_type, norm, year)
+
+
+def merge_media(db: Session, duplicate: Media, keeper_id: int) -> None:
+    """Passa o histórico de um título duplicado para o que fica e apaga o duplicado."""
+    owned_by = ((DiaryEntry, DiaryEntry.user_id), (ListItem, ListItem.list_id), (Dismissed, Dismissed.user_id))
+    for model, owner in owned_by:
+        already_there = select(owner).where(model.media_id == keeper_id)
+        db.execute(
+            update(model)
+            .where(model.media_id == duplicate.id, owner.not_in(already_there))
+            .values(media_id=keeper_id)
+        )
+        db.execute(delete(model).where(model.media_id == duplicate.id))
+    db.execute(update(RecEvent).where(RecEvent.media_id == duplicate.id).values(media_id=keeper_id))
+    db.delete(duplicate)
 
 
 def sync_catalog(db: Session, provider: CatalogProvider, source: str = "mock") -> dict:

@@ -82,6 +82,7 @@ class Media(Base):
     genres: Mapped[list[str]] = mapped_column(JSON, default=list)
     tags: Mapped[list[str]] = mapped_column(JSON, default=list)
     creators: Mapped[list[str]] = mapped_column(JSON, default=list)
+    actors: Mapped[list[str]] = mapped_column(JSON, default=list)
     popularity: Mapped[float] = mapped_column(Float, default=0.0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 

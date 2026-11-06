@@ -1,6 +1,7 @@
 from sqlalchemy import event
 
 from app.db import engine
+from app.services.catalog import search_text
 
 from .conftest import media_id_by_title
 
@@ -26,6 +27,7 @@ def test_register_consumption_with_rating(client, user_headers):
     assert detail["my_status"]["diary_entry_id"] == entry["id"]
     assert detail["ratings_count"] == 1
     assert detail["reviews"][0]["review"] == "Genial"
+    assert detail["actors"] == []  # o catálogo mock não tem elenco
 
 
 def test_rating_is_optional_and_validated(client, user_headers):
@@ -126,3 +128,33 @@ def test_facets_follow_chosen_genres(client):
     everything = client.get("/media/facets", params={"limit": 50}).json()
     assert set(facets["decades"]) <= set(everything["decades"])
     assert set(facets["creators"]) <= set(everything["creators"])
+
+
+def test_trending_is_public_and_respects_filters(client):
+    series = client.get("/media/trending", params={"type": "series", "limit": 3}).json()
+    assert len(series) == 3
+    assert all(m["type"] == "series" for m in series)
+
+
+def test_search_filters_by_genre_and_sorts(client, user_headers):
+    def search(**params):
+        return client.get("/media", params={"limit": 100, **params}, headers=user_headers).json()["items"]
+
+    assert all("Terror" in m["genres"] for m in search(genre="Terror"))
+
+    popular = [m["popularity"] for m in search()]
+    assert popular == sorted(popular, reverse=True)
+    years = [m["year"] for m in search(sort="year")]
+    assert years == sorted(years, reverse=True)
+    titles = [search_text(m["title"]) for m in search(sort="title")]
+    assert titles == sorted(titles)
+
+    # a ordem escolhida vale também para quem digitou um termo
+    years = [m["year"] for m in search(q="a", sort="year")]
+    assert len(years) > 1 and years == sorted(years, reverse=True)
+
+
+def test_genres_are_public_and_sorted(client):
+    genres = client.get("/media/genres").json()
+    assert "Terror" in genres
+    assert genres == sorted(genres)

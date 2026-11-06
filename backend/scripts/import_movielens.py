@@ -31,7 +31,9 @@ USERS_PER_CHUNK = 4096
 def catalog_movies(db: Session) -> dict[int, int]:
     """Filmes do catálogo que vieram do TMDB: ID do TMDB -> ID da mídia."""
     rows = db.execute(
-        select(Media.id, Media.external_id).where(Media.source == "tmdb", Media.type == "movie")
+        select(Media.id, Media.external_id).where(
+            Media.source == "tmdb", Media.type == "movie", Media.external_id.like("movie-%")
+        )
     )
     return {int(external_id.removeprefix("movie-")): media_id for media_id, external_id in rows}
 

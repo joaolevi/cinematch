@@ -1,6 +1,6 @@
 """Ver Recomendações, Descartar Recomendação e feedback do feed (Quero ver / Já vi / Não me interesso)."""
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -18,10 +18,11 @@ router = APIRouter(prefix="/recommendations", tags=["recomendações"])
 def feed(
     type: MediaType | None = None,
     limit: int = Query(default=20, ge=1, le=50),
+    exclude: list[int] = Query(default=[], description="Títulos que já estão na tela, para trazer os próximos"),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    strategy, recs = recommend(db, user, type, limit)
+    strategy, recs = recommend(db, user, type, limit, skip=exclude)
 
     # registra impressões ("shown") para a taxa de aceitação — uma por título por usuário
     already_shown = set(
@@ -68,9 +69,20 @@ def feedback(
     if data.action == "want":
         crud.add_to_list(db, crud.get_or_create_watchlist(db, user), media_id)
     elif data.action == "seen":
-        crud.upsert_diary(db, user, media_id, rating=data.rating, review=data.review)
+        crud.upsert_diary(
+            db, user, media_id, rating=data.rating, review=data.review, consumed_at=data.consumed_at
+        )
     else:
         crud.dismiss(db, user, media_id)
     db.add(RecEvent(user_id=user.id, media_id=media_id, action=data.action, variant=user.ab_group))
     db.commit()
     return {"ok": True, "action": data.action}
+
+
+@router.delete("/{media_id}/feedback", status_code=204)
+def undo_dismiss(media_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Desfaz o "Não me interesso"."""
+    crud.get_media_or_404(db, media_id)
+    crud.undo_dismiss(db, user, media_id)
+    db.commit()
+    return Response(status_code=204)

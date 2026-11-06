@@ -44,12 +44,13 @@ def search_media(
             or any(needle in search_text(c) for c in m.creators or [])
             or any(needle in search_text(t) for t in m.tags or [])
         ]
+    if sort == "title":
+        items.sort(key=lambda m: search_text(m.title))
+    elif sort == "year":
+        items.sort(key=lambda m: (-(m.year or 0), -m.popularity))
+    elif q:
         # títulos que começam com o termo vêm primeiro
         items.sort(key=lambda m: (not search_text(m.title).startswith(needle), -m.popularity))
-    elif sort == "title":
-        items.sort(key=lambda m: m.title.lower())
-    elif sort == "year":
-        items.sort(key=lambda m: -(m.year or 0))
     else:
         items.sort(key=lambda m: -m.popularity)
     return MediaPage(items=items[offset : offset + limit], total=len(items))
@@ -139,12 +140,14 @@ def media_detail(
     status = MyStatus(
         diary_entry_id=mine.id if mine else None,
         rating=mine.rating if mine else None,
+        consumed_at=mine.consumed_at if mine else None,
         in_watchlist=any(is_wl for _, is_wl in lists),
         dismissed=dismissed is not None,
         list_ids=[lid for lid, is_wl in lists if not is_wl],
     )
     return MediaDetailOut(
         **MediaOut.model_validate(media).model_dump(),
+        actors=media.actors or [],
         avg_rating=round(float(avg), 2) if avg is not None else None,
         ratings_count=int(count or 0),
         reviews=reviews,

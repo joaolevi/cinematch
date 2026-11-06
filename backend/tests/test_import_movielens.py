@@ -44,3 +44,12 @@ def test_import_can_run_again_without_duplicating(db, tmp_path):
     import_movielens(db, tmp_path)
 
     assert db.scalar(select(func.count()).select_from(ItemNeighbor)) == 2
+
+
+def test_import_ignores_titles_with_other_external_ids(db, tmp_path):
+    write_dataset(tmp_path)
+    add_movies(db)
+    db.add(Media(type="movie", source="tmdb", external_id="tv-500", title="Era uma série"))
+    db.commit()
+
+    assert import_movielens(db, tmp_path)["titles"] == 3

@@ -1,5 +1,7 @@
+from sqlalchemy import select
+
 from app.config import Settings
-from app.models import ItemNeighbor, RecEvent
+from app.models import ItemNeighbor, Media, RecEvent
 from app.seed import create_synthetic_users
 from app.services import recommender
 
@@ -165,3 +167,90 @@ def test_series_stay_in_feed_with_external_neighbors(client, db, monkeypatch):
 
     feed = client.get("/recommendations", params={"type": "series", "limit": 5}, headers=headers).json()
     assert feed["items"] and all(i["media"]["type"] == "series" for i in feed["items"])
+
+
+def test_undo_dismiss_brings_title_back(client, admin_headers, user_headers):
+    items = client.get("/recommendations", params={"limit": 5}, headers=user_headers).json()["items"]
+    mid = items[0]["media"]["id"]
+    client.post(f"/recommendations/{mid}/feedback", json={"action": "dismiss"}, headers=user_headers)
+    assert client.get(f"/media/{mid}", headers=user_headers).json()["my_status"]["dismissed"] is True
+
+    assert client.delete(f"/recommendations/{mid}/feedback", headers=user_headers).status_code == 204
+
+    assert client.get(f"/media/{mid}", headers=user_headers).json()["my_status"]["dismissed"] is False
+    feed = client.get("/recommendations", params={"limit": 5}, headers=user_headers).json()
+    assert mid in [i["media"]["id"] for i in feed["items"]]
+    assert client.get("/admin/metrics", headers=admin_headers).json()["overall"]["dismiss"] == 0
+
+
+def test_feed_brings_next_titles_without_repeating(client, user_headers, db):
+    def feed(exclude):
+        r = client.get("/recommendations", params={"limit": 5, "exclude": exclude}, headers=user_headers)
+        return [i["media"]["id"] for i in r.json()["items"]]
+
+    # sem histórico (em alta)
+    first = feed([])
+    second = feed(first)
+    assert len(second) == 5 and not set(first) & set(second)
+
+    # com histórico (personalizado)
+    client.post(f"/recommendations/{first[0]}/feedback", json={"action": "seen", "rating": 5}, headers=user_headers)
+    first = feed([])
+    second = feed(first)
+    assert len(second) == 5 and not set(first) & set(second)
+    assert first[0] not in second
+
+    # o que foi carregado depois também conta como exibido
+    shown = db.scalars(select(RecEvent.media_id).where(RecEvent.action == "shown")).all()
+    assert set(first + second) <= set(shown)
+
+
+def test_feed_ends_when_nothing_is_left(client, user_headers, db):
+    every_title = list(db.scalars(select(Media.id)))
+    r = client.get("/recommendations", params={"exclude": every_title}, headers=user_headers)
+    assert r.status_code == 200 and r.json()["items"] == []
+
+
+def test_seen_feedback_keeps_chosen_date(client, user_headers):
+    mid = client.get("/recommendations", params={"limit": 1}, headers=user_headers).json()["items"][0]["media"]["id"]
+    client.post(
+        f"/recommendations/{mid}/feedback",
+        json={"action": "seen", "rating": 4, "consumed_at": "2026-01-15"},
+        headers=user_headers,
+    )
+    assert client.get("/diary", headers=user_headers).json()[0]["consumed_at"] == "2026-01-15"
+    assert client.get(f"/media/{mid}", headers=user_headers).json()["my_status"]["consumed_at"] == "2026-01-15"
+
+
+def test_seen_feedback_without_date_stays_without_date(client, user_headers):
+    mid = client.get("/recommendations", params={"limit": 1}, headers=user_headers).json()["items"][0]["media"]["id"]
+    client.post(f"/recommendations/{mid}/feedback", json={"action": "seen", "rating": 4}, headers=user_headers)
+    assert client.get("/diary", headers=user_headers).json()[0]["consumed_at"] is None
+
+
+def test_preferences_without_history_do_not_use_collaborative(client, monkeypatch):
+    external_neighbors_on(monkeypatch)
+    headers = group_a_user(client)
+    client.put("/me/preferences", json={"genres": ["Terror"]}, headers=headers)
+
+    feed = client.get("/recommendations", params={"limit": 10}, headers=headers).json()
+    assert feed["strategy"] == "content"
+    assert any(i["media"]["type"] == "movie" for i in feed["items"])
+
+
+def test_reasons_do_not_repeat_the_same_title(client, db, monkeypatch):
+    external_neighbors_on(monkeypatch)
+    headers = group_a_user(client)
+    first = media_id_by_title(client, headers, "Toy Story")
+    second = media_id_by_title(client, headers, "Matrix")
+    neighbors = [media_id_by_title(client, headers, t) for t in ("Titanic", "Parasita", "Interestelar", "Corra!")]
+    for neighbor in neighbors:
+        add_neighbor(db, first, neighbor, score=0.9)
+        add_neighbor(db, second, neighbor, score=0.8)
+    for mid in (first, second):
+        client.post("/diary", json={"media_id": mid, "rating": 5}, headers=headers)
+
+    feed = client.get("/recommendations", params={"limit": 4}, headers=headers).json()
+    reasons = {i["reason"] for i in feed["items"]}
+    assert "Quem curtiu Toy Story também curtiu" in reasons
+    assert "Quem curtiu Matrix também curtiu" in reasons

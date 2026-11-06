@@ -5,11 +5,17 @@ from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..models import DiaryEntry, ItemNeighbor, Media, RecEvent, User
+from ..seed import DEMO_EMAIL
 
 
 def _pairs(db: Session, action: str, variant: str | None) -> set[tuple[int, int]]:
-    """Pares (usuário, título) com o evento, contando cada par uma única vez."""
-    q = select(RecEvent.user_id, RecEvent.media_id).where(RecEvent.action == action).distinct()
+    """Pares (usuário, título) com o evento, contando cada par uma única vez. Admins ficam de fora."""
+    q = (
+        select(RecEvent.user_id, RecEvent.media_id)
+        .join(User, User.id == RecEvent.user_id)
+        .where(RecEvent.action == action, User.role == "user")
+        .distinct()
+    )
     if variant:
         q = q.where(RecEvent.variant == variant)
     return {(user_id, media_id) for user_id, media_id in db.execute(q)}
@@ -22,13 +28,9 @@ def _variant_metrics(db: Session, variant: str | None) -> dict:
     seen = _pairs(db, "seen", variant) & shown
     dismiss = _pairs(db, "dismiss", variant) & shown
     accepted = want | seen
-
-    users_q = select(func.count()).select_from(User)
-    if variant:
-        users_q = users_q.where(User.ab_group == variant)
     return {
         "variant": variant or "total",
-        "users": int(db.scalar(users_q) or 0),
+        "users": len({user_id for user_id, _ in shown}),
         "shown": len(shown),
         "want": len(want),
         "seen": len(seen),
@@ -58,12 +60,20 @@ def acceptance_metrics(db: Session) -> dict:
         "by_variant": [_variant_metrics(db, "A"), _variant_metrics(db, "B")],
         "catalog_size": int(db.scalar(select(func.count()).select_from(Media)) or 0),
         "users": int(db.scalar(select(func.count()).select_from(User)) or 0),
-        "diary_entries": int(db.scalar(select(func.count()).select_from(DiaryEntry)) or 0),
+        "diary_entries": int(
+            db.scalar(
+                select(func.count())
+                .select_from(DiaryEntry)
+                .join(User, User.id == DiaryEntry.user_id)
+                .where(User.is_synthetic.is_(False))
+            )
+            or 0
+        ),
         "real_users": int(
             db.scalar(
                 select(func.count())
                 .select_from(User)
-                .where(User.is_synthetic.is_(False), User.role == "user")
+                .where(User.is_synthetic.is_(False), User.role == "user", User.email != DEMO_EMAIL)
             )
             or 0
         ),

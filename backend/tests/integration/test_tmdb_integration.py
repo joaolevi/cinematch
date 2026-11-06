@@ -57,6 +57,7 @@ def test_movie_details_in_portuguese(tmdb):
     assert dk["title"] == "Batman: O Cavaleiro das Trevas"
     assert dk["year"] == 2008
     assert "Christopher Nolan" in dk["creators"]
+    assert "Christian Bale" in dk["actors"]
     assert {"Ação", "Crime"} <= set(dk["genres"])
     assert dk["tags"] and dk["overview"]
 
@@ -65,6 +66,7 @@ def test_series_details(tmdb):
     bb = tmdb.get_title("series", 1396)
     assert bb["title"] == "Breaking Bad" and bb["year"] == 2008
     assert bb["creators"] == ["Vince Gilligan"]
+    assert "Bryan Cranston" in bb["actors"]
 
 
 def test_search_finds_brazilian_movie(tmdb):

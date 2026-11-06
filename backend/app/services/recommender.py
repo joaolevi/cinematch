@@ -13,6 +13,7 @@ Variante A/B: grupo A = híbrido (conteúdo + colaborativo); grupo B = só conte
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 import numpy as np
@@ -154,8 +155,9 @@ def recommend(
     user: User,
     media_type: str | None = None,
     limit: int = 20,
+    skip: Iterable[int] = (),
 ) -> tuple[str, list[Recommendation]]:
-    """Gera o feed do usuário. Retorna (estratégia, recomendações)."""
+    """Gera o feed do usuário, sem os títulos de `skip`. Retorna (estratégia, recomendações)."""
     signals = user_signals(db, user.id)
     pref_genres = list(
         db.scalars(select(UserPreference.genre).where(UserPreference.user_id == user.id))
@@ -168,7 +170,7 @@ def recommend(
     pref_tokens = [_tok("g", g) for g in pref_genres]
     pref_tokens += [f"d:{d}" for d in pref_decades]
     pref_tokens += [_tok("c", c) for c in pref_creators]
-    exclude = excluded_ids(db, user.id)
+    exclude = excluded_ids(db, user.id) | set(skip)
 
     # Nó de decisão do DA: possui histórico ou preferências?
     if not signals and not pref_tokens:
@@ -198,7 +200,7 @@ def recommend(
     content = np.asarray((X @ profile.T).todense()).ravel() / norm  # cosseno em [-1, 1]
 
     # --- Colaborativo item-item: "quem curtiu X também curtiu Y"
-    use_collab = user.ab_group == "A"
+    use_collab = user.ab_group == "A" and bool(sig_rows)
     collab = np.zeros(len(catalog))
     item_sim = None
     if use_collab and sig_rows:
@@ -256,6 +258,7 @@ def recommend(
         picked.append((best, float(best_score), int(cand[best])))
 
     recs: list[Recommendation] = []
+    reason_uses: Counter[int] = Counter()  # evita repetir o mesmo título em todos os motivos
     for pos, score, ci in picked:
         reason = _reason(
             ci,
@@ -269,6 +272,7 @@ def recommend(
             item_sim if use_collab else None,
             content_share=alpha[pos] * c_norm[pos],
             collab_share=(1 - alpha[pos]) * cf_norm[pos],
+            reason_uses=reason_uses,
         )
         recs.append(Recommendation(catalog[ci], score, reason, strategy))
 
@@ -335,23 +339,27 @@ def _reason(
     item_sim: np.ndarray | sparse.csr_matrix | None,
     content_share: float,
     collab_share: float,
+    reason_uses: Counter[int],
 ) -> str:
     """Explica a sugestão a partir do item do histórico que mais contribuiu."""
     positives = [(r, w) for r, w in sig_rows if w > 0]
 
     if item_sim is not None and collab_share > content_share and positives:
-        r, _ = max(positives, key=lambda rw: rw[1] * item_sim[rw[0], ci])
+        r, _ = max(positives, key=lambda rw: rw[1] * item_sim[rw[0], ci] / (1 + reason_uses[rw[0]]))
         if item_sim[r, ci] > 0:
+            reason_uses[r] += 1
             return f"Quem curtiu {catalog[r].title} também curtiu"
 
-    best_item, best_val = None, 0.0
+    best_item, best_val, best_rank = None, 0.0, 0.0
     for r, w in positives:
         val = w * float(X[r].multiply(X[ci]).sum())
-        if val > best_val:
-            best_item, best_val = r, val
+        rank = val / (1 + reason_uses[r])
+        if rank > best_rank:
+            best_item, best_val, best_rank = r, val, rank
     pref_val = float(pref_vec.multiply(X[ci]).sum()) * W_PREFERENCE if pref_vec is not None else 0.0
 
     if best_item is not None and best_val >= pref_val:
+        reason_uses[best_item] += 1
         return f"Porque você curtiu {catalog[best_item].title}"
     media = catalog[ci]
     creators = [c for c in pref_creators if c in (media.creators or [])]

@@ -6,7 +6,7 @@ import httpx
 import pytest
 
 from app.config import settings
-from app.models import Media
+from app.models import DiaryEntry, Media, RecEvent, User
 from app.routers import admin as admin_router
 from app.services.catalog import MockCatalogProvider, sync_catalog, title_key
 from app.services.tmdb import (
@@ -42,12 +42,17 @@ def fake_tmdb(request: httpx.Request) -> httpx.Response:
         "/tv/popular": {"results": [SERIES]},
         "/movie/155": {**MOVIE, "genres": [{"id": 28}, {"id": 80}, {"id": 53}],
                        "credits": {"crew": [{"job": "Director", "name": "Christopher Nolan"},
-                                            {"job": "Writer", "name": "Jonathan Nolan"}]},
+                                            {"job": "Writer", "name": "Jonathan Nolan"}],
+                                   "cast": [{"name": f"Ator {i}"} for i in range(1, 12)]},
                        "keywords": {"keywords": [{"name": "Joker"}, {"name": "Superhero"}]}},
         "/movie/999001": {**NEW_MOVIE, "genres": [{"id": 878}],
                           "credits": {"crew": []}, "keywords": {"keywords": []}},
         "/tv/1396": {**SERIES, "genres": [{"id": 18}, {"id": 80}],
-                     "created_by": [{"name": "Vince Gilligan"}], "keywords": {"results": [{"name": "drug"}]}},
+                     "created_by": [{"name": "Vince Gilligan"}], "keywords": {"results": [{"name": "drug"}]},
+                     "aggregate_credits": {"cast": [{"name": "Bryan Cranston"}, {"name": "Aaron Paul"}]}},
+        "/movie/603": {"id": 603, "title": "Matrix", "release_date": "1999-03-31", "overview": "Neo descobre...",
+                       "poster_path": "/matrix.jpg", "genres": [{"id": 28}], "popularity": 90, "vote_average": 8.2,
+                       "credits": {"crew": [], "cast": [{"name": "Keanu Reeves"}]}, "keywords": {"keywords": []}},
         "/search/multi": {"results": [{**MOVIE, "media_type": "movie"}, {"id": 1, "media_type": "person"}]},
     }
     if path in routes:
@@ -85,10 +90,12 @@ def test_fetch_titles_normalizes_and_enriches():
     assert dk["type"] == "movie" and dk["year"] == 2008
     assert dk["genres"] == ["Ação", "Crime", "Suspense"]
     assert dk["creators"] == ["Christopher Nolan"]
+    assert dk["actors"] == [f"Ator {i}" for i in range(1, 9)]  # só o elenco principal
     assert dk["tags"] == ["joker", "superhero"]
     assert dk["poster_url"].endswith("/dk.jpg")
     bb = titles["tv-1396"]
     assert bb["type"] == "series" and bb["creators"] == ["Vince Gilligan"]
+    assert bb["actors"] == ["Bryan Cranston", "Aaron Paul"]
     assert titles["movie-999001"]["poster_url"] is None
 
 
@@ -178,8 +185,36 @@ def test_enrich_catalog_adds_posters_keeping_tags(db):
     assert matrix.source == "tmdb" and matrix.external_id == "movie-603"
     assert matrix.poster_url.endswith("/matrix.jpg") and matrix.overview == "Neo descobre..."
     assert matrix.tags == tags_before and matrix.creators == creators_before
+    assert matrix.actors == ["Keanu Reeves"]
     # rodar de novo não refaz quem já tem pôster
     assert enrich_catalog(db, make_provider())["enriched"] == 0
+
+
+def test_enrich_merges_mock_title_already_in_tmdb_with_another_name(db):
+    mock = db.query(Media).filter(Media.title == "Matrix").one()
+    twin = Media(type="movie", title="Matrix: Outro Nome", year=1999, source="tmdb", external_id="movie-603")
+    db.add(twin)
+    moved = User(name="Moved", email="moved@t.com", password_hash="x", ab_group="A")
+    both = User(name="Both", email="both@t.com", password_hash="x", ab_group="A")
+    db.add_all([moved, both])
+    db.flush()
+    db.add_all([
+        DiaryEntry(user_id=moved.id, media_id=mock.id, rating=4),
+        DiaryEntry(user_id=both.id, media_id=mock.id, rating=1),
+        DiaryEntry(user_id=both.id, media_id=twin.id, rating=5),
+        RecEvent(user_id=moved.id, media_id=mock.id, action="shown", variant="A"),
+    ])
+    db.commit()
+    mock_id = mock.id
+
+    assert enrich_catalog(db, make_provider())["merged"] == 1
+
+    db.expire_all()
+    assert db.get(Media, mock_id) is None
+    entries = {e.user_id: e.rating for e in db.query(DiaryEntry).filter(DiaryEntry.media_id == twin.id)}
+    assert entries == {moved.id: 4, both.id: 5}  # quem tinha os dois fica com o registro do título que ficou
+    assert db.query(DiaryEntry).filter(DiaryEntry.media_id == mock_id).count() == 0
+    assert db.query(RecEvent).filter(RecEvent.media_id == twin.id).count() == 1
 
 
 def test_admin_enrich_route(client, admin_headers, fake_admin_provider):

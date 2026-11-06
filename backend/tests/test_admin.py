@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from app.models import ItemNeighbor, Media, RecEvent, User
+from app.seed import create_synthetic_users
 
 from .conftest import media_id_by_title
 
@@ -121,4 +122,29 @@ def test_metrics_explain_where_the_numbers_come_from(client, db, admin_headers, 
     assert m["movies"] + m["series"] == m["catalog_size"]
     assert m["external_neighbors_enabled"] is False
     assert m["titles_with_neighbors"] == 1
-    assert m["real_users"] == 2  # conta demo + usuário do teste
+    assert m["real_users"] == 1  # só o usuário do teste: a conta demo não conta
+
+
+def test_admin_feed_does_not_count_as_shown(client, admin_headers, user_headers):
+    client.get("/recommendations", params={"limit": 5}, headers=admin_headers)
+    client.get("/recommendations", params={"limit": 3}, headers=user_headers)
+
+    m = client.get("/admin/metrics", headers=admin_headers).json()
+    assert m["overall"]["shown"] == 3
+    assert m["overall"]["users"] == 1
+
+
+def test_synthetic_diary_stays_out_of_panel(client, db, admin_headers):
+    create_synthetic_users(db, per_persona=1)
+
+    m = client.get("/admin/metrics", headers=admin_headers).json()
+    assert m["diary_entries"] == 0
+    assert m["overall"]["users"] == 0
+    assert m["real_users"] == 0
+
+
+def test_required_fields_cannot_be_cleared(client, admin_headers, user_headers):
+    mid = media_id_by_title(client, user_headers, "Matrix")
+    r = client.patch(f"/admin/media/{mid}", json={"title": None, "genres": None}, headers=admin_headers)
+    assert r.status_code == 200
+    assert r.json()["title"] == "Matrix" and r.json()["genres"]

@@ -20,6 +20,13 @@ class RegisterIn(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6)
 
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        if len(v.strip()) < 2:
+            raise ValueError("o nome deve ter pelo menos 2 caracteres")
+        return v
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:
@@ -115,12 +122,14 @@ class ReviewOut(BaseModel):
 class MyStatus(BaseModel):
     diary_entry_id: int | None = None
     rating: float | None = None
+    consumed_at: date | None = None
     in_watchlist: bool = False
     dismissed: bool = False
     list_ids: list[int] = []
 
 
 class MediaDetailOut(MediaOut):
+    actors: list[str]
     avg_rating: float | None
     ratings_count: int
     reviews: list[ReviewOut]
@@ -220,6 +229,7 @@ class FeedbackIn(BaseModel):
     action: FeedbackAction
     rating: float | None = None
     review: str | None = Field(default=None, max_length=2000)
+    consumed_at: date | None = None
 
     @field_validator("rating")
     @classmethod
