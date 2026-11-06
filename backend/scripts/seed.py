@@ -23,6 +23,9 @@ def main() -> None:
     parser.add_argument("--tmdb", action="store_true", help="importa também os populares do TMDB")
     args = parser.parse_args()
 
+    if problems := settings.production_problems():
+        raise SystemExit(f"Valores públicos em produção: {', '.join(problems)}")
+
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     with SessionLocal() as db:

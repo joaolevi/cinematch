@@ -18,9 +18,9 @@ from .models import Media, RecEvent, User
 from .services.catalog import MockCatalogProvider, sync_catalog
 from .services.recommender import recommend
 
-ADMIN_EMAIL, ADMIN_PASSWORD = "admin@tastory.dev", "admin123"
-DEMO_EMAIL, DEMO_PASSWORD = "demo@tastory.dev", "demo123"
-SYNTHETIC_PASSWORD = "senha123"
+ADMIN_EMAIL, ADMIN_PASSWORD = "admin@tastory.dev", settings.admin_password
+DEMO_EMAIL, DEMO_PASSWORD = "demo@tastory.dev", settings.demo_password
+SYNTHETIC_PASSWORD = settings.synthetic_password
 
 PERSONAS: list[tuple[str, list[str]]] = [
     ("terror", ["Terror", "Suspense"]),

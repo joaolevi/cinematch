@@ -21,6 +21,8 @@ log = logging.getLogger("tastory")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    if problems := settings.production_problems():
+        raise RuntimeError(f"Valores públicos em produção: {', '.join(problems)}")
     Base.metadata.create_all(engine)
     if settings.auto_seed:
         with SessionLocal() as db:

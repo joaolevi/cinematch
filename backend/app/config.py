@@ -12,6 +12,12 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 REPO_DIR = BACKEND_DIR.parent
 DATA_DIR = BACKEND_DIR / "data"
 
+# Valores públicos, só para uso local: em produção `production_problems` os recusa
+DEFAULT_SECRET_KEY = "dev-secret-tastory-troque-esta-chave-em-producao"
+DEFAULT_ADMIN_PASSWORD = "admin123"
+DEFAULT_DEMO_PASSWORD = "demo123"
+DEFAULT_SYNTHETIC_PASSWORD = "senha123"
+
 
 def load_dotenv(*paths: Path) -> None:
     """Leitor mínimo de .env (CHAVE=valor por linha, # para comentários)."""
@@ -40,10 +46,14 @@ class Settings:
             "TASTORY_DATABASE_URL", f"sqlite:///{BACKEND_DIR / 'tastory.db'}"
         )
     )
-    secret_key: str = field(
-        default_factory=lambda: os.getenv(
-            "TASTORY_SECRET_KEY", "dev-secret-tastory-troque-esta-chave-em-producao"
-        )
+    environment: str = field(default_factory=lambda: os.getenv("TASTORY_ENV", "local"))
+    secret_key: str = field(default_factory=lambda: os.getenv("TASTORY_SECRET_KEY", DEFAULT_SECRET_KEY))
+    admin_password: str = field(
+        default_factory=lambda: os.getenv("TASTORY_ADMIN_PASSWORD", DEFAULT_ADMIN_PASSWORD)
+    )
+    demo_password: str = field(default_factory=lambda: os.getenv("TASTORY_DEMO_PASSWORD", DEFAULT_DEMO_PASSWORD))
+    synthetic_password: str = field(
+        default_factory=lambda: os.getenv("TASTORY_SYNTHETIC_PASSWORD", DEFAULT_SYNTHETIC_PASSWORD)
     )
     token_expire_minutes: int = field(
         default_factory=lambda: int(os.getenv("TASTORY_TOKEN_EXPIRE_MINUTES", "1440"))
@@ -63,6 +73,21 @@ class Settings:
     tmdb_language: str = field(default_factory=lambda: os.getenv("TASTORY_TMDB_LANGUAGE", "pt-BR"))
     tmdb_region: str = field(default_factory=lambda: os.getenv("TASTORY_TMDB_REGION", "BR"))
     tmdb_sync_pages: int = field(default_factory=lambda: int(os.getenv("TASTORY_TMDB_SYNC_PAGES", "2")))
+
+    def production_problems(self) -> list[str]:
+        """Lista as variáveis com valores públicos, que impedem subir em produção."""
+        if self.environment != "production":
+            return []
+        problems = []
+        if "troque" in self.secret_key or len(self.secret_key) < 32:
+            problems.append("TASTORY_SECRET_KEY")
+        if self.admin_password == DEFAULT_ADMIN_PASSWORD:
+            problems.append("TASTORY_ADMIN_PASSWORD")
+        if self.demo_password == DEFAULT_DEMO_PASSWORD:
+            problems.append("TASTORY_DEMO_PASSWORD")
+        if self.synthetic_password == DEFAULT_SYNTHETIC_PASSWORD:
+            problems.append("TASTORY_SYNTHETIC_PASSWORD")
+        return problems
 
 
 settings = Settings()
