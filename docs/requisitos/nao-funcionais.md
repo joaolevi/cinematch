@@ -2,8 +2,7 @@
 
 > [Voltar ao índice](README.md) · A forma de verificar cada requisito está no fim deste arquivo.
 
-A coluna Situação mostra o que foi verificado em 05 e 06/11/2026. **Proposto** indica um requisito que ainda
-precisa da confirmação da equipe.
+A coluna Situação mostra o que foi verificado em 05 e 06/11/2026.
 
 ## Gerais
 
@@ -16,15 +15,15 @@ precisa da confirmação da equipe.
 | RNF05 | `docs/openapi.json` reflete as rotas reais | CONTRIBUTING | Atende: as 33 rotas coincidem com a aplicação |
 | RNF06 | Testes offline verdes, e toda rota tem teste | CLAUDE.md | 52 testes offline e 13 de integração passam; sem teste: `GET /media/trending`, `GET /media/genres`, `GET /me/preferences` e `GET /health`. CI não consultado |
 | RNF07 | Compatível com Python 3.11+ | README | Rodou em 3.13.5; o CI usa 3.12 |
-| RNF08 | A interface exibe o crédito do TMDB | `docs/API.md` | Atende no `demo-front`; confirmar no front oficial |
-| RNF09 | O feed responde em até 1 s na máquina da demo | **Proposto** | Medido localmente: 27 ms com 504 títulos, no Docker |
-| RNF10 | Coletar só nome, e-mail e histórico; na homologação, aceitar e-mail fictício e avisar que os dados ficam em um servidor externo | **Proposto** | A confirmar pela equipe |
+| RNF08 | A interface exibe o crédito do TMDB | `docs/API.md` | Atende: o crédito está no rodapé da interface |
+| RNF09 | O feed responde em até 1 s na máquina da demo | Aprovado em 06/11 | Atende: 27 ms com 504 títulos, no Docker |
+| RNF10 | Coletar só nome, e-mail e histórico; na homologação, aceitar e-mail fictício e avisar que os dados ficam em um servidor externo | Aprovado em 06/11 | Aplicar no roteiro da homologação |
 
 ## Deploy
 
 | ID | Requisito | Origem | Situação |
 |---|---|---|---|
-| RNF11 | API e interface publicadas em URL pública com HTTPS | Decisão de 05/11; [#21](https://github.com/joaolevi/cinematch/issues/21) | Não iniciado: o repositório não tem arquivo de deploy |
+| RNF11 | API e interface publicadas em URL pública com HTTPS | Decisão de 05/11; [#21](https://github.com/joaolevi/cinematch/issues/21) | Não iniciado: o sistema já roda em Docker, e a publicação será no servidor do Vinicius |
 | RNF12 | Em produção não há credencial publicada: segredo JWT próprio e senhas fora do repositório | Deploy | Atende: com `TASTORY_ENV=production`, a API e o seed recusam o segredo e as senhas públicas |
 | RNF13 | Os dados sobrevivem a reinícios, com PostgreSQL | [#21](https://github.com/joaolevi/cinematch/issues/21) | Atende localmente: roda em PostgreSQL 16 no Docker, e os dados continuam depois de reiniciar |
 | RNF14 | Em produção, o painel conta só interações reais | Deploy | **Não atende por padrão:** o auto-seed grava a simulação A/B. Ver o [guia de deploy](../DEPLOY.md) |

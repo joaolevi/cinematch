@@ -21,7 +21,7 @@ O `docker-compose.yml` é só para uso local, porque as senhas dele não valem p
 `Dockerfile` e configure as variáveis abaixo na hospedagem:
 
 - **API:** `backend/Dockerfile`, que usa a porta da variável `PORT`, quando ela existir.
-- **Interface:** `demo-front/Dockerfile`, com o argumento de build `VITE_API_URL` apontando para a API publicada.
+- **Interface:** `frontend/Dockerfile`, com o argumento de build `VITE_API_URL` apontando para a API publicada.
 
 ## Branch publicada
 
@@ -54,10 +54,15 @@ de 5.800 comandos SQL, a carga não deve rodar na subida do servidor.
 
 ## Interface
 
-O `demo-front` usa `VITE_API_URL` e precisa que a hospedagem redirecione as rotas para `index.html`. O front
-oficial precisa confirmar o equivalente.
+A interface usa `VITE_API_URL` e precisa que a hospedagem redirecione as rotas para `index.html`. Não defina
+`VITE_SHOW_DEMO_ACCOUNTS` em produção: assim, os atalhos das contas de demonstração ficam escondidos.
 
-## Plano gratuito do Render, se for o escolhido
+## Servidor do Vinicius
 
-O serviço dorme após 15 minutos sem acesso e leva cerca de um minuto para acordar. O banco gratuito expira em
-30 dias.
+A publicação será no servidor do Vinicius, sem custo (decisão D12). Pontos a resolver:
+
+- **Configuração de produção:** o `docker-compose.yml` é local. O servidor precisa de uma versão com as variáveis acima, senha própria no PostgreSQL e `restart: unless-stopped`.
+- **Acesso externo com HTTPS:** a interface e a API precisam de endereços públicos. Prefira um túnel, que não exige abrir portas no roteador.
+- **Processador:** confirmar se é x86 ou ARM. As imagens podem ser construídas no próprio servidor.
+- **Cópia do banco:** fazer backup antes da homologação e da entrega.
+- **Plano B:** se o servidor cair, rodar `docker compose up --build` numa máquina local.

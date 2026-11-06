@@ -14,7 +14,7 @@
 | Bárbara | Engenheira de IA | Equipe de Dev | Recomendação |
 | Lara | Front e Design | Equipe de Dev | Frontend, Design |
 
-O Sponsor do pitch ainda não tem nome definido (ver [decisões](MVP.md#decisões)).
+O Sponsor do pitch é o Professor Rafael, professor da disciplina.
 
 ## RACI por pacote
 
@@ -42,21 +42,21 @@ Na coluna **I**, "Equipe" são as demais pessoas.
 
 Os critérios de 1.1 a 4.1 são os "Critério de conclusão" que a equipe registrou nos cartões da EAP no Trello.
 Os cartões de 4.2 e 4.3 foram criados em 06/11, e seus critérios são propostos. A coluna Situação reflete
-06/11/2026, e o estado do front oficial ainda precisa ser informado.
+06/11/2026.
 
 | Pacote | Requisitos | Critério de aceite | Situação |
 |---|---|---|---|
 | 1.1 | RF01 a RF17 | Diagramas revisados, legíveis e coerentes entre si e com a EAP | Diagramas no pitch; confirmar a revisão |
 | 1.2 | RF18 | Protótipo de alta fidelidade navegável cobrindo os principais casos de uso; estados com e sem histórico previstos | A confirmar |
 | 1.3 | RNF05 | Arquitetura e contratos documentados e revisados pela equipe antes da implementação | Contratos documentados: as 33 rotas coincidem; confirmar a revisão |
-| 2.1 | RF01 a RF03, RF18 | Usuário consegue criar conta, entrar e definir preferências; onboarding pode ser pulado sem bloquear a navegação | A confirmar |
-| 2.2 | RF06 a RF08, RF18 | Registros e listas podem ser criados e consultados; a nota é opcional e interações persistidas aparecem corretamente | A confirmar |
-| 2.3 | RF04, RF05, RF09, RF10, RF18 | Usuário encontra títulos, acessa sugestões mesmo em cold start e interage com o feed; sugestões descartadas não reaparecem no feed montado | A confirmar |
-| 2.4 | RF14 a RF17, RF18, RNF08 | Acesso protegido por perfil; administrador consegue executar ações de catálogo e moderação; usuário comum não acessa operações privilegiadas | A confirmar |
+| 2.1 | RF01 a RF03, RF18 | Usuário consegue criar conta, entrar e definir preferências; onboarding pode ser pulado sem bloquear a navegação | Fluxo testado no navegador; falta a revisão de design |
+| 2.2 | RF06 a RF08, RF18 | Registros e listas podem ser criados e consultados; a nota é opcional e interações persistidas aparecem corretamente | Fluxo testado no navegador; falta a revisão de design |
+| 2.3 | RF04, RF05, RF09, RF10, RF18 | Usuário encontra títulos, acessa sugestões mesmo em cold start e interage com o feed; sugestões descartadas não reaparecem no feed montado | Fluxo testado no navegador; falta a revisão de design |
+| 2.4 | RF14 a RF17, RF18, RNF08 | Acesso protegido por perfil; administrador consegue executar ações de catálogo e moderação; usuário comum não acessa operações privilegiadas | Fluxo testado no navegador; falta a revisão de design |
 | 3.1 | RNF13 | Esquema documentado e criado; integridade referencial e persistência dos principais fluxos validadas | Passou em SQLite e PostgreSQL; aguarda merge |
 | 3.2 | RF01 a RF10, RN01 a RN06, RN08 a RN10, RN13, RN14, RNF16, RNF17 | Endpoints testados, erros tratados, dados persistidos e rotas administrativas protegidas | Corrigido; aguarda merge |
 | 3.3 | RF15a, RF15b, RN15 | Catálogo audiovisual pesquisável e sincronizável; catálogo musical validado antes da liberação de álbuns | Funciona com o mock e o TMDB real. A parte musical está fora do MVP |
 | 3.4 | RF11 a RF13, RN07 | Serviço retorna recomendações mesmo sem histórico; exclui itens descartados ou já registrados conforme regra do produto; feedback alimenta futuras sugestões | Concluído |
-| 4.1 | RNF06, RNF07, RNF09 | Principais casos de uso executados, falhas registradas e corrigidas antes da homologação | Parcial: 52 testes offline e 13 de integração passam; faltam 4 rotas e o teste pelo front oficial; CI não consultado |
+| 4.1 | RNF06, RNF07, RNF09 | Principais casos de uso executados, falhas registradas e corrigidas antes da homologação | Parcial: 52 testes offline e 13 de integração passam; faltam 4 rotas; CI não consultado |
 | 4.2 | RF17, RN11, RN12, RNF10, RNF14 | **Proposto:** taxa entre 0% e 100% por grupo; homologação com 5 a 10 colegas registrada na issue [#14](https://github.com/joaolevi/cinematch/issues/14) | Pendente |
 | 4.3 | RNF01 a RNF04, RNF11 a RNF15, RNF18, RNF19 | **Proposto:** fluxo completo funcionando em URL com HTTPS, sem credencial pública, e documentação atualizada | Pendente |

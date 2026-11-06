@@ -1,14 +1,14 @@
 # Escopo do MVP
 
-> **Versão 6, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
+> **Versão 8, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
 A API cobre os 13 casos de uso do pitch para filmes e séries. Os 52 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
-credenciais estão prontas, mas aguardam merge. Falta criar a branch `homol`, publicar o sistema, confirmar a
-interface que será entregue, fazer a homologação e preparar a demonstração.
+credenciais estão prontas, mas aguardam merge. Falta criar a branch `homol`, publicar o sistema, ajustar o design,
+fazer a homologação e preparar a demonstração.
 
 ## Objetivo
 
@@ -28,7 +28,7 @@ corretamente. O benefício do recomendador será avaliado depois, com dados reai
 - Catálogo ampliado com o TMDB (RF15b), para os colegas encontrarem os títulos na homologação.
 - Deploy da API e da interface (RNF11 a RNF19), com a execução local como plano B ([guia](DEPLOY.md)).
 - Homologação com 5 a 10 colegas ([#14](https://github.com/joaolevi/cinematch/issues/14)).
-- Interface definida (decisão [D2](#decisões)) e demonstração ensaiada.
+- Interface em `frontend/`, com o design revisado pela Lara, e demonstração ensaiada.
 
 ## Se houver tempo
 
@@ -45,14 +45,12 @@ corretamente. O benefício do recomendador será avaliado depois, com dados reai
 
 ## Premissas e restrições
 
-As premissas ainda precisam ser confirmadas pela gerência.
+As premissas foram confirmadas por Sophia (GP) em 06/11/2026.
 
 ### Premissas
 
 - A equipe tem disponibilidade de 06/11 a 09/11, incluindo o fim de semana.
-- O projeto não tem orçamento, então usa apenas serviços gratuitos.
-- Alguém da equipe tem uma chave do TMDB, ou uma gratuita será criada.
-- O front oficial consome a API pelo contrato em [`API.md`](API.md).
+- O projeto não tem orçamento: a publicação usa o servidor do Vinicius, sem custo.
 
 ### Restrições
 
@@ -82,9 +80,9 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 ### Sex 06/11
 
 - **Sophia:** correções RN02, RN12, RN13 e RN14, com testes; senhas fora do código (RNF12).
-- **Vinicius:** escolher a hospedagem; incluir o driver PostgreSQL; fixar as versões das dependências (RNF18).
+- **Vinicius:** preparar o servidor; fixar as versões das dependências (RNF18).
 - **Antonio:** testes das rotas descobertas.
-- **Lara:** informar o estado do front oficial.
+- **Lara:** revisar o `frontend/` e começar os ajustes de design.
 - **Levi:** criar a branch `homol` no GitHub.
 
 ### Sáb 07/11
@@ -93,11 +91,10 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 - **Lara:** apontar o front para a API publicada.
 - **Antonio:** rodar os testes de integração com o TMDB real.
 - **Levi:** atualizar `PLANO.md` e `CLAUDE.md`; revisar os critérios de aceite com a equipe.
-- **Sophia:** limitar o tamanho dos campos (RNF16); ajustar as consultas do diário e das listas (RNF17); confirmar RNF09, RNF10, as premissas e o Sponsor.
+- **Sophia:** revisar os PRs.
 
 ### Dom 08/11
 
-- **Sophia:** decidir a interface da entrega (D2).
 - **Vinicius:** publicar a interface e configurar o CORS.
 - **Antonio:** testar `dev.sh` e `demo.sh`; preparar o plano B local e testar de ponta a ponta.
 - **Bárbara:** preparar a explicação do resultado do A/B; se houver tempo, testar o MovieLens.
@@ -121,12 +118,7 @@ Nesta ordem:
 
 ## Decisões
 
-### Pendentes
-
-| ID | Decisão | Proposta | Quem decide | Prazo |
-|---|---|---|---|---|
-| D2 | Qual interface será entregue? | Front oficial, se cobrir o fluxo principal contra a API até 08/11; senão, `demo-front` como está | Sophia, com Lara | 08/11 |
-| D6 | Quem é o Sponsor do pitch? | Registrar quem representa esse papel na disciplina | Sophia | 07/11 |
+Nenhuma decisão pendente em 06/11/2026.
 
 ### Aprovadas
 
@@ -134,13 +126,16 @@ Nesta ordem:
 |---|---|---|---|
 | | Regras RN12, RN13 e RN14 | Sophia (GP) | 05/11 |
 | D1 | Sem meta numérica para a taxa de aceitação no MVP. A entrega exige medir corretamente (RN12), e "o híbrido aceita mais que o conteúdo" fica como hipótese a avaliar depois do projeto, com usuários reais | Sophia (GP) | 05/11 |
+| D2 | A interface entregue é o `frontend/`, criado a partir do protótipo de apresentação | Sophia (GP) | 06/11 |
 | D3 | Demonstração com deploy como meta e execução local como plano B | Sophia (GP) | 05/11 |
 | D4 | A homologação com colegas é obrigatória no MVP | Sophia (GP) | 06/11 |
 | D5 | Cargos da equipe, em [ENTREGAS.md](ENTREGAS.md#equipe) | Equipe | 06/11 |
+| D6 | O Sponsor do pitch é o Professor Rafael, professor da disciplina | Sophia (GP) | 06/11 |
 | D7 | Filmes e séries são recomendados juntos; música, separadamente ([arquitetura](ARQUITETURA.md#decisões)) | Sophia (GP) | 06/11 |
 | D8 | O MVP mantém o cálculo atual do recomendador | Sophia (GP) | 06/11 |
 | D9 | O nome do produto é Tastory, inclusive no código | Sophia (GP) | 06/11 |
 | D11 | O sistema roda em Docker, com API, interface e PostgreSQL (RNF19) | Sophia (GP) | 06/11 |
+| D12 | O sistema será publicado no servidor do Vinicius, sem custo | Sophia (GP) | 06/11 |
 | D10 | As tarefas entram na branch `homol`, o QA testa ali, e a `main` só recebe a versão aprovada ([CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões)) | Sophia (GP) | 06/11 |
 
 ## Controle de mudanças
@@ -149,8 +144,10 @@ Nesta ordem:
 |---|---|---|---|
 | 05/11 | Integração real com o TMDB entra, com o mock como alternativa offline | Pôsteres e dados oficiais | PLANO §13 |
 | 05/11 | O front oficial sai deste repositório | Ficou com outra pessoa da equipe | PLANO §13 |
+| 06/11 | A interface volta para este repositório, em `frontend/`, a partir do protótipo | Reduz o risco da entrega, e a Lara passa a focar no design | Sophia (GP) |
 | 05/11 | O deploy, excluído no PLANO, volta como meta do MVP | Está previsto no pitch e tem responsável | Sophia (GP) |
 | 05/11 | A taxa de aceitação fica sem meta numérica | Ainda não há dados reais para definir um valor | Sophia (GP) |
+| 06/11 | A publicação será no servidor do Vinicius, e não em hospedagem gratuita | Evita custo e as limitações de planos gratuitos | Sophia (GP) |
 | 06/11 | A homologação passa de opcional a obrigatória | Consta no Estágio 3 do pitch, e o deploy a torna viável | Sophia (GP) |
 | 06/11 | A gerência passa a constar com Sophia; o PLANO cita João Levi | Cargos definidos pela equipe | Equipe |
 | 06/11 | Entram no MVP três ajustes para o sistema publicado (RNF16 a RNF18) | Revisão com foco no sistema final | Sophia (GP) |
@@ -161,11 +158,12 @@ Nesta ordem:
 
 | Risco | Efeito | Resposta | Responsável |
 |---|---|---|---|
-| O front oficial não ficar pronto | Sem interface oficial na entrega | Usar o `demo-front`, que compila, mas ainda precisa de teste no navegador | Lara |
+| O design não ficar pronto a tempo | Interface funcional, mas sem o acabamento planejado | A interface atual já cobre o fluxo completo; priorizar o que aparece na demonstração | Lara |
 | O painel do A/B não favorece o híbrido | Na simulação, A tem 65,0% e B tem 66,7%, mas ela não serve para essa comparação. Com dados reais do MovieLens, A supera B | Apresentar o painel como simulação do mecanismo de medição e usar o teste com o MovieLens como evidência exploratória | Bárbara |
 | Publicar com as credenciais do repositório | Qualquer pessoa entra como administrador | Tratar o RNF12 como condição para publicar | Sophia |
 | O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir em 09/11 e, se preciso, apresentar localmente | Vinicius |
-| Serviço gratuito dormindo | O primeiro acesso pode demorar cerca de um minuto | Acessar a URL antes da apresentação | Vinicius |
+| Servidor fora do ar | Queda de energia ou de internet na casa do Vinicius derruba o sistema | Conferir a URL antes da apresentação e manter a execução local como plano B | Vinicius |
+| Exposição da rede doméstica | Um site público pode abrir um caminho para a rede da casa | Usar túnel com HTTPS e não abrir portas no roteador | Vinicius |
 | Homologação com poucas pessoas | Com 5 a 10 colegas, a taxa não permite conclusão | Tratar o resultado como ilustrativo. Sem deploy, fazer a sessão em uma só máquina, porque as métricas ficam em um único banco | Antonio |
 | Sem internet na demo | Títulos sem pôster real | Usar o catálogo mock, que funciona offline, e testar esse cenário antes | Antonio |
 | Título procurado fora do catálogo | Mesmo com 504 títulos, "O Agente Secreto" não aparece na busca | Importar pelo painel de admin os títulos pedidos antes da sessão | Antonio |

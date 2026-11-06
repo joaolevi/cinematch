@@ -8,8 +8,10 @@
 > execução **apenas local** (sem deploy) · **filmes e séries** neste incremento; álbuns ficam para depois.
 >
 > **Status (2026-11-05):** backend completo (API, recomendador, admin, métricas A/B), **integração real com o TMDB**
-> e 49 testes (37 offline + 12 de integração). O **frontend oficial passou para outro integrante**: o contrato
-> está em `docs/API.md`/`docs/openapi.json`. `demo-front/` é apenas um protótipo para apresentação.
+> e testes automatizados. A interface está em `frontend/`, e o contrato, em `docs/API.md`/`docs/openapi.json`.
+>
+> **Este documento registra o plano original.** O que vale hoje está em `docs/MVP.md`, `docs/requisitos/` e
+> `docs/ARQUITETURA.md`.
 
 ---
 
@@ -270,5 +272,5 @@ Eu implemento a base completa; cada aluno pode assumir issues de melhoria via br
 2. **Catálogo:** mockado em JSON (sem TMDB real), atrás de uma interface substituível.
 3. **Execução:** apenas local, sem deploy.
 4. **Álbuns:** próximo incremento (fica como issue no backlog).
-5. **Frontend:** feito por outro integrante, fora deste repositório (decidido em 2026-11-05).
+5. **Frontend:** feito por outro integrante, fora deste repositório (decidido em 2026-11-05). Revista em 2026-11-06: a interface voltou para `frontend/`.
 6. **TMDB:** integração real adicionada (chave só no `.env`), mantendo o mock como fallback offline.

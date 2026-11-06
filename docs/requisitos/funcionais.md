@@ -2,8 +2,7 @@
 
 > [Voltar ao índice](README.md) · A ligação com código e testes está no fim deste arquivo.
 
-A interface é o único requisito em aberto, porque depende da decisão [D2](../MVP.md#decisões). As situações abaixo já
-consideram as correções da branch `fix/regras-do-mvp`, ainda sem merge.
+As situações abaixo já consideram as correções da branch `fix/regras-do-mvp`, ainda sem merge.
 
 ## Acesso
 
@@ -47,7 +46,7 @@ consideram as correções da branch `fix/regras-do-mvp`, ainda sem merge.
 
 | ID | Requisito | Situação | MVP |
 |---|---|---|---|
-| RF18 | Interface web para os fluxos acima | A definir (D2) | Deve |
+| RF18 | Interface web para os fluxos acima | Atende: fluxo completo testado no navegador | Deve |
 
 ## Rastreabilidade
 
@@ -73,4 +72,4 @@ Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backen
 | RF15b | DCU: Sincronizar Catálogo Externo | 3.3 | `services/tmdb.py` | `test_tmdb_unit.py`, `integration/` |
 | RF16 | DCU: Moderar Avaliações | 2.4 | `routers/admin.py` | `test_admin.py` |
 | RF17 | Pitch; PLANO §2 | 4.2 | `services/metrics.py` | `test_admin.py` |
-| RF18 | EAP 2.0 | 2.1 a 2.4 | Front oficial (fora do repositório) ou `demo-front/` | Sem testes; `demo-front` compila |
+| RF18 | EAP 2.0 | 2.1 a 2.4 | `frontend/` | Sem testes automatizados; fluxo testado no navegador |
