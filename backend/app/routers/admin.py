@@ -30,6 +30,8 @@ from ..services.metrics import acceptance_metrics
 
 router = APIRouter(prefix="/admin", tags=["administração"], dependencies=[Depends(require_admin)])
 
+REQUIRED_MEDIA_FIELDS = {"type", "title", "overview", "genres", "tags", "creators", "popularity"}
+
 
 # ---------- Catálogo ----------
 @router.post("/media", response_model=MediaOut, status_code=201)
@@ -45,6 +47,8 @@ def create_media(data: MediaIn, db: Session = Depends(get_db)):
 def update_media(media_id: int, data: MediaUpdate, db: Session = Depends(get_db)):
     media = crud.get_media_or_404(db, media_id)
     for k, v in data.model_dump(exclude_unset=True).items():
+        if v is None and k in REQUIRED_MEDIA_FIELDS:
+            continue
         setattr(media, k, v)
     db.commit()
     db.refresh(media)
@@ -61,7 +65,7 @@ def delete_media(media_id: int, db: Session = Depends(get_db)):
 def tmdb_provider(pages: int | None = None) -> TmdbCatalogProvider:
     """Cria o provider do TMDB com a chave do .env (400 se não houver chave)."""
     if not settings.tmdb_api_key:
-        raise HTTPException(status_code=400, detail="CINEMATCH_TMDB_API_KEY não configurada no .env")
+        raise HTTPException(status_code=400, detail="TASTORY_TMDB_API_KEY não configurada no .env")
     return TmdbCatalogProvider(
         settings.tmdb_api_key,
         language=settings.tmdb_language,

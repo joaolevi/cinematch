@@ -23,13 +23,16 @@ def main() -> None:
     parser.add_argument("--tmdb", action="store_true", help="importa também os populares do TMDB")
     args = parser.parse_args()
 
+    if problems := settings.production_problems():
+        raise SystemExit(f"Valores públicos em produção: {', '.join(problems)}")
+
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     with SessionLocal() as db:
         summary = seed_all(db, synthetic=not args.no_synthetic, simulate=not args.no_sim)
         if args.tmdb:
             if not settings.tmdb_api_key:
-                print("Aviso: CINEMATCH_TMDB_API_KEY não configurada; pulando o TMDB.")
+                print("Aviso: TASTORY_TMDB_API_KEY não configurada; pulando o TMDB.")
             else:
                 provider = TmdbCatalogProvider(
                     settings.tmdb_api_key, settings.tmdb_language, settings.tmdb_region, settings.tmdb_sync_pages

@@ -3,8 +3,9 @@ import tempfile
 
 # Banco isolado para os testes (antes de importar a aplicação)
 _tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
-os.environ["CINEMATCH_DATABASE_URL"] = f"sqlite:///{_tmp.name}"
-os.environ["CINEMATCH_AUTO_SEED"] = "false"
+os.environ["TASTORY_DATABASE_URL"] = f"sqlite:///{_tmp.name}"
+os.environ["TASTORY_AUTO_SEED"] = "false"
+os.environ["TASTORY_USE_EXTERNAL_NEIGHBORS"] = "false"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -51,6 +52,17 @@ def user_headers(client):
 @pytest.fixture()
 def admin_headers(client):
     return auth_headers(client, ADMIN_EMAIL, ADMIN_PASSWORD)
+
+
+def see_feed(client: TestClient, headers: dict, **params) -> list[dict]:
+    """Abre o feed e avisa que todos os cards apareceram na tela, como faz a interface."""
+    items = client.get("/recommendations", params=params, headers=headers).json()["items"]
+    client.post("/recommendations/impressions", json={"items": impressions_of(items)}, headers=headers)
+    return items
+
+
+def impressions_of(items: list[dict]) -> list[dict]:
+    return [{"media_id": i["media"]["id"], "strategy": i["strategy"], "score": i["score"]} for i in items]
 
 
 def media_id_by_title(client: TestClient, headers: dict, title: str) -> int:

@@ -1,6 +1,6 @@
 """Testes de integração REAIS: backend + API do TMDB + banco de dados.
 
-Rodam somente se CINEMATCH_TMDB_API_KEY estiver configurada (no .env ou no ambiente).
+Rodam somente se TASTORY_TMDB_API_KEY estiver configurada (no .env ou no ambiente).
     python -m pytest -m integration -v      # só estes
     python -m pytest -m "not integration"   # tudo menos estes (offline)
 """
@@ -16,7 +16,7 @@ from ..conftest import register
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.skipif(not settings.tmdb_api_key, reason="CINEMATCH_TMDB_API_KEY não configurada"),
+    pytest.mark.skipif(not settings.tmdb_api_key, reason="TASTORY_TMDB_API_KEY não configurada"),
 ]
 
 VOCABULARY = {
@@ -57,6 +57,7 @@ def test_movie_details_in_portuguese(tmdb):
     assert dk["title"] == "Batman: O Cavaleiro das Trevas"
     assert dk["year"] == 2008
     assert "Christopher Nolan" in dk["creators"]
+    assert "Christian Bale" in dk["actors"]
     assert {"Ação", "Crime"} <= set(dk["genres"])
     assert dk["tags"] and dk["overview"]
 
@@ -65,6 +66,7 @@ def test_series_details(tmdb):
     bb = tmdb.get_title("series", 1396)
     assert bb["title"] == "Breaking Bad" and bb["year"] == 2008
     assert bb["creators"] == ["Vince Gilligan"]
+    assert "Bryan Cranston" in bb["actors"]
 
 
 def test_search_finds_brazilian_movie(tmdb):

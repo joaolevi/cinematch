@@ -8,11 +8,15 @@ backend/*.db-journal
 
 # Env / IDE
 .env
+.env.production
+
+# Cópias do banco, com dados de pessoas
+backup*.sql
 .vscode/
 .idea/
 .DS_Store
 
-# Node (demo-front)
+# Node (frontend)
 node_modules/
-demo-front/dist/
+frontend/dist/
 *.tsbuildinfo

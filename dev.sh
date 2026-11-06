@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sobe a API do CineMatch (FastAPI) em http://localhost:8000 — documentação em /docs.
+# Sobe a API do Tastory (FastAPI) em http://localhost:8000 — documentação em /docs.
 # Uso: ./dev.sh          (Ctrl+C encerra)
 #      ./dev.sh --reset  (recria o banco com os dados de demonstração antes de subir)
 set -euo pipefail

@@ -13,6 +13,7 @@ Variante A/B: grupo A = híbrido (conteúdo + colaborativo); grupo B = só conte
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 import numpy as np
@@ -22,15 +23,28 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList, UserPreference
+from ..config import settings
+from ..models import (
+    DiaryEntry,
+    Dismissed,
+    ItemNeighbor,
+    ListItem,
+    Media,
+    User,
+    UserInterest,
+    UserList,
+    UserPreference,
+)
 
 # Pesos dos sinais (explícitos e implícitos) no perfil do usuário
 W_SEEN_NO_RATING = 0.6  # "Já vi" sem nota: gostou moderadamente
 W_LIST = 0.5  # watchlist / listas (implícito)
 W_DISMISS = -0.7  # "Não me interesso" (explícito negativo)
-W_PREF_GENRE = 1.0  # gêneros escolhidos no onboarding
+W_PREFERENCE = 1.0  # gêneros, décadas e criadores escolhidos no onboarding
+W_ONBOARDING_LIKE = 0.8  # título marcado no onboarding, que entra no diário sem nota
 
 POPULARITY_BONUS = 0.1
+EXTERNAL_CONTENT_WEIGHT = 0.2  # com vizinhos de pessoas reais, o colaborativo pesa mais
 DIVERSITY_PENALTY = 0.85  # multiplicador a cada repetição do gênero principal no topo
 
 
@@ -60,10 +74,19 @@ def media_tokens(m: Media) -> str:
     return " ".join(toks)
 
 
+def decade_label(decade: int) -> str:
+    return f"anos {decade % 100}" if decade < 2000 else f"anos {decade}"
+
+
 def rating_weight(rating: float | None) -> float:
     if rating is None:
         return W_SEEN_NO_RATING
     return (rating - 2.5) / 2.5  # 0.5 -> -0.8 ... 5.0 -> +1.0
+
+
+def entry_weight(rating: float | None, from_onboarding: bool) -> float:
+    """Peso de um registro do diário. Se a pessoa der uma nota depois, vale a nota."""
+    return W_ONBOARDING_LIKE if rating is None and from_onboarding else rating_weight(rating)
 
 
 def user_signals(db: Session, user_id: int) -> dict[int, float]:
@@ -75,10 +98,12 @@ def user_signals(db: Session, user_id: int) -> dict[int, float]:
         signals[media_id] = W_LIST
     for media_id in db.scalars(select(Dismissed.media_id).where(Dismissed.user_id == user_id)):
         signals[media_id] = W_DISMISS
-    for media_id, rating in db.execute(
-        select(DiaryEntry.media_id, DiaryEntry.rating).where(DiaryEntry.user_id == user_id)
+    for media_id, rating, from_onboarding in db.execute(
+        select(DiaryEntry.media_id, DiaryEntry.rating, DiaryEntry.from_onboarding).where(
+            DiaryEntry.user_id == user_id
+        )
     ):
-        signals[media_id] = rating_weight(rating)  # o diário tem prioridade
+        signals[media_id] = entry_weight(rating, from_onboarding)  # o diário tem prioridade
     return signals
 
 
@@ -128,7 +153,7 @@ def trending(
     score = 0.7 * pop + 0.3 * cnt
     order = np.argsort(-score)[:limit]
     return [
-        Recommendation(items[i], float(score[i]), "Em alta no CineMatch", "trending") for i in order
+        Recommendation(items[i], float(score[i]), "Em alta no Tastory", "trending") for i in order
     ]
 
 
@@ -138,16 +163,25 @@ def recommend(
     user: User,
     media_type: str | None = None,
     limit: int = 20,
+    skip: Iterable[int] = (),
 ) -> tuple[str, list[Recommendation]]:
-    """Gera o feed do usuário. Retorna (estratégia, recomendações)."""
+    """Gera o feed do usuário, sem os títulos de `skip`. Retorna (estratégia, recomendações)."""
     signals = user_signals(db, user.id)
     pref_genres = list(
         db.scalars(select(UserPreference.genre).where(UserPreference.user_id == user.id))
     )
-    exclude = excluded_ids(db, user.id)
+    interests = db.execute(
+        select(UserInterest.kind, UserInterest.value).where(UserInterest.user_id == user.id)
+    ).all()
+    pref_decades = [int(value) for kind, value in interests if kind == "decade"]
+    pref_creators = [value for kind, value in interests if kind == "creator"]
+    pref_tokens = [_tok("g", g) for g in pref_genres]
+    pref_tokens += [f"d:{d}" for d in pref_decades]
+    pref_tokens += [_tok("c", c) for c in pref_creators]
+    exclude = excluded_ids(db, user.id) | set(skip)
 
     # Nó de decisão do DA: possui histórico ou preferências?
-    if not signals and not pref_genres:
+    if not signals and not pref_tokens:
         return "trending", trending(db, media_type, limit, exclude)
 
     catalog: list[Media] = list(db.scalars(select(Media).order_by(Media.id)))
@@ -164,9 +198,9 @@ def recommend(
     for row, w in sig_rows:
         profile = profile + w * X[row]
     pref_vec = None
-    if pref_genres:
-        pref_vec = vectorizer.transform([" ".join(_tok("g", g) for g in pref_genres)])
-        profile = profile + W_PREF_GENRE * pref_vec
+    if pref_tokens:
+        pref_vec = vectorizer.transform([" ".join(pref_tokens)])
+        profile = profile + W_PREFERENCE * pref_vec
 
     norm = sparse_norm(profile)
     if norm < 1e-9:
@@ -174,15 +208,19 @@ def recommend(
     content = np.asarray((X @ profile.T).todense()).ravel() / norm  # cosseno em [-1, 1]
 
     # --- Colaborativo item-item: "quem curtiu X também curtiu Y"
-    use_collab = user.ab_group == "A"
+    use_collab = user.ab_group == "A" and bool(sig_rows)
     collab = np.zeros(len(catalog))
     item_sim = None
     if use_collab and sig_rows:
-        item_sim = _item_similarity(db, index, len(catalog))
+        item_sim = (
+            _external_similarity(db, catalog, index, sig_rows)
+            if settings.use_external_neighbors
+            else _item_similarity(db, index, len(catalog))
+        )
         if item_sim is not None:
             rows = np.array([r for r, _ in sig_rows])
             ws = np.array([w for _, w in sig_rows])
-            collab = (ws @ item_sim[rows]) / (np.abs(ws).sum() + 1e-9)
+            collab = np.asarray(ws @ item_sim[rows]).ravel() / (np.abs(ws).sum() + 1e-9)
             if not np.any(collab):
                 use_collab = False
         else:
@@ -198,12 +236,17 @@ def recommend(
         return ("hybrid" if use_collab else "content"), []
     cand = np.array(candidates)
     c_norm = _minmax(content[cand])
-    if use_collab:
-        alpha = 0.8 if len(sig_rows) < 5 else 0.5
+    if use_collab and settings.use_external_neighbors:
+        # A base externa só cobre filmes: as séries seguem pelo conteúdo, para não sumirem do feed
+        alpha = np.array([EXTERNAL_CONTENT_WEIGHT if catalog[i].type == "movie" else 1.0 for i in cand])
+        cf_norm = _minmax(collab[cand])
+        strategy = "hybrid"
+    elif use_collab:
+        alpha = np.full(len(cand), 0.8 if len(sig_rows) < 5 else 0.5)
         cf_norm = _minmax(collab[cand])
         strategy = "hybrid"
     else:
-        alpha, cf_norm, strategy = 1.0, np.zeros(len(cand)), "content"
+        alpha, cf_norm, strategy = np.ones(len(cand)), np.zeros(len(cand)), "content"
     pop = np.array([catalog[i].popularity for i in cand]) / 100.0
     final = alpha * c_norm + (1 - alpha) * cf_norm + POPULARITY_BONUS * pop
 
@@ -223,6 +266,7 @@ def recommend(
         picked.append((best, float(best_score), int(cand[best])))
 
     recs: list[Recommendation] = []
+    reason_uses: Counter[int] = Counter()  # evita repetir o mesmo título em todos os motivos
     for pos, score, ci in picked:
         reason = _reason(
             ci,
@@ -230,10 +274,13 @@ def recommend(
             X,
             sig_rows,
             pref_genres,
+            pref_decades,
+            pref_creators,
             pref_vec,
             item_sim if use_collab else None,
-            content_share=alpha * c_norm[pos],
-            collab_share=(1 - alpha) * cf_norm[pos],
+            content_share=alpha[pos] * c_norm[pos],
+            collab_share=(1 - alpha[pos]) * cf_norm[pos],
+            reason_uses=reason_uses,
         )
         recs.append(Recommendation(catalog[ci], score, reason, strategy))
 
@@ -244,15 +291,32 @@ def recommend(
     return strategy, recs
 
 
+def _external_similarity(
+    db: Session, catalog: list[Media], index: dict[int, int], sig_rows: list[tuple[int, float]]
+) -> sparse.csr_matrix | None:
+    """Vizinhos já calculados, só dos títulos do histórico do usuário."""
+    media_ids = [catalog[row].id for row, _ in sig_rows]
+    neighbors = db.execute(
+        select(ItemNeighbor.media_id, ItemNeighbor.neighbor_id, ItemNeighbor.score).where(
+            ItemNeighbor.media_id.in_(media_ids)
+        )
+    ).all()
+    cells = [(index[m], index[n], score) for m, n, score in neighbors if m in index and n in index]
+    if not cells:
+        return None
+    rows, cols, scores = zip(*cells)
+    return sparse.csr_matrix((scores, (rows, cols)), shape=(len(catalog), len(catalog)))
+
+
 def _item_similarity(db: Session, index: dict[int, int], n_items: int) -> np.ndarray | None:
     """Matriz item x item (cosseno) a partir das interações de todos os usuários."""
     per_user: dict[int, dict[int, float]] = defaultdict(dict)
     for uid, mid in db.execute(select(UserList.user_id, ListItem.media_id).join(ListItem)):
         per_user[uid][mid] = W_LIST
-    for uid, mid, rating in db.execute(
-        select(DiaryEntry.user_id, DiaryEntry.media_id, DiaryEntry.rating)
+    for uid, mid, rating, from_onboarding in db.execute(
+        select(DiaryEntry.user_id, DiaryEntry.media_id, DiaryEntry.rating, DiaryEntry.from_onboarding)
     ):
-        per_user[uid][mid] = rating_weight(rating)
+        per_user[uid][mid] = entry_weight(rating, from_onboarding)
     if len(per_user) < 2:
         return None
     rows, cols, vals = [], [], []
@@ -277,31 +341,44 @@ def _reason(
     X,
     sig_rows: list[tuple[int, float]],
     pref_genres: list[str],
+    pref_decades: list[int],
+    pref_creators: list[str],
     pref_vec,
-    item_sim: np.ndarray | None,
+    item_sim: np.ndarray | sparse.csr_matrix | None,
     content_share: float,
     collab_share: float,
+    reason_uses: Counter[int],
 ) -> str:
     """Explica a sugestão a partir do item do histórico que mais contribuiu."""
     positives = [(r, w) for r, w in sig_rows if w > 0]
 
     if item_sim is not None and collab_share > content_share and positives:
-        r, _ = max(positives, key=lambda rw: rw[1] * item_sim[rw[0], ci])
+        r, _ = max(positives, key=lambda rw: rw[1] * item_sim[rw[0], ci] / (1 + reason_uses[rw[0]]))
         if item_sim[r, ci] > 0:
+            reason_uses[r] += 1
             return f"Quem curtiu {catalog[r].title} também curtiu"
 
-    best_item, best_val = None, 0.0
+    best_item, best_val, best_rank = None, 0.0, 0.0
     for r, w in positives:
         val = w * float(X[r].multiply(X[ci]).sum())
-        if val > best_val:
-            best_item, best_val = r, val
-    pref_val = float(pref_vec.multiply(X[ci]).sum()) * W_PREF_GENRE if pref_vec is not None else 0.0
+        rank = val / (1 + reason_uses[r])
+        if rank > best_rank:
+            best_item, best_val, best_rank = r, val, rank
+    pref_val = float(pref_vec.multiply(X[ci]).sum()) * W_PREFERENCE if pref_vec is not None else 0.0
 
     if best_item is not None and best_val >= pref_val:
+        reason_uses[best_item] += 1
         return f"Porque você curtiu {catalog[best_item].title}"
-    matching = [g for g in pref_genres if g in (catalog[ci].genres or [])]
+    media = catalog[ci]
+    creators = [c for c in pref_creators if c in (media.creators or [])]
+    if creators:
+        return f"Porque você curte {creators[0]}"
+    matching = [g for g in pref_genres if g in (media.genres or [])]
     if matching:
         return f"Porque você gosta de {matching[0]}"
+    decade = (media.year // 10) * 10 if media.year else None
+    if decade in pref_decades:
+        return f"Porque você curte os {decade_label(decade)}"
     if best_item is not None:
         return f"Porque você curtiu {catalog[best_item].title}"
     return "Combina com o seu perfil"

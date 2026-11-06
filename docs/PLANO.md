@@ -1,6 +1,6 @@
 # Plano de Implementação — Protótipo Tastory
 
-> Baseado no pitch "CineMatch / Tastory — A história do seu gosto" (Gerência de Projeto 2026.2).
+> Baseado no pitch "Tastory — A história do seu gosto" (Gerência de Projeto 2026.2).
 > Objetivo: um **protótipo utilizável** que implemente as *core functions* do Diagrama de Casos de Uso
 > e o fluxo do Diagrama de Atividades, com interface web para interação. Não é produto final.
 >
@@ -8,8 +8,10 @@
 > execução **apenas local** (sem deploy) · **filmes e séries** neste incremento; álbuns ficam para depois.
 >
 > **Status (2026-11-05):** backend completo (API, recomendador, admin, métricas A/B), **integração real com o TMDB**
-> e 49 testes (37 offline + 12 de integração). O **frontend oficial passou para outro integrante**: o contrato
-> está em `docs/API.md`/`docs/openapi.json`. `demo-front/` é apenas um protótipo para apresentação.
+> e testes automatizados. A interface está em `frontend/`, e o contrato, em `docs/API.md`/`docs/openapi.json`.
+>
+> **Este documento registra o plano original.** O que vale hoje está em `docs/MVP.md`, `docs/requisitos/` e
+> `docs/ARQUITETURA.md`.
 
 ---
 
@@ -177,7 +179,7 @@ O pitch prevê o TMDB (base pública de filmes/séries) como "API de Catálogo E
 8. **Admin** — abas Catálogo (CRUD + importar), Moderação (resenhas) e Métricas (taxa de aceitação A/B)
 
 Identidade visual seguindo o pitch: fundo escuro `#0b0d10`, cards `#1f2630`, destaque ciano `#5ff5e8`.
-Nome exibido no app: **CineMatch**.
+Nome exibido no app: **Tastory**.
 
 ---
 
@@ -227,7 +229,7 @@ cinematch/
 - **E3.1** Testes `pytest`: auth, diário, listas, filtro do feed, cold start, cálculo da taxa de aceitação. *(EAP 4.1)*
 - **E3.2** Teste A/B simulado: script que roda os usuários sintéticos contra as variantes A e B e mostra
   a taxa de aceitação no painel. *(EAP 4.2)*
-- **E3.3** README com instruções de execução local, contas demo (`admin@cinematch.dev`, `demo@cinematch.dev`)
+- **E3.3** README com instruções de execução local, contas demo (`admin@tastory.dev`, `demo@tastory.dev`)
   e roteiro de demo. *(EAP 4.3 — documentação; deploy fora do escopo)*
 
 ### Depois (quando você pedir)
@@ -270,5 +272,5 @@ Eu implemento a base completa; cada aluno pode assumir issues de melhoria via br
 2. **Catálogo:** mockado em JSON (sem TMDB real), atrás de uma interface substituível.
 3. **Execução:** apenas local, sem deploy.
 4. **Álbuns:** próximo incremento (fica como issue no backlog).
-5. **Frontend:** feito por outro integrante, fora deste repositório (decidido em 2026-11-05).
+5. **Frontend:** feito por outro integrante, fora deste repositório (decidido em 2026-11-05). Revista em 2026-11-06: a interface voltou para `frontend/`.
 6. **TMDB:** integração real adicionada (chave só no `.env`), mantendo o mock como fallback offline.

@@ -40,3 +40,39 @@ def test_ab_groups_alternate(client):
         h = register(client, email=f"ab{i}@teste.com")
         groups.add(client.get("/me", headers=h).json()["ab_group"])
     assert groups == {"A", "B"}
+
+
+def test_password_limit_is_72_bytes(client):
+    payload = {"name": "Longa", "email": "longa@teste.com"}
+    assert client.post("/auth/register", json={**payload, "password": "a" * 73}).status_code == 422
+    assert client.post("/auth/register", json={**payload, "password": "é" * 37}).status_code == 422
+    assert client.post("/auth/register", json={**payload, "password": "a" * 72}).status_code == 201
+
+
+def test_genre_above_limit_is_rejected(client):
+    headers = register(client, email="genero@teste.com")
+    r = client.put("/me/preferences", json={"genres": ["x" * 61]}, headers=headers)
+    assert r.status_code == 422
+
+
+def test_get_preferences_returns_what_was_saved(client):
+    headers = register(client, email="gostos@teste.com")
+    empty = client.get("/me/preferences", headers=headers).json()
+    assert empty == {"genres": [], "decades": [], "creators": [], "onboarded": False}
+
+    client.put(
+        "/me/preferences",
+        json={"genres": ["Terror"], "decades": [1990], "creators": ["David Fincher"]},
+        headers=headers,
+    )
+    saved = client.get("/me/preferences", headers=headers).json()
+    assert saved == {"genres": ["Terror"], "decades": [1990], "creators": ["David Fincher"], "onboarded": True}
+
+
+def test_health_needs_no_login(client):
+    assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_blank_name_is_rejected(client):
+    payload = {"name": "   ", "email": "sem-nome@teste.com", "password": "segredo1"}
+    assert client.post("/auth/register", json=payload).status_code == 422
