@@ -63,7 +63,7 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
      `scripts.import_movielens`.
   5. `α = 0,8` com < 5 sinais, senão `0,5`; com MovieLens, `0,2` nos filmes e `1` nas séries; + `0,1·popularidade`; penalidade de diversidade `0,85^n`;
      exclui registrados, descartados, watchlist e títulos do TMDB sem sinopse, pôster ou nome legível
-     (`can_be_suggested`); nas séries, `SERIES_POPULARITY_BONUS` só reordena as séries entre si; completa com trending.
+     (`can_be_suggested`); nas séries, `SERIES_POPULARITY_BONUS` só escolhe quais séries ocupam os lugares delas; completa com trending.
   6. `_reason` gera "Porque você curtiu X", "Quem curtiu X também curtiu", "Porque você gosta de G" e os
      motivos por época e criador, variando o título citado.
 - **Impressões:** a interface avisa em `POST /recommendations/impressions` quando metade do card aparece na tela,

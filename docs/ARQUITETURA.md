@@ -145,12 +145,12 @@ animação:
 - **Peso 1:** títulos conhecidos e ainda parecidos com o perfil, como *Better Call Saul* e *Como Eu Conheci Sua Mãe*.
 - **Peso 2:** a lista perde a relação com o perfil: quem gosta de comédia recebe *Sherlock* e *Os 100*.
 
-**Decisão (D16):** usar peso 1 nas séries, só para ordená-las entre si. Aplicar o peso direto na nota aumentava a parte de séries
-no feed: quem só gostava de filmes passava de 7 para 17 séries em 36 sugestões. Assim, a proporção com os filmes não muda. A rota
-do TMDB fica como próximo passo, porque precisa de uma carga nova na tabela de vizinhos.
+**Decisão (D16):** usar peso 1 só para escolher quais séries ocupam os lugares delas no feed. Aplicar o peso direto na nota
+aumentava a parte de séries: quem só gostava de filmes passava de 7 para 17 séries em 36 sugestões. Assim, os filmes e os lugares
+das séries continuam iguais. A rota do TMDB fica como próximo passo, porque precisa de uma carga nova na tabela de vizinhos.
 
-O catálogo também tem 849 títulos sem sinopse em português e 159 com o nome em outro alfabeto, como 논스톱. Eles vêm assim do TMDB
-e pioravam a impressão do feed, então o feed só sugere títulos com sinopse, pôster e nome legível (RN20). Isso mantém 3.096 dos
+O catálogo também tem 849 títulos sem sinopse em português e 153 com o nome em outro alfabeto, como 논스톱. Eles vêm assim do TMDB
+e pioravam a impressão do feed, então o feed só sugere títulos com sinopse, pôster e nome legível (RN20). Isso mantém 3.102 dos
 3.957 títulos, e a busca continua mostrando todos. Cortar por popularidade não serve, porque tiraria lançamentos com poucos votos,
 e filtrar por palavra-chave também não, porque "adult" aparece em títulos como *Os Simpsons*.
 

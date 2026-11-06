@@ -57,6 +57,6 @@ Os cartões de 4.2 e 4.3 foram criados em 06/11, e seus critérios foram aprovad
 | 3.2 | RF01 a RF10, RN01 a RN06, RN08 a RN10, RN13, RN14, RNF16, RNF17 | Endpoints testados, erros tratados, dados persistidos e rotas administrativas protegidas | Corrigido; está na `homol`, aguardando o QA |
 | 3.3 | RF15a, RF15b, RN15 | Catálogo audiovisual pesquisável e sincronizável; catálogo musical validado antes da liberação de álbuns | Funciona com o mock e o TMDB real. A parte musical está fora do MVP |
 | 3.4 | RF11 a RF13, RN07 | Serviço retorna recomendações mesmo sem histórico; exclui itens descartados ou já registrados conforme regra do produto; feedback alimenta futuras sugestões | Concluído |
-| 4.1 | RNF06, RNF07, RNF09 | Principais casos de uso executados, falhas registradas e corrigidas antes do teste interno | Parcial: 87 testes offline e 13 de integração passam, toda rota tem teste e o CI passou no PR #22; faltam os testes do Antonio na `homol` |
+| 4.1 | RNF06, RNF07, RNF09 | Principais casos de uso executados, falhas registradas e corrigidas antes do teste interno | Parcial: 88 testes offline e 13 de integração passam, toda rota tem teste e o CI passou no PR #22; faltam os testes do Antonio na `homol` |
 | 4.2 | RF17, RN11, RN12, RNF10, RNF14 | Taxa entre 0% e 100% por grupo; teste interno com a equipe registrado na issue [#14](https://github.com/joaolevi/cinematch/issues/14) | Pendente |
 | 4.3 | RNF01 a RNF04, RNF11 a RNF15, RNF18, RNF19 | Fluxo completo funcionando em URL com HTTPS, sem credencial pública, e documentação atualizada | Pendente |

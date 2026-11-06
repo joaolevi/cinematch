@@ -1,11 +1,11 @@
 # Escopo do MVP
 
-> **Versão 19, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, às 17h, com 10 a 15 minutos de apresentação (a confirmar) e deploy como meta. Gerente de projeto: Sophia.
+> **Versão 20, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, às 17h, com 10 a 15 minutos de apresentação (a confirmar) e deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [teste interno](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
-A API cobre os 13 casos de uso do pitch para filmes e séries. Os 87 testes offline e os 13 com o TMDB real
+A API cobre os 13 casos de uso do pitch para filmes e séries. Os 88 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
 credenciais estão na branch `homol`, com o CI passando. Falta o QA testar a `homol`, publicar o sistema, ajustar o
 design, fazer o teste interno e preparar a demonstração.
@@ -139,7 +139,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | D15 | O teste A/B continua no sistema, mas no MVP mostra que a medição funciona. A evidência de qualidade vem do teste com o MovieLens, e o teste interno é ilustrativo | Sophia (GP) | 06/11 |
 | D13 | O onboarding pergunta gêneros, épocas, diretores e títulos, em três passos. Palavras-chave ficam de fora, porque são termos crus e muitos em inglês | Sophia (GP) | 06/11 |
 | D10 | As tarefas entram na branch `homol`, o QA testa ali, e a `main` só recebe a versão aprovada ([CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões)) | Sophia (GP) | 06/11 |
-| D16 | O feed só sugere títulos do TMDB com sinopse, pôster e nome em alfabeto latino, e a popularidade pesa 1 na ordem das séries entre si | Sophia (GP) | 06/11 |
+| D16 | O feed só sugere títulos do TMDB com sinopse, pôster e nome legível, e a popularidade pesa 1 na escolha das séries, sem mudar os filmes nem os lugares das séries | Sophia (GP) | 06/11 |
 | D17 | A escolha entre deploy e execução local sai no domingo (08/11), às 20h. No mesmo horário, o front é congelado, e depois disso só entram correções de erro | Sophia (GP) | 06/11 |
 | D18 | No servidor, o Vinicius usa uma chave própria do TMDB, e a senha de admin fica só com Sophia e Antonio, em mensagem privada | Sophia (GP) | 06/11 |
 | D19 | Cada pessoa faz o teste interno por conta própria, até 12h de 09/11. O plano B roda no notebook da Sophia | Sophia (GP) | 06/11 |
