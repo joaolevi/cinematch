@@ -1,11 +1,11 @@
-# API do CineMatch — guia para quem vai fazer o frontend
+# API do Tastory — guia para quem vai fazer o frontend
 
 - **Base URL (local):** `http://localhost:8000`
 - **Documentação interativa:** `http://localhost:8000/docs` (Swagger, dá para testar todas as rotas)
 - **Contrato OpenAPI:** [`openapi.json`](openapi.json). Serve para gerar clientes/tipos, ex.:
   `npx openapi-typescript docs/openapi.json -o src/api-types.ts`
 - **CORS:** liberado por padrão para `localhost:5173` (Vite) e `localhost:3000` (Next/CRA).
-  Outras origens vão em `CINEMATCH_CORS_ORIGINS` no `.env`.
+  Outras origens vão em `TASTORY_CORS_ORIGINS` no `.env`.
 - Erros vêm como `{"detail": "mensagem"}` (validação: `detail` é uma lista com `msg`).
 
 ## Autenticação
@@ -15,7 +15,7 @@
 3. Envie em todas as rotas protegidas: `Authorization: Bearer <access_token>` (validade de 24 h)
 4. `role == "admin"` libera as rotas `/admin/*`. Se `onboarded == false`, mostre o onboarding.
 
-Contas de demonstração: `admin@cinematch.dev / admin123`, `demo@cinematch.dev / demo123`.
+Contas de demonstração: `admin@tastory.dev / admin123`, `demo@tastory.dev / demo123`.
 
 ## Rotas
 

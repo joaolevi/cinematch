@@ -18,8 +18,8 @@ from .models import Media, RecEvent, User
 from .services.catalog import MockCatalogProvider, sync_catalog
 from .services.recommender import recommend
 
-ADMIN_EMAIL, ADMIN_PASSWORD = "admin@cinematch.dev", "admin123"
-DEMO_EMAIL, DEMO_PASSWORD = "demo@cinematch.dev", "demo123"
+ADMIN_EMAIL, ADMIN_PASSWORD = "admin@tastory.dev", "admin123"
+DEMO_EMAIL, DEMO_PASSWORD = "demo@tastory.dev", "demo123"
 SYNTHETIC_PASSWORD = "senha123"
 
 PERSONAS: list[tuple[str, list[str]]] = [
@@ -92,7 +92,7 @@ def create_synthetic_users(db: Session, per_persona: int = 5, seed: int = 42) ->
         liked_pool = [m for m in catalog if set(m.genres) & set(genres)]
         other_pool = [m for m in catalog if not set(m.genres) & set(genres)]
         for i in range(per_persona):
-            email = f"{slug}.{i + 1}@seed.cinematch.dev"
+            email = f"{slug}.{i + 1}@seed.tastory.dev"
             if db.scalar(select(User).where(User.email == email)):
                 continue
             user = User(

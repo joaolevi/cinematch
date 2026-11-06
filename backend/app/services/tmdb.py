@@ -2,9 +2,9 @@
 
 Implementa a mesma interface do `MockCatalogProvider` (`fetch_titles()`), então o resto do sistema
 não sabe de onde os títulos vêm. Requer uma chave gratuita de themoviedb.org em
-`CINEMATCH_TMDB_API_KEY` (no `.env`, que NÃO vai para o git).
+`TASTORY_TMDB_API_KEY` (no `.env`, que NÃO vai para o git).
 
-Os gêneros do TMDB são convertidos para o vocabulário do CineMatch (o mesmo do catálogo mockado),
+Os gêneros do TMDB são convertidos para o vocabulário do Tastory (o mesmo do catálogo mockado),
 para que preferências do onboarding e o recomendador funcionem com títulos das duas origens.
 """
 
@@ -21,7 +21,7 @@ from .catalog import ExternalTitle
 BASE_URL = "https://api.themoviedb.org/3"
 IMAGE_URL = "https://image.tmdb.org/t/p/w342"
 
-# IDs de gênero do TMDB -> gêneros do CineMatch (IDs são estáveis e independem do idioma)
+# IDs de gênero do TMDB -> gêneros do Tastory (IDs são estáveis e independem do idioma)
 MOVIE_GENRES: dict[int, list[str]] = {
     28: ["Ação"], 12: ["Aventura"], 16: ["Animação"], 35: ["Comédia"], 80: ["Crime"],
     99: ["Documentário"], 18: ["Drama"], 10751: ["Família"], 14: ["Fantasia"], 36: ["Histórico"],
@@ -86,7 +86,7 @@ class TmdbCatalogProvider:
         max_workers: int = 8,
     ):
         if not api_key:
-            raise TmdbError("CINEMATCH_TMDB_API_KEY não configurada", status_code=400)
+            raise TmdbError("TASTORY_TMDB_API_KEY não configurada", status_code=400)
         self.language = language
         self.region = region
         self.pages = max(1, pages)

@@ -1,11 +1,11 @@
-# CineMatch 🎬
+# Tastory 🎬
 
 > **A história do seu gosto**: diário de filmes e séries com motor de recomendação híbrido.
 > Protótipo acadêmico da disciplina **Gerência de Projeto, 2026.2** (UFAL).
 
 Plataformas de diário (como o Letterboxd) registram tudo o que você assiste, mas não usam esse acervo
 para sugerir o próximo título. Netflix e Spotify recomendam, mas só dentro do próprio catálogo.
-O CineMatch une as duas coisas: **um diário** + **um recomendador** que combina os atributos dos títulos
+O Tastory une as duas coisas: **um diário** + **um recomendador** que combina os atributos dos títulos
 (gênero, tags, diretor, década) com o gosto de usuários parecidos com você.
 
 Este repositório tem a **API (backend)**, com integração real com o **TMDB**. O frontend oficial está a
@@ -48,7 +48,7 @@ Pré-requisito: **Python 3.11+**.
 ```bash
 git clone https://github.com/joaolevi/cinematch.git
 cd cinematch
-cp .env.example .env     # opcional: coloque sua chave do TMDB em CINEMATCH_TMDB_API_KEY
+cp .env.example .env     # opcional: coloque sua chave do TMDB em TASTORY_TMDB_API_KEY
 ./dev.sh                 # instala dependências e sobe a API em http://localhost:8000/docs
 ./dev.sh --reset         # mesmo, mas recria o banco com os dados de demonstração
 ```
@@ -65,16 +65,16 @@ cd backend
 uvicorn app.main:app --reload
 ```
 
-Na primeira execução o banco SQLite (`backend/cinematch.db`) é criado e populado automaticamente com
+Na primeira execução o banco SQLite (`backend/tastory.db`) é criado e populado automaticamente com
 o catálogo mockado. Para recriar do zero: `cd backend && python -m scripts.seed`.
 
 ### Contas de demonstração
 
 | Perfil | E-mail | Senha |
 |---|---|---|
-| Administrador | `admin@cinematch.dev` | `admin123` |
-| Usuário (sem histórico, cai no *cold start*) | `demo@cinematch.dev` | `demo123` |
-| 30 usuários sintéticos (personas de gosto) | `terror.1@seed.cinematch.dev` … `comedia.5@seed.cinematch.dev` | `senha123` |
+| Administrador | `admin@tastory.dev` | `admin123` |
+| Usuário (sem histórico, cai no *cold start*) | `demo@tastory.dev` | `demo123` |
+| 30 usuários sintéticos (personas de gosto) | `terror.1@seed.tastory.dev` … `comedia.5@seed.tastory.dev` | `senha123` |
 
 ---
 
@@ -82,7 +82,7 @@ o catálogo mockado. Para recriar do zero: `cd backend && python -m scripts.seed
 
 - **Mock (offline):** `backend/data/seed_catalog.json` (153 títulos carregados no início) e
   `mock_external_catalog.json` (45 extras). Funciona sem internet e sem chave.
-- **TMDB (real):** com `CINEMATCH_TMDB_API_KEY` no `.env`, o admin pode:
+- **TMDB (real):** com `TASTORY_TMDB_API_KEY` no `.env`, o admin pode:
   - `POST /admin/sync?provider=tmdb&pages=2`: importa filmes e séries populares no Brasil, com
     pôster, sinopse em português, diretor/criadores e palavras-chave;
   - `GET /admin/tmdb/search?q=...` + `POST /admin/tmdb/import`: busca e importa um título específico;

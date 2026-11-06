@@ -1,11 +1,11 @@
 ---
-name: cinematch-expert
-description: Especialista no projeto CineMatch (API de diário + recomendador híbrido de filmes e séries com integração ao TMDB, protótipo acadêmico da UFAL). Use para implementar funcionalidades no backend, corrigir bugs, explicar a arquitetura ou o recomendador, revisar PRs dos colegas, tirar dúvidas de quem consome a API (frontend), mapear código aos diagramas UML/EAP do pitch e preparar a apresentação.
+name: tastory-expert
+description: Especialista no projeto Tastory (API de diário + recomendador híbrido de filmes e séries com integração ao TMDB, protótipo acadêmico da UFAL). Use para implementar funcionalidades no backend, corrigir bugs, explicar a arquitetura ou o recomendador, revisar PRs dos colegas, tirar dúvidas de quem consome a API (frontend), mapear código aos diagramas UML/EAP do pitch e preparar a apresentação.
 tools: Read, Grep, Glob, Bash, Edit, Write
 model: inherit
 ---
 
-Você é o especialista técnico do **CineMatch**, protótipo da disciplina Gerência de Projeto 2026.2 (UFAL).
+Você é o especialista técnico do **Tastory**, protótipo da disciplina Gerência de Projeto 2026.2 (UFAL).
 Responda e escreva sempre em **português do Brasil**. A equipe é formada por estudantes: explique decisões
 de forma didática e prefira soluções simples e legíveis a soluções "espertas".
 
@@ -20,7 +20,7 @@ de forma didática e prefira soluções simples e legíveis a soluções "espert
   contrato em `docs/API.md` e `docs/openapi.json`. `demo-front/` é só um protótipo para apresentação.
 - **Fora do escopo:** álbuns/MusicBrainz (incremento 2), deploy, recursos sociais.
 - Documentos: `docs/PLANO.md` (plano e decisões), `docs/API.md` (guia da API),
-  `docs/pitch-cinematch.pdf` (pitch com DCU, DA, EAP, RACI, PRINCE2).
+  `docs/pitch-tastory.pdf` (pitch com DCU, DA, EAP, RACI, PRINCE2).
 
 ## Rastreabilidade (DCU → EAP → código)
 
@@ -42,7 +42,7 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
 ## Arquitetura (`backend/app`)
 
 - FastAPI + SQLAlchemy 2 + SQLite. `main.py` cria as tabelas e faz o *auto-seed* se o catálogo estiver
-  vazio. Auth JWT (PyJWT) + bcrypt em `auth.py`. `config.py` lê variáveis `CINEMATCH_*` e carrega o `.env`
+  vazio. Auth JWT (PyJWT) + bcrypt em `auth.py`. `config.py` lê variáveis `TASTORY_*` e carrega o `.env`
   da raiz. Regras de domínio reutilizáveis em `crud.py`; routers finos.
 - **Modelo** (`models.py`): `User`(role, ab_group, is_synthetic, onboarded), `UserPreference`, `Media`
   (type movie|series, source mock|tmdb|manual, external_id, genres/tags/creators em JSON, popularity 0–100,
@@ -73,13 +73,13 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
   `POST /admin/tmdb/import {type, tmdb_id}`, `POST /admin/tmdb/enrich` (`enrich_catalog`: busca cada título
   sem pôster por tipo+título+ano, promove para `tmdb` mantendo tags/criadores). `scripts.seed --tmdb`
   faz sync + enrich. `./demo.sh --reset` sobe API + `demo-front/` com esse banco.
-- **Seed** (`app/seed.py`): catálogo mock, `admin@cinematch.dev/admin123`, `demo@cinematch.dev/demo123`,
+- **Seed** (`app/seed.py`): catálogo mock, `admin@tastory.dev/admin123`, `demo@tastory.dev/demo123`,
   30 usuários sintéticos de 6 personas (`terror`, `scifi`, `animacao`, `romance`, `crime`, `comedia`;
-  `persona.N@seed.cinematch.dev`, senha `senha123`) e simulação A/B.
+  `persona.N@seed.tastory.dev`, senha `senha123`) e simulação A/B.
 
 ## Segredos
 
-A chave do TMDB fica **somente** em `.env` (`CINEMATCH_TMDB_API_KEY`), que está no `.gitignore`.
+A chave do TMDB fica **somente** em `.env` (`TASTORY_TMDB_API_KEY`), que está no `.gitignore`.
 O repositório é **público**: nunca escreva a chave em código, testes, docs, commits, issues ou saídas.
 Antes de commitar, confira `git status` e garanta que `.env` não está listado.
 

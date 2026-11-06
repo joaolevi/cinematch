@@ -1,4 +1,4 @@
-"""Configurações da aplicação, lidas de variáveis de ambiente (prefixo CINEMATCH_).
+"""Configurações da aplicação, lidas de variáveis de ambiente (prefixo TASTORY_).
 
 Também carrega um arquivo `.env` na raiz do repositório (ou em backend/), se existir.
 Variáveis já definidas no ambiente têm prioridade sobre o `.env`.
@@ -37,21 +37,21 @@ def _bool(value: str) -> bool:
 class Settings:
     database_url: str = field(
         default_factory=lambda: os.getenv(
-            "CINEMATCH_DATABASE_URL", f"sqlite:///{BACKEND_DIR / 'cinematch.db'}"
+            "TASTORY_DATABASE_URL", f"sqlite:///{BACKEND_DIR / 'tastory.db'}"
         )
     )
     secret_key: str = field(
         default_factory=lambda: os.getenv(
-            "CINEMATCH_SECRET_KEY", "dev-secret-cinematch-troque-esta-chave-em-producao"
+            "TASTORY_SECRET_KEY", "dev-secret-tastory-troque-esta-chave-em-producao"
         )
     )
     token_expire_minutes: int = field(
-        default_factory=lambda: int(os.getenv("CINEMATCH_TOKEN_EXPIRE_MINUTES", "1440"))
+        default_factory=lambda: int(os.getenv("TASTORY_TOKEN_EXPIRE_MINUTES", "1440"))
     )
-    auto_seed: bool = field(default_factory=lambda: _bool(os.getenv("CINEMATCH_AUTO_SEED", "true")))
+    auto_seed: bool = field(default_factory=lambda: _bool(os.getenv("TASTORY_AUTO_SEED", "true")))
     cors_origins: list[str] = field(
         default_factory=lambda: os.getenv(
-            "CINEMATCH_CORS_ORIGINS",
+            "TASTORY_CORS_ORIGINS",
             "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000",
         ).split(",")
     )
@@ -59,10 +59,10 @@ class Settings:
     external_catalog_path: Path = DATA_DIR / "mock_external_catalog.json"
 
     # TMDB (themoviedb.org) — opcional. Sem chave, a sincronização usa o catálogo mockado.
-    tmdb_api_key: str = field(default_factory=lambda: os.getenv("CINEMATCH_TMDB_API_KEY", "").strip())
-    tmdb_language: str = field(default_factory=lambda: os.getenv("CINEMATCH_TMDB_LANGUAGE", "pt-BR"))
-    tmdb_region: str = field(default_factory=lambda: os.getenv("CINEMATCH_TMDB_REGION", "BR"))
-    tmdb_sync_pages: int = field(default_factory=lambda: int(os.getenv("CINEMATCH_TMDB_SYNC_PAGES", "2")))
+    tmdb_api_key: str = field(default_factory=lambda: os.getenv("TASTORY_TMDB_API_KEY", "").strip())
+    tmdb_language: str = field(default_factory=lambda: os.getenv("TASTORY_TMDB_LANGUAGE", "pt-BR"))
+    tmdb_region: str = field(default_factory=lambda: os.getenv("TASTORY_TMDB_REGION", "BR"))
+    tmdb_sync_pages: int = field(default_factory=lambda: int(os.getenv("TASTORY_TMDB_SYNC_PAGES", "2")))
 
 
 settings = Settings()

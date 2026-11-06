@@ -3,8 +3,8 @@ import tempfile
 
 # Banco isolado para os testes (antes de importar a aplicação)
 _tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
-os.environ["CINEMATCH_DATABASE_URL"] = f"sqlite:///{_tmp.name}"
-os.environ["CINEMATCH_AUTO_SEED"] = "false"
+os.environ["TASTORY_DATABASE_URL"] = f"sqlite:///{_tmp.name}"
+os.environ["TASTORY_AUTO_SEED"] = "false"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

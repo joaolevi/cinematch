@@ -26,6 +26,6 @@ trap 'kill 0' EXIT INT TERM
 (cd demo-front && npm run dev -- --host 127.0.0.1) &
 sleep 2
 echo ""
-echo ">> Interface: http://localhost:5173   (demo@cinematch.dev / demo123 · admin@cinematch.dev / admin123)"
+echo ">> Interface: http://localhost:5173   (demo@tastory.dev / demo123 · admin@tastory.dev / admin123)"
 echo ">> API:       http://localhost:8000/docs"
 wait

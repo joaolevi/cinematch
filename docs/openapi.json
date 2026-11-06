@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "CineMatch API",
+    "title": "Tastory API",
     "description": "Diário e recomendador de filmes e séries — protótipo (Gerência de Projeto 2026.2).",
     "version": "0.1.0"
   },

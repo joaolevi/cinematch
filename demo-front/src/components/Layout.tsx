@@ -9,7 +9,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 export function Logo() {
   return (
     <span className="text-2xl font-extrabold tracking-tight">
-      Cine<span className="text-accent">Match</span>
+      Tast<span className="text-accent">ory</span>
     </span>
   );
 }
@@ -64,7 +64,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer className="mx-auto max-w-6xl px-4 pb-8 text-xs text-muted">
-        CineMatch, protótipo para apresentação · Gerência de Projeto 2026.2 (UFAL) · Dados e pôsteres:{" "}
+        Tastory, protótipo para apresentação · Gerência de Projeto 2026.2 (UFAL) · Dados e pôsteres:{" "}
         <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="text-accent">
           TMDB
         </a>{" "}

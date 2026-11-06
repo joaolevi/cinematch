@@ -38,6 +38,6 @@
 
 ## Usando o Claude Code
 
-O repositório tem um agente especialista em `.claude/agents/cinematch-expert.md` e contexto geral em
-`CLAUDE.md`. No Claude Code, peça por exemplo: *"use o agente cinematch-expert para adicionar um filtro
+O repositório tem um agente especialista em `.claude/agents/tastory-expert.md` e contexto geral em
+`CLAUDE.md`. No Claude Code, peça por exemplo: *"use o agente tastory-expert para adicionar um filtro
 por década na busca"*.

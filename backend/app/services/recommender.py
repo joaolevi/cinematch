@@ -128,7 +128,7 @@ def trending(
     score = 0.7 * pop + 0.3 * cnt
     order = np.argsort(-score)[:limit]
     return [
-        Recommendation(items[i], float(score[i]), "Em alta no CineMatch", "trending") for i in order
+        Recommendation(items[i], float(score[i]), "Em alta no Tastory", "trending") for i in order
     ]
 
 

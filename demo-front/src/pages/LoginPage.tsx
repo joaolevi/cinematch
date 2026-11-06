@@ -34,7 +34,7 @@ export default function LoginPage() {
 
   function fillDemo(kind: "demo" | "admin") {
     setMode("login");
-    setEmail(kind === "demo" ? "demo@cinematch.dev" : "admin@cinematch.dev");
+    setEmail(kind === "demo" ? "demo@tastory.dev" : "admin@tastory.dev");
     setPassword(kind === "demo" ? "demo123" : "admin123");
   }
 

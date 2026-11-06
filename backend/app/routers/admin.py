@@ -61,7 +61,7 @@ def delete_media(media_id: int, db: Session = Depends(get_db)):
 def tmdb_provider(pages: int | None = None) -> TmdbCatalogProvider:
     """Cria o provider do TMDB com a chave do .env (400 se não houver chave)."""
     if not settings.tmdb_api_key:
-        raise HTTPException(status_code=400, detail="CINEMATCH_TMDB_API_KEY não configurada no .env")
+        raise HTTPException(status_code=400, detail="TASTORY_TMDB_API_KEY não configurada no .env")
     return TmdbCatalogProvider(
         settings.tmdb_api_key,
         language=settings.tmdb_language,

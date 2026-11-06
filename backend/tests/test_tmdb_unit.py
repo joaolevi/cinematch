@@ -69,7 +69,7 @@ def make_provider(key="chave-teste", **kw) -> TmdbCatalogProvider:
     return TmdbCatalogProvider(key, pages=1, client=client, max_workers=2, **kw)
 
 
-def test_map_genres_uses_cinematch_vocabulary():
+def test_map_genres_uses_tastory_vocabulary():
     assert map_genres("movie", [878, 53, 10770]) == ["Ficção Científica", "Suspense"]
     assert map_genres("series", [10765, 10759]) == ["Ficção Científica", "Fantasia", "Ação", "Aventura"]
 

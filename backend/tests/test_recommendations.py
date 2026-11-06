@@ -8,7 +8,7 @@ def test_cold_start_returns_trending(client, user_headers):
     feed = client.get("/recommendations", headers=user_headers).json()
     assert feed["strategy"] == "trending"
     assert len(feed["items"]) == 20  # usuário novo nunca vê a tela vazia
-    assert all(i["reason"] == "Em alta no CineMatch" for i in feed["items"])
+    assert all(i["reason"] == "Em alta no Tastory" for i in feed["items"])
 
 
 def test_preferences_personalize_feed(client, user_headers):

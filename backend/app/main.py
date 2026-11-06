@@ -1,4 +1,4 @@
-"""Ponto de entrada da API do CineMatch.
+"""Ponto de entrada da API do Tastory.
 
 Rodar:  uvicorn app.main:app --reload   (a partir da pasta backend/)
 Docs:   http://localhost:8000/docs
@@ -16,7 +16,7 @@ from .db import Base, SessionLocal, engine
 from .models import Media
 from .routers import admin, auth, diary, lists, media, recommendations
 
-log = logging.getLogger("cinematch")
+log = logging.getLogger("tastory")
 
 
 @asynccontextmanager
@@ -32,7 +32,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(
-    title="CineMatch API",
+    title="Tastory API",
     description="Diário e recomendador de filmes e séries — protótipo (Gerência de Projeto 2026.2).",
     version="0.1.0",
     lifespan=lifespan,
