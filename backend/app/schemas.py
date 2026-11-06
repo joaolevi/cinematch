@@ -6,6 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 MediaType = Literal["movie", "series"]
+MAX_PASSWORD_BYTES = 72  # limite do bcrypt
 FeedbackAction = Literal["want", "seen", "dismiss"]
 
 
@@ -17,7 +18,14 @@ class ORM(BaseModel):
 class RegisterIn(BaseModel):
     name: str = Field(min_length=2, max_length=120)
     email: EmailStr
-    password: str = Field(min_length=6, max_length=128)
+    password: str = Field(min_length=6)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if len(v.encode()) > MAX_PASSWORD_BYTES:
+            raise ValueError(f"a senha deve ter no máximo {MAX_PASSWORD_BYTES} bytes")
+        return v
 
 
 class LoginIn(BaseModel):
