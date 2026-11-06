@@ -1,4 +1,7 @@
 import { useId, useState } from "react";
+import { formatRating } from "../format";
+
+const STAR_COLOR = "var(--color-amber)";
 
 function Star({ fill }: { fill: 0 | 0.5 | 1 }) {
   const id = `half${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -6,14 +9,14 @@ function Star({ fill }: { fill: 0 | 0.5 | 1 }) {
     <svg viewBox="0 0 24 24" className="h-full w-full">
       <defs>
         <linearGradient id={id}>
-          <stop offset="50%" stopColor="#5ff5e8" />
+          <stop offset="50%" stopColor={STAR_COLOR} />
           <stop offset="50%" stopColor="transparent" />
         </linearGradient>
       </defs>
       <path
         d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"
-        fill={fill === 1 ? "#5ff5e8" : fill === 0.5 ? `url(#${id})` : "transparent"}
-        stroke="#5ff5e8"
+        fill={fill === 1 ? STAR_COLOR : fill === 0.5 ? `url(#${id})` : "transparent"}
+        stroke={STAR_COLOR}
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
@@ -76,7 +79,7 @@ export function StarsInput({
           </span>
         ))}
       </div>
-      <span className="w-10 text-sm text-muted">{value != null ? value.toFixed(1) : "—"}</span>
+      <span className="w-16 text-sm text-muted">{value != null ? formatRating(value) : "sem nota"}</span>
       {value != null && (
         <button type="button" className="text-xs text-muted underline hover:text-accent" onClick={() => onChange(null)}>
           limpar

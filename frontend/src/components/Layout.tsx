@@ -62,9 +62,8 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer className="mx-auto w-full max-w-6xl px-4 py-6 text-xs text-muted">
-        Tastory ·{" "}
         <Link to="/sobre" className="hover:text-accent">
-          Sobre
+          Sobre o Tastory
         </Link>
       </footer>
     </div>

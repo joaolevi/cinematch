@@ -2,13 +2,20 @@
 
 @theme {
   --font-sans: "Urbanist", ui-sans-serif, system-ui, sans-serif;
-  --color-bg: #0b0d10;
-  --color-surface: #1f2630;
-  --color-surface-2: #283140;
-  --color-line: #334052;
+  --color-bg: #0a0c12;
+  --color-surface: #181d29;
+  --color-surface-2: #232b3b;
+  --color-line: #313c50;
   --color-accent: #5ff5e8;
   --color-accent-dim: #3cc4b9;
+  --color-violet: #b69cff;
+  --color-coral: #ff8a7a;
+  --color-amber: #ffc857;
   --color-muted: #9aa7b8;
+}
+
+html {
+  color-scheme: dark;
 }
 
 html, body, #root {
@@ -16,7 +23,11 @@ html, body, #root {
 }
 
 body {
-  background: var(--color-bg);
+  background:
+    radial-gradient(900px 420px at 12% -8%, rgb(95 245 232 / 0.1), transparent 65%),
+    radial-gradient(900px 420px at 88% -8%, rgb(182 156 255 / 0.13), transparent 65%),
+    var(--color-bg);
+  background-repeat: no-repeat;
   color: #e8edf3;
   font-family: var(--font-sans);
 }
@@ -29,6 +40,15 @@ body {
 }
 @utility btn-ghost {
   @apply btn border border-line text-slate-200 hover:border-accent hover:text-accent;
+}
+@utility btn-want {
+  @apply btn border border-violet/50 text-violet hover:bg-violet/15;
+}
+@utility btn-seen {
+  @apply btn border border-accent/50 text-accent hover:bg-accent/15;
+}
+@utility btn-skip {
+  @apply btn border border-line text-muted hover:border-coral/60 hover:bg-coral/10 hover:text-coral;
 }
 @utility btn-danger {
   @apply btn border border-red-400/40 text-red-300 hover:bg-red-500/10;

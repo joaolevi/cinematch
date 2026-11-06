@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import Poster from "../components/Poster";
 import { StarsDisplay } from "../components/Stars";
+import { plural } from "../format";
 import type { AdminReview, ExternalTitle, Media, MediaInput, Metrics, VariantMetrics } from "../types";
 
 type Tab = "metrics" | "catalog" | "moderation";
@@ -69,6 +70,7 @@ function VariantCard({ m, label }: { m: VariantMetrics; label: string }) {
 }
 
 const MIN_PEOPLE_TO_CONCLUDE = 30;
+const ADMIN_SYNC_PAGES = 2; // sincronização rápida; a carga completa é feita pelo script de seed
 
 /** Diz como ler os números, de acordo com a origem deles. */
 function dataWarning(m: Metrics): { title: string; text: string } {
@@ -82,7 +84,7 @@ function dataWarning(m: Metrics): { title: string; text: string } {
   if (m.real_users < MIN_PEOPLE_TO_CONCLUDE) {
     return {
       title: "Ainda são poucas pessoas",
-      text: `Com ${m.real_users} pessoa(s), use estes números como referência, não como conclusão.`,
+      text: `Com ${plural(m.real_users, "pessoa", "pessoas")}, use estes números como referência, não como conclusão.`,
     };
   }
   return {
@@ -111,8 +113,8 @@ function MetricsTab() {
       </div>
       <div className="mt-5 grid gap-4 md:grid-cols-3">
         <VariantCard m={m.overall} label="Total" />
-        <VariantCard m={a} label="Grupo A · híbrido" />
-        <VariantCard m={b} label="Grupo B · só conteúdo" />
+        <VariantCard m={a} label="Grupo A (híbrido)" />
+        <VariantCard m={b} label="Grupo B (só conteúdo)" />
       </div>
       <div className="mt-4 flex flex-wrap gap-6 text-sm text-muted">
         <span>Pessoas reais: {m.real_users}</span>
@@ -204,7 +206,7 @@ function MediaForm({
           type="number"
           min={0}
           max={100}
-          title="Popularidade (0–100)"
+          title="Popularidade, de 0 a 100"
           value={f.popularity}
           onChange={(e) => setF({ ...f, popularity: Number(e.target.value) })}
         />
@@ -339,10 +341,10 @@ function TmdbPanel({ onChange }: { onChange: () => void }) {
   }
 
   async function sync(provider: "tmdb" | "mock") {
-    const r = await run(provider, () => api.adminSync(provider));
+    const r = await run(provider, () => api.adminSync(provider, ADMIN_SYNC_PAGES));
     if (r) {
       setMsg(
-        `${r.provider}: ${r.fetched} recebidos · ${r.created} novos · ${r.merged} unificados com o catálogo · ${r.updated} atualizados`,
+        `${r.provider}: ${plural(r.fetched, "título recebido", "títulos recebidos")}, ${plural(r.created, "novo", "novos")}, ${plural(r.merged, "unificado", "unificados")} com o catálogo e ${plural(r.updated, "atualizado", "atualizados")}.`,
       );
       onChange();
     }

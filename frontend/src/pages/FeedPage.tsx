@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import MediaCard from "../components/MediaCard";
 import SeenModal from "../components/SeenModal";
 import type { Feed, FeedbackAction, Media, MediaType } from "../types";
+
+const PAGE = 18;
 
 const STRATEGY_LABEL: Record<Feed["strategy"], string> = {
   hybrid: "Escolhidos a dedo, com base no seu gosto e em quem curte coisas parecidas",
@@ -21,16 +23,26 @@ export default function FeedPage() {
   const [error, setError] = useState<string | null>(null);
   const [seenTarget, setSeenTarget] = useState<Media | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [moreFailed, setMoreFailed] = useState(false);
+  const bottom = useRef<HTMLDivElement>(null);
+  const fetching = useRef(false);
+  const latestLoad = useRef(0); // respostas de um filtro antigo são ignoradas
 
   const load = useCallback(async () => {
+    const thisLoad = ++latestLoad.current;
     setLoading(true);
     setError(null);
+    setHasMore(true);
+    setMoreFailed(false);
     try {
-      setFeed(await api.feed(type || undefined, 18));
+      const first = await api.feed(type || undefined, PAGE);
+      if (thisLoad === latestLoad.current) setFeed(first);
     } catch (e) {
-      setError((e as Error).message);
+      if (thisLoad === latestLoad.current) setError((e as Error).message);
     } finally {
-      setLoading(false);
+      if (thisLoad === latestLoad.current) setLoading(false);
     }
   }, [type]);
 
@@ -38,14 +50,43 @@ export default function FeedPage() {
     load();
   }, [load]);
 
+  const loadMore = useCallback(async () => {
+    if (!feed || fetching.current) return;
+    const thisLoad = latestLoad.current;
+    const onScreen = feed.items.map((i) => i.media.id);
+    fetching.current = true;
+    setLoadingMore(true);
+    setMoreFailed(false);
+    try {
+      const next = await api.feed(type || undefined, PAGE, onScreen);
+      if (thisLoad !== latestLoad.current) return;
+      const fresh = next.items.filter((i) => !onScreen.includes(i.media.id));
+      if (fresh.length === 0) setHasMore(false);
+      else setFeed((f) => (f ? { ...f, items: [...f.items, ...fresh] } : f));
+    } catch {
+      if (thisLoad === latestLoad.current) setMoreFailed(true);
+    } finally {
+      fetching.current = false;
+      setLoadingMore(false);
+    }
+  }, [feed, type]);
+
+  useEffect(() => {
+    const target = bottom.current;
+    if (!target || !hasMore || moreFailed) return;
+    const observer = new IntersectionObserver(([entry]) => entry.isIntersecting && loadMore(), { rootMargin: "400px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore, moreFailed]);
+
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 2500);
     return () => clearTimeout(t);
   }, [toast]);
 
-  async function act(media: Media, action: FeedbackAction, rating?: number | null, review?: string) {
-    await api.feedback(media.id, action, rating, review);
+  async function act(media: Media, action: FeedbackAction, rating?: number | null, review?: string, date?: string | null) {
+    await api.feedback(media.id, action, rating, review, date);
     setFeed((f) => (f ? { ...f, items: f.items.filter((i) => i.media.id !== media.id) } : f));
     setToast(
       action === "want"
@@ -79,7 +120,7 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {user && !user.onboarded && feed?.strategy === "trending" && (
+      {user && feed?.strategy === "trending" && (
         <div className="card mt-6 flex flex-wrap items-center justify-between gap-3 p-4">
           <p className="text-sm">Conte o que você curte e a gente acerta muito mais.</p>
           <Link to="/onboarding" className="btn-primary">
@@ -97,14 +138,14 @@ export default function FeedPage() {
             <p className="mt-1 line-clamp-2 text-xs text-accent/90" title={rec.reason}>
               {rec.reason}
             </p>
-            <div className="mt-2 grid grid-cols-3 gap-1">
-              <button className="btn-ghost px-1 py-1 text-[11px]" title="Quero ver" onClick={() => act(rec.media, "want")}>
-                + Quero
+            <div className="mt-2 grid grid-cols-[1fr_1fr_auto] gap-1">
+              <button className="btn-want px-1 py-1 text-[11px]" onClick={() => act(rec.media, "want")}>
+                Quero ver
               </button>
-              <button className="btn-ghost px-1 py-1 text-[11px]" title="Já vi" onClick={() => setSeenTarget(rec.media)}>
-                ✓ Já vi
+              <button className="btn-seen px-1 py-1 text-[11px]" onClick={() => setSeenTarget(rec.media)}>
+                Já vi
               </button>
-              <button className="btn-ghost px-1 py-1 text-[11px]" title="Não me interesso" onClick={() => act(rec.media, "dismiss")}>
+              <button className="btn-skip px-2 py-1 text-[11px]" title="Não me interesso" aria-label="Não me interesso" onClick={() => act(rec.media, "dismiss")}>
                 ✕
               </button>
             </div>
@@ -112,16 +153,26 @@ export default function FeedPage() {
         ))}
       </div>
 
-      {feed && feed.items.length === 0 && !loading && (
-        <p className="mt-6 text-muted">Você viu tudo por aqui! Clique em ↻ para receber novas sugestões.</p>
+      <div ref={bottom} />
+      {loadingMore && <p className="mt-8 text-center text-sm text-muted">Procurando mais títulos para você...</p>}
+      {moreFailed && (
+        <div className="mt-8 text-center">
+          <p className="text-sm text-muted">Não conseguimos trazer mais sugestões agora.</p>
+          <button className="btn-ghost mt-3" onClick={loadMore}>
+            Tentar de novo
+          </button>
+        </div>
+      )}
+      {feed && !hasMore && !loading && (
+        <p className="mt-8 text-center text-muted">Você viu tudo por aqui! Clique em ↻ para receber novas sugestões.</p>
       )}
 
       {seenTarget && (
         <SeenModal
           media={seenTarget}
           onClose={() => setSeenTarget(null)}
-          onConfirm={async (rating, review) => {
-            await act(seenTarget, "seen", rating, review);
+          onConfirm={async (rating, review, date) => {
+            await act(seenTarget, "seen", rating, review, date);
             setSeenTarget(null);
           }}
         />

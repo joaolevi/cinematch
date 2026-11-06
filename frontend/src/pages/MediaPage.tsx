@@ -4,6 +4,7 @@ import { api } from "../api";
 import Poster from "../components/Poster";
 import SeenModal from "../components/SeenModal";
 import { StarsDisplay } from "../components/Stars";
+import { formatDate, formatRating, genreColor, plural } from "../format";
 import type { MediaDetail, UserList } from "../types";
 
 export default function MediaPage() {
@@ -36,80 +37,130 @@ export default function MediaPage() {
   const status = media.my_status;
 
   async function toggleList(list: UserList, inList: boolean) {
-    if (inList) await api.removeFromList(list.id, mediaId);
-    else await api.addToList(list.id, mediaId);
+    if (inList) {
+      await api.removeFromList(list.id, mediaId);
+    } else {
+      if (status.dismissed) await api.undoDismiss(mediaId);
+      // A watchlist passa pelo feedback para contar na taxa de aceitação
+      if (list.is_watchlist) await api.feedback(mediaId, "want");
+      else await api.addToList(list.id, mediaId);
+    }
+    load();
+  }
+
+  async function toggleDismiss() {
+    if (status.dismissed) await api.undoDismiss(mediaId);
+    else await api.feedback(mediaId, "dismiss");
     load();
   }
 
   return (
     <div>
-      <div className="grid gap-8 md:grid-cols-[240px_1fr]">
-        <div className="mx-auto w-48 md:w-full">
-          <Poster media={media} />
-        </div>
-        <div>
-          <p className="text-sm text-muted">
-            {media.type === "movie" ? "Filme" : "Série"} · {media.year} · {media.creators.join(", ")}
-          </p>
-          <h1 className="mt-1 text-4xl font-extrabold">{media.title}</h1>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {media.genres.map((g) => (
-              <span key={g} className="chip border-accent/40 text-accent">
-                {g}
-              </span>
-            ))}
-            {media.tags.map((t) => (
-              <span key={t} className="chip">
-                #{t}
-              </span>
-            ))}
+      <div className="relative overflow-hidden rounded-2xl border border-line/60 bg-surface/40 p-6 md:p-8">
+        {media.poster_url && (
+          <div
+            aria-hidden
+            className="absolute inset-0 scale-110 bg-cover bg-center opacity-20 blur-2xl"
+            style={{ backgroundImage: `url(${media.poster_url})` }}
+          />
+        )}
+        <div className="relative grid gap-8 md:grid-cols-[240px_1fr]">
+          <div className="mx-auto w-48 md:w-full">
+            <Poster media={media} />
           </div>
-          <p className="mt-5 max-w-2xl leading-relaxed text-slate-300">{media.overview}</p>
+          <div>
+            <p className="text-sm text-muted">
+              {media.type === "movie" ? "Filme" : "Série"}
+              {media.year ? ` de ${media.year}` : ""}
+            </p>
+            <h1 className="mt-1 text-4xl font-extrabold">{media.title}</h1>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {media.genres.map((g) => {
+                const color = genreColor(g);
+                return (
+                  <span key={g} className="chip" style={{ color, borderColor: `${color}66`, backgroundColor: `${color}14` }}>
+                    {g}
+                  </span>
+                );
+              })}
+              {media.tags.map((t) => (
+                <span key={t} className="chip">
+                  #{t}
+                </span>
+              ))}
+            </div>
+            <p className="mt-5 max-w-2xl leading-relaxed text-slate-300">{media.overview}</p>
 
-          <div className="mt-5 flex items-center gap-3 text-sm">
-            <StarsDisplay value={media.avg_rating} />
-            <span className="text-muted">
-              {media.avg_rating != null ? `${media.avg_rating.toFixed(1)} · ` : ""}
-              {media.ratings_count} nota(s) na plataforma
-            </span>
-          </div>
+            <dl className="mt-5 max-w-2xl space-y-1.5 text-sm">
+              {media.creators.length > 0 && (
+                <div className="flex gap-3">
+                  <dt className="w-16 shrink-0 text-muted">{media.type === "movie" ? "Direção" : "Criação"}</dt>
+                  <dd>{media.creators.join(", ")}</dd>
+                </div>
+              )}
+              {media.actors.length > 0 && (
+                <div className="flex gap-3">
+                  <dt className="w-16 shrink-0 text-muted">Elenco</dt>
+                  <dd>{media.actors.join(", ")}</dd>
+                </div>
+              )}
+            </dl>
 
-          <div className="mt-6 flex flex-wrap gap-2">
-            <button className="btn-primary" onClick={() => setShowSeen(true)}>
-              {status.diary_entry_id ? "✓ No diário — editar" : "✓ Já vi"}
-            </button>
-            {watchlist && (
-              <button className="btn-ghost" onClick={() => toggleList(watchlist, status.in_watchlist)}>
-                {status.in_watchlist ? "− Remover do Quero ver" : "+ Quero ver"}
+            <div className="mt-5 flex items-center gap-3 text-sm">
+              {media.avg_rating != null && <StarsDisplay value={media.avg_rating} />}
+              <span className="text-muted">
+                {media.avg_rating != null
+                  ? `${formatRating(media.avg_rating)} de média em ${plural(media.ratings_count, "nota", "notas")}`
+                  : "Ainda sem notas"}
+              </span>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              <button className="btn-primary" onClick={() => setShowSeen(true)}>
+                {status.diary_entry_id ? "Editar registro" : "✓ Já vi"}
               </button>
+              {watchlist && (
+                <button className="btn-want" onClick={() => toggleList(watchlist, status.in_watchlist)}>
+                  {status.in_watchlist ? "Remover do Quero ver" : "+ Quero ver"}
+                </button>
+              )}
+              {!status.diary_entry_id && !status.in_watchlist && (
+                <button className="btn-skip" onClick={toggleDismiss}>
+                  {status.dismissed ? "↩ Voltar para as sugestões" : "✕ Não me interesso"}
+                </button>
+              )}
+            </div>
+            {status.dismissed && (
+              <p className="mt-3 text-sm text-muted">Combinado, não vamos mais sugerir este título.</p>
+            )}
+            {status.diary_entry_id && (
+              <p className="mt-3 flex items-center gap-2 text-sm text-muted">
+                {status.consumed_at ? `Você viu em ${formatDate(status.consumed_at)}` : "Você já viu este título"}
+                {status.rating != null && <StarsDisplay value={status.rating} />}
+              </p>
+            )}
+
+            {customLists.length > 0 && (
+              <div className="mt-6">
+                <p className="text-sm font-semibold">Suas listas</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {customLists.map((l) => {
+                    const inList = status.list_ids.includes(l.id);
+                    return (
+                      <button
+                        key={l.id}
+                        className={`chip cursor-pointer ${inList ? "border-accent text-accent" : ""}`}
+                        onClick={() => toggleList(l, inList)}
+                      >
+                        {inList ? "✓ " : "+ "}
+                        {l.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </div>
-          {status.rating != null && (
-            <p className="mt-3 flex items-center gap-2 text-sm text-muted">
-              Sua nota: <StarsDisplay value={status.rating} />
-            </p>
-          )}
-
-          {customLists.length > 0 && (
-            <div className="mt-6">
-              <p className="text-sm font-semibold">Suas listas</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {customLists.map((l) => {
-                  const inList = status.list_ids.includes(l.id);
-                  return (
-                    <button
-                      key={l.id}
-                      className={`chip cursor-pointer ${inList ? "border-accent text-accent" : ""}`}
-                      onClick={() => toggleList(l, inList)}
-                    >
-                      {inList ? "✓ " : "+ "}
-                      {l.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -133,6 +184,7 @@ export default function MediaPage() {
         <SeenModal
           media={media}
           initialRating={status.rating}
+          initialDate={status.consumed_at}
           onClose={() => setShowSeen(false)}
           onConfirm={async (rating, review, date) => {
             if (status.diary_entry_id) {
@@ -142,7 +194,7 @@ export default function MediaPage() {
                 ...(review ? { review } : {}),
               });
             } else {
-              await api.addDiary(mediaId, rating, review, date);
+              await api.feedback(mediaId, "seen", rating, review, date);
             }
             setShowSeen(false);
             load();

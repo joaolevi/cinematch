@@ -83,7 +83,7 @@ export default function LoginPage() {
             <button className="cursor-pointer text-accent underline" onClick={() => fillDemo("demo")}>
               usuário demo
             </button>{" "}
-            ·{" "}
+            ou{" "}
             <button className="cursor-pointer text-accent underline" onClick={() => fillDemo("admin")}>
               administrador
             </button>

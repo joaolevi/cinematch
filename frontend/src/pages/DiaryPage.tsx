@@ -4,10 +4,39 @@ import { api } from "../api";
 import Poster from "../components/Poster";
 import SeenModal from "../components/SeenModal";
 import { StarsDisplay } from "../components/Stars";
+import { formatDate, formatRating } from "../format";
 import type { DiaryEntry } from "../types";
 
+const RANKING_SIZE = 10;
+const LOVED_FROM = 3.5;
+const HATED_BELOW = 3; // quem só dá notas altas não vê títulos bons na lista dos que odiou
+
+function Ranking({ title, entries, color }: { title: string; entries: DiaryEntry[]; color: string }) {
+  if (entries.length === 0) return null;
+  return (
+    <section className="mt-8">
+      <h2 className={`text-lg font-bold ${color}`}>{title}</h2>
+      <ol className="mt-3 flex gap-3 overflow-x-auto pb-2">
+        {entries.map((e, position) => (
+          <li key={e.id} className="w-24 shrink-0">
+            <Link to={`/media/${e.media.id}`} className="relative block" title={e.media.title}>
+              <Poster media={e.media} compact />
+              <span className={`absolute top-1 left-1 rounded-md bg-bg/85 px-1.5 text-sm font-extrabold ${color}`}>
+                {position + 1}
+              </span>
+            </Link>
+            <div className="mt-1.5">
+              <StarsDisplay value={e.rating} size={13} />
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function monthLabel(entry: DiaryEntry): string {
-  if (!entry.consumed_at) return "Seus primeiros favoritos";
+  if (!entry.consumed_at) return entry.from_onboarding ? "Seus primeiros favoritos" : "Sem data";
   const d = new Date(entry.consumed_at + "T12:00:00");
   return d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 }
@@ -46,6 +75,15 @@ export default function DiaryPage() {
     return { total: entries?.length ?? 0, avg, top };
   }, [entries]);
 
+  const rankings = useMemo(() => {
+    const rated = (entries ?? []).filter((e) => e.rating != null);
+    const note = (e: DiaryEntry) => e.rating ?? 0;
+    return {
+      loved: rated.filter((e) => note(e) >= LOVED_FROM).sort((a, b) => note(b) - note(a)).slice(0, RANKING_SIZE),
+      hated: rated.filter((e) => note(e) < HATED_BELOW).sort((a, b) => note(a) - note(b)).slice(0, RANKING_SIZE),
+    };
+  }, [entries]);
+
   return (
     <div>
       <h1 className="text-3xl font-bold">Meu diário</h1>
@@ -53,18 +91,23 @@ export default function DiaryPage() {
 
       <div className="mt-6 grid grid-cols-3 gap-3 sm:max-w-xl">
         <div className="card p-4">
-          <p className="text-2xl font-bold">{stats.total}</p>
-          <p className="text-xs text-muted">títulos registrados</p>
+          <p className="text-2xl font-bold text-accent">{stats.total}</p>
+          <p className="text-xs text-muted">{stats.total === 1 ? "título registrado" : "títulos registrados"}</p>
         </div>
         <div className="card p-4">
-          <p className="text-2xl font-bold">{stats.avg != null ? stats.avg.toFixed(1) : "—"}</p>
+          <p className={`font-bold text-amber ${stats.avg != null ? "text-2xl" : "text-sm leading-8"}`}>
+            {stats.avg != null ? formatRating(stats.avg) : "Sem notas"}
+          </p>
           <p className="text-xs text-muted">nota média</p>
         </div>
         <div className="card p-4">
-          <p className="line-clamp-2 text-sm font-bold">{stats.top.join(", ") || "—"}</p>
+          <p className="line-clamp-2 text-sm font-bold text-violet">{stats.top.join(", ") || "Nenhum ainda"}</p>
           <p className="text-xs text-muted">gêneros mais vistos</p>
         </div>
       </div>
+
+      <Ranking title="Top 10 que você mais amou" entries={rankings.loved} color="text-amber" />
+      <Ranking title="Top 10 que você mais odiou" entries={rankings.hated} color="text-coral" />
 
       {error && <p className="mt-6 text-red-300">{error}</p>}
       {entries?.length === 0 && (
@@ -93,7 +136,7 @@ export default function DiaryPage() {
                       <StarsDisplay value={e.rating} size={14} />
                       {e.consumed_at && (
                         <span className="text-xs text-muted">
-                          {new Date(e.consumed_at + "T12:00:00").toLocaleDateString("pt-BR")}
+                          {formatDate(e.consumed_at)}
                         </span>
                       )}
                     </div>
@@ -132,6 +175,7 @@ export default function DiaryPage() {
           media={editing.media}
           initialRating={editing.rating}
           initialReview={editing.review ?? ""}
+          initialDate={editing.consumed_at}
           onClose={() => setEditing(null)}
           onConfirm={async (rating, review, date) => {
             await api.updateDiary(editing.id, { rating, review, consumed_at: date });

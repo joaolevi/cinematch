@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { api, getToken, setToken } from "./api";
+import { ApiError, api, getToken, setToken } from "./api";
 import type { User } from "./types";
 
 interface AuthState {
@@ -24,8 +24,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       setUser(await api.me());
-    } catch {
-      setToken(null);
+    } catch (e) {
+      // Só uma sessão inválida encerra o login: falha de rede ou do servidor não deve deslogar
+      if (e instanceof ApiError && e.status === 401) setToken(null);
       setUser(null);
     }
   }, []);

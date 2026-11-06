@@ -1,15 +1,23 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import MediaCard from "../components/MediaCard";
-import type { Media, MediaType } from "../types";
+import { plural } from "../format";
+import type { Media, MediaSort, MediaType } from "../types";
 
 const PAGE = 24;
+
+const SORTS: { value: MediaSort; label: string }[] = [
+  { value: "popularity", label: "Mais populares" },
+  { value: "title", label: "Ordem alfabética" },
+  { value: "year", label: "Mais recentes" },
+];
 
 /** Buscar Mídias. */
 export default function SearchPage() {
   const [q, setQ] = useState("");
   const [type, setType] = useState<MediaType | "">("");
   const [genre, setGenre] = useState("");
+  const [sort, setSort] = useState<MediaSort>("popularity");
   const [genres, setGenres] = useState<string[]>([]);
   const [items, setItems] = useState<Media[]>([]);
   const [total, setTotal] = useState(0);
@@ -22,12 +30,12 @@ export default function SearchPage() {
 
   useEffect(() => {
     setOffset(0);
-  }, [q, type, genre]);
+  }, [q, type, genre, sort]);
 
   useEffect(() => {
     const t = setTimeout(() => {
       api
-        .search({ q, type, genre, limit: PAGE, offset })
+        .search({ q, type, genre, sort, limit: PAGE, offset })
         .then((r) => {
           setItems((prev) => (offset === 0 ? r.items : [...prev, ...r.items]));
           setTotal(r.total);
@@ -36,7 +44,7 @@ export default function SearchPage() {
         .catch((e) => setError(e.message));
     }, 250);
     return () => clearTimeout(t);
-  }, [q, type, genre, offset]);
+  }, [q, type, genre, sort, offset]);
 
   return (
     <div>
@@ -60,8 +68,15 @@ export default function SearchPage() {
             <option key={g}>{g}</option>
           ))}
         </select>
+        <select className="input sm:w-44" aria-label="Ordenar" value={sort} onChange={(e) => setSort(e.target.value as MediaSort)}>
+          {SORTS.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
       </div>
-      <p className="mt-3 text-sm text-muted">{total} resultado(s)</p>
+      <p className="mt-3 text-sm text-muted">{total > 0 ? plural(total, "resultado", "resultados") : "Nenhum resultado"}</p>
       {error && <p className="mt-3 text-red-300">{error}</p>}
 
       <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-4 lg:grid-cols-6">

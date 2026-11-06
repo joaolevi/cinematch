@@ -100,7 +100,7 @@ export default function OnboardingPage() {
     setLoading(true);
     try {
       const facets = await api.facets([...selectedGenres]);
-      setDecades(facets.decades);
+      setDecades([...new Set([...selectedDecades, ...facets.decades])].sort((a, b) => b - a));
       setCreators([...new Set([...selectedCreators, ...facets.creators])]);
     } catch (e) {
       setError((e as Error).message);
@@ -131,6 +131,11 @@ export default function OnboardingPage() {
   }
 
   async function finish(skip = false) {
+    // Quem já tinha feito o onboarding e pula mantém o que escolheu antes
+    if (skip && user?.onboarded) {
+      navigate("/");
+      return;
+    }
     setSaving(true);
     try {
       await api.setPreferences(

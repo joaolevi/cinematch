@@ -10,6 +10,8 @@ export interface User {
   onboarded: boolean;
 }
 
+export type MediaSort = "popularity" | "title" | "year";
+
 export interface Media {
   id: number;
   type: MediaType;
@@ -35,12 +37,14 @@ export interface Review {
 }
 
 export interface MediaDetail extends Media {
+  actors: string[];
   avg_rating: number | null;
   ratings_count: number;
   reviews: Review[];
   my_status: {
     diary_entry_id: number | null;
     rating: number | null;
+  consumed_at: string | null;
     in_watchlist: boolean;
     dismissed: boolean;
     list_ids: number[];
