@@ -1,8 +1,7 @@
 """Catálogo externo (ator secundário "API de Catálogo Externo" do DCU).
 
-No protótipo a API externa é simulada por arquivos JSON. Para usar uma API real (ex.: TMDB),
-basta criar outro `CatalogProvider` com o mesmo método `fetch_titles()` — o resto do sistema
-não precisa mudar.
+Os títulos vêm de um `CatalogProvider`: o mock em JSON ou o TMDB (`services/tmdb.py`). Para outra fonte,
+como o MusicBrainz, basta criar outro provider com `fetch_titles()`: o resto do sistema não precisa mudar.
 """
 
 import json

@@ -4,7 +4,7 @@ Reproduz a fórmula de `app/services/recommender.py`, sem a etapa de diversidade
 A base não fica no repositório: baixe `ml-latest-small` em https://grouplens.org/datasets/movielens/latest/
 
 Uso (a partir de backend/):
-    python -m scripts.avaliar_recomendador <pasta-do-ml-latest-small>
+    python -m scripts.evaluate_recommender <pasta-do-ml-latest-small>
 """
 
 import argparse

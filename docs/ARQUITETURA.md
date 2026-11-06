@@ -42,7 +42,7 @@ A mesma tabela recebe vizinhos de origens diferentes, o que permite tratar cada 
 
 Testes feitos em 05 e 06/11/2026. Para repetir o teste de qualidade, baixe o
 [MovieLens](https://grouplens.org/datasets/movielens/latest/) e rode
-`python -m scripts.avaliar_recomendador <pasta-do-ml-latest-small>` a partir de `backend/`.
+`python -m scripts.evaluate_recommender <pasta-do-ml-latest-small>` a partir de `backend/`.
 
 ### Carga do recomendador atual
 
