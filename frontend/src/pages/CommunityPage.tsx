@@ -2,29 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import Poster from "../components/Poster";
-import { StarsDisplay } from "../components/Stars";
-import { colorFor, formatDate, localDate, plural, timeAgo } from "../format";
+import WatchedBy, { Avatar } from "../components/WatchedBy";
+import { plural } from "../format";
 import type { CommunityEntry, Reviewer } from "../types";
 
 const PAGE = 20;
-
-function Avatar({ name, size }: { name: string; size: string }) {
-  return (
-    <span
-      aria-hidden
-      className={`flex shrink-0 items-center justify-center rounded-full font-bold text-bg ${size}`}
-      style={{ backgroundColor: colorFor(name) }}
-    >
-      {name.charAt(0).toUpperCase()}
-    </span>
-  );
-}
-
-function watchedWhen(consumedAt: string): string {
-  if (consumedAt === localDate()) return "hoje";
-  if (consumedAt === localDate(1)) return "ontem";
-  return `em ${formatDate(consumedAt)}`;
-}
 
 function Post({ entry }: { entry: CommunityEntry }) {
   const link = `/media/${entry.media.id}`;
@@ -40,13 +22,13 @@ function Post({ entry }: { entry: CommunityEntry }) {
           </Link>{" "}
           {entry.media.year && <span className="font-normal text-muted">{entry.media.year}</span>}
         </h2>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-          <Avatar name={entry.user_name} size="h-6 w-6 text-xs" />
-          {entry.rating != null && <StarsDisplay value={entry.rating} size={14} />}
-          <span>
-            {entry.consumed_at ? "Visto" : "Registrado"} por <strong className="text-slate-200">{entry.user_name}</strong>{" "}
-            {entry.consumed_at ? watchedWhen(entry.consumed_at) : timeAgo(entry.created_at)}
-          </span>
+        <div className="mt-1.5">
+          <WatchedBy
+            name={entry.user_name}
+            rating={entry.rating}
+            consumedAt={entry.consumed_at}
+            createdAt={entry.created_at}
+          />
         </div>
         {entry.review && <p className="mt-2 break-words whitespace-pre-line text-slate-200">{entry.review}</p>}
       </div>

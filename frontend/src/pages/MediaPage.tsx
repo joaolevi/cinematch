@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
+import Carousel from "../components/Carousel";
 import MediaCard from "../components/MediaCard";
 import Poster from "../components/Poster";
 import SeenModal from "../components/SeenModal";
 import { StarsDisplay } from "../components/Stars";
+import WatchedBy from "../components/WatchedBy";
 import { colorFor, formatDate, formatRating, plural } from "../format";
 import type { Media, MediaDetail, UserList } from "../types";
 
@@ -195,10 +197,14 @@ export default function MediaPage() {
       {similar.length > 0 && (
         <section className="mt-12">
           <h2 className="text-xl font-bold">Títulos parecidos</h2>
-          <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-6">
-            {similar.map((m) => (
-              <MediaCard key={m.id} media={m} />
-            ))}
+          <div className="mt-4">
+            <Carousel label="títulos parecidos">
+              {similar.map((m) => (
+                <div key={m.id} className="w-36 shrink-0 snap-start sm:w-40">
+                  <MediaCard media={m} />
+                </div>
+              ))}
+            </Carousel>
           </div>
         </section>
       )}
@@ -206,15 +212,12 @@ export default function MediaPage() {
       <section className="mt-12">
         <h2 className="text-xl font-bold">Resenhas</h2>
         {media.reviews.length === 0 && <p className="mt-2 text-sm text-muted">Ninguém comentou ainda. Que tal ser a primeira pessoa?</p>}
-        <div className="mt-4 space-y-3">
+        <div className="mt-2 divide-y divide-line/60">
           {media.reviews.map((r) => (
-            <div key={r.id} className="card p-4">
-              <div className="flex items-center gap-3 text-sm">
-                <span className="font-semibold">{r.user_name}</span>
-                <StarsDisplay value={r.rating} size={14} />
-              </div>
-              <p className="mt-2 text-slate-300">{r.review}</p>
-            </div>
+            <article key={r.id} className="py-4">
+              <WatchedBy name={r.user_name} rating={r.rating} consumedAt={r.consumed_at} createdAt={r.created_at} />
+              <p className="mt-2 break-words whitespace-pre-line text-slate-200">{r.review}</p>
+            </article>
           ))}
         </div>
       </section>
