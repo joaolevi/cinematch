@@ -2,8 +2,8 @@
 
 > Responsável: Lara. A interface consome a API pelo contrato em [`../docs/API.md`](../docs/API.md).
 
-React + Vite + TypeScript + Tailwind. Telas: login, onboarding, feed "Para você", busca, detalhe,
-diário, listas e admin (métricas A/B, catálogo com sincronização/importação do TMDB, moderação).
+React + Vite + TypeScript + Tailwind. Telas: login, onboarding em três passos, feed "Para você", busca, detalhe,
+diário, listas, sobre e admin (métricas A/B, catálogo com sincronização/importação do TMDB, moderação).
 
 ## Rodar
 

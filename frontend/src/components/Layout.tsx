@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -19,7 +19,7 @@ export default function Layout() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-line/60 bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <NavLink to="/">
@@ -60,15 +60,14 @@ export default function Layout() {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         <Outlet />
       </main>
-      <footer className="mx-auto max-w-6xl px-4 pb-8 text-xs text-muted">
-        Tastory · Gerência de Projeto 2026.2 (UFAL) · Dados e pôsteres:{" "}
-        <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="text-accent">
-          TMDB
-        </a>{" "}
-        (este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB)
+      <footer className="mx-auto w-full max-w-6xl px-4 py-6 text-xs text-muted">
+        Tastory ·{" "}
+        <Link to="/sobre" className="hover:text-accent">
+          Sobre
+        </Link>
       </footer>
     </div>
   );

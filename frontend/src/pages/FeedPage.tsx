@@ -7,9 +7,9 @@ import SeenModal from "../components/SeenModal";
 import type { Feed, FeedbackAction, Media, MediaType } from "../types";
 
 const STRATEGY_LABEL: Record<Feed["strategy"], string> = {
-  hybrid: "Híbrido: seu perfil + usuários parecidos com você",
-  content: "Baseado no seu perfil de gosto",
-  trending: "Em alta — registre ou avalie títulos para personalizar",
+  hybrid: "Escolhidos a dedo, com base no seu gosto e em quem curte coisas parecidas",
+  content: "Escolhidos a dedo, com base no que você curte",
+  trending: "O que está em alta agora. Conte o que você curte e isso aqui fica com a sua cara",
 };
 
 /** Ver Recomendações: feed com Quero ver / Já vi / Não me interesso. */
@@ -49,10 +49,10 @@ export default function FeedPage() {
     setFeed((f) => (f ? { ...f, items: f.items.filter((i) => i.media.id !== media.id) } : f));
     setToast(
       action === "want"
-        ? `"${media.title}" foi para a sua lista Quero ver`
+        ? `Anotado! "${media.title}" está na sua lista Quero ver`
         : action === "seen"
-          ? `"${media.title}" registrado no diário`
-          : `Ok, não vamos mais sugerir "${media.title}"`,
+          ? `Boa! "${media.title}" entrou no seu diário`
+          : `Combinado, não vamos mais sugerir "${media.title}"`,
     );
   }
 
@@ -81,7 +81,7 @@ export default function FeedPage() {
 
       {user && !user.onboarded && feed?.strategy === "trending" && (
         <div className="card mt-6 flex flex-wrap items-center justify-between gap-3 p-4">
-          <p className="text-sm">Conte o que você curte para receber sugestões personalizadas.</p>
+          <p className="text-sm">Conte o que você curte e a gente acerta muito mais.</p>
           <Link to="/onboarding" className="btn-primary">
             Definir preferências
           </Link>
@@ -89,7 +89,7 @@ export default function FeedPage() {
       )}
 
       {error && <p className="mt-6 text-red-300">{error}</p>}
-      {loading && !feed && <p className="mt-6 text-muted">Calculando recomendações...</p>}
+      {loading && !feed && <p className="mt-6 text-muted">Procurando algo a sua cara...</p>}
 
       <div className="mt-6 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-6">
         {feed?.items.map((rec) => (
@@ -113,7 +113,7 @@ export default function FeedPage() {
       </div>
 
       {feed && feed.items.length === 0 && !loading && (
-        <p className="mt-6 text-muted">Você zerou o feed! Clique em ↻ para gerar novas sugestões.</p>
+        <p className="mt-6 text-muted">Você viu tudo por aqui! Clique em ↻ para receber novas sugestões.</p>
       )}
 
       {seenTarget && (

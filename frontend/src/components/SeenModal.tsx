@@ -29,7 +29,7 @@ export default function SeenModal({
       aria-modal="true"
     >
       <div className="card w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
-        <p className="text-xs font-semibold tracking-wider text-accent uppercase">Registrar consumo</p>
+        <p className="text-xs font-semibold tracking-wider text-accent uppercase">Que bom que você viu!</p>
         <h2 className="mt-1 text-xl font-bold">{media.title}</h2>
 
         <label className="mt-5 block text-sm font-medium">Nota (opcional)</label>

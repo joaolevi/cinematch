@@ -7,7 +7,7 @@ import { StarsDisplay } from "../components/Stars";
 import type { DiaryEntry } from "../types";
 
 function monthLabel(entry: DiaryEntry): string {
-  if (!entry.consumed_at) return "Marcados no onboarding";
+  if (!entry.consumed_at) return "Seus primeiros favoritos";
   const d = new Date(entry.consumed_at + "T12:00:00");
   return d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 }
@@ -69,7 +69,7 @@ export default function DiaryPage() {
       {error && <p className="mt-6 text-red-300">{error}</p>}
       {entries?.length === 0 && (
         <p className="mt-8 text-muted">
-          Nada por aqui ainda. Marque "Já vi" no <Link to="/" className="text-accent underline">feed</Link> ou na{" "}
+          Sua história começa aqui! Marque "Já vi" no <Link to="/" className="text-accent underline">feed</Link> ou na{" "}
           <Link to="/buscar" className="text-accent underline">busca</Link>.
         </p>
       )}

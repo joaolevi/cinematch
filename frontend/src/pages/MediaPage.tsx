@@ -115,7 +115,7 @@ export default function MediaPage() {
 
       <section className="mt-12">
         <h2 className="text-xl font-bold">Resenhas</h2>
-        {media.reviews.length === 0 && <p className="mt-2 text-sm text-muted">Nenhuma resenha ainda.</p>}
+        {media.reviews.length === 0 && <p className="mt-2 text-sm text-muted">Ninguém comentou ainda. Que tal ser a primeira pessoa?</p>}
         <div className="mt-4 space-y-3">
           {media.reviews.map((r) => (
             <div key={r.id} className="card p-4">

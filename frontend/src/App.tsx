@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth";
 import Layout from "./components/Layout";
+import AboutPage from "./pages/AboutPage";
 import AdminPage from "./pages/AdminPage";
 import DiaryPage from "./pages/DiaryPage";
 import FeedPage from "./pages/FeedPage";
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="media/:id" element={<MediaPage />} />
             <Route path="diario" element={<DiaryPage />} />
             <Route path="listas" element={<ListsPage />} />
+            <Route path="sobre" element={<AboutPage />} />
             <Route path="admin" element={<RequireAuth admin><AdminPage /></RequireAuth>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

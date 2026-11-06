@@ -96,7 +96,7 @@ export default function ListsPage() {
               </div>
               {active.items.length === 0 && (
                 <p className="mt-4 text-sm text-muted">
-                  Lista vazia. Adicione títulos pela página de cada mídia{active.is_watchlist ? " ou pelo botão “+ Quero” no feed" : ""}.
+                  Sua lista está esperando! Adicione títulos pela página de cada um{active.is_watchlist ? " ou pelo botão “+ Quero” no feed" : ""}.
                 </p>
               )}
               <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-4 lg:grid-cols-5">
