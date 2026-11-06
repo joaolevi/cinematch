@@ -15,7 +15,7 @@ export default function AdminPage() {
       <div className="mt-4 flex gap-2">
         {(
           [
-            ["metrics", "Métricas A/B"],
+            ["metrics", "Painel"],
             ["catalog", "Catálogo"],
             ["moderation", "Moderação"],
           ] as const
@@ -68,6 +68,29 @@ function VariantCard({ m, label }: { m: VariantMetrics; label: string }) {
   );
 }
 
+const MIN_PEOPLE_TO_CONCLUDE = 30;
+
+/** Diz como ler os números, de acordo com a origem deles. */
+function dataWarning(m: Metrics): { title: string; text: string } {
+  if (m.simulated_shown > 0) {
+    const share = Math.round((m.simulated_shown / Math.max(m.overall.shown, 1)) * 100);
+    return {
+      title: "Estes números são de teste",
+      text: `${share}% das sugestões vêm de usuários simulados. Elas mostram que a medição funciona, não qual grupo é melhor.`,
+    };
+  }
+  if (m.real_users < MIN_PEOPLE_TO_CONCLUDE) {
+    return {
+      title: "Ainda são poucas pessoas",
+      text: `Com ${m.real_users} pessoa(s), use estes números como referência, não como conclusão.`,
+    };
+  }
+  return {
+    title: "Dados de pessoas reais",
+    text: "Compare os grupos com atenção à quantidade de sugestões exibidas em cada um.",
+  };
+}
+
 function MetricsTab() {
   const [m, setM] = useState<Metrics | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -79,25 +102,57 @@ function MetricsTab() {
   if (error) return <p className="text-red-300">{error}</p>;
   if (!m) return <p className="text-muted">Carregando...</p>;
   const [a, b] = m.by_variant;
+  const warning = dataWarning(m);
   return (
     <div>
-      <p className="max-w-3xl text-sm text-muted">
-        Taxa de aceitação = (Quero ver + Já vi) ÷ sugestões exibidas. O grupo <b>A</b> recebe o recomendador{" "}
-        <b>híbrido</b> (conteúdo + colaborativo); o grupo <b>B</b>, apenas o <b>baseado em conteúdo</b>. Os
-        usuários sintéticos do seed simulam beta testers.
-      </p>
+      <div className="card border-accent/40 p-4">
+        <p className="font-semibold">{warning.title}</p>
+        <p className="mt-1 text-sm text-muted">{warning.text}</p>
+      </div>
       <div className="mt-5 grid gap-4 md:grid-cols-3">
         <VariantCard m={m.overall} label="Total" />
         <VariantCard m={a} label="Grupo A · híbrido" />
         <VariantCard m={b} label="Grupo B · só conteúdo" />
       </div>
       <div className="mt-4 flex flex-wrap gap-6 text-sm text-muted">
-        <span>Catálogo: {m.catalog_size} títulos</span>
-        <span>Usuários: {m.users}</span>
+        <span>Pessoas reais: {m.real_users}</span>
         <span>Registros no diário: {m.diary_entries}</span>
         <button className="text-accent underline" onClick={load}>
           atualizar
         </button>
+      </div>
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <section className="card p-5">
+          <h2 className="font-semibold">Como ler este painel</h2>
+          <ul className="mt-2 space-y-2 text-sm text-muted">
+            <li>
+              <b>Taxa de aceitação:</b> títulos marcados com Quero ver ou Já vi, dividido pelas sugestões exibidas.
+            </li>
+            <li>
+              <b>Grupo A:</b> recebe o recomendador híbrido, que junta as características dos títulos com o que
+              pessoas de gosto parecido curtiram.
+            </li>
+            <li>
+              <b>Grupo B:</b> recebe só as características dos títulos. Serve de comparação.
+            </li>
+            <li>Cada pessoa entra em um grupo ao se cadastrar, e só o painel mostra essa informação.</li>
+          </ul>
+        </section>
+        <section className="card p-5">
+          <h2 className="font-semibold">Como o recomendador está agora</h2>
+          <ul className="mt-2 space-y-2 text-sm text-muted">
+            <li>
+              <b>Catálogo:</b> {m.catalog_size} títulos ({m.movies} filmes e {m.series} séries).
+            </li>
+            <li>
+              <b>MovieLens:</b> {m.external_neighbors_enabled ? "ligado" : "desligado"}, com {m.titles_with_neighbors}{" "}
+              filmes com vizinhos.
+            </li>
+            <li>
+              <b>Séries:</b> seguem só pelas características, porque ainda não têm dados reais.
+            </li>
+          </ul>
+        </section>
       </div>
     </div>
   );

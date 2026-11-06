@@ -107,6 +107,12 @@ export interface Metrics {
   catalog_size: number;
   users: number;
   diary_entries: number;
+  real_users: number;
+  simulated_shown: number;
+  movies: number;
+  series: number;
+  external_neighbors_enabled: boolean;
+  titles_with_neighbors: number;
 }
 
 export type MediaInput = Pick<

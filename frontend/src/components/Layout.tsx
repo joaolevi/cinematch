@@ -45,9 +45,7 @@ export default function Layout() {
             )}
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
-            <span className="hidden text-muted sm:inline">
-              {user?.name} <span className="chip ml-1 px-2 py-0.5">grupo {user?.ab_group}</span>
-            </span>
+            <span className="hidden text-muted sm:inline">{user?.name}</span>
             <button
               className="btn-ghost px-3 py-1.5"
               onClick={() => {

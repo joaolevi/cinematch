@@ -1,3 +1,7 @@
+from sqlalchemy import select
+
+from app.models import ItemNeighbor, Media, RecEvent, User
+
 from .conftest import media_id_by_title
 
 
@@ -99,3 +103,22 @@ def test_edit_keeps_moderated_review_hidden(client, admin_headers, user_headers)
 def test_poster_url_above_limit_is_rejected(client, admin_headers):
     payload = {"type": "movie", "title": "Filme", "poster_url": "http://a/" + "x" * 500}
     assert client.post("/admin/media", json=payload, headers=admin_headers).status_code == 422
+
+
+def test_metrics_explain_where_the_numbers_come_from(client, db, admin_headers, user_headers):
+    client.get("/recommendations", params={"limit": 3}, headers=user_headers)
+    synthetic = User(name="Sintético", email="sint@teste.com", password_hash="x", is_synthetic=True)
+    movie = db.scalar(select(Media).where(Media.type == "movie"))
+    db.add(synthetic)
+    db.flush()
+    db.add(RecEvent(user_id=synthetic.id, media_id=movie.id, action="shown", variant="A"))
+    db.add(ItemNeighbor(media_id=movie.id, neighbor_id=movie.id, source="movielens", score=0.5))
+    db.commit()
+
+    m = client.get("/admin/metrics", headers=admin_headers).json()
+    assert m["simulated_shown"] == 1
+    assert m["overall"]["shown"] == 4
+    assert m["movies"] + m["series"] == m["catalog_size"]
+    assert m["external_neighbors_enabled"] is False
+    assert m["titles_with_neighbors"] == 1
+    assert m["real_users"] == 2  # conta demo + usuário do teste

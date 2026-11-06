@@ -2641,6 +2641,30 @@
           "diary_entries": {
             "type": "integer",
             "title": "Diary Entries"
+          },
+          "real_users": {
+            "type": "integer",
+            "title": "Real Users"
+          },
+          "simulated_shown": {
+            "type": "integer",
+            "title": "Simulated Shown"
+          },
+          "movies": {
+            "type": "integer",
+            "title": "Movies"
+          },
+          "series": {
+            "type": "integer",
+            "title": "Series"
+          },
+          "external_neighbors_enabled": {
+            "type": "boolean",
+            "title": "External Neighbors Enabled"
+          },
+          "titles_with_neighbors": {
+            "type": "integer",
+            "title": "Titles With Neighbors"
           }
         },
         "type": "object",
@@ -2649,7 +2673,13 @@
           "by_variant",
           "catalog_size",
           "users",
-          "diary_entries"
+          "diary_entries",
+          "real_users",
+          "simulated_shown",
+          "movies",
+          "series",
+          "external_neighbors_enabled",
+          "titles_with_neighbors"
         ],
         "title": "MetricsOut"
       },

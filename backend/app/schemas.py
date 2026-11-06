@@ -291,3 +291,9 @@ class MetricsOut(BaseModel):
     catalog_size: int
     users: int
     diary_entries: int
+    real_users: int
+    simulated_shown: int
+    movies: int
+    series: int
+    external_neighbors_enabled: bool
+    titles_with_neighbors: int
