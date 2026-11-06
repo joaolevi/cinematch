@@ -54,3 +54,27 @@ def test_acceptance_rate(client, admin_headers, user_headers):
     m = client.get("/admin/metrics", headers=admin_headers).json()
     assert m["overall"]["shown"] == 10
     assert m["overall"]["acceptance_rate"] == 0.2  # (1 want + 1 seen) / 10 exibidas
+
+
+def test_acceptance_counts_each_title_once(client, admin_headers, user_headers):
+    items = client.get("/recommendations", params={"limit": 10}, headers=user_headers).json()["items"]
+    mid = items[0]["media"]["id"]
+    for _ in range(3):
+        client.post(f"/recommendations/{mid}/feedback", json={"action": "want"}, headers=user_headers)
+    client.post(f"/recommendations/{mid}/feedback", json={"action": "seen"}, headers=user_headers)
+
+    overall = client.get("/admin/metrics", headers=admin_headers).json()["overall"]
+    assert overall["shown"] == 10
+    assert overall["acceptance_rate"] == 0.1
+
+
+def test_acceptance_ignores_titles_not_shown(client, admin_headers, user_headers):
+    shown = client.get("/recommendations", params={"limit": 1}, headers=user_headers).json()["items"]
+    shown_id = shown[0]["media"]["id"]
+    catalog = client.get("/media", params={"limit": 5}, headers=user_headers).json()["items"]
+    other = next(m["id"] for m in catalog if m["id"] != shown_id)
+    client.post(f"/recommendations/{other}/feedback", json={"action": "want"}, headers=user_headers)
+
+    overall = client.get("/admin/metrics", headers=admin_headers).json()["overall"]
+    assert overall["want"] == 0
+    assert overall["acceptance_rate"] == 0.0
