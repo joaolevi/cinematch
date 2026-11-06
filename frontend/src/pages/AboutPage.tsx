@@ -17,6 +17,9 @@ export default function AboutPage() {
         </a>
         <p className="mt-3 text-sm text-muted">Os dados e as imagens dos títulos vêm do TMDB.</p>
         <p className="mt-1 text-sm text-muted">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+        <p className="mt-3 text-sm text-muted">
+          As recomendações de filmes usam avaliações do MovieLens, da GroupLens Research, que não endossa este projeto.
+        </p>
       </section>
 
       <section>

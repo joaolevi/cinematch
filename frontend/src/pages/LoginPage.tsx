@@ -39,7 +39,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <Logo />
-          <p className="mt-2 text-sm text-muted">O diário que sabe o que você vai querer ver depois.</p>
+          <p className="mt-2 font-semibold">A história do seu gosto</p>
         </div>
 
         <div className="card p-6">
