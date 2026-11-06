@@ -130,7 +130,7 @@ Diagrama de Atividades do pitch:
 3. **Com dados → híbrido:**
    - **Conteúdo:** cada título vira um vetor TF‑IDF de gêneros, tags, criadores, década e tipo. O perfil do
      usuário é a soma ponderada dos títulos com que interagiu (nota → `(nota − 2,5)/2,5`, já vi sem nota `+0,6`,
-     listas `+0,5`, descarte `−0,7`; gêneros, épocas e criadores do onboarding `+1`). O score é a similaridade
+     título marcado no onboarding `+0,8`, listas `+0,5`, descarte `−0,7`; gêneros, épocas e criadores do onboarding `+1`). O score é a similaridade
      de cosseno.
    - **Colaborativo (item‑item):** similaridade de cosseno entre títulos na matriz usuário × título, ou seja,
      *"quem curtiu X também curtiu Y"*. Com `TASTORY_USE_EXTERNAL_NEIGHBORS=true`, os filmes usam os vizinhos
@@ -148,8 +148,8 @@ Diagrama de Atividades do pitch:
 ```bash
 cd backend
 pip install -r requirements-dev.txt   # o dev.sh instala só o necessário para rodar a API
-python -m pytest -q                    # todos (93): é o que roda no CI, onde os 13 de integração são pulados
-python -m pytest -q -m "not integration"   # só offline (80)
+python -m pytest -q                    # todos (95): é o que roda no CI, onde os 13 de integração são pulados
+python -m pytest -q -m "not integration"   # só offline (82)
 python -m pytest -q -m integration     # só integração real com TMDB + banco (13, precisa da chave)
 ```
 

@@ -1054,11 +1054,11 @@
               "items": {
                 "type": "integer"
               },
-              "description": "Títulos que já estão na tela, para trazer os próximos",
+              "description": "Títulos que já foram mostrados, para trazer outros",
               "default": [],
               "title": "Exclude"
             },
-            "description": "Títulos que já estão na tela, para trazer os próximos"
+            "description": "Títulos que já foram mostrados, para trazer outros"
           }
         ],
         "responses": {

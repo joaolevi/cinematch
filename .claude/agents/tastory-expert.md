@@ -52,7 +52,8 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
   `UserList`/`ListItem` (is_watchlist), `RecEvent` (shown|want|seen|dismiss + variant), `Dismissed`.
   Sem migrações: mudou o modelo → `python -m scripts.seed`.
 - **Recomendador** (`services/recommender.py`):
-  1. `user_signals`: diário (peso `(nota−2,5)/2,5`, sem nota `0,6`), listas `0,5`, descartes `−0,7`;
+  1. `user_signals`: diário (peso `(nota−2,5)/2,5`, sem nota `0,6`, marcado no onboarding `0,8`), listas `0,5`,
+     descartes `−0,7`;
      preferências do onboarding (gêneros, décadas e criadores) somam `1,0`.
   2. Sem sinais nem preferências → `trending()` (0,7·popularidade + 0,3·registros na plataforma).
   3. Conteúdo: TF‑IDF sobre tokens `g:` gênero (peso 2), `t:` tag, `c:` criador, `d:` década, `type:`;

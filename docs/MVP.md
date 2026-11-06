@@ -1,11 +1,11 @@
 # Escopo do MVP
 
-> **Versão 14, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
+> **Versão 15, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [homologação](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
-A API cobre os 13 casos de uso do pitch para filmes e séries. Os 80 testes offline e os 13 com o TMDB real
+A API cobre os 13 casos de uso do pitch para filmes e séries. Os 82 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
 credenciais estão prontas, mas aguardam merge. Falta criar a branch `homol`, publicar o sistema, ajustar o design,
 fazer a homologação e preparar a demonstração.
@@ -158,6 +158,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | 06/11 | O detalhe do título ganha "Não me interesso", com opção de desfazer | Na listagem o botão já existia, e faltava no detalhe | Sophia (GP) |
 | 06/11 | O detalhe mostra o elenco, e a data do "Já vi" passa a ser opcional, com atalhos para hoje e ontem | Pedido da GP ao testar o sistema: a data preenchida sozinha podia ficar errada | Sophia (GP) |
 | 06/11 | Entram no MVP o top 10 do diário (RF19, RN17), novas sugestões ao rolar o feed e a escolha da ordem na busca | Pedido da GP ao testar o sistema. A busca já pedia ordenação no RF04, mas a tela não oferecia | Sophia (GP) |
+| 06/11 | Títulos do onboarding ficam sem nota (RN18), títulos futuros aparecem como "Em breve" (RN19) e o feed permite trocar as sugestões | A nota automática distorcia as médias e o top 10, e o botão ↻ repetia a mesma lista | Sophia (GP) |
 
 ## Riscos
 
