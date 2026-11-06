@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
+import MediaCard from "../components/MediaCard";
 import Poster from "../components/Poster";
 import SeenModal from "../components/SeenModal";
 import { StarsDisplay } from "../components/Stars";
 import { colorFor, formatDate, formatRating, plural } from "../format";
-import type { MediaDetail, UserList } from "../types";
+import type { Media, MediaDetail, UserList } from "../types";
 
 function PeopleLinks({ names }: { names: string[] }) {
   return (
@@ -27,6 +28,7 @@ export default function MediaPage() {
   const mediaId = Number(id);
   const [media, setMedia] = useState<MediaDetail | null>(null);
   const [lists, setLists] = useState<UserList[]>([]);
+  const [similar, setSimilar] = useState<Media[]>([]);
   const [showSeen, setShowSeen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +45,12 @@ export default function MediaPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    setSimilar([]);
+    api.similar(mediaId).then(setSimilar).catch(() => {});
+    window.scrollTo(0, 0);
+  }, [mediaId]);
 
   if (error) return <p className="text-red-300">{error}</p>;
   if (!media) return <p className="text-muted">Carregando...</p>;
@@ -183,6 +191,17 @@ export default function MediaPage() {
           </div>
         </div>
       </div>
+
+      {similar.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-xl font-bold">Títulos parecidos</h2>
+          <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-6">
+            {similar.map((m) => (
+              <MediaCard key={m.id} media={m} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mt-12">
         <h2 className="text-xl font-bold">Resenhas</h2>

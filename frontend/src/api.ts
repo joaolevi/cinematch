@@ -106,6 +106,7 @@ export const api = {
   facets: (genre: string[]) => request<{ decades: number[]; creators: string[] }>("/media/facets", { query: { genre } }),
   search: (query: { q?: string; type?: MediaType | ""; genre?: string; person?: string; sort?: MediaSort; limit?: number; offset?: number }) =>
     request<{ items: Media[]; total: number }>("/media", { query }),
+  similar: (id: number) => request<Media[]>(`/media/${id}/similar`),
   trending: (type?: MediaType, limit = 20) =>
     request<Media[]>("/media/trending", { query: { type, limit } }),
   media: (id: number) => request<MediaDetail>(`/media/${id}`),

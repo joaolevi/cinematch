@@ -328,6 +328,38 @@ def recommend(
     return strategy, recs
 
 
+def similar_titles(db: Session, user: User, media_id: int, limit: int = 12) -> list[Media]:
+    """Títulos do mesmo tipo parecidos com este, sem o que a pessoa já viu, descartou ou guardou."""
+    catalog: list[Media] = list(db.scalars(select(Media).order_by(Media.id)))
+    index = {m.id: i for i, m in enumerate(catalog)}
+    media = catalog[index[media_id]]
+    exclude = excluded_ids(db, user.id) | {media_id}
+    usable = [m for m in catalog if m.type == media.type and m.id not in exclude and can_be_suggested(m)]
+    by_id = {m.id: m for m in usable}
+
+    picked: list[Media] = []
+    if settings.use_external_neighbors:
+        neighbors = db.scalars(
+            select(ItemNeighbor.neighbor_id)
+            .where(ItemNeighbor.media_id == media_id)
+            .order_by(ItemNeighbor.score.desc())
+        )
+        picked = [by_id[n] for n in neighbors if n in by_id][:limit]
+
+    if len(picked) < limit and usable:
+        X = TfidfVectorizer(token_pattern=r"[^ ]+", lowercase=False).fit_transform(
+            [media_tokens(m) for m in catalog]
+        )
+        content = np.asarray((X @ X[index[media_id]].T).todense()).ravel()
+        rows = [index[m.id] for m in usable]
+        bonus = SERIES_POPULARITY_BONUS if media.type == "series" else POPULARITY_BONUS
+        score = _minmax(content[rows]) + bonus * np.array([m.popularity for m in usable]) / 100.0
+        have = {m.id for m in picked}
+        ranked = [usable[pos] for pos in np.argsort(-score) if usable[pos].id not in have]
+        picked += ranked[: limit - len(picked)]
+    return picked
+
+
 def _external_similarity(
     db: Session, catalog: list[Media], index: dict[int, int], sig_rows: list[tuple[int, float]]
 ) -> sparse.csr_matrix | None:

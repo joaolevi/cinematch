@@ -13,7 +13,7 @@ from ..db import get_db
 from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList
 from ..schemas import MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MyStatus, ReviewOut
 from ..services.catalog import search_text
-from ..services.recommender import trending as trending_service
+from ..services.recommender import similar_titles, trending as trending_service
 
 router = APIRouter(prefix="/media", tags=["mídias"])
 
@@ -99,6 +99,17 @@ def trending(
     db: Session = Depends(get_db),
 ):
     return [r.media for r in trending_service(db, type, limit)]
+
+
+@router.get("/{media_id}/similar", response_model=list[MediaOut])
+def similar(
+    media_id: int,
+    limit: int = Query(default=12, ge=1, le=24),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    crud.get_media_or_404(db, media_id)
+    return similar_titles(db, user, media_id, limit)
 
 
 @router.get("/{media_id}", response_model=MediaDetailOut)

@@ -122,6 +122,50 @@ def test_series_weight_keeps_movies_and_series_slots_in_mixed_feed(client, user_
     assert [title for _, title in light] != [title for _, title in heavy]  # as séries mudam
 
 
+def test_similar_titles_skip_the_title_itself_and_what_the_person_already_has(client, db, user_headers):
+    def titles(mid):
+        r = client.get(f"/media/{mid}/similar", params={"limit": 24}, headers=user_headers)
+        assert r.status_code == 200
+        return r.json()
+
+    matrix = media_id_by_title(client, user_headers, "Matrix")
+    first = titles(matrix)
+    assert 0 < len(first) <= 24
+    assert matrix not in [m["id"] for m in first]
+    assert {m["type"] for m in first} == {"movie"}
+
+    seen, wanted, dismissed = first[0]["id"], first[1]["id"], first[2]["id"]
+    client.post("/diary", json={"media_id": seen}, headers=user_headers)
+    client.post(f"/recommendations/{wanted}/feedback", json={"action": "want"}, headers=user_headers)
+    client.post(f"/recommendations/{dismissed}/feedback", json={"action": "dismiss"}, headers=user_headers)
+    assert not {seen, wanted, dismissed} & {m["id"] for m in titles(matrix)}
+
+
+def test_similar_series_are_series_and_skip_incomplete_titles(client, db, user_headers):
+    db.add(Media(type="series", title="Incompleta", overview="", source="tmdb", external_id="tv-1",
+                 genres=["Suspense", "Drama"], popularity=100))
+    db.commit()
+    dark = media_id_by_title(client, user_headers, "Dark")
+    items = client.get(f"/media/{dark}/similar", params={"limit": 24}, headers=user_headers).json()
+    assert {m["type"] for m in items} == {"series"}
+    assert "Incompleta" not in [m["title"] for m in items]
+
+
+def test_similar_movies_use_external_neighbors_when_enabled(client, db, user_headers, monkeypatch):
+    external_neighbors_on(monkeypatch)
+    matrix = media_id_by_title(client, user_headers, "Matrix")
+    toy_story = media_id_by_title(client, user_headers, "Toy Story")
+    db.add(ItemNeighbor(media_id=matrix, neighbor_id=toy_story, source="movielens", score=0.9))
+    db.commit()
+    items = client.get(f"/media/{matrix}/similar", headers=user_headers).json()
+    assert items[0]["title"] == "Toy Story" and len(items) == 12  # completa com o conteúdo
+
+
+def test_similar_titles_need_login_and_an_existing_title(client, user_headers):
+    assert client.get("/media/1/similar").status_code == 401
+    assert client.get("/media/999999/similar", headers=user_headers).status_code == 404
+
+
 def test_only_titles_on_screen_count_as_shown(client, db, user_headers):
     def shown():
         return db.query(RecEvent).filter(RecEvent.action == "shown").count()
