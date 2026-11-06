@@ -9,6 +9,9 @@ backend/*.db-journal
 # Env / IDE
 .env
 .env.production
+
+# Cópias do banco, com dados de pessoas
+backup*.sql
 .vscode/
 .idea/
 .DS_Store

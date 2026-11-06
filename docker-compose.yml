@@ -19,7 +19,7 @@ services:
   api:
     build: ./backend
     environment:
-      TASTORY_DATABASE_URL: postgresql://tastory:tastory@db:5432/tastory
+      TASTORY_DATABASE_URL: postgresql+psycopg://tastory:tastory@db:5432/tastory
       TASTORY_SECRET_KEY: ${TASTORY_SECRET_KEY:-segredo-apenas-para-uso-local}
       TASTORY_CORS_ORIGINS: http://localhost:5173
       TASTORY_TMDB_API_KEY: ${TASTORY_TMDB_API_KEY:-}

@@ -24,7 +24,7 @@ services:
     environment:
       TASTORY_ENV: production
       TASTORY_AUTO_SEED: "false"
-      TASTORY_DATABASE_URL: postgresql://tastory:${POSTGRES_PASSWORD:?defina no .env.production}@db:5432/tastory
+      TASTORY_DATABASE_URL: postgresql+psycopg://tastory:${POSTGRES_PASSWORD:?defina no .env.production}@db:5432/tastory
       TASTORY_SECRET_KEY: ${TASTORY_SECRET_KEY:?defina no .env.production}
       TASTORY_ADMIN_PASSWORD: ${TASTORY_ADMIN_PASSWORD:?defina no .env.production}
       TASTORY_DEMO_PASSWORD: ${TASTORY_DEMO_PASSWORD:?defina no .env.production}

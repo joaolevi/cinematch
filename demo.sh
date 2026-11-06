@@ -14,7 +14,7 @@ if [ ! -x .venv/bin/python ]; then
     echo "Falha ao criar o venv. No Ubuntu/Debian/WSL rode: sudo apt install python3-venv"; exit 1; }
 fi
 .venv/bin/pip install -q -r backend/requirements.txt
-[ -d frontend/node_modules ] || (cd frontend && npm install)
+[ -d frontend/node_modules ] || (cd frontend && npm ci)
 
 if [ "${1:-}" = "--reset" ]; then
   echo ">> Recriando banco (mock + TMDB)..."
