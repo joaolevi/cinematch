@@ -82,3 +82,30 @@ def test_group_b_uses_content_only(client, db):
     client.post("/diary", json={"media_id": mid, "rating": 5}, headers=headers)
     feed = client.get("/recommendations", headers=headers).json()
     assert feed["variant"] == "B" and feed["strategy"] == "content"
+
+
+def test_preferred_creator_guides_feed_and_reason(client, user_headers):
+    r = client.put("/me/preferences", json={"creators": ["Christopher Nolan"]}, headers=user_headers)
+    assert r.status_code == 200 and r.json()["creators"] == ["Christopher Nolan"]
+
+    feed = client.get("/recommendations", params={"limit": 5}, headers=user_headers).json()
+    assert feed["strategy"] in {"content", "hybrid"}
+    first = feed["items"][0]
+    assert "Christopher Nolan" in first["media"]["creators"]
+    assert first["reason"] == "Porque você curte Christopher Nolan"
+
+
+def test_preferred_decade_guides_feed(client, user_headers):
+    r = client.put("/me/preferences", json={"decades": [1990]}, headers=user_headers)
+    assert r.json()["decades"] == [1990]
+
+    feed = client.get("/recommendations", params={"limit": 5}, headers=user_headers).json()
+    assert feed["strategy"] in {"content", "hybrid"}
+    assert any(1990 <= i["media"]["year"] < 2000 for i in feed["items"])
+    assert any(i["reason"] == "Porque você curte os anos 90" for i in feed["items"])
+
+
+def test_redoing_preferences_replaces_interests(client, user_headers):
+    client.put("/me/preferences", json={"decades": [1990], "creators": ["David Fincher"]}, headers=user_headers)
+    r = client.put("/me/preferences", json={"decades": [2010]}, headers=user_headers)
+    assert r.json()["decades"] == [2010] and r.json()["creators"] == []

@@ -1,5 +1,7 @@
 """Buscar Mídias, detalhe e mídias em alta."""
 
+from collections import Counter
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -8,11 +10,13 @@ from .. import crud
 from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList
-from ..schemas import MediaDetailOut, MediaOut, MediaPage, MediaType, MyStatus, ReviewOut
+from ..schemas import MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MyStatus, ReviewOut
 from ..services.catalog import search_text
 from ..services.recommender import trending as trending_service
 
 router = APIRouter(prefix="/media", tags=["mídias"])
+
+MIN_TITLES_PER_DECADE = 3
 
 
 @router.get("", response_model=MediaPage)
@@ -57,6 +61,27 @@ def list_genres(db: Session = Depends(get_db)):
     for g in db.scalars(select(Media.genres)):
         genres.update(g or [])
     return sorted(genres)
+
+
+@router.get("/facets", response_model=MediaFacetsOut)
+def media_facets(
+    genre: list[str] = Query(default=[]),
+    limit: int = Query(default=12, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    """Décadas e criadores do catálogo, para o onboarding. Criadores vêm ordenados pela popularidade."""
+    items = list(db.scalars(select(Media)))
+    if genre:
+        items = [m for m in items if set(genre) & set(m.genres or [])]
+    decades = Counter((m.year // 10) * 10 for m in items if m.year)
+    creators: Counter[str] = Counter()
+    for m in items:
+        for creator in m.creators or []:
+            creators[creator] += m.popularity
+    return MediaFacetsOut(
+        decades=sorted((d for d, count in decades.items() if count >= MIN_TITLES_PER_DECADE), reverse=True),
+        creators=[name for name, _ in creators.most_common(limit)],
+    )
 
 
 @router.get("/trending", response_model=list[MediaOut])

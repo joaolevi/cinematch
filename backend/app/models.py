@@ -1,6 +1,6 @@
 """Modelo relacional (pacote 3.1 da EAP).
 
-Tabelas: users, user_preferences, media, diary_entries, lists, list_items, rec_events, dismissed.
+Tabelas: users, user_preferences, user_interests, media, diary_entries, lists, list_items, rec_events, dismissed.
 """
 
 from datetime import date, datetime, timezone
@@ -53,6 +53,18 @@ class UserPreference(Base):
     genre: Mapped[str] = mapped_column(String(60))
 
     user: Mapped[User] = relationship(back_populates="preferences")
+
+
+class UserInterest(Base):
+    """Interesses do onboarding além dos gêneros: décadas e criadores."""
+
+    __tablename__ = "user_interests"
+    __table_args__ = (UniqueConstraint("user_id", "kind", "value"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(10))  # decade | creator
+    value: Mapped[str] = mapped_column(String(120))
 
 
 class Media(Base):

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from .. import crud
 from ..auth import create_token, get_current_user, hash_password, verify_password
 from ..db import get_db
-from ..models import User, UserPreference
+from ..models import User, UserInterest, UserPreference
 from ..schemas import LoginIn, PreferencesIn, PreferencesOut, RegisterIn, TokenOut, UserOut
 
 router = APIRouter(tags=["acesso"])
@@ -49,19 +49,33 @@ def me(user: User = Depends(get_current_user)):
 @router.get("/me/preferences", response_model=PreferencesOut)
 def get_preferences(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     genres = list(db.scalars(select(UserPreference.genre).where(UserPreference.user_id == user.id)))
-    return PreferencesOut(genres=genres, onboarded=user.onboarded)
+    interests = db.execute(
+        select(UserInterest.kind, UserInterest.value).where(UserInterest.user_id == user.id)
+    ).all()
+    return PreferencesOut(
+        genres=genres,
+        decades=sorted(int(value) for kind, value in interests if kind == "decade"),
+        creators=[value for kind, value in interests if kind == "creator"],
+        onboarded=user.onboarded,
+    )
 
 
 @router.put("/me/preferences", response_model=PreferencesOut)
 def set_preferences(
     data: PreferencesIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
-    """Onboarding: gêneros favoritos + títulos que o usuário já gosta (viram registros no diário)."""
+    """Onboarding: gêneros, décadas, criadores e títulos que o usuário já gosta (viram registros no diário)."""
     for pref in list(user.preferences):
         db.delete(pref)
+    for interest in db.scalars(select(UserInterest).where(UserInterest.user_id == user.id)):
+        db.delete(interest)
     db.flush()
     for genre in dict.fromkeys(g.strip() for g in data.genres if g.strip()):
         db.add(UserPreference(user_id=user.id, genre=genre))
+    for decade in dict.fromkeys(data.decades):
+        db.add(UserInterest(user_id=user.id, kind="decade", value=str(decade)))
+    for creator in dict.fromkeys(c.strip() for c in data.creators if c.strip()):
+        db.add(UserInterest(user_id=user.id, kind="creator", value=creator))
     for media_id in data.liked_media_ids:
         crud.get_media_or_404(db, media_id)
         crud.add_onboarding_like(db, user, media_id)

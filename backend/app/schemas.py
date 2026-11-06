@@ -51,11 +51,15 @@ class TokenOut(BaseModel):
 # ---------- Preferências ----------
 class PreferencesIn(BaseModel):
     genres: list[Annotated[str, Field(max_length=60)]] = []
+    decades: list[Annotated[int, Field(ge=1880, le=2100)]] = []
+    creators: list[Annotated[str, Field(max_length=120)]] = []
     liked_media_ids: list[int] = []
 
 
 class PreferencesOut(BaseModel):
     genres: list[str]
+    decades: list[int]
+    creators: list[str]
     onboarded: bool
 
 
@@ -121,6 +125,11 @@ class MediaDetailOut(MediaOut):
     ratings_count: int
     reviews: list[ReviewOut]
     my_status: MyStatus
+
+
+class MediaFacetsOut(BaseModel):
+    decades: list[int]
+    creators: list[str]
 
 
 class MediaPage(BaseModel):

@@ -116,3 +116,13 @@ def test_search_ignores_accents(client, user_headers):
     for query in ("chefao", "CHEFÃO"):
         items = client.get("/media", params={"q": query}, headers=user_headers).json()["items"]
         assert "O Poderoso Chefão" in [m["title"] for m in items]
+
+
+def test_facets_follow_chosen_genres(client):
+    facets = client.get("/media/facets", params={"genre": ["Terror"], "limit": 5}).json()
+    assert len(facets["creators"]) == 5
+    assert facets["decades"] == sorted(facets["decades"], reverse=True)
+
+    everything = client.get("/media/facets", params={"limit": 50}).json()
+    assert set(facets["decades"]) <= set(everything["decades"])
+    assert set(facets["creators"]) <= set(everything["creators"])

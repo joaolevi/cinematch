@@ -22,13 +22,13 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList, UserPreference
+from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserInterest, UserList, UserPreference
 
 # Pesos dos sinais (explícitos e implícitos) no perfil do usuário
 W_SEEN_NO_RATING = 0.6  # "Já vi" sem nota: gostou moderadamente
 W_LIST = 0.5  # watchlist / listas (implícito)
 W_DISMISS = -0.7  # "Não me interesso" (explícito negativo)
-W_PREF_GENRE = 1.0  # gêneros escolhidos no onboarding
+W_PREFERENCE = 1.0  # gêneros, décadas e criadores escolhidos no onboarding
 
 POPULARITY_BONUS = 0.1
 DIVERSITY_PENALTY = 0.85  # multiplicador a cada repetição do gênero principal no topo
@@ -58,6 +58,10 @@ def media_tokens(m: Media) -> str:
         toks.append(f"d:{(m.year // 10) * 10}")
     toks.append(f"type:{m.type}")
     return " ".join(toks)
+
+
+def decade_label(decade: int) -> str:
+    return f"anos {decade % 100}" if decade < 2000 else f"anos {decade}"
 
 
 def rating_weight(rating: float | None) -> float:
@@ -144,10 +148,18 @@ def recommend(
     pref_genres = list(
         db.scalars(select(UserPreference.genre).where(UserPreference.user_id == user.id))
     )
+    interests = db.execute(
+        select(UserInterest.kind, UserInterest.value).where(UserInterest.user_id == user.id)
+    ).all()
+    pref_decades = [int(value) for kind, value in interests if kind == "decade"]
+    pref_creators = [value for kind, value in interests if kind == "creator"]
+    pref_tokens = [_tok("g", g) for g in pref_genres]
+    pref_tokens += [f"d:{d}" for d in pref_decades]
+    pref_tokens += [_tok("c", c) for c in pref_creators]
     exclude = excluded_ids(db, user.id)
 
     # Nó de decisão do DA: possui histórico ou preferências?
-    if not signals and not pref_genres:
+    if not signals and not pref_tokens:
         return "trending", trending(db, media_type, limit, exclude)
 
     catalog: list[Media] = list(db.scalars(select(Media).order_by(Media.id)))
@@ -164,9 +176,9 @@ def recommend(
     for row, w in sig_rows:
         profile = profile + w * X[row]
     pref_vec = None
-    if pref_genres:
-        pref_vec = vectorizer.transform([" ".join(_tok("g", g) for g in pref_genres)])
-        profile = profile + W_PREF_GENRE * pref_vec
+    if pref_tokens:
+        pref_vec = vectorizer.transform([" ".join(pref_tokens)])
+        profile = profile + W_PREFERENCE * pref_vec
 
     norm = sparse_norm(profile)
     if norm < 1e-9:
@@ -230,6 +242,8 @@ def recommend(
             X,
             sig_rows,
             pref_genres,
+            pref_decades,
+            pref_creators,
             pref_vec,
             item_sim if use_collab else None,
             content_share=alpha * c_norm[pos],
@@ -277,6 +291,8 @@ def _reason(
     X,
     sig_rows: list[tuple[int, float]],
     pref_genres: list[str],
+    pref_decades: list[int],
+    pref_creators: list[str],
     pref_vec,
     item_sim: np.ndarray | None,
     content_share: float,
@@ -295,13 +311,20 @@ def _reason(
         val = w * float(X[r].multiply(X[ci]).sum())
         if val > best_val:
             best_item, best_val = r, val
-    pref_val = float(pref_vec.multiply(X[ci]).sum()) * W_PREF_GENRE if pref_vec is not None else 0.0
+    pref_val = float(pref_vec.multiply(X[ci]).sum()) * W_PREFERENCE if pref_vec is not None else 0.0
 
     if best_item is not None and best_val >= pref_val:
         return f"Porque você curtiu {catalog[best_item].title}"
-    matching = [g for g in pref_genres if g in (catalog[ci].genres or [])]
+    media = catalog[ci]
+    creators = [c for c in pref_creators if c in (media.creators or [])]
+    if creators:
+        return f"Porque você curte {creators[0]}"
+    matching = [g for g in pref_genres if g in (media.genres or [])]
     if matching:
         return f"Porque você gosta de {matching[0]}"
+    decade = (media.year // 10) * 10 if media.year else None
+    if decade in pref_decades:
+        return f"Porque você curte os {decade_label(decade)}"
     if best_item is not None:
         return f"Porque você curtiu {catalog[best_item].title}"
     return "Combina com o seu perfil"
