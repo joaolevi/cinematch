@@ -225,6 +225,16 @@ class FeedOut(BaseModel):
     items: list[RecommendationOut]
 
 
+class ImpressionIn(BaseModel):
+    media_id: int
+    strategy: Literal["hybrid", "content", "trending"]
+    score: float
+
+
+class ImpressionsIn(BaseModel):
+    items: list[ImpressionIn] = Field(max_length=100)
+
+
 class FeedbackIn(BaseModel):
     action: FeedbackAction
     rating: float | None = None

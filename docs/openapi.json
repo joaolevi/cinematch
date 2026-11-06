@@ -1054,11 +1054,11 @@
               "items": {
                 "type": "integer"
               },
-              "description": "Títulos que já estão na tela, para trazer os próximos",
+              "description": "Títulos que já foram mostrados, para trazer outros",
               "default": [],
               "title": "Exclude"
             },
-            "description": "Títulos que já estão na tela, para trazer os próximos"
+            "description": "Títulos que já foram mostrados, para trazer outros"
           }
         ],
         "responses": {
@@ -1083,6 +1083,46 @@
             }
           }
         }
+      }
+    },
+    "/recommendations/impressions": {
+      "post": {
+        "tags": [
+          "recomendações"
+        ],
+        "summary": "Impressions",
+        "description": "Registra os títulos do feed que apareceram na tela, uma vez por usuário e título.",
+        "operationId": "impressions_recommendations_impressions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImpressionsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/recommendations/{media_id}/feedback": {
@@ -2101,6 +2141,51 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImpressionIn": {
+        "properties": {
+          "media_id": {
+            "type": "integer",
+            "title": "Media Id"
+          },
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "hybrid",
+              "content",
+              "trending"
+            ],
+            "title": "Strategy"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media_id",
+          "strategy",
+          "score"
+        ],
+        "title": "ImpressionIn"
+      },
+      "ImpressionsIn": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ImpressionIn"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ImpressionsIn"
       },
       "ListIn": {
         "properties": {

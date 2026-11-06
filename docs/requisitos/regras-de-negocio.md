@@ -32,7 +32,7 @@ RN12, RN13 e RN14 foram aprovadas por Sophia (GP) em 05/11/2026.
 |---|---|---|
 | RN07 | O feed não mostra títulos registrados, descartados ou na watchlist | Atende |
 | RN11 | O grupo A/B alterna pela ordem de cadastro | Atende |
-| RN12 | Taxa de aceitação = títulos aceitos (Quero ver ou Já vi) ÷ títulos exibidos, contando cada par usuário e título uma única vez e apenas títulos exibidos no feed | Atende |
+| RN12 | Taxa de aceitação = títulos aceitos (Quero ver ou Já vi) ÷ títulos exibidos, contando cada par usuário e título uma única vez e apenas títulos exibidos no feed. Um título conta como exibido quando pelo menos metade do card aparece na tela | Atende |
 
 ## Catálogo
 
@@ -40,12 +40,14 @@ RN12, RN13 e RN14 foram aprovadas por Sophia (GP) em 05/11/2026.
 |---|---|---|
 | RN15 | O mesmo título vindo de origens diferentes não é duplicado (prioridade: TMDB, mock, manual) | Atende |
 | RN16 | A busca ignora acentos | Atende |
+| RN19 | Títulos de anos futuros aparecem como "Em breve" e ficam no fim da ordem "Mais recentes" | Atende |
 
 ## Diário
 
 | ID | Regra | Situação |
 |---|---|---|
 | RN17 | O top 10 dos mais amados usa notas a partir de 3,5, e o dos mais odiados, notas abaixo de 3. Assim, quem só dá notas altas não vê títulos bons entre os odiados | Atende |
+| RN18 | Títulos marcados no onboarding entram no diário sem nota. Eles não contam nas médias nem no top 10, mas o recomendador os trata como "gostei", até a pessoa dar uma nota | Atende |
 
 ## Rastreabilidade
 
@@ -64,9 +66,11 @@ Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backen
 | RN09 | `routers/lists.py`, `routers/diary.py` | `test_diary_lists.py` (diário sem teste) |
 | RN10 | `auth.py` | `test_admin.py` |
 | RN11 | `routers/auth.py` | `test_auth.py` |
-| RN12 | `services/metrics.py` | `test_admin.py` |
+| RN12 | `services/metrics.py`, `routers/recommendations.py`, `frontend/src/impressions.tsx` | `test_admin.py`, `test_recommendations.py` |
 | RN13 | `routers/diary.py` | `test_admin.py` |
 | RN14 | `routers/auth.py`, `crud.py` | `test_diary_lists.py` |
 | RN15 | `services/catalog.py` | `test_tmdb_unit.py` |
 | RN16 | `routers/media.py`, `services/catalog.py` | `test_diary_lists.py` |
 | RN17 | `frontend/src/pages/DiaryPage.tsx` | Sem teste automatizado; conferida no navegador |
+| RN18 | `crud.py`, `services/recommender.py` | `test_recommendations.py` |
+| RN19 | `routers/media.py`, `frontend/src/components/Poster.tsx` | `test_diary_lists.py` |

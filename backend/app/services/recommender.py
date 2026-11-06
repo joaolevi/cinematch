@@ -41,6 +41,7 @@ W_SEEN_NO_RATING = 0.6  # "Já vi" sem nota: gostou moderadamente
 W_LIST = 0.5  # watchlist / listas (implícito)
 W_DISMISS = -0.7  # "Não me interesso" (explícito negativo)
 W_PREFERENCE = 1.0  # gêneros, décadas e criadores escolhidos no onboarding
+W_ONBOARDING_LIKE = 0.8  # título marcado no onboarding, que entra no diário sem nota
 
 POPULARITY_BONUS = 0.1
 EXTERNAL_CONTENT_WEIGHT = 0.2  # com vizinhos de pessoas reais, o colaborativo pesa mais
@@ -83,6 +84,11 @@ def rating_weight(rating: float | None) -> float:
     return (rating - 2.5) / 2.5  # 0.5 -> -0.8 ... 5.0 -> +1.0
 
 
+def entry_weight(rating: float | None, from_onboarding: bool) -> float:
+    """Peso de um registro do diário. Se a pessoa der uma nota depois, vale a nota."""
+    return W_ONBOARDING_LIKE if rating is None and from_onboarding else rating_weight(rating)
+
+
 def user_signals(db: Session, user_id: int) -> dict[int, float]:
     """Mapa media_id -> peso, combinando diário, listas e descartes."""
     signals: dict[int, float] = {}
@@ -92,10 +98,12 @@ def user_signals(db: Session, user_id: int) -> dict[int, float]:
         signals[media_id] = W_LIST
     for media_id in db.scalars(select(Dismissed.media_id).where(Dismissed.user_id == user_id)):
         signals[media_id] = W_DISMISS
-    for media_id, rating in db.execute(
-        select(DiaryEntry.media_id, DiaryEntry.rating).where(DiaryEntry.user_id == user_id)
+    for media_id, rating, from_onboarding in db.execute(
+        select(DiaryEntry.media_id, DiaryEntry.rating, DiaryEntry.from_onboarding).where(
+            DiaryEntry.user_id == user_id
+        )
     ):
-        signals[media_id] = rating_weight(rating)  # o diário tem prioridade
+        signals[media_id] = entry_weight(rating, from_onboarding)  # o diário tem prioridade
     return signals
 
 
@@ -305,10 +313,10 @@ def _item_similarity(db: Session, index: dict[int, int], n_items: int) -> np.nda
     per_user: dict[int, dict[int, float]] = defaultdict(dict)
     for uid, mid in db.execute(select(UserList.user_id, ListItem.media_id).join(ListItem)):
         per_user[uid][mid] = W_LIST
-    for uid, mid, rating in db.execute(
-        select(DiaryEntry.user_id, DiaryEntry.media_id, DiaryEntry.rating)
+    for uid, mid, rating, from_onboarding in db.execute(
+        select(DiaryEntry.user_id, DiaryEntry.media_id, DiaryEntry.rating, DiaryEntry.from_onboarding)
     ):
-        per_user[uid][mid] = rating_weight(rating)
+        per_user[uid][mid] = entry_weight(rating, from_onboarding)
     if len(per_user) < 2:
         return None
     rows, cols, vals = [], [], []

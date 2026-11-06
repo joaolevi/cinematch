@@ -17,6 +17,7 @@ DEFAULT_SECRET_KEY = "dev-secret-tastory-troque-esta-chave-em-producao"
 DEFAULT_ADMIN_PASSWORD = "admin123"
 DEFAULT_DEMO_PASSWORD = "demo123"
 DEFAULT_SYNTHETIC_PASSWORD = "senha123"
+PUBLIC_PASSWORDS = {DEFAULT_ADMIN_PASSWORD, DEFAULT_DEMO_PASSWORD, DEFAULT_SYNTHETIC_PASSWORD}
 
 
 def load_dotenv(*paths: Path) -> None:
@@ -84,11 +85,11 @@ class Settings:
         problems = []
         if "troque" in self.secret_key or len(self.secret_key) < 32:
             problems.append("TASTORY_SECRET_KEY")
-        if self.admin_password == DEFAULT_ADMIN_PASSWORD:
+        if self.admin_password in PUBLIC_PASSWORDS:
             problems.append("TASTORY_ADMIN_PASSWORD")
-        if self.demo_password == DEFAULT_DEMO_PASSWORD:
+        if self.demo_password in PUBLIC_PASSWORDS:
             problems.append("TASTORY_DEMO_PASSWORD")
-        if self.synthetic_password == DEFAULT_SYNTHETIC_PASSWORD:
+        if self.synthetic_password in PUBLIC_PASSWORDS:
             problems.append("TASTORY_SYNTHETIC_PASSWORD")
         return problems
 

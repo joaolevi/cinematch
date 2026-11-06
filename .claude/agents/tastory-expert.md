@@ -52,7 +52,8 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
   `UserList`/`ListItem` (is_watchlist), `RecEvent` (shown|want|seen|dismiss + variant), `Dismissed`.
   Sem migrações: mudou o modelo → `python -m scripts.seed`.
 - **Recomendador** (`services/recommender.py`):
-  1. `user_signals`: diário (peso `(nota−2,5)/2,5`, sem nota `0,6`), listas `0,5`, descartes `−0,7`;
+  1. `user_signals`: diário (peso `(nota−2,5)/2,5`, sem nota `0,6`, marcado no onboarding `0,8`), listas `0,5`,
+     descartes `−0,7`;
      preferências do onboarding (gêneros, décadas e criadores) somam `1,0`.
   2. Sem sinais nem preferências → `trending()` (0,7·popularidade + 0,3·registros na plataforma).
   3. Conteúdo: TF‑IDF sobre tokens `g:` gênero (peso 2), `t:` tag, `c:` criador, `d:` década, `type:`;
@@ -64,8 +65,9 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
      exclui registrados, descartados e watchlist; completa com trending.
   6. `_reason` gera "Porque você curtiu X", "Quem curtiu X também curtiu", "Porque você gosta de G" e os
      motivos por época e criador, variando o título citado.
-- **Impressões:** `GET /recommendations` grava `shown` uma única vez por (usuário, título). O parâmetro `exclude`
-  traz os próximos títulos ao rolar, e o que foi carregado também conta como exibido.
+- **Impressões:** a interface avisa em `POST /recommendations/impressions` quando metade do card aparece na tela,
+  e a API grava `shown` uma única vez por (usuário, título). `GET /recommendations` não grava nada, e o parâmetro
+  `exclude` traz os próximos títulos.
 - **Catálogo** (`services/catalog.py`): interface `CatalogProvider.fetch_titles()`.
   - `MockCatalogProvider`: `data/seed_catalog.json` (153, carregado no seed) e
     `data/mock_external_catalog.json` (45 extras).

@@ -80,7 +80,7 @@ Registre na [issue #14](https://github.com/joaolevi/cinematch/issues/14):
 - médias das perguntas 1 a 3 e contagem das perguntas 4, 5 e 7;
 - problemas encontrados, com o link do cartão de cada um.
 
-A Bárbara usa esses dados na análise da taxa de aceitação. O feed carrega mais títulos ao rolar, e todos contam como exibidos, então quem rola mais tende a ter uma taxa menor. Na apresentação, trate o resultado como ilustrativo e use o
+A Bárbara usa esses dados na análise da taxa de aceitação. Um título só conta como exibido quando pelo menos metade do card aparece na tela, mesmo que a pessoa não pare para olhar. Na apresentação, trate o resultado como ilustrativo e use o
 teste com o MovieLens como evidência de qualidade ([arquitetura](ARQUITETURA.md#evidências)).
 
 Não apague os dados antes da apresentação. Quem pedir a exclusão da conta deve ser atendido depois da entrega, com o [comando do guia de deploy](DEPLOY.md#apagar-uma-conta).

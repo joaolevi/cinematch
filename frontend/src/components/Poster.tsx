@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { isUpcoming } from "../format";
 import type { Media } from "../types";
 
 function hash(text: string): number {
@@ -18,15 +19,23 @@ export default function Poster({
   compact?: boolean;
 }) {
   const [broken, setBroken] = useState(false);
+  const upcoming = !compact && isUpcoming(media.year) && (
+    <span className="absolute top-2 right-2 z-10 rounded-md bg-amber px-1.5 py-0.5 text-[11px] font-bold text-bg">
+      Em breve
+    </span>
+  );
   if (media.poster_url && !broken) {
     return (
-      <img
-        src={media.poster_url}
-        alt={media.title}
-        loading="lazy"
-        onError={() => setBroken(true)}
-        className={`aspect-[2/3] w-full rounded-lg object-cover ${className}`}
-      />
+      <div className="relative">
+        <img
+          src={media.poster_url}
+          alt={media.title}
+          loading="lazy"
+          onError={() => setBroken(true)}
+          className={`aspect-[2/3] w-full rounded-lg object-cover ${className}`}
+        />
+        {upcoming}
+      </div>
     );
   }
   const h = hash(media.title);
@@ -40,6 +49,7 @@ export default function Poster({
       }}
       aria-label={`Pôster de ${media.title}`}
     >
+      {upcoming}
       {compact ? (
         <span className="absolute inset-0 flex items-center justify-center text-xl font-extrabold text-white/70">
           {media.title.charAt(0)}

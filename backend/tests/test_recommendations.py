@@ -5,7 +5,7 @@ from app.models import ItemNeighbor, Media, RecEvent
 from app.seed import create_synthetic_users
 from app.services import recommender
 
-from .conftest import media_id_by_title, register
+from .conftest import impressions_of, media_id_by_title, register
 
 
 def test_cold_start_returns_trending(client, user_headers):
@@ -53,11 +53,32 @@ def test_feedback_actions_remove_from_feed(client, user_headers):
     assert not new_ids & {want, seen, dismiss}
 
 
-def test_shown_events_are_unique_per_title(client, db, user_headers):
-    client.get("/recommendations", headers=user_headers)
-    client.get("/recommendations", headers=user_headers)
-    shown = db.query(RecEvent).filter(RecEvent.action == "shown").count()
-    assert shown == 20
+def test_only_titles_on_screen_count_as_shown(client, db, user_headers):
+    def shown():
+        return db.query(RecEvent).filter(RecEvent.action == "shown").count()
+
+    items = client.get("/recommendations", params={"limit": 5}, headers=user_headers).json()["items"]
+    assert shown() == 0  # carregar o feed não conta
+
+    on_screen = {"items": impressions_of(items[:2])}
+    for _ in range(2):  # avisar de novo não conta duas vezes
+        r = client.post("/recommendations/impressions", json=on_screen, headers=user_headers)
+        assert r.status_code == 204
+    assert shown() == 2
+
+
+def test_impressions_ignore_unknown_titles(client, db, user_headers):
+    unknown = {"items": [{"media_id": 999999, "strategy": "hybrid", "score": 0.5}]}
+    r = client.post("/recommendations/impressions", json=unknown, headers=user_headers)
+    assert r.status_code == 204
+    assert db.query(RecEvent).filter(RecEvent.action == "shown").count() == 0
+
+
+def test_impressions_require_login_and_a_valid_batch(client, user_headers):
+    assert client.post("/recommendations/impressions", json={"items": []}).status_code == 401
+    too_many = {"items": [{"media_id": 1, "strategy": "hybrid", "score": 0.5}] * 101}
+    r = client.post("/recommendations/impressions", json=too_many, headers=user_headers)
+    assert r.status_code == 422
 
 
 def test_hybrid_strategy_with_collaborative_data(client, db):
@@ -183,7 +204,28 @@ def test_undo_dismiss_brings_title_back(client, admin_headers, user_headers):
     assert client.get("/admin/metrics", headers=admin_headers).json()["overall"]["dismiss"] == 0
 
 
-def test_feed_brings_next_titles_without_repeating(client, user_headers, db):
+def test_onboarding_title_has_no_rating_but_counts_as_liked(client, user_headers, db):
+    mid = media_id_by_title(client, user_headers, "Matrix")
+    client.put(
+        "/me/preferences",
+        json={"genres": [], "decades": [], "creators": [], "liked_media_ids": [mid]},
+        headers=user_headers,
+    )
+
+    entry = client.get("/diary", headers=user_headers).json()[0]
+    assert entry["from_onboarding"] and entry["rating"] is None
+    detail = client.get(f"/media/{mid}", headers=user_headers).json()
+    assert detail["ratings_count"] == 0  # não entra na média do título
+
+    user_id = client.get("/me", headers=user_headers).json()["id"]
+    assert recommender.user_signals(db, user_id)[mid] == recommender.W_ONBOARDING_LIKE
+
+    # se a pessoa der uma nota depois, vale a nota
+    client.patch(f"/diary/{entry['id']}", json={"rating": 1}, headers=user_headers)
+    assert recommender.user_signals(db, user_id)[mid] < 0
+
+
+def test_feed_brings_next_titles_without_repeating(client, user_headers):
     def feed(exclude):
         r = client.get("/recommendations", params={"limit": 5, "exclude": exclude}, headers=user_headers)
         return [i["media"]["id"] for i in r.json()["items"]]
@@ -199,10 +241,6 @@ def test_feed_brings_next_titles_without_repeating(client, user_headers, db):
     second = feed(first)
     assert len(second) == 5 and not set(first) & set(second)
     assert first[0] not in second
-
-    # o que foi carregado depois também conta como exibido
-    shown = db.scalars(select(RecEvent.media_id).where(RecEvent.action == "shown")).all()
-    assert set(first + second) <= set(shown)
 
 
 def test_feed_ends_when_nothing_is_left(client, user_headers, db):

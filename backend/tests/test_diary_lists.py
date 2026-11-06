@@ -1,6 +1,9 @@
+from datetime import date
+
 from sqlalchemy import event
 
 from app.db import engine
+from app.models import Media
 from app.services.catalog import search_text
 
 from .conftest import media_id_by_title
@@ -152,6 +155,18 @@ def test_search_filters_by_genre_and_sorts(client, user_headers):
     # a ordem escolhida vale também para quem digitou um termo
     years = [m["year"] for m in search(q="a", sort="year")]
     assert len(years) > 1 and years == sorted(years, reverse=True)
+
+
+def test_most_recent_order_leaves_upcoming_titles_last(client, user_headers, db):
+    next_year = date.today().year + 1
+    db.add(Media(type="movie", title="Ainda Vai Estrear", year=next_year, source="manual"))
+    db.commit()
+    total = client.get("/media", params={"limit": 1}, headers=user_headers).json()["total"]
+    page = {"sort": "year", "limit": 1}
+    newest = client.get("/media", params=page, headers=user_headers).json()["items"][0]
+    last = client.get("/media", params={**page, "offset": total - 1}, headers=user_headers).json()["items"][0]
+    assert newest["year"] <= date.today().year
+    assert last["title"] == "Ainda Vai Estrear"
 
 
 def test_genres_are_public_and_sorted(client):
