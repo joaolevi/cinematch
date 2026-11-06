@@ -27,9 +27,21 @@ docker compose -f docker-compose.prod.yml --env-file .env.production exec api py
 ```
 
 **Esse comando apaga todas as tabelas**, então nunca o execute com usuários reais no banco. O `--no-sim` deixa o painel de
-métricas vazio, pronto para contar só interações reais. Em teste, a carga levou 23 s e gerou 504 títulos, 498 com pôster.
+métricas vazio, pronto para contar só interações reais. Em teste, a carga levou cerca de 1,5 minuto e gerou 3.966 títulos, 3.923 com pôster.
 
-## 3. Abrir o acesso externo
+## 3. Carregar as recomendações de filmes
+
+Opcional, mas é o que mais melhora as sugestões. Baixe o [MovieLens 32M](https://grouplens.org/datasets/movielens/32m/), que
+fica fora do repositório, e rode depois da carga inicial:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.production run --rm -v /caminho/ml-32m:/data:ro api python -m scripts.import_movielens /data
+```
+
+Em teste, levou 31 s e gerou 71.835 vizinhos para 1.438 filmes. Depois, defina `TASTORY_USE_EXTERNAL_NEIGHBORS=true` no
+`.env.production` e rode o `up -d` de novo. A licença não permite uso comercial sem permissão.
+
+## 4. Abrir o acesso externo
 
 Use o [Tailscale Funnel](https://tailscale.com/docs/features/tailscale-funnel), que dá HTTPS sem abrir portas no roteador e
 sem comprar domínio. No servidor, com o Funnel habilitado na conta:
@@ -44,7 +56,7 @@ Depois, preencha `TASTORY_PUBLIC_URL` e `TASTORY_API_URL` com os endereços gera
 Funnel tem limite de banda, e a Tailscale recomenda não expor dados sensíveis, por isso aceite e-mail fictício na
 homologação (RNF10).
 
-## 4. Fazer backup
+## 5. Fazer backup
 
 Antes da homologação e da entrega:
 

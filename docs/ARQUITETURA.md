@@ -1,6 +1,6 @@
 # Arquitetura e sistema final
 
-> **Versão 1, 06/11/2026.** Validação técnica: Bárbara (IA) e Levi (TL). Aprovação: Sophia (GP).
+> **Versão 2, 06/11/2026.** Validação técnica: Bárbara (IA) e Levi (TL). Aprovação: Sophia (GP).
 > Este documento trata do sistema final, com filmes, séries e música. O que será entregue em 10/11 está em [MVP.md](MVP.md).
 
 ## Decisões
@@ -9,6 +9,7 @@
 |---|---|---|---|
 | D7 | Filmes e séries são recomendados juntos; música é recomendada separadamente | Filmes e séries já compartilham gêneros, diretores e dados. Cruzar com música exige pessoas que consomem as duas coisas, e ainda não temos esses dados | Sophia (GP), 06/11 |
 | D8 | O MVP mantém o cálculo atual; a mudança de arquitetura fica para depois de 10/11 | Com o catálogo atual, o feed responde em milissegundos, e trocar agora colocaria a entrega em risco | Sophia (GP), 06/11 |
+| D14 | Os vizinhos do MovieLens 32M substituem os usuários inventados nos filmes, com a opção desligada por padrão | Foi a maior melhora medida, e a opção desligada protege a entrega | Sophia (GP), 06/11 |
 
 A recomendação cruzada entre filmes e música fica como evolução: o diário unificado vai gerar esses dados com o tempo.
 
@@ -33,8 +34,8 @@ A mesma tabela recebe vizinhos de origens diferentes, o que permite tratar cada 
 
 | Mídia | Fonte de "quem curtiu X curtiu Y" | Observação |
 |---|---|---|
-| Filmes | MovieLens e TMDB | O MovieLens liga cada filme ao ID do TMDB. A licença proíbe uso comercial sem permissão |
-| Séries | TMDB | O MovieLens só tem filmes |
+| Filmes | MovieLens 32M | Já implementado, com a opção `TASTORY_USE_EXTERNAL_NEIGHBORS`. A licença proíbe uso comercial sem permissão |
+| Séries | Rotas de recomendação do TMDB | Ainda não implementado. Não há base pública com avaliações de séries por pessoa e ID do TMDB |
 | Música | ListenBrainz | Dados abertos; a similaridade por álbum ainda precisa ser confirmada |
 | Entre mídias | Interações da própria plataforma | Só funciona com usuários reais |
 
@@ -80,6 +81,50 @@ falta são dados reais.
 híbrido também ganhou do conteúdo, mas com só 27 pessoas. A GroupLens informa que essa versão da base não serve
 para publicar resultados de pesquisa, então trate o teste como exploratório.
 
+### Dados reais, dados inventados e modelos prontos
+
+Mesmo teste, agora com as características reais do TMDB (3.636 filmes). Peso ajustado é 0,2 no conteúdo. Para comparar,
+a popularidade sozinha dá 0,083.
+
+| Origem do colaborativo | NDCG@20, peso atual | NDCG@20, peso ajustado |
+|---|---|---|
+| Nenhuma (grupo B) | 0,020 | — |
+| 30 usuários inventados, como hoje | 0,019 | 0,013 |
+| 3.000 usuários inventados | 0,020 | 0,012 |
+| 30 usuários reais | 0,078 | 0,087 |
+| 610 usuários reais | 0,106 | 0,136 |
+| **MovieLens 32M, 50 vizinhos por título** | **0,146** | **0,149** |
+| MovieLens 32M, matriz completa | 0,125 | 0,154 |
+| ALS pronto do Hugging Face, usado como similaridade entre filmes | 0,067 | 0,078 |
+
+**Conclusões:** usuários inventados não ajudam, porque só repetem regras que nós mesmos escrevemos. Dados reais multiplicam
+a qualidade, e guardar só 50 vizinhos por título quase não custa nada. O ALS pronto foi avaliado sem os fatores de usuário,
+que não existem para os nossos usuários, então o teste mede só esse uso.
+
+Modelo de texto pronto (`paraphrase-multilingual-MiniLM-L12-v2`, com as sinopses em português):
+
+| Conteúdo | Sem colaborativo | Com o MovieLens 32M |
+|---|---|---|
+| TF-IDF, como hoje | 0,020 | 0,149 |
+| Modelo de texto | 0,012 | 0,146 |
+| Os dois juntos | 0,024 | 0,149 |
+
+O modelo de texto não melhora o resultado e exige bibliotecas pesadas, então fica de fora por enquanto.
+
+**Limites:** os testes usam pessoas e filmes do MovieLens, e o usuário do teste pode aparecer na base 32M. Nada disso mede
+séries. No sistema real, 1.438 dos 1.985 filmes do catálogo têm vizinhos: os demais são recentes ou não estão na base.
+
+### Fontes avaliadas
+
+| Fonte | O que oferece | Decisão |
+|---|---|---|
+| TMDB | Catálogo de filmes e séries e rotas de títulos relacionados | Continua como catálogo |
+| MovieLens 32M | 32 milhões de avaliações, com ID do TMDB, só filmes | Usado nos filmes |
+| IMDb | Filmes, séries, episódios e elenco; só médias, sem avaliações por pessoa | Opção para elenco, com uso não comercial |
+| ListenBrainz | Dados abertos de música | Candidato para música |
+| Yambda | 4,79 bilhões de interações de música, com IDs anônimos | Não liga com o catálogo |
+| Douban e Amazon Reviews | Mesmas pessoas em filmes e música, mas difíceis de ligar ao catálogo | Só para estudo |
+
 ### Arquitetura proposta
 
 | | Hoje | Vizinhos guardados (50 por título) |
@@ -116,4 +161,4 @@ Estes requisitos ficam fora do MVP.
 | RNFF02 | Tempo e memória do feed não dependem do tamanho do catálogo | Não atende: ver as evidências acima |
 | RNFF03 | Limitar tentativas de login | Não atende |
 | RNFF04 | Sincronizar catálogos em segundo plano | Não atende: a sincronização roda dentro da requisição |
-| RNFF05 | Usar dados reais na parte colaborativa | Não atende: hoje depende de 30 usuários inventados |
+| RNFF05 | Usar dados reais na parte colaborativa | Parcial: filmes usam o MovieLens 32M quando a opção está ligada; séries e música ainda não têm fonte |

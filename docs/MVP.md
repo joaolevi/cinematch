@@ -1,11 +1,11 @@
 # Escopo do MVP
 
-> **Versão 9, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
+> **Versão 10, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
-A API cobre os 13 casos de uso do pitch para filmes e séries. Os 52 testes offline e os 13 com o TMDB real
+A API cobre os 13 casos de uso do pitch para filmes e séries. Os 61 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
 credenciais estão prontas, mas aguardam merge. Falta criar a branch `homol`, publicar o sistema, ajustar o design,
 fazer a homologação e preparar a demonstração.
@@ -26,6 +26,7 @@ corretamente. O benefício do recomendador será avaliado depois, com dados reai
 - Testes para as quatro rotas descobertas (RNF06).
 - Três ajustes para o sistema publicado: tamanho dos campos (RNF16), consultas do diário e das listas (RNF17) e versões fixas das dependências (RNF18).
 - Catálogo ampliado com o TMDB (RF15b), para os colegas encontrarem os títulos na homologação.
+- Recomendações de filmes com o MovieLens 32M, ligadas depois da validação da Bárbara ([arquitetura](ARQUITETURA.md)).
 - Deploy da API e da interface (RNF11 a RNF19), com a execução local como plano B ([guia](DEPLOY.md)).
 - Homologação com 5 a 10 colegas ([#14](https://github.com/joaolevi/cinematch/issues/14)).
 - Interface em `frontend/`, com o design revisado pela Lara, e demonstração ensaiada.
@@ -33,7 +34,6 @@ corretamente. O benefício do recomendador será avaliado depois, com dados reai
 ## Se houver tempo
 
 - Busca que ignora acentos (RN16).
-- Teste do MovieLens como fonte do colaborativo, desligado por padrão e com corte em 08/11 ([arquitetura](ARQUITETURA.md)).
 
 ## Fora do MVP
 
@@ -97,7 +97,7 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 
 - **Vinicius:** publicar a interface e configurar o CORS.
 - **Antonio:** testar `dev.sh` e `demo.sh`; preparar o plano B local e testar de ponta a ponta.
-- **Bárbara:** preparar a explicação do resultado do A/B; se houver tempo, testar o MovieLens.
+- **Bárbara:** preparar a explicação do resultado do A/B; validar as recomendações com o MovieLens.
 
 ### Seg 09/11
 
@@ -136,6 +136,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | D9 | O nome do produto é Tastory, inclusive no código | Sophia (GP) | 06/11 |
 | D11 | O sistema roda em Docker, com API, interface e PostgreSQL (RNF19) | Sophia (GP) | 06/11 |
 | D12 | O sistema será publicado no servidor do Vinicius, sem custo | Sophia (GP) | 06/11 |
+| D14 | Os vizinhos do MovieLens 32M substituem os usuários inventados nos filmes, com a opção desligada por padrão | Sophia (GP) | 06/11 |
 | D13 | O onboarding pergunta gêneros, épocas, diretores e títulos, em três passos. Palavras-chave ficam de fora, porque são termos crus e muitos em inglês | Sophia (GP) | 06/11 |
 | D10 | As tarefas entram na branch `homol`, o QA testa ali, e a `main` só recebe a versão aprovada ([CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões)) | Sophia (GP) | 06/11 |
 
@@ -149,6 +150,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | 05/11 | O deploy, excluído no PLANO, volta como meta do MVP | Está previsto no pitch e tem responsável | Sophia (GP) |
 | 05/11 | A taxa de aceitação fica sem meta numérica | Ainda não há dados reais para definir um valor | Sophia (GP) |
 | 06/11 | A publicação será no servidor do Vinicius, e não em hospedagem gratuita | Evita custo e as limitações de planos gratuitos | Sophia (GP) |
+| 06/11 | O MovieLens passa de "se houver tempo" a parte do MVP | Foi a maior melhora medida nas recomendações | Sophia (GP) |
 | 06/11 | O onboarding passa a coletar épocas e diretores, em três passos | Aproveitar melhor o que o recomendador já usa | Sophia (GP) |
 | 06/11 | A homologação passa de opcional a obrigatória | Consta no Estágio 3 do pitch, e o deploy a torna viável | Sophia (GP) |
 | 06/11 | A gerência passa a constar com Sophia; o PLANO cita João Levi | Cargos definidos pela equipe | Equipe |
@@ -162,10 +164,11 @@ Nenhuma decisão pendente em 06/11/2026.
 |---|---|---|---|
 | O design não ficar pronto a tempo | Interface funcional, mas sem o acabamento planejado | A interface atual já cobre o fluxo completo; priorizar o que aparece na demonstração | Lara |
 | O painel do A/B não favorece o híbrido | Na simulação, A tem 65,0% e B tem 66,7%, mas ela não serve para essa comparação. Com dados reais do MovieLens, A supera B | Apresentar o painel como simulação do mecanismo de medição e usar o teste com o MovieLens como evidência exploratória | Bárbara |
+| Séries com sugestões fracas | Sem dados reais, as séries dependem só do conteúdo e aparecem títulos obscuros | Avaliar as rotas do TMDB e, se preciso, dar mais peso à popularidade | Bárbara |
 | Publicar com as credenciais do repositório | Qualquer pessoa entra como administrador | Tratar o RNF12 como condição para publicar | Sophia |
 | O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir em 09/11 e, se preciso, apresentar localmente | Vinicius |
 | Servidor fora do ar | Queda de energia ou de internet na casa do Vinicius derruba o sistema | Conferir a URL antes da apresentação e manter a execução local como plano B | Vinicius |
 | Exposição da rede doméstica | Um site público pode abrir um caminho para a rede da casa | Usar túnel com HTTPS e não abrir portas no roteador | Vinicius |
 | Homologação com poucas pessoas | Com 5 a 10 colegas, a taxa não permite conclusão | Tratar o resultado como ilustrativo. Sem deploy, fazer a sessão em uma só máquina, porque as métricas ficam em um único banco | Antonio |
 | Sem internet na demo | Títulos sem pôster real | Usar o catálogo mock, que funciona offline, e testar esse cenário antes | Antonio |
-| Título procurado fora do catálogo | Mesmo com 504 títulos, "O Agente Secreto" não aparece na busca | Importar pelo painel de admin os títulos pedidos antes da sessão | Antonio |
+| Título procurado fora do catálogo | Com 3.966 títulos, a maioria aparece, mas o catálogo ainda não cobre tudo | Importar pelo painel de admin os títulos que faltarem | Antonio |
