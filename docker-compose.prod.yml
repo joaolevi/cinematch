@@ -1,0 +1,54 @@
+# Produção no servidor. Veja docs/DEPLOY.md.
+# docker compose -f docker-compose.prod.yml --env-file .env.production up --build -d
+name: tastory-prod
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tastory
+      POSTGRES_USER: tastory
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina no .env.production}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tastory -d tastory"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      TASTORY_ENV: production
+      TASTORY_AUTO_SEED: "false"
+      TASTORY_DATABASE_URL: postgresql://tastory:${POSTGRES_PASSWORD:?defina no .env.production}@db:5432/tastory
+      TASTORY_SECRET_KEY: ${TASTORY_SECRET_KEY:?defina no .env.production}
+      TASTORY_ADMIN_PASSWORD: ${TASTORY_ADMIN_PASSWORD:?defina no .env.production}
+      TASTORY_DEMO_PASSWORD: ${TASTORY_DEMO_PASSWORD:?defina no .env.production}
+      TASTORY_SYNTHETIC_PASSWORD: ${TASTORY_SYNTHETIC_PASSWORD:?defina no .env.production}
+      TASTORY_CORS_ORIGINS: ${TASTORY_PUBLIC_URL:?defina no .env.production}
+      TASTORY_TMDB_API_KEY: ${TASTORY_TMDB_API_KEY:-}
+      TASTORY_TMDB_SYNC_PAGES: ${TASTORY_TMDB_SYNC_PAGES:-10}
+    # Só o próprio servidor acessa as portas; o túnel leva o tráfego público até elas
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${TASTORY_API_URL:?defina no .env.production}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+
+volumes:
+  db-data:
