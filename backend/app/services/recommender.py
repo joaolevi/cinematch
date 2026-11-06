@@ -12,6 +12,7 @@ Variante A/B: grupo A = híbrido (conteúdo + colaborativo); grupo B = só conte
 
 from __future__ import annotations
 
+import re
 from collections import Counter, defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -44,8 +45,10 @@ W_PREFERENCE = 1.0  # gêneros, décadas e criadores escolhidos no onboarding
 W_ONBOARDING_LIKE = 0.8  # título marcado no onboarding, que entra no diário sem nota
 
 POPULARITY_BONUS = 0.1
+SERIES_POPULARITY_BONUS = 1.0  # sem avaliações reais de séries, a popularidade evita títulos obscuros
 EXTERNAL_CONTENT_WEIGHT = 0.2  # com vizinhos de pessoas reais, o colaborativo pesa mais
 DIVERSITY_PENALTY = 0.85  # multiplicador a cada repetição do gênero principal no topo
+LATIN_LETTER = re.compile(r"[A-Za-zÀ-ÿ]")
 
 
 @dataclass
@@ -59,6 +62,13 @@ class Recommendation:
 # ---------------------------------------------------------------- utilidades
 def _tok(prefix: str, value: str) -> str:
     return f"{prefix}:{value.strip().lower().replace(' ', '_')}"
+
+
+def can_be_suggested(m: Media) -> bool:
+    """O feed só sugere títulos do TMDB com sinopse, pôster e nome legível. A busca mostra todos."""
+    if m.source != "tmdb":
+        return True  # o catálogo mock não tem pôster
+    return bool(m.overview and m.poster_url and LATIN_LETTER.search(m.title))
 
 
 def media_tokens(m: Media) -> str:
@@ -142,7 +152,7 @@ def trending(
     q = select(Media)
     if media_type:
         q = q.where(Media.type == media_type)
-    items = [m for m in db.scalars(q) if m.id not in exclude]
+    items = [m for m in db.scalars(q) if m.id not in exclude and can_be_suggested(m)]
     if not items:
         return []
     counts = dict(
@@ -230,7 +240,7 @@ def recommend(
     candidates = [
         i
         for i, m in enumerate(catalog)
-        if m.id not in exclude and (media_type is None or m.type == media_type)
+        if m.id not in exclude and (media_type is None or m.type == media_type) and can_be_suggested(m)
     ]
     if not candidates:
         return ("hybrid" if use_collab else "content"), []
@@ -248,7 +258,14 @@ def recommend(
     else:
         alpha, cf_norm, strategy = np.ones(len(cand)), np.zeros(len(cand)), "content"
     pop = np.array([catalog[i].popularity for i in cand]) / 100.0
-    final = alpha * c_norm + (1 - alpha) * cf_norm + POPULARITY_BONUS * pop
+    blend = alpha * c_norm + (1 - alpha) * cf_norm
+    final = blend + POPULARITY_BONUS * pop
+
+    # Nas séries, a popularidade pesa mais, mas só reordena as séries entre si.
+    # Elas trocam de nota umas com as outras, então a proporção com os filmes não muda.
+    series = np.flatnonzero([catalog[i].type == "series" for i in cand])
+    by_new_order = series[np.argsort(blend[series] + SERIES_POPULARITY_BONUS * pop[series])]
+    final[by_new_order] = np.sort(final[series])
 
     # --- Diversidade: penaliza repetição do gênero principal no topo do feed
     picked: list[tuple[int, float, int]] = []  # (pos em cand, score ajustado, idx catálogo)

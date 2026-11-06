@@ -53,6 +53,59 @@ def test_feedback_actions_remove_from_feed(client, user_headers):
     assert not new_ids & {want, seen, dismiss}
 
 
+def test_feed_only_suggests_tmdb_titles_with_synopsis_poster_and_readable_name(client, db, user_headers):
+    def tmdb_title(title, overview="Sinopse", poster="https://img/x.jpg"):
+        return Media(type="movie", title=title, overview=overview, poster_url=poster, source="tmdb",
+                     external_id=f"movie-{title}", genres=["Drama"], popularity=100)
+
+    db.add_all([
+        tmdb_title("Completo"),
+        tmdb_title("Sem Sinopse", overview=""),
+        tmdb_title("Sem Pôster", poster=None),
+        tmdb_title("논스톱"),
+    ])
+    db.commit()
+
+    def titles(path, **params):
+        r = client.get(path, params={"limit": 50, **params}, headers=user_headers).json()
+        return {i["media"]["title"] if "media" in i else i["title"] for i in (r["items"] if isinstance(r, dict) else r)}
+
+    hidden = {"Sem Sinopse", "Sem Pôster", "논스톱"}
+    assert "Completo" in titles("/recommendations") and not titles("/recommendations") & hidden  # em alta
+    assert "Completo" in titles("/media/trending") and not titles("/media/trending") & hidden
+
+    mid = media_id_by_title(client, user_headers, "Completo")
+    client.post(f"/recommendations/{mid}/feedback", json={"action": "seen", "rating": 5}, headers=user_headers)
+    assert not titles("/recommendations") & hidden  # personalizado
+
+    assert titles("/media", q="Sem Sinopse") == {"Sem Sinopse"}  # a busca mostra todos
+
+
+def test_series_give_more_weight_to_popularity_than_movies(client, db, user_headers):
+    def pair(media_type):
+        liked = Media(type=media_type, title=f"Favorita {media_type}", genres=["Drama"], tags=["ilha", "fuga"],
+                      creators=["Fulana"], popularity=50, source="manual")
+        close = Media(type=media_type, title=f"Parecida {media_type}", genres=["Drama"], tags=["ilha", "fuga"],
+                      creators=["Fulana"], popularity=0, source="manual")
+        popular = Media(type=media_type, title=f"Popular {media_type}", genres=["Drama"], popularity=100, source="manual")
+        db.add_all([liked, close, popular])
+        db.flush()
+        return liked.id
+
+    ids = [pair("movie"), pair("series")]
+    db.commit()
+    for mid in ids:
+        client.post("/diary", json={"media_id": mid, "rating": 5}, headers=user_headers)
+
+    def first_of_pair(media_type):
+        items = client.get("/recommendations", params={"type": media_type, "limit": 50}, headers=user_headers).json()["items"]
+        titles = [i["media"]["title"] for i in items]
+        return min((f"Parecida {media_type}", f"Popular {media_type}"), key=titles.index)
+
+    assert first_of_pair("movie") == "Parecida movie"
+    assert first_of_pair("series") == "Popular series"
+
+
 def test_only_titles_on_screen_count_as_shown(client, db, user_headers):
     def shown():
         return db.query(RecEvent).filter(RecEvent.action == "shown").count()
