@@ -5,6 +5,9 @@
 A publicação será no servidor do Vinicius, sem custo (decisão D12), com o arquivo `docker-compose.prod.yml`. Os passos
 abaixo foram testados localmente em 06/11/2026, exceto o acesso externo.
 
+Os comandos abaixo têm atalhos no `Makefile`: `make prod-up`, `make prod-logs`, `make prod-seed CONFIRMAR=sim`,
+`make prod-movielens DATA=/caminho/ml-32m` e `make backup`.
+
 ## 1. Configurar
 
 ```bash
