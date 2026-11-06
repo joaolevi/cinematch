@@ -3,7 +3,7 @@ from sqlalchemy import select
 from app.models import ItemNeighbor, Media, RecEvent, User
 from app.seed import create_synthetic_users
 
-from .conftest import media_id_by_title
+from .conftest import media_id_by_title, see_feed
 
 
 def test_admin_routes_require_admin(client, user_headers):
@@ -50,7 +50,7 @@ def test_moderation_hides_review(client, admin_headers, user_headers):
 
 
 def test_acceptance_rate(client, admin_headers, user_headers):
-    items = client.get("/recommendations", params={"limit": 10}, headers=user_headers).json()["items"]
+    items = see_feed(client, user_headers, limit=10)
     ids = [i["media"]["id"] for i in items]
     client.post(f"/recommendations/{ids[0]}/feedback", json={"action": "want"}, headers=user_headers)
     client.post(f"/recommendations/{ids[1]}/feedback", json={"action": "seen"}, headers=user_headers)
@@ -62,7 +62,7 @@ def test_acceptance_rate(client, admin_headers, user_headers):
 
 
 def test_acceptance_counts_each_title_once(client, admin_headers, user_headers):
-    items = client.get("/recommendations", params={"limit": 10}, headers=user_headers).json()["items"]
+    items = see_feed(client, user_headers, limit=10)
     mid = items[0]["media"]["id"]
     for _ in range(3):
         client.post(f"/recommendations/{mid}/feedback", json={"action": "want"}, headers=user_headers)
@@ -74,7 +74,7 @@ def test_acceptance_counts_each_title_once(client, admin_headers, user_headers):
 
 
 def test_acceptance_ignores_titles_not_shown(client, admin_headers, user_headers):
-    shown = client.get("/recommendations", params={"limit": 1}, headers=user_headers).json()["items"]
+    shown = see_feed(client, user_headers, limit=1)
     shown_id = shown[0]["media"]["id"]
     catalog = client.get("/media", params={"limit": 5}, headers=user_headers).json()["items"]
     other = next(m["id"] for m in catalog if m["id"] != shown_id)
@@ -107,7 +107,7 @@ def test_poster_url_above_limit_is_rejected(client, admin_headers):
 
 
 def test_metrics_explain_where_the_numbers_come_from(client, db, admin_headers, user_headers):
-    client.get("/recommendations", params={"limit": 3}, headers=user_headers)
+    see_feed(client, user_headers, limit=3)
     synthetic = User(name="Sintético", email="sint@teste.com", password_hash="x", is_synthetic=True)
     movie = db.scalar(select(Media).where(Media.type == "movie"))
     db.add(synthetic)
@@ -126,8 +126,8 @@ def test_metrics_explain_where_the_numbers_come_from(client, db, admin_headers, 
 
 
 def test_admin_feed_does_not_count_as_shown(client, admin_headers, user_headers):
-    client.get("/recommendations", params={"limit": 5}, headers=admin_headers)
-    client.get("/recommendations", params={"limit": 3}, headers=user_headers)
+    see_feed(client, admin_headers, limit=5)
+    see_feed(client, user_headers, limit=3)
 
     m = client.get("/admin/metrics", headers=admin_headers).json()
     assert m["overall"]["shown"] == 3

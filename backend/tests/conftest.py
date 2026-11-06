@@ -54,6 +54,17 @@ def admin_headers(client):
     return auth_headers(client, ADMIN_EMAIL, ADMIN_PASSWORD)
 
 
+def see_feed(client: TestClient, headers: dict, **params) -> list[dict]:
+    """Abre o feed e avisa que todos os cards apareceram na tela, como faz a interface."""
+    items = client.get("/recommendations", params=params, headers=headers).json()["items"]
+    client.post("/recommendations/impressions", json={"items": impressions_of(items)}, headers=headers)
+    return items
+
+
+def impressions_of(items: list[dict]) -> list[dict]:
+    return [{"media_id": i["media"]["id"], "strategy": i["strategy"], "score": i["score"]} for i in items]
+
+
 def media_id_by_title(client: TestClient, headers: dict, title: str) -> int:
     r = client.get("/media", params={"q": title}, headers=headers)
     items = [m for m in r.json()["items"] if m["title"] == title]

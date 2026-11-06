@@ -4,6 +4,7 @@ import { api } from "../api";
 import { useAuth } from "../auth";
 import MediaCard from "../components/MediaCard";
 import SeenModal from "../components/SeenModal";
+import { OnScreen, useImpressions } from "../impressions";
 import type { Feed, FeedbackAction, Media, MediaType } from "../types";
 
 const PAGE = 18;
@@ -28,11 +29,14 @@ export default function FeedPage() {
   const [moreFailed, setMoreFailed] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
   const fetching = useRef(false);
+  const replacing = useRef(false); // enquanto a lista é substituída, a paginação espera
+  const impressions = useImpressions();
   const latestLoad = useRef(0); // respostas de um filtro antigo são ignoradas
   const alreadyShown = useRef(new Set<number>()); // tudo o que apareceu desde o último recomeço
 
   const load = useCallback(async () => {
     const thisLoad = ++latestLoad.current;
+    replacing.current = true;
     setLoading(true);
     setError(null);
     setHasMore(true);
@@ -46,7 +50,10 @@ export default function FeedPage() {
     } catch (e) {
       if (thisLoad === latestLoad.current) setError((e as Error).message);
     } finally {
-      if (thisLoad === latestLoad.current) setLoading(false);
+      if (thisLoad === latestLoad.current) {
+        replacing.current = false;
+        setLoading(false);
+      }
     }
   }, [type]);
 
@@ -55,7 +62,7 @@ export default function FeedPage() {
   }, [load]);
 
   const loadMore = useCallback(async () => {
-    if (!feed || fetching.current) return;
+    if (!feed || fetching.current || replacing.current) return;
     const thisLoad = latestLoad.current;
     fetching.current = true;
     setLoadingMore(true);
@@ -77,6 +84,7 @@ export default function FeedPage() {
 
   async function swap() {
     const thisLoad = ++latestLoad.current;
+    replacing.current = true;
     setLoading(true);
     setError(null);
     setMoreFailed(false);
@@ -94,17 +102,20 @@ export default function FeedPage() {
     } catch (e) {
       if (thisLoad === latestLoad.current) setError((e as Error).message);
     } finally {
-      if (thisLoad === latestLoad.current) setLoading(false);
+      if (thisLoad === latestLoad.current) {
+        replacing.current = false;
+        setLoading(false);
+      }
     }
   }
 
   useEffect(() => {
     const target = bottom.current;
-    if (!target || !hasMore || moreFailed) return;
+    if (!target || !hasMore || moreFailed || loading || loadingMore) return;
     const observer = new IntersectionObserver(([entry]) => entry.isIntersecting && loadMore(), { rootMargin: "400px" });
     observer.observe(target);
     return () => observer.disconnect();
-  }, [hasMore, loadMore, moreFailed]);
+  }, [hasMore, loadMore, moreFailed, loading, loadingMore]);
 
   useEffect(() => {
     if (!toast) return;
@@ -113,6 +124,10 @@ export default function FeedPage() {
   }, [toast]);
 
   async function act(media: Media, action: FeedbackAction, rating?: number | null, review?: string, date?: string | null) {
+    // A reação só conta se o título tiver sido exibido, mesmo com o card quase saindo da tela
+    const rec = feed?.items.find((i) => i.media.id === media.id);
+    if (rec) impressions.mark(rec);
+    await impressions.send();
     await api.feedback(media.id, action, rating, review, date);
     setFeed((f) => (f ? { ...f, items: f.items.filter((i) => i.media.id !== media.id) } : f));
     setToast(
@@ -161,22 +176,24 @@ export default function FeedPage() {
 
       <div className="mt-6 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-6">
         {feed?.items.map((rec) => (
-          <MediaCard key={rec.media.id} media={rec.media}>
-            <p className="mt-1 line-clamp-2 text-xs text-accent/90" title={rec.reason}>
-              {rec.reason}
-            </p>
-            <div className="mt-2 grid grid-cols-[1fr_1fr_auto] gap-1">
-              <button className="btn-want px-1 py-1 text-[11px]" onClick={() => act(rec.media, "want")}>
-                Quero ver
-              </button>
-              <button className="btn-seen px-1 py-1 text-[11px]" onClick={() => setSeenTarget(rec.media)}>
-                Já vi
-              </button>
-              <button className="btn-skip px-2 py-1 text-[11px]" title="Não me interesso" aria-label="Não me interesso" onClick={() => act(rec.media, "dismiss")}>
-                ✕
-              </button>
-            </div>
-          </MediaCard>
+          <OnScreen key={rec.media.id} rec={rec} onSeen={impressions.mark}>
+            <MediaCard media={rec.media}>
+              <p className="mt-1 line-clamp-2 text-xs text-accent/90" title={rec.reason}>
+                {rec.reason}
+              </p>
+              <div className="mt-2 grid grid-cols-[1fr_1fr_auto] gap-1">
+                <button className="btn-want px-1 py-1 text-[11px]" onClick={() => act(rec.media, "want")}>
+                  Quero ver
+                </button>
+                <button className="btn-seen px-1 py-1 text-[11px]" onClick={() => setSeenTarget(rec.media)}>
+                  Já vi
+                </button>
+                <button className="btn-skip px-2 py-1 text-[11px]" title="Não me interesso" aria-label="Não me interesso" onClick={() => act(rec.media, "dismiss")}>
+                  ✕
+                </button>
+              </div>
+            </MediaCard>
+          </OnScreen>
         ))}
       </div>
 

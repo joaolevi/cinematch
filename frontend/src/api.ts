@@ -10,6 +10,7 @@ import type {
   MediaSort,
   MediaType,
   Metrics,
+  Recommendation,
   SyncResult,
   User,
   UserList,
@@ -133,6 +134,11 @@ export const api = {
   feed: (type?: MediaType, limit = 20, exclude: number[] = []) =>
     request<Feed>("/recommendations", { query: { type, limit, exclude: exclude.map(String) } }),
   undoDismiss: (media_id: number) => request<void>(`/recommendations/${media_id}/feedback`, { method: "DELETE" }),
+  impressions: (items: Recommendation[]) =>
+    request<void>("/recommendations/impressions", {
+      method: "POST",
+      body: { items: items.map((i) => ({ media_id: i.media.id, strategy: i.strategy, score: i.score })) },
+    }),
   feedback: (media_id: number, action: FeedbackAction, rating?: number | null, review?: string, consumed_at?: string | null) =>
     request<{ ok: boolean }>(`/recommendations/${media_id}/feedback`, {
       method: "POST",
