@@ -148,8 +148,8 @@ Diagrama de Atividades do pitch:
 ```bash
 cd backend
 pip install -r requirements-dev.txt   # o dev.sh instala só o necessário para rodar a API
-python -m pytest -q                    # todos (95): é o que roda no CI, onde os 13 de integração são pulados
-python -m pytest -q -m "not integration"   # só offline (82)
+python -m pytest -q                    # todos (98): é o que roda no CI, onde os 13 de integração são pulados
+python -m pytest -q -m "not integration"   # só offline (85)
 python -m pytest -q -m integration     # só integração real com TMDB + banco (13, precisa da chave)
 ```
 

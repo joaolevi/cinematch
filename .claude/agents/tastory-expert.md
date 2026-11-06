@@ -65,8 +65,9 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
      exclui registrados, descartados e watchlist; completa com trending.
   6. `_reason` gera "Porque você curtiu X", "Quem curtiu X também curtiu", "Porque você gosta de G" e os
      motivos por época e criador, variando o título citado.
-- **Impressões:** `GET /recommendations` grava `shown` uma única vez por (usuário, título). O parâmetro `exclude`
-  traz os próximos títulos ao rolar, e o que foi carregado também conta como exibido.
+- **Impressões:** a interface avisa em `POST /recommendations/impressions` quando metade do card aparece na tela,
+  e a API grava `shown` uma única vez por (usuário, título). `GET /recommendations` não grava nada, e o parâmetro
+  `exclude` traz os próximos títulos.
 - **Catálogo** (`services/catalog.py`): interface `CatalogProvider.fetch_titles()`.
   - `MockCatalogProvider`: `data/seed_catalog.json` (153, carregado no seed) e
     `data/mock_external_catalog.json` (45 extras).
