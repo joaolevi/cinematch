@@ -9,6 +9,7 @@ de `docs/API.md`. O escopo atual está em `docs/MVP.md`, e os requisitos, em `do
 
 ## Comandos
 
+- Atalhos: `make` lista todos, inclusive `make test`, `make openapi` e os de produção
 - Subir a API: `./dev.sh` (http://localhost:8000/docs) · recriar banco: `./dev.sh --reset`
 - Subir tudo com PostgreSQL: `docker compose up --build` (interface em http://localhost:5173)
 - Testes: `.venv/bin/pip install -r backend/requirements-dev.txt`, uma vez, e depois

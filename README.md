@@ -67,6 +67,11 @@ uvicorn app.main:app --reload
 Na primeira execução o banco SQLite (`backend/tastory.db`) é criado e populado automaticamente com
 o catálogo mockado. Para recriar do zero: `cd backend && python -m scripts.seed`.
 
+### Atalhos com make
+
+No Linux, no macOS ou no WSL, `make` lista os atalhos do projeto. Os principais são `make up`, `make down`, `make test`,
+`make test-offline` e `make openapi`. No Windows sem WSL, use os comandos desta seção.
+
 ### Com Docker
 
 Sobe a API, a interface e o PostgreSQL com um comando. Pré-requisito: Docker.
