@@ -5,14 +5,14 @@
 
 ## Equipe
 
-| Pessoa | Cargo | Papel no pitch | Etiqueta no Trello |
+| Pessoa | Cargo | Papel no pitch | Áreas no Trello |
 |---|---|---|---|
-| Sophia | Backend e Gerente de Projeto | Gerente; Equipe de Dev | Back e GP · Sophia |
-| Levi | Tech Lead e Analista de Requisitos; Trello e apresentação | Analista | TL e Requisitos · Levi |
-| Antonio | QA | QA | QA · Antonio |
-| Vinicius | DevOps | Equipe de Dev | DevOps · Vinicius |
-| Bárbara | Engenheira de IA | Equipe de Dev | IA · Bárbara |
-| Lara | Front e Design | Equipe de Dev | Front e Design · Lara |
+| Sophia | Backend e Gerente de Projeto | Gerente; Equipe de Dev | Backend, Dados, Gestão |
+| Levi | Tech Lead e Analista de Requisitos; Trello e apresentação | Analista | Requisitos, Docs |
+| Antonio | QA | QA | QA |
+| Vinicius | DevOps | Equipe de Dev | DevOps |
+| Bárbara | Engenheira de IA | Equipe de Dev | Recomendação |
+| Lara | Front e Design | Equipe de Dev | Frontend, Design |
 
 O Sponsor do pitch ainda não tem nome definido (ver [decisões](MVP.md#decisões)).
 
@@ -59,4 +59,4 @@ Os cartões de 4.2 e 4.3 foram criados em 06/11, e seus critérios são proposto
 | 3.4 | RF11 a RF13, RN07 | Serviço retorna recomendações mesmo sem histórico; exclui itens descartados ou já registrados conforme regra do produto; feedback alimenta futuras sugestões | Concluído |
 | 4.1 | RNF06, RNF07, RNF09 | Principais casos de uso executados, falhas registradas e corrigidas antes da homologação | Parcial: 39 testes offline passam; faltam 4 rotas e o teste pela interface; CI não consultado |
 | 4.2 | RF17, RN11, RN12, RNF10, RNF14 | **Proposto:** taxa entre 0% e 100% por grupo; homologação com 5 a 10 colegas registrada na issue [#14](https://github.com/joaolevi/cinematch/issues/14) | Pendente |
-| 4.3 | RNF01 a RNF04, RNF11 a RNF15, RNF18 | **Proposto:** fluxo completo funcionando em URL com HTTPS, sem credencial pública, e documentação atualizada | Pendente |
+| 4.3 | RNF01 a RNF04, RNF11 a RNF15, RNF18, RNF19 | **Proposto:** fluxo completo funcionando em URL com HTTPS, sem credencial pública, e documentação atualizada | Pendente |

@@ -3,9 +3,9 @@
 ## Fluxo de trabalho
 
 1. Pegue uma **issue** no quadro do projeto (ou crie uma) e atribua a você.
-2. Atualize a `main` e crie uma branch:
+2. Atualize a `homol` e crie uma branch:
    ```bash
-   git checkout main && git pull
+   git checkout homol && git pull
    git checkout -b feat/nome-curto      # feat/, fix/, docs/, test/, refactor/
    ```
 3. Faça commits pequenos e descritivos, em português:
@@ -15,9 +15,28 @@
    cd backend && python -m pytest -q
    ```
    Os testes de integração com o TMDB rodam só se você tiver a chave no `.env`. Sem chave, eles são pulados.
-5. `git push -u origin feat/nome-curto` e abra um **Pull Request** para a `main`, com `Closes #N`
+5. `git push -u origin feat/nome-curto` e abra um **Pull Request** para a `homol`, com `Closes #N`
    na descrição.
 6. Peça revisão de pelo menos uma pessoa da equipe. Só faça merge com o **CI verde**.
+7. Depois do merge, o QA testa a tarefa na `homol`.
+
+## Branches e versões
+
+- **`main`:** versão estável, com o MVP de apresentação. Só recebe a `homol` depois da aprovação do QA.
+- **`homol`:** recebe os Pull Requests. É a versão que o QA testa e que fica publicada durante os testes.
+- **Branches de tarefa:** saem da `homol` e voltam para ela.
+
+Para marcar versões estáveis, usamos tags:
+
+- **Homologação:** ninguém faz merge durante a sessão, e a versão testada na `homol` ganha a tag `homologacao-09-11`.
+- **Problema encontrado:** a correção entra por Pull Request na `homol` depois da sessão, e o QA testa de novo.
+- **Entrega:** com a aprovação do QA, a `homol` sobe para a `main`, que ganha a tag `entrega-10-11`.
+
+```bash
+git switch homol && git pull
+git tag homologacao-09-11
+git push origin homologacao-09-11
+```
 
 ## Organização no GitHub
 
