@@ -29,7 +29,7 @@
 
 Para marcar versões estáveis, usamos tags:
 
-- **Homologação:** ninguém faz merge durante a sessão, e a versão testada na `homol` ganha a tag `homologacao-09-11`.
+- **Teste interno:** ninguém faz merge durante o teste, e a versão testada na `homol` ganha a tag `homologacao-09-11`.
 - **Problema encontrado:** a correção entra por Pull Request na `homol` depois da sessão, e o QA testa de novo.
 - **Entrega:** com a aprovação do QA, a `homol` sobe para a `main`, que ganha a tag `entrega-10-11`.
 

@@ -17,7 +17,7 @@ A coluna Situação mostra o que foi verificado em 05 e 06/11/2026.
 | RNF07 | Compatível com Python 3.12+ | README | Rodou em 3.13.5; o CI e o Docker usam 3.12. As versões fixas do numpy e do scipy não instalam em Python mais antigo |
 | RNF08 | A interface exibe o crédito do TMDB | `docs/API.md` | Atende: o aviso e o logo estão na página Sobre, como o TMDB exige |
 | RNF09 | O feed responde em até 1 s na máquina da demo | Aprovado em 06/11 | Atende: cerca de 115 ms com 3.966 títulos, no Docker |
-| RNF10 | Coletar só nome, e-mail e histórico; na homologação, aceitar e-mail fictício e avisar que os dados ficam em um servidor externo | Aprovado em 06/11 | O aviso e o e-mail fictício estão no [roteiro da homologação](../HOMOLOGACAO.md); falta aplicar na sessão |
+| RNF10 | Coletar só nome, e-mail e histórico; no teste interno, aceitar e-mail fictício e avisar que os dados ficam em um servidor externo | Aprovado em 06/11 | O aviso e o e-mail fictício estão no [roteiro do teste interno](../HOMOLOGACAO.md); falta aplicar no teste |
 
 ## Deploy
 
@@ -46,11 +46,11 @@ A coluna Situação mostra o que foi verificado em 05 e 06/11/2026.
 | RNF07 | 4.1 | CI com Python 3.12 |
 | RNF08 | 2.4 | Conferir o crédito na interface |
 | RNF09 | 4.1 | Medir `GET /recommendations` na máquina da demo |
-| RNF10 | 4.2 | Conferir o aviso no roteiro da homologação |
+| RNF10 | 4.2 | Conferir o aviso no roteiro do teste interno |
 | RNF11 | 4.3 | Abrir a API e a interface pela URL pública, com HTTPS |
 | RNF12 | 4.3 | Confirmar que o login com as senhas do repositório falha em produção |
 | RNF13 | 3.1, 4.3 | Reiniciar o serviço e confirmar que os dados continuam lá |
-| RNF14 | 4.2, 4.3 | Confirmar que o painel começa sem interações antes da homologação |
+| RNF14 | 4.2, 4.3 | Confirmar que o painel começa sem interações antes do teste interno |
 | RNF15 | 4.3 | Confirmar que o navegador bloqueia chamadas de outra origem |
 | RNF16 | 3.2 | Enviar campos acima do limite no PostgreSQL e confirmar o erro 422 |
 | RNF17 | 3.2 | Contar as consultas de `GET /diary` e `GET /lists` |

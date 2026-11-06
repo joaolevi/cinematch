@@ -1,14 +1,14 @@
 # Escopo do MVP
 
-> **Versão 17, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
-> Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [homologação](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
+> **Versão 18, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
+> Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [teste interno](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
 A API cobre os 13 casos de uso do pitch para filmes e séries. Os 85 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
 credenciais estão na branch `homol`, com o CI passando. Falta o QA testar a `homol`, publicar o sistema, ajustar o
-design, fazer a homologação e preparar a demonstração.
+design, fazer o teste interno e preparar a demonstração.
 
 ## Objetivo
 
@@ -25,15 +25,16 @@ corretamente. O benefício do recomendador será avaliado depois, com dados reai
 - Quatro correções na API, com teste: RN02, RN12, RN13 e RN14 ([regras de negócio](requisitos/regras-de-negocio.md)).
 - Testes para as quatro rotas descobertas (RNF06).
 - Três ajustes para o sistema publicado: tamanho dos campos (RNF16), consultas do diário e das listas (RNF17) e versões fixas das dependências (RNF18).
-- Catálogo ampliado com o TMDB (RF15b), para os colegas encontrarem os títulos na homologação.
+- Catálogo ampliado com o TMDB (RF15b), para a equipe encontrar os títulos no teste interno.
 - Recomendações de filmes com o MovieLens 32M, ligadas depois da validação da Bárbara ([arquitetura](ARQUITETURA.md)).
 - Deploy da API e da interface (RNF11 a RNF19), com a execução local como plano B ([guia](DEPLOY.md)).
-- Homologação com 5 a 10 colegas ([#14](https://github.com/joaolevi/cinematch/issues/14)).
+- Teste interno com as 6 pessoas da equipe, no sistema publicado ([#14](https://github.com/joaolevi/cinematch/issues/14)).
 - Interface em `frontend/`, com o design revisado pela Lara, e demonstração ensaiada.
 - Busca que ignora acentos (RN16), que estava em "se houver tempo" e já foi feita.
 
 ## Fora do MVP
 
+- Homologação com pessoas de fora da equipe.
 - Álbuns ([#19](https://github.com/joaolevi/cinematch/issues/19)).
 - Página de perfil ([#16](https://github.com/joaolevi/cinematch/issues/16)) e filtro por década ([#17](https://github.com/joaolevi/cinematch/issues/17)).
 - Testes do frontend ([#18](https://github.com/joaolevi/cinematch/issues/18)).
@@ -69,7 +70,7 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 - [ ] Depois de clonar, um único comando (`./dev.sh`) sobe a API, sem chave de API.
 - [x] Testes offline verdes e CI verde.
 - [ ] Sistema publicado em URL com HTTPS e sem credencial pública, ou decisão registrada de apresentar localmente.
-- [ ] Homologação feita com 5 a 10 colegas, com o resultado registrado na issue [#14](https://github.com/joaolevi/cinematch/issues/14).
+- [ ] Teste interno feito com a equipe, com o resultado registrado na issue [#14](https://github.com/joaolevi/cinematch/issues/14).
 - [ ] Demo ensaiada do início ao fim, com plano B em vídeo ou prints.
 
 ## Cronograma
@@ -102,8 +103,8 @@ Nesta ordem:
 
 1. **Vinicius e Antonio:** testar o fluxo completo na URL pública.
 2. **Lara:** fazer os ajustes finais no front.
-3. **Antonio:** conduzir a homologação com os colegas ([#14](https://github.com/joaolevi/cinematch/issues/14)).
-4. **Bárbara:** analisar a taxa de aceitação da homologação.
+3. **Antonio:** conduzir o teste interno com a equipe ([#14](https://github.com/joaolevi/cinematch/issues/14)).
+4. **Bárbara:** analisar a taxa de aceitação do teste interno.
 5. **Levi:** conduzir o ensaio e preparar o plano B em vídeo ou prints ([#15](https://github.com/joaolevi/cinematch/issues/15)).
 6. **Sophia:** decidir entre deploy e execução local.
 7. **Levi:** com a aprovação do Antonio, subir a `homol` para a `main`.
@@ -125,7 +126,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | D1 | Sem meta numérica para a taxa de aceitação no MVP. A entrega exige medir corretamente (RN12), e "o híbrido aceita mais que o conteúdo" fica como hipótese a avaliar depois do projeto, com usuários reais | Sophia (GP) | 05/11 |
 | D2 | A interface entregue é o `frontend/`, criado a partir do protótipo de apresentação | Sophia (GP) | 06/11 |
 | D3 | Demonstração com deploy como meta e execução local como plano B | Sophia (GP) | 05/11 |
-| D4 | A homologação com colegas é obrigatória no MVP | Sophia (GP) | 06/11 |
+| D4 | A homologação do MVP é um teste interno com a equipe. A homologação com pessoas de fora fica para depois da entrega | Sophia (GP) | 06/11 |
 | D5 | Cargos da equipe, em [ENTREGAS.md](ENTREGAS.md#equipe) | Equipe | 06/11 |
 | D6 | O Sponsor do pitch é o Professor Rafael, professor da disciplina | Sophia (GP) | 06/11 |
 | D7 | Filmes e séries são recomendados juntos; música, separadamente ([arquitetura](ARQUITETURA.md#decisões)) | Sophia (GP) | 06/11 |
@@ -134,7 +135,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | D11 | O sistema roda em Docker, com API, interface e PostgreSQL (RNF19) | Sophia (GP) | 06/11 |
 | D12 | O sistema será publicado no servidor do Vinicius, sem custo | Sophia (GP) | 06/11 |
 | D14 | Os vizinhos do MovieLens 32M substituem os usuários inventados nos filmes, com a opção desligada por padrão | Sophia (GP) | 06/11 |
-| D15 | O teste A/B continua no sistema, mas no MVP mostra que a medição funciona. A evidência de qualidade vem do teste com o MovieLens, e a homologação é ilustrativa | Sophia (GP) | 06/11 |
+| D15 | O teste A/B continua no sistema, mas no MVP mostra que a medição funciona. A evidência de qualidade vem do teste com o MovieLens, e o teste interno é ilustrativo | Sophia (GP) | 06/11 |
 | D13 | O onboarding pergunta gêneros, épocas, diretores e títulos, em três passos. Palavras-chave ficam de fora, porque são termos crus e muitos em inglês | Sophia (GP) | 06/11 |
 | D10 | As tarefas entram na branch `homol`, o QA testa ali, e a `main` só recebe a versão aprovada ([CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões)) | Sophia (GP) | 06/11 |
 
@@ -160,6 +161,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | 06/11 | Entram no MVP o top 10 do diário (RF19, RN17), novas sugestões ao rolar o feed e a escolha da ordem na busca | Pedido da GP ao testar o sistema. A busca já pedia ordenação no RF04, mas a tela não oferecia | Sophia (GP) |
 | 06/11 | Títulos do onboarding ficam sem nota (RN18), títulos futuros aparecem como "Em breve" (RN19) e o feed permite trocar as sugestões | A nota automática distorcia as médias e o top 10, e o botão ↻ repetia a mesma lista | Sophia (GP) |
 | 06/11 | Um título passa a contar como exibido quando aparece na tela, e não quando a API o envia (RN12) | Com o feed ao rolar e a troca de sugestões, títulos que ninguém viu entravam na taxa de aceitação | Sophia (GP) |
+| 06/11 | A homologação com 5 a 10 colegas vira um teste interno com as 6 pessoas da equipe, e a homologação com pessoas de fora fica para depois da entrega | Prazo curto, e o resultado já era ilustrativo (D15). Perde-se o olhar de quem não conhece o sistema | Sophia (GP) |
 
 ## Riscos
 
@@ -173,6 +175,6 @@ Nenhuma decisão pendente em 06/11/2026.
 | O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir em 09/11 e, se preciso, apresentar localmente | Vinicius |
 | Servidor fora do ar | Queda de energia ou de internet na casa do Vinicius derruba o sistema | Conferir a URL antes da apresentação e manter a execução local como plano B | Vinicius |
 | Exposição da rede doméstica | Um site público pode abrir um caminho para a rede da casa | Usar túnel com HTTPS e não abrir portas no roteador | Vinicius |
-| Homologação com poucas pessoas | Com 5 a 10 colegas, a taxa não permite conclusão | Tratar o resultado como ilustrativo. Sem deploy, fazer a sessão em uma só máquina, porque as métricas ficam em um único banco | Antonio |
+| Teste interno só com quem conhece o sistema | Problemas de uso podem passar despercebidos, e a taxa não permite conclusão | Chamar de teste interno na apresentação e tratar o resultado como ilustrativo. Sem deploy, fazer o teste em uma só máquina, porque as métricas ficam em um único banco | Antonio |
 | Sem internet na demo | Títulos sem pôster real | O sistema local mostra um pôster gerado no lugar da imagem ([plano B](DEPLOY.md#plano-b)); testar esse cenário antes | Antonio |
 | Título procurado fora do catálogo | Com cerca de 3.950 títulos, a maioria aparece, mas o catálogo ainda não cobre tudo | Importar pelo painel de admin os títulos que faltarem | Antonio |
