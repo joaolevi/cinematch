@@ -78,6 +78,15 @@ def upsert_diary(
     return entry
 
 
+def add_onboarding_like(db: Session, user: User, media_id: int) -> None:
+    """Registra um título curtido no onboarding, sem alterar o que já está no diário."""
+    entry = db.scalar(
+        select(DiaryEntry).where(DiaryEntry.user_id == user.id, DiaryEntry.media_id == media_id)
+    )
+    if entry is None:
+        upsert_diary(db, user, media_id, rating=4.5, from_onboarding=True)
+
+
 def dismiss(db: Session, user: User, media_id: int) -> None:
     exists = db.scalar(
         select(Dismissed).where(Dismissed.user_id == user.id, Dismissed.media_id == media_id)

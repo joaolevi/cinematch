@@ -66,3 +66,12 @@ def test_cannot_touch_other_users_list(client, user_headers):
     other = register(client, email="outro@teste.com")
     lst = client.post("/lists", json={"name": "Minha"}, headers=other).json()
     assert client.get(f"/lists/{lst['id']}", headers=user_headers).status_code == 404
+
+
+def test_onboarding_keeps_existing_rating(client, user_headers):
+    mid = media_id_by_title(client, user_headers, "Parasita")
+    client.post("/diary", json={"media_id": mid, "rating": 1}, headers=user_headers)
+
+    r = client.put("/me/preferences", json={"genres": [], "liked_media_ids": [mid]}, headers=user_headers)
+    assert r.status_code == 200
+    assert client.get("/diary", headers=user_headers).json()[0]["rating"] == 1

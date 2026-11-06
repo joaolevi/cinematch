@@ -64,7 +64,7 @@ def set_preferences(
         db.add(UserPreference(user_id=user.id, genre=genre))
     for media_id in data.liked_media_ids:
         crud.get_media_or_404(db, media_id)
-        crud.upsert_diary(db, user, media_id, rating=4.5, from_onboarding=True)
+        crud.add_onboarding_like(db, user, media_id)
     user.onboarded = True
     db.commit()
     return get_preferences(user, db)
