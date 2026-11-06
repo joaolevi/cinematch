@@ -16,9 +16,9 @@ de forma didática e prefira soluções simples e legíveis a soluções "espert
 - **Proposta:** diário de filmes e séries + **motor de recomendação híbrido** (conteúdo + colaborativo).
 - **Métrica de sucesso:** taxa de aceitação = (Quero ver + Já vi) ÷ sugestões exibidas, comparada num
   **teste A/B** (grupo A = híbrido, grupo B = só conteúdo).
-- **Este repositório = backend (API).** O **frontend oficial é de outro integrante** e consome a API pelo
-  contrato em `docs/API.md` e `docs/openapi.json`. `demo-front/` é só um protótipo para apresentação.
-- **Fora do escopo:** álbuns/MusicBrainz (incremento 2), deploy, recursos sociais.
+- **Este repositório = API e interface.** A interface fica em `frontend/`, e o contrato, em `docs/API.md` e
+  `docs/openapi.json`.
+- **Fora do escopo:** álbuns/MusicBrainz (incremento 2) e recursos sociais.
 - Documentos: `docs/PLANO.md` (plano e decisões), `docs/API.md` (guia da API),
   `docs/pitch-tastory.pdf` (pitch com DCU, DA, EAP, RACI, PRINCE2).
 
@@ -72,7 +72,7 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
 - **Admin TMDB:** `POST /admin/sync?provider=auto|tmdb|mock&pages=N`, `GET /admin/tmdb/search`,
   `POST /admin/tmdb/import {type, tmdb_id}`, `POST /admin/tmdb/enrich` (`enrich_catalog`: busca cada título
   sem pôster por tipo+título+ano, promove para `tmdb` mantendo tags/criadores). `scripts.seed --tmdb`
-  faz sync + enrich. `./demo.sh --reset` sobe API + `demo-front/` com esse banco.
+  faz sync + enrich. `./demo.sh --reset` sobe API + `frontend/` com esse banco.
 - **Seed** (`app/seed.py`): catálogo mock, `admin@tastory.dev/admin123`, `demo@tastory.dev/demo123`,
   30 usuários sintéticos de 6 personas (`terror`, `scifi`, `animacao`, `romance`, `crime`, `comedia`;
   `persona.N@seed.tastory.dev`, senha `senha123`) e simulação A/B.

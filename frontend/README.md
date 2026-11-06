@@ -1,8 +1,6 @@
-# demo-front: protótipo de interface para apresentação
+# frontend: interface do Tastory
 
-> ⚠️ **Não é o frontend oficial.** O front oficial é de outro integrante e consome a mesma API
-> (contrato em [`../docs/API.md`](../docs/API.md)). Esta pasta existe só para demonstrar o backend em
-> calls e apresentações. Pode ser apagada quando o front oficial estiver pronto.
+> Responsável: Lara. A interface consome a API pelo contrato em [`../docs/API.md`](../docs/API.md).
 
 React + Vite + TypeScript + Tailwind. Telas: login, onboarding, feed "Para você", busca, detalhe,
 diário, listas e admin (métricas A/B, catálogo com sincronização/importação do TMDB, moderação).
@@ -16,7 +14,7 @@ Na raiz do repositório:
 ./demo.sh           # nas próximas
 ```
 
-Ou manualmente: suba a API (`./dev.sh`) e, em outro terminal, `cd demo-front && npm install && npm run dev`.
+Ou manualmente: suba a API (`./dev.sh`) e, em outro terminal, `cd frontend && npm install && npm run dev`.
 Abra http://localhost:5173.
 
 ## Roteiro da demo (≈ 5 min)

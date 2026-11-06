@@ -8,15 +8,14 @@ para sugerir o próximo título. Netflix e Spotify recomendam, mas só dentro do
 O Tastory une as duas coisas: **um diário** + **um recomendador** que combina os atributos dos títulos
 (gênero, tags, diretor, década) com o gosto de usuários parecidos com você.
 
-Este repositório tem a **API (backend)**, com integração real com o **TMDB**. O frontend oficial está a
-cargo de outro integrante e consome esta API. O guia para ele está em [`docs/API.md`](docs/API.md).
-Em [`demo-front/`](demo-front/) há um **protótipo de interface só para apresentação**:
+Este repositório tem a **API (backend)**, com integração real com o **TMDB**, e a **interface** em
+[`frontend/`](frontend/). O contrato entre as duas partes está em [`docs/API.md`](docs/API.md).
 
 ```bash
 ./demo.sh --reset    # recria o banco (mock + TMDB) e sobe API + interface → http://localhost:5173
 ```
 
-![Protótipo de interface](demo-front/screenshots/feed.png)
+![Interface do Tastory](frontend/screenshots/feed.png)
 
 ---
 
@@ -167,8 +166,8 @@ cinematch/
 │   ├── data/           # catálogos mockados (JSON)
 │   ├── scripts/seed.py # recria o banco
 │   └── tests/          # pytest (+ integration/ com o TMDB real)
-├── demo-front/         # protótipo de interface para apresentação (não é o front oficial)
-├── demo.sh             # sobe API + demo-front
+├── frontend/           # interface (React, TypeScript e Tailwind)
+├── demo.sh             # sobe API + interface
 ├── docs/               # PLANO.md, API.md, openapi.json, pitch
 ├── .claude/agents/     # agente do Claude Code especialista no projeto
 └── dev.sh
@@ -181,9 +180,7 @@ pequenos, abra um Pull Request vinculado à issue (`Closes #N`) e espere o CI fi
 
 ## 🗺️ Próximos incrementos
 
-- **Frontend oficial** consumindo esta API (guia em `docs/API.md`).
 - **Álbuns** (MusicBrainz) como terceira mídia, previsto no pitch para o segundo incremento.
-- Deploy em nuvem.
 
 ## 👥 Equipe
 

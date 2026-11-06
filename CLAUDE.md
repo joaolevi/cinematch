@@ -4,12 +4,13 @@ Protótipo acadêmico (UFAL, Gerência de Projeto 2026.2): API de diário de fil
 híbrido, com integração real ao TMDB. Plano em `docs/PLANO.md`; guia da API em `docs/API.md`;
 pitch em `docs/pitch-tastory.pdf`. Para tarefas maiores, use o agente `.claude/agents/tastory-expert.md`.
 
-O **frontend oficial é de outro integrante** e fica fora deste repositório. `demo-front/` é só um
-protótipo para apresentação: não invista nele sem pedido explícito.
+A interface fica em `frontend/`, sob responsabilidade da Lara. Mudanças nela precisam respeitar o contrato
+de `docs/API.md`. O escopo atual está em `docs/MVP.md`, e os requisitos, em `docs/requisitos/`.
 
 ## Comandos
 
 - Subir a API: `./dev.sh` (http://localhost:8000/docs) · recriar banco: `./dev.sh --reset`
+- Subir tudo com PostgreSQL: `docker compose up --build` (interface em http://localhost:5173)
 - Testes: `cd backend && ../.venv/bin/python -m pytest -q`
   (`-m "not integration"` = offline; `-m integration` = TMDB real, precisa da chave no `.env`)
 - Recriar banco: `cd backend && ../.venv/bin/python -m scripts.seed`
@@ -19,7 +20,8 @@ protótipo para apresentação: não invista nele sem pedido explícito.
 ## Regras
 
 - Escopo: protótipo. Priorize funcionar e ser fácil de explicar, não perfeição.
-- Fora do escopo agora: álbuns (incremento 2) e deploy.
+- Fora do escopo agora: álbuns (incremento 2).
+- As tarefas sobem para a branch `homol`; a `main` só recebe a versão aprovada pelo QA.
 - **Segredos:** a chave do TMDB fica só no `.env` (gitignored). Nunca a escreva em código, testes,
   commits, issues ou logs. O repositório é público.
 - Textos, docs e mensagens de commit em português.

@@ -12,7 +12,7 @@ backend/*.db-journal
 .idea/
 .DS_Store
 
-# Node (demo-front)
+# Node (frontend)
 node_modules/
-demo-front/dist/
+frontend/dist/
 *.tsbuildinfo

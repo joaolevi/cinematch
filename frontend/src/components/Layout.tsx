@@ -64,7 +64,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer className="mx-auto max-w-6xl px-4 pb-8 text-xs text-muted">
-        Tastory, protótipo para apresentação · Gerência de Projeto 2026.2 (UFAL) · Dados e pôsteres:{" "}
+        Tastory · Gerência de Projeto 2026.2 (UFAL) · Dados e pôsteres:{" "}
         <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="text-accent">
           TMDB
         </a>{" "}
