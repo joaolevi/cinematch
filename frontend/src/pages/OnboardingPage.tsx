@@ -5,17 +5,43 @@ import { useAuth } from "../auth";
 import Poster from "../components/Poster";
 import type { Media } from "../types";
 
+const LAST_STEP = 3;
 const TITLE_COUNT = 24;
+const POPULAR_POOL = 60;
 
-/** Intercala as listas para todos os gêneros aparecerem, sem repetir títulos. */
-function mergeByGenre(lists: Media[][], limit: number): Media[] {
+type Step = 1 | 2 | 3;
+
+const decadeLabel = (decade: number) => (decade < 2000 ? `Anos ${decade % 100}` : `Anos ${decade}`);
+
+function genreMessage(selected: string[]): string {
+  if (selected.length === 0) return "Escolha quantos quiser. Isso já nos dá uma boa pista.";
+  if (selected.length === 1) return `Boa! ${selected[0]} é um ótimo começo.`;
+  if (selected.length <= 4) return "Ótimo gosto! Já estamos conhecendo você.";
+  return "Eclético, hein? Vai ter muita coisa boa por aqui.";
+}
+
+function interestMessage(count: number): string {
+  if (count === 0) return "Essa parte é opcional, mas ajuda a acertar mais.";
+  if (count === 1) return "Anotado! Pode marcar mais, se quiser.";
+  return "Perfeito, isso ajuda bastante.";
+}
+
+function likedMessage(count: number): string {
+  if (count === 0) return "Toque nos que você curtiu. Três já fazem diferença.";
+  if (count === 1) return "Boa! Mais dois e as sugestões ficam bem melhores.";
+  if (count === 2) return "Quase lá! Só mais um.";
+  return `Perfeito, ${count} títulos marcados. Agora dá para acertar bem!`;
+}
+
+/** Intercala as listas para todas as escolhas aparecerem, sem repetir títulos. */
+function interleave(lists: Media[][]): Media[] {
   const seen = new Set<number>();
   const merged: Media[] = [];
   const longest = Math.max(0, ...lists.map((list) => list.length));
   for (let i = 0; i < longest; i++) {
     for (const list of lists) {
       const media = list[i];
-      if (media && !seen.has(media.id) && merged.length < limit) {
+      if (media && !seen.has(media.id)) {
         seen.add(media.id);
         merged.push(media);
       }
@@ -27,21 +53,32 @@ function mergeByGenre(lists: Media[][], limit: number): Media[] {
 /** Definir Preferências Iniciais (onboarding opcional do Diagrama de Atividades). */
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const { refresh } = useAuth();
-  const [step, setStep] = useState<1 | 2>(1);
+  const { user, refresh } = useAuth();
+  const [step, setStep] = useState<Step>(1);
   const [genres, setGenres] = useState<string[]>([]);
+  const [decades, setDecades] = useState<number[]>([]);
+  const [creators, setCreators] = useState<string[]>([]);
   const [titles, setTitles] = useState<Media[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set());
+  const [selectedDecades, setSelectedDecades] = useState<Set<number>>(new Set());
+  const [selectedCreators, setSelectedCreators] = useState<Set<string>>(new Set());
   const [liked, setLiked] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const firstName = user?.name.split(" ")[0];
+  const interestCount = selectedDecades.size + selectedCreators.size;
+
   useEffect(() => {
     api.genres().then(setGenres).catch((e) => setError(e.message));
     api
       .getPreferences()
-      .then((p) => setSelectedGenres(new Set(p.genres)))
+      .then((p) => {
+        setSelectedGenres(new Set(p.genres));
+        setSelectedDecades(new Set(p.decades));
+        setSelectedCreators(new Set(p.creators));
+      })
       .catch(() => {});
   }, []);
 
@@ -52,25 +89,40 @@ export default function OnboardingPage() {
     update(next);
   };
 
-  function goTo(next: 1 | 2) {
+  function goTo(next: Step) {
     setError(null);
     setStep(next);
     window.scrollTo(0, 0);
   }
 
-  async function showTitles() {
+  async function showInterests() {
     goTo(2);
+    setLoading(true);
+    try {
+      const facets = await api.facets([...selectedGenres]);
+      setDecades(facets.decades);
+      setCreators([...new Set([...selectedCreators, ...facets.creators])]);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function showTitles() {
+    goTo(3);
     setTitles([]);
     setLoading(true);
     try {
-      if (selectedGenres.size === 0) {
-        setTitles(await api.trending(undefined, TITLE_COUNT));
-      } else {
-        const results = await Promise.all(
-          [...selectedGenres].map((genre) => api.search({ genre, limit: TITLE_COUNT })),
-        );
-        setTitles(mergeByGenre(results.map((r) => r.items), TITLE_COUNT));
-      }
+      const searches = [
+        ...[...selectedCreators].map((q) => api.search({ q, limit: 8 })),
+        ...[...selectedGenres].map((genre) => api.search({ genre, limit: POPULAR_POOL })),
+      ];
+      const lists = (await Promise.all(searches)).map((r) => r.items);
+      const pool = lists.length > 0 ? interleave(lists) : await api.trending(undefined, POPULAR_POOL);
+      const inChosenDecade = (m: Media) => m.year !== null && selectedDecades.has(Math.floor(m.year / 10) * 10);
+      const ordered = [...pool.filter(inChosenDecade), ...pool.filter((m) => !inChosenDecade(m))];
+      setTitles(ordered.slice(0, TITLE_COUNT));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -81,7 +133,16 @@ export default function OnboardingPage() {
   async function finish(skip = false) {
     setSaving(true);
     try {
-      await api.setPreferences(skip ? [] : [...selectedGenres], skip ? [] : [...liked]);
+      await api.setPreferences(
+        skip
+          ? { genres: [], decades: [], creators: [], liked_media_ids: [] }
+          : {
+              genres: [...selectedGenres],
+              decades: [...selectedDecades],
+              creators: [...selectedCreators],
+              liked_media_ids: [...liked],
+            },
+      );
       await refresh();
       navigate("/");
     } catch (e) {
@@ -90,39 +151,40 @@ export default function OnboardingPage() {
     }
   }
 
+  const chip = (active: boolean) =>
+    `chip cursor-pointer px-4 py-1.5 text-sm transition ${
+      active ? "border-accent bg-accent/15 text-accent" : "hover:border-slate-400"
+    }`;
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center gap-3">
-        <p className="text-xs font-semibold tracking-wider text-accent uppercase">Passo {step} de 2</p>
+        <p className="text-xs font-semibold tracking-wider text-accent uppercase">
+          Passo {step} de {LAST_STEP}
+        </p>
         <div className="h-1 flex-1 overflow-hidden rounded-full bg-surface-2">
-          <div className={`h-full bg-accent transition-all ${step === 1 ? "w-1/2" : "w-full"}`} />
+          <div className="h-full bg-accent transition-all" style={{ width: `${(step / LAST_STEP) * 100}%` }} />
         </div>
       </div>
 
-      {step === 1 ? (
+      {step === 1 && (
         <>
           <div>
-            <h1 className="text-3xl font-bold">Quais gêneros você curte?</h1>
-            <p className="mt-1 text-muted">
-              Vamos usar sua escolha para mostrar títulos no próximo passo e montar suas primeiras recomendações.
-            </p>
+            <h1 className="text-3xl font-bold">
+              {firstName ? `Oi, ${firstName}! O que você curte assistir?` : "O que você curte assistir?"}
+            </h1>
+            <p className="mt-1 text-muted">{genreMessage([...selectedGenres])}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {genres.map((g) => (
-              <button
-                key={g}
-                onClick={() => toggle(selectedGenres, g, setSelectedGenres)}
-                className={`chip cursor-pointer px-4 py-1.5 text-sm transition ${
-                  selectedGenres.has(g) ? "border-accent bg-accent/15 text-accent" : "hover:border-slate-400"
-                }`}
-              >
+              <button key={g} onClick={() => toggle(selectedGenres, g, setSelectedGenres)} className={chip(selectedGenres.has(g))}>
                 {g}
               </button>
             ))}
           </div>
           {error && <p className="text-red-300">{error}</p>}
           <div className="flex flex-wrap gap-3">
-            <button className="btn-primary px-6" onClick={showTitles}>
+            <button className="btn-primary px-6" onClick={showInterests}>
               Continuar
             </button>
             <button className="btn-ghost" disabled={saving} onClick={() => finish(true)}>
@@ -130,16 +192,58 @@ export default function OnboardingPage() {
             </button>
           </div>
         </>
-      ) : (
+      )}
+
+      {step === 2 && (
         <>
           <div>
-            <h1 className="text-3xl font-bold">Marque o que você já viu e gostou</h1>
-            <p className="mt-1 text-muted">
-              {selectedGenres.size > 0 ? "Títulos populares dos gêneros que você escolheu." : "Títulos populares no Tastory."}{" "}
-              {liked.size} selecionado(s).
-            </p>
+            <h1 className="text-3xl font-bold">Tem alguma época ou diretor que você ama?</h1>
+            <p className="mt-1 text-muted">{interestMessage(interestCount)}</p>
           </div>
-          {loading && <p className="text-muted">Carregando títulos...</p>}
+          {loading && <p className="text-muted">Procurando opções a sua cara...</p>}
+          {decades.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-muted">Épocas</h2>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {decades.map((d) => (
+                  <button key={d} onClick={() => toggle(selectedDecades, d, setSelectedDecades)} className={chip(selectedDecades.has(d))}>
+                    {decadeLabel(d)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {creators.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-muted">Diretores e criadores</h2>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {creators.map((c) => (
+                  <button key={c} onClick={() => toggle(selectedCreators, c, setSelectedCreators)} className={chip(selectedCreators.has(c))}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {error && <p className="text-red-300">{error}</p>}
+          <div className="flex flex-wrap gap-3">
+            <button className="btn-primary px-6" onClick={showTitles}>
+              Continuar
+            </button>
+            <button className="btn-ghost" onClick={() => goTo(1)}>
+              Voltar
+            </button>
+          </div>
+        </>
+      )}
+
+      {step === 3 && (
+        <>
+          <div>
+            <h1 className="text-3xl font-bold">E o que você já viu e gostou?</h1>
+            <p className="mt-1 text-muted">{likedMessage(liked.size)}</p>
+          </div>
+          {loading && <p className="text-muted">Separando títulos para você...</p>}
           <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
             {titles.map((m) => (
               <button
@@ -159,9 +263,9 @@ export default function OnboardingPage() {
           {error && <p className="text-red-300">{error}</p>}
           <div className="flex flex-wrap gap-3">
             <button className="btn-primary px-6" disabled={saving} onClick={() => finish(false)}>
-              Ver minhas recomendações
+              {liked.size > 0 ? "Ver minhas recomendações" : "Ver sugestões assim mesmo"}
             </button>
-            <button className="btn-ghost" disabled={saving} onClick={() => goTo(1)}>
+            <button className="btn-ghost" disabled={saving} onClick={() => goTo(2)}>
               Voltar
             </button>
           </div>

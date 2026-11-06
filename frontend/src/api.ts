@@ -42,7 +42,9 @@ export class ApiError extends Error {
   }
 }
 
-type Query = Record<string, string | number | boolean | undefined | null>;
+type Preferences = { genres: string[]; decades: number[]; creators: string[] };
+
+type Query = Record<string, string | string[] | number | boolean | undefined | null>;
 
 async function request<T>(
   path: string,
@@ -50,7 +52,8 @@ async function request<T>(
 ): Promise<T> {
   const url = new URL(path, API_URL);
   for (const [k, v] of Object.entries(options.query ?? {})) {
-    if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
+    if (Array.isArray(v)) v.forEach((item) => url.searchParams.append(k, item));
+    else if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
   }
   const headers: Record<string, string> = {};
   const token = getToken();
@@ -65,7 +68,7 @@ async function request<T>(
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
     });
   } catch {
-    throw new ApiError(0, "Não foi possível conectar à API. O backend está rodando?");
+    throw new ApiError(0, "Não conseguimos falar com o servidor. Tente de novo em instantes.");
   }
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => ({}));
@@ -90,15 +93,13 @@ export const api = {
   login: (email: string, password: string) =>
     request<TokenOut>("/auth/login", { method: "POST", body: { email, password } }),
   me: () => request<User>("/me"),
-  getPreferences: () => request<{ genres: string[]; onboarded: boolean }>("/me/preferences"),
-  setPreferences: (genres: string[], liked_media_ids: number[]) =>
-    request<{ genres: string[]; onboarded: boolean }>("/me/preferences", {
-      method: "PUT",
-      body: { genres, liked_media_ids },
-    }),
+  getPreferences: () => request<Preferences & { onboarded: boolean }>("/me/preferences"),
+  setPreferences: (preferences: Preferences & { liked_media_ids: number[] }) =>
+    request<Preferences & { onboarded: boolean }>("/me/preferences", { method: "PUT", body: preferences }),
 
   // Mídias
   genres: () => request<string[]>("/media/genres"),
+  facets: (genre: string[]) => request<{ decades: number[]; creators: string[] }>("/media/facets", { query: { genre } }),
   search: (query: { q?: string; type?: MediaType | ""; genre?: string; limit?: number; offset?: number }) =>
     request<{ items: Media[]; total: number }>("/media", { query }),
   trending: (type?: MediaType, limit = 20) =>
