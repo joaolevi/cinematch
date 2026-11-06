@@ -1,14 +1,14 @@
 # Escopo do MVP
 
-> **Versão 16, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
+> **Versão 17, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [homologação](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
 A API cobre os 13 casos de uso do pitch para filmes e séries. Os 85 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
-credenciais estão prontas, mas aguardam merge. Falta criar a branch `homol`, publicar o sistema, ajustar o design,
-fazer a homologação e preparar a demonstração.
+credenciais estão na branch `homol`, com o CI passando. Falta o QA testar a `homol`, publicar o sistema, ajustar o
+design, fazer a homologação e preparar a demonstração.
 
 ## Objetivo
 
@@ -67,7 +67,7 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 - [ ] Admin sincroniza o mock, edita e remove títulos e oculta resenhas; resenha oculta e editada continua oculta.
 - [ ] O painel mostra a taxa total e por grupo, sempre entre 0% e 100%.
 - [ ] Depois de clonar, um único comando (`./dev.sh`) sobe a API, sem chave de API.
-- [ ] Testes offline verdes e CI verde.
+- [x] Testes offline verdes e CI verde.
 - [ ] Sistema publicado em URL com HTTPS e sem credencial pública, ou decisão registrada de apresentar localmente.
 - [ ] Homologação feita com 5 a 10 colegas, com o resultado registrado na issue [#14](https://github.com/joaolevi/cinematch/issues/14).
 - [ ] Demo ensaiada do início ao fim, com plano B em vídeo ou prints.
