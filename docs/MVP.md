@@ -5,7 +5,7 @@
 
 ## Situação atual
 
-A API cobre os 13 casos de uso do pitch para filmes e séries. Os 104 testes offline e os 13 com o TMDB real
+A API cobre os 13 casos de uso do pitch para filmes e séries. Os 108 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
 credenciais estão na branch `homol`, com o CI passando. Falta o QA testar a `homol`, publicar o sistema, ajustar o
 design, fazer o teste interno e preparar a demonstração.
@@ -184,6 +184,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | Séries com sugestões fracas | Sem dados reais, as séries dependem só do conteúdo e aparecem títulos obscuros | Filtro do feed e peso maior da popularidade na ordem das séries (D16, [arquitetura](ARQUITETURA.md#séries-sem-dados-reais)) | Bárbara |
 | Publicar com as credenciais do repositório | Qualquer pessoa entra como administrador | Tratar o RNF12 como condição para publicar | Sophia |
 | Registros visíveis na Comunidade | Quem tem conta vê o que as outras pessoas marcaram como Já vi, sem poder esconder | Avisar no cadastro e na página (RNF20) e aceitar e-mail fictício. A escolha de privacidade fica para depois (RFF11) | Sophia |
+| Resenhas de contas simuladas na publicação | Pessoas que não existem apareceriam no detalhe dos títulos e nas médias | Fazer a carga com `--no-synthetic`, como no [guia](DEPLOY.md#2-fazer-a-carga-inicial) | Vinicius |
 | Mudança no banco depois da publicação | O projeto não tem migrations: uma coluna nova derruba a busca e o feed até alguém ajustar o banco | Não mudar os modelos até a entrega. Se for inevitável, seguir o [guia](DEPLOY.md#atualizar-o-sistema-publicado) | Sophia |
 | O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir no domingo (08/11), às 20h, e, se preciso, apresentar localmente | Vinicius |
 | Servidor fora do ar | Queda de energia ou de internet na casa do Vinicius derruba o sistema | Conferir a URL antes da apresentação e manter a execução local como plano B | Vinicius |

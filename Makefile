@@ -52,7 +52,7 @@ prod-logs: ## Acompanha os logs do sistema publicado
 
 prod-seed: ## Apaga e recarrega o banco publicado (exige CONFIRMAR=sim)
 	@test "$(CONFIRMAR)" = "sim" || { echo "Este comando apaga todas as tabelas. Para rodar: make prod-seed CONFIRMAR=sim"; exit 1; }
-	$(PROD) exec api python -m scripts.seed --no-sim --tmdb
+	$(PROD) exec api python -m scripts.seed --no-sim --no-synthetic --tmdb
 
 prod-movielens: ## Carrega o MovieLens (exige DATA=/caminho/ml-32m)
 	@test -n "$(DATA)" || { echo "Informe a pasta: make prod-movielens DATA=/caminho/ml-32m"; exit 1; }

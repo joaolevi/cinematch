@@ -29,11 +29,11 @@ o teste do fluxo completo.
 Rode uma única vez:
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env.production exec api python -m scripts.seed --no-sim --tmdb
+docker compose -f docker-compose.prod.yml --env-file .env.production exec api python -m scripts.seed --no-sim --no-synthetic --tmdb
 ```
 
 **Esse comando apaga todas as tabelas**, então nunca o execute com usuários reais no banco. O `--no-sim` deixa o painel de
-métricas vazio, pronto para contar só interações reais. Em teste, a carga levou cerca de 2 minutos e gerou cerca de 3.950 títulos, quase todos com pôster.
+métricas vazio, e o `--no-synthetic` evita contas simuladas, para só aparecerem notas e resenhas de pessoas reais. Em teste, a carga levou cerca de 2 minutos e gerou cerca de 3.950 títulos, quase todos com pôster.
 
 ## 3. Carregar as recomendações de filmes
 
