@@ -1,11 +1,11 @@
 # Escopo do MVP
 
-> **Versão 21, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, às 17h, com 10 a 15 minutos de apresentação (a confirmar) e deploy como meta. Gerente de projeto: Sophia.
+> **Versão 22, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, às 17h, com 10 a 15 minutos de apresentação (a confirmar) e deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [teste interno](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
-A API cobre os 13 casos de uso do pitch para filmes e séries. Os 99 testes offline e os 13 com o TMDB real
+A API cobre os 13 casos de uso do pitch para filmes e séries. Os 104 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
 credenciais estão na branch `homol`, com o CI passando. Falta o QA testar a `homol`, publicar o sistema, ajustar o
 design, fazer o teste interno e preparar a demonstração.
@@ -29,6 +29,7 @@ corretamente. O benefício do recomendador será avaliado depois, com dados reai
 - Recomendações de filmes com o MovieLens 32M, ligadas na publicação ([arquitetura](ARQUITETURA.md)).
 - Feed sem títulos incompletos e com séries mais conhecidas (D16, RN20).
 - Página Comunidade, em que todo mundo vê os registros de todo mundo (RF20, D21). Só entra se estiver estável até sábado à noite.
+- Títulos parecidos no detalhe (RF21) e gêneros, diretores e atores clicáveis (RF22), com o mesmo limite.
 - Deploy da API e da interface (RNF11 a RNF19), com a execução local como plano B ([guia](DEPLOY.md)).
 - Teste interno com as 6 pessoas da equipe, no sistema publicado ([#14](https://github.com/joaolevi/cinematch/issues/14)).
 - Interface em `frontend/`, com o design revisado pela Lara, e demonstração ensaiada.
@@ -91,7 +92,7 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 - **Lara:** apontar o front para a API publicada.
 - **Antonio:** rodar os testes de integração com o TMDB real.
 - **Levi:** atualizar `PLANO.md` e `CLAUDE.md`; revisar os critérios de aceite com a equipe.
-- **Sophia:** revisar os PRs e fechar a Comunidade até a noite. Se não estiver estável, ela não entra.
+- **Sophia:** revisar os PRs e fechar a Comunidade, os títulos parecidos e as categorias clicáveis até a noite. O que não estiver estável não entra.
 
 ### Dom 08/11
 
@@ -169,6 +170,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | 06/11 | Entram no MVP o top 10 do diário (RF19, RN17), novas sugestões ao rolar o feed e a escolha da ordem na busca | Pedido da GP ao testar o sistema. A busca já pedia ordenação no RF04, mas a tela não oferecia | Sophia (GP) |
 | 06/11 | Títulos do onboarding ficam sem nota (RN18), títulos futuros aparecem como "Em breve" (RN19) e o feed permite trocar as sugestões | A nota automática distorcia as médias e o top 10, e o botão ↻ repetia a mesma lista | Sophia (GP) |
 | 06/11 | Um título passa a contar como exibido quando aparece na tela, e não quando a API o envia (RN12) | Com o feed ao rolar e a troca de sugestões, títulos que ninguém viu entravam na taxa de aceitação | Sophia (GP) |
+| 06/11 | Entram no MVP os títulos parecidos (RF21) e as categorias clicáveis (RF22) | Enriquecem a navegação com pouco risco: não mudam o banco e aproveitam a Busca | Sophia (GP) |
 | 06/11 | Entra no MVP a página Comunidade (RF20) | Foi o item com maior valor para a demonstração e o menor risco entre os deixados para depois: não muda o banco | Sophia (GP) |
 | 06/11 | Entram no MVP o filtro do feed e o peso maior da popularidade nas séries (D16) | Títulos sem sinopse, sem tradução ou obscuros prejudicavam a demonstração | Sophia (GP) |
 | 06/11 | A homologação com 5 a 10 colegas vira um teste interno com as 6 pessoas da equipe, e a homologação com pessoas de fora fica para depois da entrega | Prazo curto, e o resultado já era ilustrativo (D15). Perde-se o olhar de quem não conhece o sistema | Sophia (GP) |

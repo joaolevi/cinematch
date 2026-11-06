@@ -211,10 +211,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Trecho do título, criador ou tag",
+              "description": "Trecho do título, criador, ator ou tag",
               "title": "Q"
             },
-            "description": "Trecho do título, criador ou tag"
+            "description": "Trecho do título, criador, ator ou tag"
           },
           {
             "name": "type",
@@ -251,6 +251,24 @@
               ],
               "title": "Genre"
             }
+          },
+          {
+            "name": "person",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Nome exato de um diretor, criador ou ator",
+              "title": "Person"
+            },
+            "description": "Nome exato de um diretor, criador ou ator"
           },
           {
             "name": "sort",
@@ -447,6 +465,69 @@
                     "$ref": "#/components/schemas/MediaOut"
                   },
                   "title": "Response Trending Media Trending Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{media_id}/similar": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Similar",
+        "operationId": "similar_media__media_id__similar_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 24,
+              "minimum": 1,
+              "default": 12,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaOut"
+                  },
+                  "title": "Response Similar Media  Media Id  Similar Get"
                 }
               }
             }
