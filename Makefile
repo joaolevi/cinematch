@@ -56,7 +56,9 @@ prod-seed: ## Apaga e recarrega o banco publicado (exige CONFIRMAR=sim)
 
 prod-movielens: ## Carrega o MovieLens (exige DATA=/caminho/ml-32m)
 	@test -n "$(DATA)" || { echo "Informe a pasta: make prod-movielens DATA=/caminho/ml-32m"; exit 1; }
-	$(PROD) run --rm -v $(DATA):/data:ro api python -m scripts.import_movielens /data
+	$(PROD) run --rm -v "$(DATA):/data:ro" api python -m scripts.import_movielens /data
 
+# Se a exportação falhar, o make para aqui, e a cópia do dia continua intacta
 backup: ## Copia o banco publicado para backup-AAAA-MM-DD.sql
-	$(PROD) exec -T db pg_dump -U tastory tastory > backup-$$(date +%F).sql
+	$(PROD) exec -T db pg_dump -U tastory tastory > backup-parcial.sql
+	mv backup-parcial.sql backup-$$(date +%F).sql
