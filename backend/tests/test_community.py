@@ -25,7 +25,6 @@ def test_community_shows_everyone_newest_first(client, user_headers):
     see(client, other, "Dark", rating=2)
 
     page = community(client, user_headers)
-    assert page["total"] == 2
     assert [i["media"]["title"] for i in page["items"]] == ["Dark", "Matrix"]
     first, second = page["items"]
     assert first["user_name"] == "Outra Pessoa" and first["rating"] == 2 and first["review"] is None
@@ -56,7 +55,7 @@ def test_community_leaves_out_onboarding_and_special_accounts(client, db, user_h
     db.add(DiaryEntry(user_id=synthetic.id, media_id=mid, rating=5))
     db.commit()
 
-    assert community(client, user_headers) == {"items": [], "total": 0}
+    assert community(client, user_headers) == {"items": []}
 
 
 def test_community_only_shows_seen_titles(client, user_headers):
@@ -99,9 +98,43 @@ def test_community_pages_do_not_repeat_entries(client, db, user_headers):
     for title in ("Matrix", "Dark", "Parasita"):
         see(client, user_headers, title)
     first = community(client, user_headers, limit=2)
-    second = community(client, user_headers, limit=2, offset=2)
-    assert first["total"] == 3 and len(first["items"]) == 2 and len(second["items"]) == 1
+    second = community(client, user_headers, limit=2, before_id=first["items"][-1]["id"])
+    assert len(first["items"]) == 2 and len(second["items"]) == 1
     assert not {i["id"] for i in first["items"]} & {i["id"] for i in second["items"]}
+
+
+def see_four(client, headers):
+    for title in ("Matrix", "Dark", "Parasita", "Toy Story"):
+        see(client, headers, title)
+    return community(client, headers, limit=2)["items"]  # Toy Story e Parasita
+
+
+def older_than(client, headers, entry):
+    items = community(client, headers, limit=2, before_id=entry["id"])["items"]
+    return [i["media"]["title"] for i in items]
+
+
+def test_removing_a_loaded_entry_does_not_skip_older_ones(client, user_headers):
+    first = see_four(client, user_headers)
+    client.delete(f"/diary/{first[0]['id']}", headers=user_headers)
+    assert older_than(client, user_headers, first[-1]) == ["Dark", "Matrix"]
+
+
+def test_new_entries_do_not_repeat_loaded_ones(client, user_headers):
+    first = see_four(client, user_headers)
+    see(client, user_headers, "Barbie")
+    assert older_than(client, user_headers, first[-1]) == ["Dark", "Matrix"]
+
+
+def test_community_keeps_paging_when_the_cursor_entry_is_removed(client, user_headers):
+    first = see_four(client, user_headers)
+    client.delete(f"/diary/{first[-1]['id']}", headers=user_headers)
+    assert older_than(client, user_headers, first[-1]) == ["Dark", "Matrix"]
+
+
+def test_community_rejects_an_invalid_cursor(client, user_headers):
+    r = client.get("/community", params={"before_id": 0}, headers=user_headers)
+    assert r.status_code == 422
 
 
 def test_community_queries_do_not_grow_with_items(client, db, user_headers):

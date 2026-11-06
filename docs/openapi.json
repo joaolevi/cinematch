@@ -1326,15 +1326,23 @@
             }
           },
           {
-            "name": "offset",
+            "name": "before_id",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Traz os registros anteriores a este",
+              "title": "Before Id"
+            },
+            "description": "Traz os registros anteriores a este"
           }
         ],
         "responses": {
@@ -2085,16 +2093,11 @@
             },
             "type": "array",
             "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
           }
         },
         "type": "object",
         "required": [
-          "items",
-          "total"
+          "items"
         ],
         "title": "CommunityPage"
       },

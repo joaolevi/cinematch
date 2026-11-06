@@ -237,7 +237,6 @@ class CommunityEntryOut(BaseModel):
 
 class CommunityPage(BaseModel):
     items: list[CommunityEntryOut]
-    total: int
 
 
 class ReviewerOut(BaseModel):

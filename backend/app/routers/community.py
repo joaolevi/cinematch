@@ -24,16 +24,16 @@ VISIBLE = (
 @router.get("", response_model=CommunityPage)
 def community(
     limit: int = Query(default=20, ge=1, le=50),
-    offset: int = Query(default=0, ge=0),
+    before_id: int | None = Query(default=None, ge=1, description="Traz os registros anteriores a este"),
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ):
     visible = select(DiaryEntry).join(User, User.id == DiaryEntry.user_id).where(*VISIBLE)
+    page = visible.where(DiaryEntry.id < before_id) if before_id is not None else visible
     entries = db.scalars(
-        visible.options(selectinload(DiaryEntry.media), selectinload(DiaryEntry.user))
-        .order_by(DiaryEntry.created_at.desc(), DiaryEntry.id.desc())
+        page.options(selectinload(DiaryEntry.media), selectinload(DiaryEntry.user))
+        .order_by(DiaryEntry.id.desc())
         .limit(limit)
-        .offset(offset)
     )
     return CommunityPage(
         items=[
@@ -47,8 +47,7 @@ def community(
                 created_at=e.created_at,
             )
             for e in entries
-        ],
-        total=db.scalar(select(func.count()).select_from(visible.subquery())) or 0,
+        ]
     )
 
 

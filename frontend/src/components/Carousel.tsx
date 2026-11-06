@@ -17,7 +17,7 @@ export default function Carousel({ label, children }: { label: string; children:
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, [update, children]);
+  }, [update]);
 
   const move = (direction: 1 | -1) => {
     const el = row.current;

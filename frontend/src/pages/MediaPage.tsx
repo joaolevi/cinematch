@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
 import Carousel from "../components/Carousel";
@@ -25,22 +25,31 @@ function PeopleLinks({ names }: { names: string[] }) {
   );
 }
 
+/** Cada título monta a página do zero, para nada do título anterior sobrar na tela. */
 export default function MediaPage() {
   const { id } = useParams();
-  const mediaId = Number(id);
+  return <MediaView key={id} mediaId={Number(id)} />;
+}
+
+function MediaView({ mediaId }: { mediaId: number }) {
   const [media, setMedia] = useState<MediaDetail | null>(null);
   const [lists, setLists] = useState<UserList[]>([]);
   const [similar, setSimilar] = useState<Media[]>([]);
   const [showSeen, setShowSeen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const latestLoad = useRef(0); // se duas cargas se cruzarem, vale a mais recente
+
   const load = useCallback(async () => {
+    const thisLoad = ++latestLoad.current;
     try {
       const [m, l] = await Promise.all([api.media(mediaId), api.lists()]);
+      if (thisLoad !== latestLoad.current) return;
       setMedia(m);
       setLists(l);
+      setError(null);
     } catch (e) {
-      setError((e as Error).message);
+      if (thisLoad === latestLoad.current) setError((e as Error).message);
     }
   }, [mediaId]);
 
@@ -49,7 +58,6 @@ export default function MediaPage() {
   }, [load]);
 
   useEffect(() => {
-    setSimilar([]);
     api.similar(mediaId).then(setSimilar).catch(() => {});
     window.scrollTo(0, 0);
   }, [mediaId]);

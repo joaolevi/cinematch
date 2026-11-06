@@ -39,13 +39,13 @@ function Post({ entry }: { entry: CommunityEntry }) {
 function Reviewers({ people }: { people: Reviewer[] }) {
   if (people.length === 0) return null;
   return (
-    <aside className="hidden lg:block">
+    <aside className="order-first lg:order-none">
       <h2 className="border-b border-line/60 pb-2 text-xs font-semibold tracking-wider text-muted uppercase">
         Quem mais escreve
       </h2>
-      <ul className="divide-y divide-line/60">
-        {people.map((person) => (
-          <li key={person.name} className="flex items-center gap-3 py-3">
+      <ul className="flex flex-wrap gap-x-6 lg:block lg:divide-y lg:divide-line/60">
+        {people.map((person, position) => (
+          <li key={position} className="flex items-center gap-3 py-3">
             <Avatar name={person.name} size="h-10 w-10" />
             <div className="min-w-0">
               <p className="truncate font-semibold">{person.name}</p>
@@ -81,11 +81,9 @@ export default function CommunityPage() {
     setFailed(false);
     try {
       const loaded = entries ?? [];
-      const page = await api.community(PAGE, loaded.length);
-      const known = new Set(loaded.map((e) => e.id));
-      const fresh = page.items.filter((e) => !known.has(e.id));
-      setEntries([...loaded, ...fresh]);
-      setHasMore(fresh.length > 0 && loaded.length + page.items.length < page.total);
+      const page = await api.community(PAGE, loaded.at(-1)?.id);
+      setEntries([...loaded, ...page.items]);
+      setHasMore(page.items.length === PAGE);
     } catch {
       setFailed(true);
     } finally {
@@ -116,7 +114,7 @@ export default function CommunityPage() {
         </p>
       )}
 
-      <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_280px]">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-10">
         <div>
           {entries && entries.length > 0 && (
             <h2 className="border-b border-line/60 pb-2 text-xs font-semibold tracking-wider text-muted uppercase">
