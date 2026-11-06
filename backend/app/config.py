@@ -65,6 +65,9 @@ class Settings:
             "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000",
         ).split(",")
     )
+    use_external_neighbors: bool = field(
+        default_factory=lambda: _bool(os.getenv("TASTORY_USE_EXTERNAL_NEIGHBORS", "false"))
+    )
     seed_catalog_path: Path = DATA_DIR / "seed_catalog.json"
     external_catalog_path: Path = DATA_DIR / "mock_external_catalog.json"
 

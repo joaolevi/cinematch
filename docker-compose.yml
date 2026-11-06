@@ -23,6 +23,7 @@ services:
       TASTORY_SECRET_KEY: ${TASTORY_SECRET_KEY:-segredo-apenas-para-uso-local}
       TASTORY_CORS_ORIGINS: http://localhost:5173
       TASTORY_TMDB_API_KEY: ${TASTORY_TMDB_API_KEY:-}
+      TASTORY_USE_EXTERNAL_NEIGHBORS: ${TASTORY_USE_EXTERNAL_NEIGHBORS:-false}
     ports:
       - "8000:8000"
     depends_on:

@@ -1,6 +1,6 @@
 """Modelo relacional (pacote 3.1 da EAP).
 
-Tabelas: users, user_preferences, user_interests, media, diary_entries, lists, list_items, rec_events, dismissed.
+Tabelas: users, user_preferences, user_interests, media, item_neighbors, diary_entries, lists, list_items, rec_events, dismissed.
 """
 
 from datetime import date, datetime, timezone
@@ -84,6 +84,19 @@ class Media(Base):
     creators: Mapped[list[str]] = mapped_column(JSON, default=list)
     popularity: Mapped[float] = mapped_column(Float, default=0.0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ItemNeighbor(Base):
+    """Títulos parecidos, calculados com avaliações de uma base externa, como o MovieLens."""
+
+    __tablename__ = "item_neighbors"
+    __table_args__ = (UniqueConstraint("media_id", "neighbor_id", "source"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    media_id: Mapped[int] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"), index=True)
+    neighbor_id: Mapped[int] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"))
+    source: Mapped[str] = mapped_column(String(20))
+    score: Mapped[float] = mapped_column(Float)
 
 
 class DiaryEntry(Base):

@@ -31,7 +31,8 @@ services:
       TASTORY_SYNTHETIC_PASSWORD: ${TASTORY_SYNTHETIC_PASSWORD:?defina no .env.production}
       TASTORY_CORS_ORIGINS: ${TASTORY_PUBLIC_URL:?defina no .env.production}
       TASTORY_TMDB_API_KEY: ${TASTORY_TMDB_API_KEY:-}
-      TASTORY_TMDB_SYNC_PAGES: ${TASTORY_TMDB_SYNC_PAGES:-10}
+      TASTORY_TMDB_SYNC_PAGES: ${TASTORY_TMDB_SYNC_PAGES:-100}
+      TASTORY_USE_EXTERNAL_NEIGHBORS: ${TASTORY_USE_EXTERNAL_NEIGHBORS:-false}
     # Só o próprio servidor acessa as portas; o túnel leva o tráfego público até elas
     ports:
       - "127.0.0.1:${API_PORT:-8000}:8000"

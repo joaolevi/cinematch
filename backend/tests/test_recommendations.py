@@ -1,5 +1,7 @@
-from app.models import RecEvent
+from app.config import Settings
+from app.models import ItemNeighbor, RecEvent
 from app.seed import create_synthetic_users
+from app.services import recommender
 
 from .conftest import media_id_by_title, register
 
@@ -109,3 +111,57 @@ def test_redoing_preferences_replaces_interests(client, user_headers):
     client.put("/me/preferences", json={"decades": [1990], "creators": ["David Fincher"]}, headers=user_headers)
     r = client.put("/me/preferences", json={"decades": [2010]}, headers=user_headers)
     assert r.json()["decades"] == [2010] and r.json()["creators"] == []
+
+
+def external_neighbors_on(monkeypatch):
+    monkeypatch.setattr(recommender, "settings", Settings(use_external_neighbors=True))
+
+
+def group_a_user(client):
+    for i in range(3):
+        headers = register(client, email=f"vizinho{i}@teste.com")
+        if client.get("/me", headers=headers).json()["ab_group"] == "A":
+            return headers
+    raise AssertionError("nenhum usuário caiu no grupo A")
+
+
+def add_neighbor(db, media_id, neighbor_id, score=0.9):
+    db.add(ItemNeighbor(media_id=media_id, neighbor_id=neighbor_id, source="movielens", score=score))
+    db.commit()
+
+
+def test_external_neighbors_guide_feed_when_enabled(client, db, monkeypatch):
+    external_neighbors_on(monkeypatch)
+    headers = group_a_user(client)
+    liked = media_id_by_title(client, headers, "Toy Story")
+    neighbor = media_id_by_title(client, headers, "Titanic")
+    add_neighbor(db, liked, neighbor)
+    client.post("/diary", json={"media_id": liked, "rating": 5}, headers=headers)
+
+    feed = client.get("/recommendations", params={"limit": 5}, headers=headers).json()
+    assert feed["strategy"] == "hybrid"
+    first = feed["items"][0]
+    assert first["media"]["id"] == neighbor
+    assert first["reason"] == "Quem curtiu Toy Story também curtiu"
+
+
+def test_external_neighbors_are_ignored_when_disabled(client, db):
+    headers = group_a_user(client)
+    liked = media_id_by_title(client, headers, "Toy Story")
+    neighbor = media_id_by_title(client, headers, "Titanic")
+    add_neighbor(db, liked, neighbor)
+    client.post("/diary", json={"media_id": liked, "rating": 5}, headers=headers)
+
+    feed = client.get("/recommendations", params={"limit": 5}, headers=headers).json()
+    assert neighbor not in [i["media"]["id"] for i in feed["items"]]
+
+
+def test_series_stay_in_feed_with_external_neighbors(client, db, monkeypatch):
+    external_neighbors_on(monkeypatch)
+    headers = group_a_user(client)
+    liked = media_id_by_title(client, headers, "Toy Story")
+    add_neighbor(db, liked, media_id_by_title(client, headers, "Titanic"))
+    client.post("/diary", json={"media_id": liked, "rating": 5}, headers=headers)
+
+    feed = client.get("/recommendations", params={"type": "series", "limit": 5}, headers=headers).json()
+    assert feed["items"] and all(i["media"]["type"] == "series" for i in feed["items"])

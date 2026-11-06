@@ -22,7 +22,18 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserInterest, UserList, UserPreference
+from ..config import settings
+from ..models import (
+    DiaryEntry,
+    Dismissed,
+    ItemNeighbor,
+    ListItem,
+    Media,
+    User,
+    UserInterest,
+    UserList,
+    UserPreference,
+)
 
 # Pesos dos sinais (explícitos e implícitos) no perfil do usuário
 W_SEEN_NO_RATING = 0.6  # "Já vi" sem nota: gostou moderadamente
@@ -31,6 +42,7 @@ W_DISMISS = -0.7  # "Não me interesso" (explícito negativo)
 W_PREFERENCE = 1.0  # gêneros, décadas e criadores escolhidos no onboarding
 
 POPULARITY_BONUS = 0.1
+EXTERNAL_CONTENT_WEIGHT = 0.2  # com vizinhos de pessoas reais, o colaborativo pesa mais
 DIVERSITY_PENALTY = 0.85  # multiplicador a cada repetição do gênero principal no topo
 
 
@@ -190,11 +202,15 @@ def recommend(
     collab = np.zeros(len(catalog))
     item_sim = None
     if use_collab and sig_rows:
-        item_sim = _item_similarity(db, index, len(catalog))
+        item_sim = (
+            _external_similarity(db, catalog, index, sig_rows)
+            if settings.use_external_neighbors
+            else _item_similarity(db, index, len(catalog))
+        )
         if item_sim is not None:
             rows = np.array([r for r, _ in sig_rows])
             ws = np.array([w for _, w in sig_rows])
-            collab = (ws @ item_sim[rows]) / (np.abs(ws).sum() + 1e-9)
+            collab = np.asarray(ws @ item_sim[rows]).ravel() / (np.abs(ws).sum() + 1e-9)
             if not np.any(collab):
                 use_collab = False
         else:
@@ -210,12 +226,17 @@ def recommend(
         return ("hybrid" if use_collab else "content"), []
     cand = np.array(candidates)
     c_norm = _minmax(content[cand])
-    if use_collab:
-        alpha = 0.8 if len(sig_rows) < 5 else 0.5
+    if use_collab and settings.use_external_neighbors:
+        # A base externa só cobre filmes: as séries seguem pelo conteúdo, para não sumirem do feed
+        alpha = np.array([EXTERNAL_CONTENT_WEIGHT if catalog[i].type == "movie" else 1.0 for i in cand])
+        cf_norm = _minmax(collab[cand])
+        strategy = "hybrid"
+    elif use_collab:
+        alpha = np.full(len(cand), 0.8 if len(sig_rows) < 5 else 0.5)
         cf_norm = _minmax(collab[cand])
         strategy = "hybrid"
     else:
-        alpha, cf_norm, strategy = 1.0, np.zeros(len(cand)), "content"
+        alpha, cf_norm, strategy = np.ones(len(cand)), np.zeros(len(cand)), "content"
     pop = np.array([catalog[i].popularity for i in cand]) / 100.0
     final = alpha * c_norm + (1 - alpha) * cf_norm + POPULARITY_BONUS * pop
 
@@ -246,8 +267,8 @@ def recommend(
             pref_creators,
             pref_vec,
             item_sim if use_collab else None,
-            content_share=alpha * c_norm[pos],
-            collab_share=(1 - alpha) * cf_norm[pos],
+            content_share=alpha[pos] * c_norm[pos],
+            collab_share=(1 - alpha[pos]) * cf_norm[pos],
         )
         recs.append(Recommendation(catalog[ci], score, reason, strategy))
 
@@ -256,6 +277,23 @@ def recommend(
         have = exclude | {r.media.id for r in recs}
         recs += trending(db, media_type, limit - len(recs), have)
     return strategy, recs
+
+
+def _external_similarity(
+    db: Session, catalog: list[Media], index: dict[int, int], sig_rows: list[tuple[int, float]]
+) -> sparse.csr_matrix | None:
+    """Vizinhos já calculados, só dos títulos do histórico do usuário."""
+    media_ids = [catalog[row].id for row, _ in sig_rows]
+    neighbors = db.execute(
+        select(ItemNeighbor.media_id, ItemNeighbor.neighbor_id, ItemNeighbor.score).where(
+            ItemNeighbor.media_id.in_(media_ids)
+        )
+    ).all()
+    cells = [(index[m], index[n], score) for m, n, score in neighbors if m in index and n in index]
+    if not cells:
+        return None
+    rows, cols, scores = zip(*cells)
+    return sparse.csr_matrix((scores, (rows, cols)), shape=(len(catalog), len(catalog)))
 
 
 def _item_similarity(db: Session, index: dict[int, int], n_items: int) -> np.ndarray | None:
@@ -294,7 +332,7 @@ def _reason(
     pref_decades: list[int],
     pref_creators: list[str],
     pref_vec,
-    item_sim: np.ndarray | None,
+    item_sim: np.ndarray | sparse.csr_matrix | None,
     content_share: float,
     collab_share: float,
 ) -> str:
