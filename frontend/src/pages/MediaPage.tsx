@@ -1,33 +1,66 @@
-import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
+import Carousel from "../components/Carousel";
+import MediaCard from "../components/MediaCard";
 import Poster from "../components/Poster";
 import SeenModal from "../components/SeenModal";
 import { StarsDisplay } from "../components/Stars";
-import { formatDate, formatRating, genreColor, plural } from "../format";
-import type { MediaDetail, UserList } from "../types";
+import WatchedBy from "../components/WatchedBy";
+import { colorFor, formatDate, formatRating, plural } from "../format";
+import type { Media, MediaDetail, UserList } from "../types";
 
+function PeopleLinks({ names }: { names: string[] }) {
+  return (
+    <dd>
+      {names.map((name, position) => (
+        <span key={name}>
+          {position > 0 && ", "}
+          <Link to={`/buscar?pessoa=${encodeURIComponent(name)}`} className="hover:text-accent hover:underline">
+            {name}
+          </Link>
+        </span>
+      ))}
+    </dd>
+  );
+}
+
+/** Cada título monta a página do zero, para nada do título anterior sobrar na tela. */
 export default function MediaPage() {
   const { id } = useParams();
-  const mediaId = Number(id);
+  return <MediaView key={id} mediaId={Number(id)} />;
+}
+
+function MediaView({ mediaId }: { mediaId: number }) {
   const [media, setMedia] = useState<MediaDetail | null>(null);
   const [lists, setLists] = useState<UserList[]>([]);
+  const [similar, setSimilar] = useState<Media[]>([]);
   const [showSeen, setShowSeen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const latestLoad = useRef(0); // se duas cargas se cruzarem, vale a mais recente
+
   const load = useCallback(async () => {
+    const thisLoad = ++latestLoad.current;
     try {
       const [m, l] = await Promise.all([api.media(mediaId), api.lists()]);
+      if (thisLoad !== latestLoad.current) return;
       setMedia(m);
       setLists(l);
+      setError(null);
     } catch (e) {
-      setError((e as Error).message);
+      if (thisLoad === latestLoad.current) setError((e as Error).message);
     }
   }, [mediaId]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    api.similar(mediaId).then(setSimilar).catch(() => {});
+    window.scrollTo(0, 0);
+  }, [mediaId]);
 
   if (error) return <p className="text-red-300">{error}</p>;
   if (!media) return <p className="text-muted">Carregando...</p>;
@@ -76,11 +109,16 @@ export default function MediaPage() {
             <h1 className="mt-1 text-4xl font-extrabold">{media.title}</h1>
             <div className="mt-3 flex flex-wrap gap-2">
               {media.genres.map((g) => {
-                const color = genreColor(g);
+                const color = colorFor(g);
                 return (
-                  <span key={g} className="chip" style={{ color, borderColor: `${color}66`, backgroundColor: `${color}14` }}>
+                  <Link
+                    key={g}
+                    to={`/buscar?genero=${encodeURIComponent(g)}`}
+                    className="chip transition hover:brightness-125"
+                    style={{ color, borderColor: `${color}66`, backgroundColor: `${color}14` }}
+                  >
                     {g}
-                  </span>
+                  </Link>
                 );
               })}
               {media.tags.map((t) => (
@@ -95,13 +133,13 @@ export default function MediaPage() {
               {media.creators.length > 0 && (
                 <div className="flex gap-3">
                   <dt className="w-16 shrink-0 text-muted">{media.type === "movie" ? "Direção" : "Criação"}</dt>
-                  <dd>{media.creators.join(", ")}</dd>
+                  <PeopleLinks names={media.creators} />
                 </div>
               )}
               {media.actors.length > 0 && (
                 <div className="flex gap-3">
                   <dt className="w-16 shrink-0 text-muted">Elenco</dt>
-                  <dd>{media.actors.join(", ")}</dd>
+                  <PeopleLinks names={media.actors} />
                 </div>
               )}
             </dl>
@@ -164,18 +202,30 @@ export default function MediaPage() {
         </div>
       </div>
 
+      {similar.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-xl font-bold">Títulos parecidos</h2>
+          <div className="mt-4">
+            <Carousel label="títulos parecidos">
+              {similar.map((m) => (
+                <div key={m.id} className="w-36 shrink-0 snap-start sm:w-40">
+                  <MediaCard media={m} />
+                </div>
+              ))}
+            </Carousel>
+          </div>
+        </section>
+      )}
+
       <section className="mt-12">
         <h2 className="text-xl font-bold">Resenhas</h2>
         {media.reviews.length === 0 && <p className="mt-2 text-sm text-muted">Ninguém comentou ainda. Que tal ser a primeira pessoa?</p>}
-        <div className="mt-4 space-y-3">
+        <div className="mt-2 divide-y divide-line/60">
           {media.reviews.map((r) => (
-            <div key={r.id} className="card p-4">
-              <div className="flex items-center gap-3 text-sm">
-                <span className="font-semibold">{r.user_name}</span>
-                <StarsDisplay value={r.rating} size={14} />
-              </div>
-              <p className="mt-2 text-slate-300">{r.review}</p>
-            </div>
+            <article key={r.id} className="py-4">
+              <WatchedBy name={r.user_name} rating={r.rating} consumedAt={r.consumed_at} createdAt={r.created_at} />
+              <p className="mt-2 break-words whitespace-pre-line text-slate-200">{r.review}</p>
+            </article>
           ))}
         </div>
       </section>

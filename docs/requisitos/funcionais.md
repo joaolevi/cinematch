@@ -16,7 +16,7 @@ As situações abaixo consideram o código da branch `homol`, que ainda não sub
 
 | ID | Requisito | Situação | MVP |
 |---|---|---|---|
-| RF04 | Buscar por título, criador ou tag, filtrar por tipo e gênero e ordenar | Atende | Deve |
+| RF04 | Buscar por título, criador, ator ou tag, filtrar por tipo e gênero e ordenar | Atende | Deve |
 | RF05 | Ver o detalhe de um título: dados, elenco, nota média, resenhas e status do usuário | Atende | Deve |
 | RF06 | Registrar que viu um título, com data opcional, e editar ou apagar o registro | Atende | Deve |
 | RF07 | Dar nota e escrever resenha, ambas opcionais | Atende | Deve |
@@ -24,6 +24,9 @@ As situações abaixo consideram o código da branch `homol`, que ainda não sub
 | RF09 | Ver o feed "Para você", com filtro por tipo, novas sugestões ao rolar a página e opção de trocar as sugestões | Atende | Deve |
 | RF10 | Reagir a uma sugestão com Quero ver, Já vi ou Não me interesso | Atende | Deve |
 | RF19 | Ver no diário o top 10 dos títulos mais amados e o dos mais odiados | Atende | Deve |
+| RF20 | Ver a página Comunidade, com os registros mais recentes de todas as pessoas (pessoa, título, nota, resenha e quando a pessoa viu) e com quem mais escreve resenhas | Atende | Deve |
+| RF21 | Ver títulos parecidos no detalhe, sem o que a pessoa já viu, descartou ou guardou | Atende | Deve |
+| RF22 | Explorar por gênero, diretor, criador e ator: clicar no detalhe abre a Busca filtrada, com endereço próprio | Atende | Deve |
 
 ## Inteligência
 
@@ -75,3 +78,6 @@ Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backen
 | RF17 | Pitch; PLANO §2 | 4.2 | `services/metrics.py` | `test_admin.py` |
 | RF18 | EAP 2.0 | 2.1 a 2.4 | `frontend/` | Sem testes automatizados; fluxo testado no navegador |
 | RF19 | Pedido da GP, 06/11 | 2.2 | `frontend/src/pages/DiaryPage.tsx` | Sem testes automatizados; fluxo testado no navegador |
+| RF20 | Pedido da GP, 06/11 | 2.3 | `routers/community.py`, `frontend/src/pages/CommunityPage.tsx` | `test_community.py` |
+| RF21 | Pedido da GP, 06/11 | 2.3 | `routers/media.py`, `services/recommender.py` | `test_recommendations.py` |
+| RF22 | Pedido da GP, 06/11 | 2.3 | `routers/media.py`, `frontend/src/pages/SearchPage.tsx` | `test_diary_lists.py` |

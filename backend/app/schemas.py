@@ -225,6 +225,26 @@ class FeedOut(BaseModel):
     items: list[RecommendationOut]
 
 
+class CommunityEntryOut(BaseModel):
+    id: int
+    user_name: str
+    media: MediaOut
+    rating: float | None
+    review: str | None
+    consumed_at: date | None
+    created_at: datetime
+
+
+class CommunityPage(BaseModel):
+    items: list[CommunityEntryOut]
+
+
+class ReviewerOut(BaseModel):
+    name: str
+    titles: int
+    reviews: int
+
+
 class ImpressionIn(BaseModel):
     media_id: int
     strategy: Literal["hybrid", "content", "trending"]

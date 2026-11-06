@@ -12,11 +12,13 @@ A coluna Situação mostra o que foi verificado em 05 e 06/11/2026.
 | RNF02 | A chave do TMDB fica só no `.env`, fora do git | CLAUDE.md | Atende: `.env` está no `.gitignore` |
 | RNF03 | Senhas guardadas com bcrypt; rotas protegidas exigem JWT | PLANO §3 | Atende |
 | RNF04 | Textos e documentação em português | CLAUDE.md | Sem auditoria completa |
-| RNF05 | `docs/openapi.json` reflete as rotas reais | CONTRIBUTING | Atende: as 35 rotas coincidem com a aplicação |
-| RNF06 | Testes offline verdes, e toda rota tem teste | CLAUDE.md | Atende: 88 testes offline e 13 de integração passam, e as quatro rotas que faltavam ganharam teste. O CI passou no PR #22 |
+| RNF05 | `docs/openapi.json` reflete as rotas reais | CONTRIBUTING | Atende: as 39 rotas coincidem com a aplicação |
+| RNF06 | Testes offline verdes, e toda rota tem teste | CLAUDE.md | Atende: 108 testes offline e 13 de integração passam, e as quatro rotas que faltavam ganharam teste. O CI passou no PR #22 |
 | RNF07 | Compatível com Python 3.12+ | README | Rodou em 3.13.5; o CI e o Docker usam 3.12. As versões fixas do numpy e do scipy não instalam em Python mais antigo |
 | RNF08 | A interface exibe o crédito do TMDB | `docs/API.md` | Atende: o aviso e o logo estão na página Sobre, como o TMDB exige |
 | RNF09 | O feed responde em até 1 s na máquina da demo | Aprovado em 06/11 | Atende: cerca de 115 ms com 3.966 títulos, no Docker |
+| RNF20 | O cadastro e a página Comunidade avisam que os registros ficam visíveis para quem tem conta | Decisão de 06/11 | Atende |
+| RNF21 | A página Comunidade responde em até 1 s e não faz uma consulta ao banco por item | Decisão de 06/11 | Atende: o número de consultas não cresce com os itens |
 | RNF10 | Coletar só nome, e-mail e histórico; no teste interno, aceitar e-mail fictício e avisar que os dados ficam em um servidor externo | Aprovado em 06/11 | O aviso e o e-mail fictício estão no [roteiro do teste interno](../HOMOLOGACAO.md); falta aplicar no teste |
 
 ## Deploy
@@ -56,3 +58,5 @@ A coluna Situação mostra o que foi verificado em 05 e 06/11/2026.
 | RNF17 | 3.2 | Contar as consultas de `GET /diary` e `GET /lists` |
 | RNF18 | 4.3 | Instalar em ambiente limpo e conferir as versões |
 | RNF19 | 4.3 | Rodar `docker compose up --build` e testar o fluxo completo |
+| RNF20 | 2.1, 2.3 | Conferir o aviso no cadastro e na Comunidade |
+| RNF21 | 2.3 | `test_community.py` e medição na máquina da demo |

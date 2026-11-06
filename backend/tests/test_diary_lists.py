@@ -169,6 +169,23 @@ def test_most_recent_order_leaves_upcoming_titles_last(client, user_headers, db)
     assert last["title"] == "Ainda Vai Estrear"
 
 
+def test_search_by_person_finds_directors_and_actors(client, db, user_headers):
+    db.add_all([
+        Media(type="movie", title="Com Diretora", source="manual", creators=["Fulana de Tal"]),
+        Media(type="series", title="Com Atriz", source="manual", actors=["Fulana de Tal", "Outra Pessoa"]),
+        Media(type="movie", title="Nome Parecido", source="manual", actors=["Fulana de Talvez"]),
+    ])
+    db.commit()
+
+    def titles(**params):
+        items = client.get("/media", params=params, headers=user_headers).json()["items"]
+        return {m["title"] for m in items}
+
+    assert titles(person="Fulana de Tal") == {"Com Diretora", "Com Atriz"}  # nome exato
+    assert titles(person="fulana de tal", type="series") == {"Com Atriz"}
+    assert "Com Atriz" in titles(q="outra pessoa")  # a busca também encontra atores
+
+
 def test_genres_are_public_and_sorted(client):
     genres = client.get("/media/genres").json()
     assert "Terror" in genres

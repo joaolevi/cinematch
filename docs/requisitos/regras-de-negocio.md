@@ -50,6 +50,17 @@ RN12, RN13 e RN14 foram aprovadas por Sophia (GP) em 05/11/2026.
 | RN17 | O top 10 dos mais amados usa notas a partir de 3,5, e o dos mais odiados, notas abaixo de 3. Assim, quem só dá notas altas não vê títulos bons entre os odiados | Atende |
 | RN18 | Títulos marcados no onboarding entram no diário sem nota. Eles não contam nas médias nem no top 10, mas o recomendador os trata como "gostei", até a pessoa dar uma nota | Atende |
 
+## Comunidade
+
+| ID | Regra | Situação |
+|---|---|---|
+| RN21 | Só entram registros de "Já vi" de contas comuns. Ficam de fora as contas simuladas, a demo, o admin e os títulos marcados no onboarding | Atende |
+| RN22 | "Quero ver", listas e "Não me interesso" nunca aparecem | Atende |
+| RN23 | Resenha oculta pela moderação não aparece. O registro continua, sem o texto | Atende |
+| RN24 | A página mostra o nome da pessoa, nunca o e-mail | Atende |
+| RN26 | O item mostra quando a pessoa viu. Sem data informada, mostra quando ela registrou. Resenhas ocultas não contam em "Quem mais escreve" | Atende |
+| RN25 | Remover um registro tira o item da página. Editar atualiza o item, sem levá-lo ao topo | Atende |
+
 ## Rastreabilidade
 
 Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backend/tests/`.
@@ -64,6 +75,7 @@ Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backen
 | RN06 | `crud.py` | Falta |
 | RN07 | `services/recommender.py` | `test_recommendations.py` |
 | RN20 | `services/recommender.py` | `test_recommendations.py` |
+| RN21 a RN26 | `routers/community.py` | `test_community.py` |
 | RN08 | `routers/lists.py` | `test_auth.py`, `test_diary_lists.py` (renomear sem teste) |
 | RN09 | `routers/lists.py`, `routers/diary.py` | `test_diary_lists.py` (diário sem teste) |
 | RN10 | `auth.py` | `test_admin.py` |

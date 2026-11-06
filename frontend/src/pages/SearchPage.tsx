@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import MediaCard from "../components/MediaCard";
 import { plural } from "../format";
@@ -16,7 +17,9 @@ const SORTS: { value: MediaSort; label: string }[] = [
 export default function SearchPage() {
   const [q, setQ] = useState("");
   const [type, setType] = useState<MediaType | "">("");
-  const [genre, setGenre] = useState("");
+  const [params, setParams] = useSearchParams();
+  const genre = params.get("genero") ?? "";
+  const person = params.get("pessoa") ?? "";
   const [sort, setSort] = useState<MediaSort>("popularity");
   const [genres, setGenres] = useState<string[]>([]);
   const [items, setItems] = useState<Media[]>([]);
@@ -30,12 +33,12 @@ export default function SearchPage() {
 
   useEffect(() => {
     setOffset(0);
-  }, [q, type, genre, sort]);
+  }, [q, type, genre, person, sort]);
 
   useEffect(() => {
     const t = setTimeout(() => {
       api
-        .search({ q, type, genre, sort, limit: PAGE, offset })
+        .search({ q, type, genre, person, sort, limit: PAGE, offset })
         .then((r) => {
           setItems((prev) => (offset === 0 ? r.items : [...prev, ...r.items]));
           setTotal(r.total);
@@ -44,15 +47,31 @@ export default function SearchPage() {
         .catch((e) => setError(e.message));
     }, 250);
     return () => clearTimeout(t);
-  }, [q, type, genre, sort, offset]);
+  }, [q, type, genre, person, sort, offset]);
+
+  function setFilter(name: "genero" | "pessoa", value: string) {
+    const next = new URLSearchParams(params);
+    if (value) next.set(name, value);
+    else next.delete(name);
+    setParams(next);
+  }
+
+  const heading = person ? `Filmes e séries com ${person}` : genre ? `Filmes e séries de ${genre}` : "Buscar";
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Buscar</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="text-3xl font-bold">{heading}</h1>
+        {person && (
+          <button className="btn-ghost px-3 py-1 text-xs" onClick={() => setFilter("pessoa", "")}>
+            Limpar filtro
+          </button>
+        )}
+      </div>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row">
         <input
           className="input sm:flex-1"
-          placeholder="Título, diretor, criador ou tag (ex.: Nolan, máfia, brasil)"
+          placeholder="Título, diretor, ator ou tag (ex.: Nolan, máfia, brasil)"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoFocus
@@ -62,7 +81,7 @@ export default function SearchPage() {
           <option value="movie">Filmes</option>
           <option value="series">Séries</option>
         </select>
-        <select className="input sm:w-48" value={genre} onChange={(e) => setGenre(e.target.value)}>
+        <select className="input sm:w-48" value={genre} onChange={(e) => setFilter("genero", e.target.value)}>
           <option value="">Todos os gêneros</option>
           {genres.map((g) => (
             <option key={g}>{g}</option>

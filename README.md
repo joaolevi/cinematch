@@ -25,10 +25,11 @@ Este repositório tem a **API (backend)**, com integração real com o **TMDB**,
 |---|---|---|
 | Acesso | Cadastrar conta, Fazer login | `POST /auth/register`, `POST /auth/login` |
 | Acesso | Definir preferências iniciais | `PUT /me/preferences` |
-| Uso Geral | Buscar mídias | `GET /media`, `GET /media/{id}` |
+| Uso Geral | Buscar mídias | `GET /media`, `GET /media/{id}`, `GET /media/{id}/similar` |
 | Uso Geral | Registrar consumo / Avaliar mídia | `/diary` (nota 0,5–5 ★ e resenha opcionais) |
 | Uso Geral | Gerenciar listas | `/lists` (watchlist "Quero ver" + listas próprias) |
 | Uso Geral | Ver / Descartar recomendação | `GET /recommendations`, `POST /recommendations/{id}/feedback` |
+| Uso Geral | Ver a Comunidade | `GET /community`, `GET /community/reviewers` |
 | Inteligência | Gerar recomendações | `app/services/recommender.py` (híbrido + cold start) |
 | Administração | Gerenciar catálogo | `/admin/media` |
 | Administração | Sincronizar catálogo externo | `POST /admin/sync`, `/admin/tmdb/search`, `/admin/tmdb/import` |
@@ -155,8 +156,8 @@ Diagrama de Atividades do pitch:
 ```bash
 cd backend
 pip install -r requirements-dev.txt   # o dev.sh instala só o necessário para rodar a API
-python -m pytest -q                    # todos (101): é o que roda no CI, onde os 13 de integração são pulados
-python -m pytest -q -m "not integration"   # só offline (88)
+python -m pytest -q                    # todos (121): é o que roda no CI, onde os 13 de integração são pulados
+python -m pytest -q -m "not integration"   # só offline (108)
 python -m pytest -q -m integration     # só integração real com TMDB + banco (13, precisa da chave)
 ```
 

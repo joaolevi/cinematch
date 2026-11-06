@@ -24,10 +24,11 @@ Contas de demonstração: `admin@tastory.dev / admin123`, `demo@tastory.dev / de
 | `GET /me` | Usuário logado | — |
 | `GET /me/preferences` | Preferências salvas | — → `{genres, decades, creators, onboarded}` |
 | `PUT /me/preferences` | Onboarding | `{genres: string[], decades: number[], creators: string[], liked_media_ids: number[]}` |
-| `GET /media` | Busca/listagem | `q`, `type` (`movie`\|`series`), `genre`, `sort` (`popularity`\|`title`\|`year`; em `popularity`, com `q`, os títulos que começam com o termo vêm primeiro; em `year`, títulos de anos futuros ficam no fim), `limit`, `offset` → `{items, total}` |
+| `GET /media` | Busca/listagem | `q`, `type` (`movie`\|`series`), `genre`, `person` (nome exato de diretor, criador ou ator), `sort` (`popularity`\|`title`\|`year`; em `popularity`, com `q`, os títulos que começam com o termo vêm primeiro; em `year`, títulos de anos futuros ficam no fim), `limit`, `offset` → `{items, total}` |
 | `GET /media/genres` | Lista de gêneros (para filtros/onboarding) | — |
 | `GET /media/facets` | Décadas e criadores do catálogo, para o onboarding | `genre` (pode repetir), `limit` |
 | `GET /media/trending` | Em alta (sem login). Como o feed, só traz títulos do TMDB com sinopse, pôster e nome legível | `type`, `limit` |
+| `GET /media/{id}/similar` | Títulos parecidos, do mesmo tipo, sem o que a pessoa já viu, descartou ou guardou | `limit` |
 | `GET /media/{id}` | Detalhe + elenco (`actors`) + média de notas + resenhas + `my_status` | — |
 | `GET /diary` | Diário do usuário (mais recente primeiro) | — |
 | `POST /diary` | "Já vi". Sem `consumed_at`, o registro fica sem data | `{media_id, rating?: 0.5–5 (passo 0.5), review?, consumed_at?: "AAAA-MM-DD"}` |
@@ -40,6 +41,8 @@ Contas de demonstração: `admin@tastory.dev / admin123`, `demo@tastory.dev / de
 | `POST /recommendations/{media_id}/feedback` | Botões do feed | `{action: "want"\|"seen"\|"dismiss", rating?, review?, consumed_at?}` |
 | `POST /recommendations/impressions` | Avisa quais títulos do feed apareceram na tela. É isso que conta como exibido | `{items: [{media_id, strategy, score}]}` (até 100) |
 | `DELETE /recommendations/{media_id}/feedback` | Desfazer o "Não me interesso" | — |
+| `GET /community` | Página Comunidade: registros de "Já vi" de todas as pessoas, do mais recente ao mais antigo | `limit`, `before_id` (id do último item carregado) → `{items: [{id, user_name, media, rating, review, consumed_at, created_at}]}` |
+| `GET /community/reviewers` | Quem mais escreve resenhas | `limit` → `[{name, titles, reviews}]` |
 | `GET /health` | Confere se a API está no ar (sem login) | — |
 | `POST /admin/media` · `PATCH`/`DELETE /admin/media/{id}` | Gerenciar catálogo | campos de mídia |
 | `POST /admin/sync` | Sincronizar catálogo externo | `provider` (`auto`\|`tmdb`\|`mock`), `pages` |

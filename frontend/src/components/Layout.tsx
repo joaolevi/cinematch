@@ -2,7 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+  `rounded-lg px-2 py-1.5 text-sm font-medium transition sm:px-3 ${
     isActive ? "bg-surface-2 text-accent" : "text-slate-300 hover:text-white"
   }`;
 
@@ -25,7 +25,7 @@ export default function Layout() {
           <NavLink to="/">
             <Logo />
           </NavLink>
-          <nav className="flex flex-wrap gap-1">
+          <nav className="order-last flex w-full flex-wrap gap-1 sm:order-none sm:w-auto">
             <NavLink to="/" end className={linkClass}>
               Para você
             </NavLink>
@@ -37,6 +37,9 @@ export default function Layout() {
             </NavLink>
             <NavLink to="/listas" className={linkClass}>
               Listas
+            </NavLink>
+            <NavLink to="/comunidade" className={linkClass}>
+              Comunidade
             </NavLink>
             {user?.role === "admin" && (
               <NavLink to="/admin" className={linkClass}>

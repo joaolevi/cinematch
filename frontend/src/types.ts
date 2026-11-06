@@ -83,6 +83,22 @@ export interface Feed {
   items: Recommendation[];
 }
 
+export interface CommunityEntry {
+  id: number;
+  user_name: string;
+  media: Media;
+  rating: number | null;
+  review: string | null;
+  consumed_at: string | null;
+  created_at: string;
+}
+
+export interface Reviewer {
+  name: string;
+  titles: number;
+  reviews: number;
+}
+
 export interface AdminReview {
   id: number;
   user_name: string;

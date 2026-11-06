@@ -23,14 +23,15 @@ em um único banco.
 Use uma conta nova e comum. As contas de admin não entram na medição.
 
 Os dados ficam no servidor do Vinicius (RNF10), então você pode usar um e-mail fictício. Use uma senha que você não usa em
-nenhum outro lugar.
+nenhum outro lugar. O que você marcar como Já vi fica visível para quem tem conta, na página Comunidade.
 
 1. Crie a conta e responda às perguntas iniciais.
 2. Reaja a pelo menos 10 sugestões do feed, do jeito que faria de verdade: **Quero ver**, **Já vi** ou **Não me interesso**.
 3. Em um título que você já viu, dê uma nota e escreva uma resenha curta.
 4. Busque um filme ou uma série de que você gosta e abra os detalhes.
 5. Volte ao feed e veja se as sugestões mudaram.
-6. Responda às perguntas abaixo, no grupo ou em um comentário na issue #14.
+6. Abra a Comunidade e veja os registros da equipe.
+7. Responda às perguntas abaixo, no grupo ou em um comentário na issue #14.
 
 ## Perguntas
 

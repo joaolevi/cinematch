@@ -14,7 +14,7 @@ from sqlalchemy import func, select
 from .config import settings
 from .db import Base, SessionLocal, engine
 from .models import Media
-from .routers import admin, auth, diary, lists, media, recommendations
+from .routers import admin, auth, community, diary, lists, media, recommendations
 
 log = logging.getLogger("tastory")
 
@@ -48,7 +48,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for r in (auth.router, media.router, diary.router, lists.router, recommendations.router, admin.router):
+for r in (auth.router, media.router, diary.router, lists.router, recommendations.router, community.router, admin.router):
     app.include_router(r)
 
 
