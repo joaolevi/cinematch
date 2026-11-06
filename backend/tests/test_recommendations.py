@@ -60,6 +60,7 @@ def test_feed_only_suggests_tmdb_titles_with_synopsis_poster_and_readable_name(c
 
     db.add_all([
         tmdb_title("Completo"),
+        tmdb_title("1917"),
         tmdb_title("Sem Sinopse", overview=""),
         tmdb_title("Sem Pôster", poster=None),
         tmdb_title("논스톱"),
@@ -71,7 +72,7 @@ def test_feed_only_suggests_tmdb_titles_with_synopsis_poster_and_readable_name(c
         return {i["media"]["title"] if "media" in i else i["title"] for i in (r["items"] if isinstance(r, dict) else r)}
 
     hidden = {"Sem Sinopse", "Sem Pôster", "논스톱"}
-    assert "Completo" in titles("/recommendations") and not titles("/recommendations") & hidden  # em alta
+    assert {"Completo", "1917"} <= titles("/recommendations") and not titles("/recommendations") & hidden  # em alta
     assert "Completo" in titles("/media/trending") and not titles("/media/trending") & hidden
 
     mid = media_id_by_title(client, user_headers, "Completo")
@@ -104,6 +105,21 @@ def test_series_give_more_weight_to_popularity_than_movies(client, db, user_head
 
     assert first_of_pair("movie") == "Parecida movie"
     assert first_of_pair("series") == "Popular series"
+
+
+def test_series_weight_keeps_movies_and_series_slots_in_mixed_feed(client, user_headers, monkeypatch):
+    for title in ("Matrix", "Dark", "Parasita"):
+        mid = media_id_by_title(client, user_headers, title)
+        client.post("/diary", json={"media_id": mid, "rating": 5}, headers=user_headers)
+
+    def feed(weight):
+        monkeypatch.setattr(recommender, "SERIES_POPULARITY_BONUS", weight)
+        items = client.get("/recommendations", params={"limit": 30}, headers=user_headers).json()["items"]
+        return [(i["media"]["title"] if i["media"]["type"] == "movie" else "série", i["media"]["title"]) for i in items]
+
+    light, heavy = feed(recommender.POPULARITY_BONUS), feed(1.0)
+    assert [slot for slot, _ in light] == [slot for slot, _ in heavy]  # filmes e lugares das séries iguais
+    assert [title for _, title in light] != [title for _, title in heavy]  # as séries mudam
 
 
 def test_only_titles_on_screen_count_as_shown(client, db, user_headers):

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter, defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 import numpy as np
@@ -64,11 +64,16 @@ def _tok(prefix: str, value: str) -> str:
     return f"{prefix}:{value.strip().lower().replace(' ', '_')}"
 
 
+def has_readable_name(title: str) -> bool:
+    """Aceita nomes com letras latinas e nomes só com números, como 1917."""
+    return bool(LATIN_LETTER.search(title)) or not any(char.isalpha() for char in title)
+
+
 def can_be_suggested(m: Media) -> bool:
     """O feed só sugere títulos do TMDB com sinopse, pôster e nome legível. A busca mostra todos."""
     if m.source != "tmdb":
         return True  # o catálogo mock não tem pôster
-    return bool(m.overview and m.poster_url and LATIN_LETTER.search(m.title))
+    return bool(m.overview and m.poster_url and has_readable_name(m.title))
 
 
 def media_tokens(m: Media) -> str:
@@ -138,6 +143,25 @@ def _minmax(x: np.ndarray) -> np.ndarray:
     if hi - lo < 1e-9:
         return np.zeros_like(x)
     return (x - lo) / (hi - lo)
+
+
+def _pick_diverse(
+    positions: Iterable[int], scores: np.ndarray, main_genre: Callable[[int], str], limit: int
+) -> list[tuple[int, float]]:
+    """Escolhe as melhores posições, penalizando a repetição do gênero principal no topo."""
+    picked: list[tuple[int, float]] = []
+    remaining = set(positions)
+    genre_count: Counter[str] = Counter()
+    while remaining and len(picked) < limit:
+        best, best_score = None, -np.inf
+        for pos in remaining:
+            score = scores[pos] * (DIVERSITY_PENALTY ** genre_count[main_genre(pos)])
+            if score > best_score:
+                best, best_score = pos, score
+        remaining.discard(best)
+        genre_count[main_genre(best)] += 1
+        picked.append((best, float(best_score)))
+    return picked
 
 
 # ---------------------------------------------------------------- cold start
@@ -261,30 +285,26 @@ def recommend(
     blend = alpha * c_norm + (1 - alpha) * cf_norm
     final = blend + POPULARITY_BONUS * pop
 
-    # Nas séries, a popularidade pesa mais, mas só reordena as séries entre si.
-    # Elas trocam de nota umas com as outras, então a proporção com os filmes não muda.
-    series = np.flatnonzero([catalog[i].type == "series" for i in cand])
-    by_new_order = series[np.argsort(blend[series] + SERIES_POPULARITY_BONUS * pop[series])]
-    final[by_new_order] = np.sort(final[series])
+    def main_genre(pos: int) -> str:
+        return (catalog[cand[pos]].genres or ["?"])[0]
 
-    # --- Diversidade: penaliza repetição do gênero principal no topo do feed
-    picked: list[tuple[int, float, int]] = []  # (pos em cand, score ajustado, idx catálogo)
-    remaining = set(range(len(cand)))
-    genre_count: Counter[str] = Counter()
-    while remaining and len(picked) < limit:
-        best, best_score = None, -np.inf
-        for pos in remaining:
-            g = (catalog[cand[pos]].genres or ["?"])[0]
-            s = final[pos] * (DIVERSITY_PENALTY ** genre_count[g])
-            if s > best_score:
-                best, best_score = pos, s
-        remaining.discard(best)
-        genre_count[(catalog[cand[best]].genres or ["?"])[0]] += 1
-        picked.append((best, float(best_score), int(cand[best])))
+    def is_series(pos: int) -> bool:
+        return catalog[cand[pos]].type == "series"
+
+    picked = _pick_diverse(range(len(cand)), final, main_genre, limit)
+
+    # Nas séries, a popularidade pesa mais. Os filmes e os lugares das séries no feed não mudam:
+    # só as séries que ocupam esses lugares são escolhidas de novo.
+    slots = [n for n, (pos, _) in enumerate(picked) if is_series(pos)]
+    boosted = blend + SERIES_POPULARITY_BONUS * pop
+    all_series = [pos for pos in range(len(cand)) if is_series(pos)]
+    for slot, (pos, _) in zip(slots, _pick_diverse(all_series, boosted, main_genre, len(slots))):
+        picked[slot] = (pos, picked[slot][1])
 
     recs: list[Recommendation] = []
     reason_uses: Counter[int] = Counter()  # evita repetir o mesmo título em todos os motivos
-    for pos, score, ci in picked:
+    for pos, score in picked:
+        ci = int(cand[pos])
         reason = _reason(
             ci,
             catalog,
