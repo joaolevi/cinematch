@@ -144,7 +144,7 @@
           "acesso"
         ],
         "summary": "Set Preferences",
-        "description": "Onboarding: gêneros favoritos + títulos que o usuário já gosta (viram registros no diário).",
+        "description": "Onboarding: gêneros, décadas, criadores e títulos que o usuário já gosta (viram registros no diário).",
         "operationId": "set_preferences_me_preferences_put",
         "requestBody": {
           "content": {
@@ -329,6 +329,65 @@
                   },
                   "type": "array",
                   "title": "Response List Genres Media Genres Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/facets": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Media Facets",
+        "description": "Décadas e criadores do catálogo, para o onboarding. Criadores vêm ordenados pela popularidade.",
+        "operationId": "media_facets_media_facets_get",
+        "parameters": [
+          {
+            "name": "genre",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [],
+              "title": "Genre"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 12,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaFacetsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2206,6 +2265,30 @@
         ],
         "title": "MediaDetailOut"
       },
+      "MediaFacetsOut": {
+        "properties": {
+          "decades": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Decades"
+          },
+          "creators": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Creators"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decades",
+          "creators"
+        ],
+        "title": "MediaFacetsOut"
+      },
       "MediaIn": {
         "properties": {
           "type": {
@@ -2627,6 +2710,25 @@
             "title": "Genres",
             "default": []
           },
+          "decades": {
+            "items": {
+              "type": "integer",
+              "maximum": 2100.0,
+              "minimum": 1880.0
+            },
+            "type": "array",
+            "title": "Decades",
+            "default": []
+          },
+          "creators": {
+            "items": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "type": "array",
+            "title": "Creators",
+            "default": []
+          },
           "liked_media_ids": {
             "items": {
               "type": "integer"
@@ -2648,6 +2750,20 @@
             "type": "array",
             "title": "Genres"
           },
+          "decades": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Decades"
+          },
+          "creators": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Creators"
+          },
           "onboarded": {
             "type": "boolean",
             "title": "Onboarded"
@@ -2656,6 +2772,8 @@
         "type": "object",
         "required": [
           "genres",
+          "decades",
+          "creators",
           "onboarded"
         ],
         "title": "PreferencesOut"

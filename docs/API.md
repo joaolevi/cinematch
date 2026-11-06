@@ -23,9 +23,10 @@ Contas de demonstração: `admin@tastory.dev / admin123`, `demo@tastory.dev / de
 |---|---|---|
 | `GET /me` | Usuário logado | — |
 | `GET /me/preferences` | Gêneros escolhidos | — |
-| `PUT /me/preferences` | Onboarding | `{genres: string[], liked_media_ids: number[]}` |
+| `PUT /me/preferences` | Onboarding | `{genres: string[], decades: number[], creators: string[], liked_media_ids: number[]}` |
 | `GET /media` | Busca/listagem | `q`, `type` (`movie`\|`series`), `genre`, `sort` (`popularity`\|`title`\|`year`), `limit`, `offset` → `{items, total}` |
 | `GET /media/genres` | Lista de gêneros (para filtros/onboarding) | — |
+| `GET /media/facets` | Décadas e criadores do catálogo, para o onboarding | `genre` (pode repetir), `limit` |
 | `GET /media/trending` | Em alta (sem login) | `type`, `limit` |
 | `GET /media/{id}` | Detalhe + média de notas + resenhas + `my_status` | — |
 | `GET /diary` | Diário do usuário (mais recente primeiro) | — |

@@ -10,7 +10,7 @@ As situações abaixo já consideram as correções da branch `fix/regras-do-mvp
 |---|---|---|---|
 | RF01 | Cadastrar conta com nome, e-mail e senha | Atende | Deve |
 | RF02 | Entrar com e-mail e senha e receber um token válido por 24 h | Atende | Deve |
-| RF03 | Escolher gêneros e títulos favoritos em um onboarding opcional | Atende | Deve |
+| RF03 | Escolher gêneros, épocas, diretores e títulos favoritos em um onboarding opcional de três passos | Atende | Deve |
 
 ## Uso geral
 

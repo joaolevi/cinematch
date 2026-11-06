@@ -1,6 +1,6 @@
 # Escopo do MVP
 
-> **Versão 8, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
+> **Versão 9, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
@@ -136,6 +136,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | D9 | O nome do produto é Tastory, inclusive no código | Sophia (GP) | 06/11 |
 | D11 | O sistema roda em Docker, com API, interface e PostgreSQL (RNF19) | Sophia (GP) | 06/11 |
 | D12 | O sistema será publicado no servidor do Vinicius, sem custo | Sophia (GP) | 06/11 |
+| D13 | O onboarding pergunta gêneros, épocas, diretores e títulos, em três passos. Palavras-chave ficam de fora, porque são termos crus e muitos em inglês | Sophia (GP) | 06/11 |
 | D10 | As tarefas entram na branch `homol`, o QA testa ali, e a `main` só recebe a versão aprovada ([CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões)) | Sophia (GP) | 06/11 |
 
 ## Controle de mudanças
@@ -148,6 +149,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | 05/11 | O deploy, excluído no PLANO, volta como meta do MVP | Está previsto no pitch e tem responsável | Sophia (GP) |
 | 05/11 | A taxa de aceitação fica sem meta numérica | Ainda não há dados reais para definir um valor | Sophia (GP) |
 | 06/11 | A publicação será no servidor do Vinicius, e não em hospedagem gratuita | Evita custo e as limitações de planos gratuitos | Sophia (GP) |
+| 06/11 | O onboarding passa a coletar épocas e diretores, em três passos | Aproveitar melhor o que o recomendador já usa | Sophia (GP) |
 | 06/11 | A homologação passa de opcional a obrigatória | Consta no Estágio 3 do pitch, e o deploy a torna viável | Sophia (GP) |
 | 06/11 | A gerência passa a constar com Sophia; o PLANO cita João Levi | Cargos definidos pela equipe | Equipe |
 | 06/11 | Entram no MVP três ajustes para o sistema publicado (RNF16 a RNF18) | Revisão com foco no sistema final | Sophia (GP) |
