@@ -2243,7 +2243,8 @@
           "poster_url": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 500
               },
               {
                 "type": "null"
@@ -2466,7 +2467,8 @@
           "poster_url": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 500
               },
               {
                 "type": "null"
@@ -2618,7 +2620,8 @@
         "properties": {
           "genres": {
             "items": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 60
             },
             "type": "array",
             "title": "Genres",
@@ -2699,7 +2702,6 @@
           },
           "password": {
             "type": "string",
-            "maxLength": 128,
             "minLength": 6,
             "title": "Password"
           }

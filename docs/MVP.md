@@ -1,14 +1,14 @@
 # Escopo do MVP
 
-> **Versão 5, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
+> **Versão 6, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, com deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
-A API cobre os 13 casos de uso do pitch para filmes e séries, e os 39 testes offline passam. Para chegar
-ao MVP faltam quatro correções na API, a retirada das credenciais públicas, três ajustes para o sistema
-publicado, o catálogo ampliado, o deploy, a confirmação da interface que será entregue, a homologação e a
-preparação da demonstração.
+A API cobre os 13 casos de uso do pitch para filmes e séries. Os 52 testes offline e os 13 com o TMDB real
+passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
+credenciais estão prontas, mas aguardam merge. Falta criar a branch `homol`, publicar o sistema, confirmar a
+interface que será entregue, fazer a homologação e preparar a demonstração.
 
 ## Objetivo
 
@@ -167,4 +167,5 @@ Nesta ordem:
 | O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir em 09/11 e, se preciso, apresentar localmente | Vinicius |
 | Serviço gratuito dormindo | O primeiro acesso pode demorar cerca de um minuto | Acessar a URL antes da apresentação | Vinicius |
 | Homologação com poucas pessoas | Com 5 a 10 colegas, a taxa não permite conclusão | Tratar o resultado como ilustrativo. Sem deploy, fazer a sessão em uma só máquina, porque as métricas ficam em um único banco | Antonio |
-| Sem chave do TMDB ou sem internet na demo | Títulos sem pôster real e catálogo pequeno na homologação | Conseguir a chave até 07/11; se não der, usar o catálogo mock e testar esse cenário antes | Antonio |
+| Sem internet na demo | Títulos sem pôster real | Usar o catálogo mock, que funciona offline, e testar esse cenário antes | Antonio |
+| Título procurado fora do catálogo | Mesmo com 504 títulos, "O Agente Secreto" não aparece na busca | Importar pelo painel de admin os títulos pedidos antes da sessão | Antonio |

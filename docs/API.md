@@ -10,7 +10,7 @@
 
 ## Autenticação
 
-1. `POST /auth/register` `{name, email, password}` ou `POST /auth/login` `{email, password}`
+1. `POST /auth/register` `{name, email, password}` (senha de 6 caracteres a 72 bytes) ou `POST /auth/login` `{email, password}`
 2. Resposta: `{access_token, token_type: "bearer", user: {id, name, email, role, ab_group, onboarded}}`
 3. Envie em todas as rotas protegidas: `Authorization: Bearer <access_token>` (validade de 24 h)
 4. `role == "admin"` libera as rotas `/admin/*`. Se `onboarded == false`, mostre o onboarding.

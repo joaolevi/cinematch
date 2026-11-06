@@ -2,22 +2,22 @@
 
 > [Voltar ao índice](README.md) · A forma de verificar cada requisito está no fim deste arquivo.
 
-A coluna Situação mostra o que foi verificado em 05/11/2026. **Proposto** indica um requisito que ainda
+A coluna Situação mostra o que foi verificado em 05 e 06/11/2026. **Proposto** indica um requisito que ainda
 precisa da confirmação da equipe.
 
 ## Gerais
 
 | ID | Requisito | Origem | Situação |
 |---|---|---|---|
-| RNF01 | Depois de clonar, subir a API com um único comando (`./dev.sh`), sem chave de API; depois da primeira instalação, funcionar sem internet | PLANO §11 | API sobe e responde em `/health`; seed completo em 5,7 s. `dev.sh` e `demo.sh` ainda não testados. É o plano B do deploy |
+| RNF01 | Depois de clonar, subir a API com um único comando (`./dev.sh`), sem chave de API; depois da primeira instalação, funcionar sem internet | PLANO §11 | Atende: `dev.sh` e `demo.sh` testados, com o fluxo completo no navegador. É o plano B do deploy |
 | RNF02 | A chave do TMDB fica só no `.env`, fora do git | CLAUDE.md | Atende: `.env` está no `.gitignore` |
 | RNF03 | Senhas guardadas com bcrypt; rotas protegidas exigem JWT | PLANO §3 | Atende |
 | RNF04 | Textos e documentação em português | CLAUDE.md | Sem auditoria completa |
 | RNF05 | `docs/openapi.json` reflete as rotas reais | CONTRIBUTING | Atende: as 33 rotas coincidem com a aplicação |
-| RNF06 | Testes offline verdes, e toda rota tem teste | CLAUDE.md | 39 testes passam; sem teste: `GET /media/trending`, `GET /media/genres`, `GET /me/preferences` e `GET /health`. CI não consultado |
+| RNF06 | Testes offline verdes, e toda rota tem teste | CLAUDE.md | 52 testes offline e 13 de integração passam; sem teste: `GET /media/trending`, `GET /media/genres`, `GET /me/preferences` e `GET /health`. CI não consultado |
 | RNF07 | Compatível com Python 3.11+ | README | Rodou em 3.13.5; o CI usa 3.12 |
 | RNF08 | A interface exibe o crédito do TMDB | `docs/API.md` | Atende no `demo-front`; confirmar no front oficial |
-| RNF09 | O feed responde em até 1 s na máquina da demo | **Proposto** | Medido localmente: até 67 ms com 153 títulos |
+| RNF09 | O feed responde em até 1 s na máquina da demo | **Proposto** | Medido localmente: 27 ms com 504 títulos, no Docker |
 | RNF10 | Coletar só nome, e-mail e histórico; na homologação, aceitar e-mail fictício e avisar que os dados ficam em um servidor externo | **Proposto** | A confirmar pela equipe |
 
 ## Deploy
@@ -25,12 +25,12 @@ precisa da confirmação da equipe.
 | ID | Requisito | Origem | Situação |
 |---|---|---|---|
 | RNF11 | API e interface publicadas em URL pública com HTTPS | Decisão de 05/11; [#21](https://github.com/joaolevi/cinematch/issues/21) | Não iniciado: o repositório não tem arquivo de deploy |
-| RNF12 | Em produção não há credencial publicada: segredo JWT próprio e senhas fora do repositório | Deploy | **Não atende:** as senhas de admin, demo e usuários sintéticos estão fixas em `seed.py`, e o segredo JWT padrão é público |
-| RNF13 | Os dados sobrevivem a reinícios, com PostgreSQL | [#21](https://github.com/joaolevi/cinematch/issues/21) | Parcial: testes offline, seed e feed passaram em PostgreSQL 14 numa cópia local; falta incluir o driver nas dependências |
+| RNF12 | Em produção não há credencial publicada: segredo JWT próprio e senhas fora do repositório | Deploy | Atende: com `TASTORY_ENV=production`, a API e o seed recusam o segredo e as senhas públicas |
+| RNF13 | Os dados sobrevivem a reinícios, com PostgreSQL | [#21](https://github.com/joaolevi/cinematch/issues/21) | Atende localmente: roda em PostgreSQL 16 no Docker, e os dados continuam depois de reiniciar |
 | RNF14 | Em produção, o painel conta só interações reais | Deploy | **Não atende por padrão:** o auto-seed grava a simulação A/B. Ver o [guia de deploy](../DEPLOY.md) |
 | RNF15 | O CORS libera apenas a origem do front publicado | Deploy | Configurável por `TASTORY_CORS_ORIGINS` |
-| RNF16 | Entrada acima do limite devolve erro de validação (422), não erro 500 | Revisão de 06/11 | **Não atende:** no PostgreSQL, gênero com 70 caracteres e pôster com 600 geram erro 500; no SQLite dos testes, o erro não aparece |
-| RNF17 | Diário e listas não fazem uma consulta ao banco por item | Revisão de 06/11 | **Não atende:** cerca de 100 consultas para 100 itens |
+| RNF16 | Entrada acima do limite devolve erro de validação (422), não erro 500 | Revisão de 06/11 | Atende: conferido no PostgreSQL |
+| RNF17 | Diário e listas não fazem uma consulta ao banco por item | Revisão de 06/11 | Atende: o número de consultas não cresce com os itens |
 | RNF19 | O sistema sobe em Docker com um comando, com API, interface e PostgreSQL | Decisão de 06/11 | Atende localmente: fluxo completo testado no navegador, e os dados continuam depois de reiniciar |
 | RNF18 | Dependências com versões fixas | Revisão de 06/11 | **Não atende:** `requirements.txt` usa `>=`, e o bcrypt 5 foi instalado sem aviso, o que expôs a RN02 |
 

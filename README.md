@@ -82,6 +82,8 @@ Se o `.env` tiver `TASTORY_TMDB_API_KEY`, o Docker usa essa chave.
 
 ### Contas de demonstração
 
+Essas senhas valem só para uso local. Em produção, elas são recusadas (veja `docs/DEPLOY.md`).
+
 | Perfil | E-mail | Senha |
 |---|---|---|
 | Administrador | `admin@tastory.dev` | `admin123` |
@@ -143,8 +145,8 @@ Diagrama de Atividades do pitch:
 
 ```bash
 cd backend
-python -m pytest -q                    # todos (52)
-python -m pytest -q -m "not integration"   # só offline (39): é o que roda no CI
+python -m pytest -q                    # todos (65)
+python -m pytest -q -m "not integration"   # só offline (52): é o que roda no CI
 python -m pytest -q -m integration     # só integração real com TMDB + banco (13, precisa da chave)
 ```
 

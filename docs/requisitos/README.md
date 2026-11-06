@@ -1,6 +1,6 @@
 # Requisitos do Tastory
 
-> **Versão 5, 06/11/2026.** Base: pitch (DCU, DA e EAP), [`PLANO.md`](../PLANO.md), issues do GitHub e o código atual.
+> **Versão 6, 06/11/2026.** Base: pitch (DCU, DA e EAP), [`PLANO.md`](../PLANO.md), issues do GitHub e o código atual.
 > Quando estes documentos divergirem do `PLANO.md`, valem estes documentos.
 
 O que será entregue em 10/11 está em [MVP.md](../MVP.md), e os responsáveis e critérios de aceite por pacote da
@@ -15,7 +15,7 @@ já construído, por isso cada um registra a situação atual.
 | Arquivo | Conteúdo |
 |---|---|
 | [funcionais.md](funcionais.md) | 19 requisitos funcionais, por pacote do DCU, com rastreabilidade |
-| [regras-de-negocio.md](regras-de-negocio.md) | 16 regras de negócio, 5 delas ainda não cumpridas, com rastreabilidade |
+| [regras-de-negocio.md](regras-de-negocio.md) | 16 regras de negócio, com rastreabilidade |
 | [nao-funcionais.md](nao-funcionais.md) | 19 requisitos não funcionais, gerais e de deploy, com a forma de verificar |
 
 ## Legendas

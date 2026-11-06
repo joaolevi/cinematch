@@ -53,10 +53,10 @@ Os cartões de 4.2 e 4.3 foram criados em 06/11, e seus critérios são proposto
 | 2.2 | RF06 a RF08, RF18 | Registros e listas podem ser criados e consultados; a nota é opcional e interações persistidas aparecem corretamente | A confirmar |
 | 2.3 | RF04, RF05, RF09, RF10, RF18 | Usuário encontra títulos, acessa sugestões mesmo em cold start e interage com o feed; sugestões descartadas não reaparecem no feed montado | A confirmar |
 | 2.4 | RF14 a RF17, RF18, RNF08 | Acesso protegido por perfil; administrador consegue executar ações de catálogo e moderação; usuário comum não acessa operações privilegiadas | A confirmar |
-| 3.1 | RNF13 | Esquema documentado e criado; integridade referencial e persistência dos principais fluxos validadas | Parcial: passou em SQLite e em PostgreSQL numa cópia local; falta o driver |
-| 3.2 | RF01 a RF10, RN01 a RN06, RN08 a RN10, RN13, RN14, RNF16, RNF17 | Endpoints testados, erros tratados, dados persistidos e rotas administrativas protegidas | Parcial: faltam RN02, RN13, RN14, RNF16 e RNF17 |
-| 3.3 | RF15a, RF15b, RN15 | Catálogo audiovisual pesquisável e sincronizável; catálogo musical validado antes da liberação de álbuns | Parcial: funciona com o mock; falta testar o TMDB real. A parte musical está fora do MVP |
+| 3.1 | RNF13 | Esquema documentado e criado; integridade referencial e persistência dos principais fluxos validadas | Passou em SQLite e PostgreSQL; aguarda merge |
+| 3.2 | RF01 a RF10, RN01 a RN06, RN08 a RN10, RN13, RN14, RNF16, RNF17 | Endpoints testados, erros tratados, dados persistidos e rotas administrativas protegidas | Corrigido; aguarda merge |
+| 3.3 | RF15a, RF15b, RN15 | Catálogo audiovisual pesquisável e sincronizável; catálogo musical validado antes da liberação de álbuns | Funciona com o mock e o TMDB real. A parte musical está fora do MVP |
 | 3.4 | RF11 a RF13, RN07 | Serviço retorna recomendações mesmo sem histórico; exclui itens descartados ou já registrados conforme regra do produto; feedback alimenta futuras sugestões | Concluído |
-| 4.1 | RNF06, RNF07, RNF09 | Principais casos de uso executados, falhas registradas e corrigidas antes da homologação | Parcial: 39 testes offline passam; faltam 4 rotas e o teste pela interface; CI não consultado |
+| 4.1 | RNF06, RNF07, RNF09 | Principais casos de uso executados, falhas registradas e corrigidas antes da homologação | Parcial: 52 testes offline e 13 de integração passam; faltam 4 rotas e o teste pelo front oficial; CI não consultado |
 | 4.2 | RF17, RN11, RN12, RNF10, RNF14 | **Proposto:** taxa entre 0% e 100% por grupo; homologação com 5 a 10 colegas registrada na issue [#14](https://github.com/joaolevi/cinematch/issues/14) | Pendente |
 | 4.3 | RNF01 a RNF04, RNF11 a RNF15, RNF18, RNF19 | **Proposto:** fluxo completo funcionando em URL com HTTPS, sem credencial pública, e documentação atualizada | Pendente |

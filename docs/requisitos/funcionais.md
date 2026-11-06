@@ -2,16 +2,16 @@
 
 > [Voltar ao índice](README.md) · A ligação com código e testes está no fim deste arquivo.
 
-Quatro requisitos estão parciais porque dependem de [regras](regras-de-negocio.md) ainda não cumpridas, e a
-interface depende da decisão [D2](../MVP.md#decisões).
+A interface é o único requisito em aberto, porque depende da decisão [D2](../MVP.md#decisões). As situações abaixo já
+consideram as correções da branch `fix/regras-do-mvp`, ainda sem merge.
 
 ## Acesso
 
 | ID | Requisito | Situação | MVP |
 |---|---|---|---|
-| RF01 | Cadastrar conta com nome, e-mail e senha | Parcial (RN02) | Deve |
+| RF01 | Cadastrar conta com nome, e-mail e senha | Atende | Deve |
 | RF02 | Entrar com e-mail e senha e receber um token válido por 24 h | Atende | Deve |
-| RF03 | Escolher gêneros e títulos favoritos em um onboarding opcional | Parcial (RN14) | Deve |
+| RF03 | Escolher gêneros e títulos favoritos em um onboarding opcional | Atende | Deve |
 
 ## Uso geral
 
@@ -39,9 +39,9 @@ interface depende da decisão [D2](../MVP.md#decisões).
 |---|---|---|---|
 | RF14 | Admin cria, edita e remove títulos | Atende | Deve |
 | RF15a | Admin sincroniza o catálogo mockado, sem internet | Atende | Deve |
-| RF15b | Admin sincroniza, busca e importa títulos do TMDB real | Atende com TMDB simulado; os prints do projeto mostram uso real, mas os testes de integração não rodaram nesta revisão (sem chave) | Deve |
-| RF16 | Admin lista, oculta e restaura resenhas | Parcial (RN13) | Deve |
-| RF17 | Admin vê a taxa de aceitação geral e por grupo A/B | Parcial (RN12) | Deve |
+| RF15b | Admin sincroniza, busca e importa títulos do TMDB real | Atende: os 13 testes com o TMDB real passaram em 06/11 | Deve |
+| RF16 | Admin lista, oculta e restaura resenhas | Atende | Deve |
+| RF17 | Admin vê a taxa de aceitação geral e por grupo A/B | Atende | Deve |
 
 ## Interface
 
