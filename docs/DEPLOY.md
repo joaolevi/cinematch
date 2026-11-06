@@ -97,6 +97,7 @@ qualquer máquina com a chave do TMDB. O arquivo tem e-mails e senhas criptograf
 git clone https://github.com/joaolevi/cinematch.git && cd cinematch
 git checkout homol
 docker compose build
+docker compose pull db
 ```
 
 **3. Restaure o banco antes de subir a API.** Se a API subir antes, ela cria dados de exemplo no banco vazio:

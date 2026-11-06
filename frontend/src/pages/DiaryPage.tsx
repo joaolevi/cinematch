@@ -26,7 +26,7 @@ function Ranking({ title, entries, color }: { title: string; entries: DiaryEntry
                 {position + 1}
               </span>
             </Link>
-            <div className="mt-1.5">
+            <div className="mt-1.5 flex justify-center">
               <StarsDisplay value={e.rating} size={13} />
             </div>
           </li>

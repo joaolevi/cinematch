@@ -7,7 +7,7 @@ import type { Media, MediaSort, MediaType } from "../types";
 const PAGE = 24;
 
 const SORTS: { value: MediaSort; label: string }[] = [
-  { value: "popularity", label: "Mais populares" },
+  { value: "popularity", label: "Mais relevantes" },
   { value: "title", label: "Ordem alfabética" },
   { value: "year", label: "Mais recentes" },
 ];

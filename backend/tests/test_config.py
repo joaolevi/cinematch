@@ -32,6 +32,12 @@ def test_production_rejects_public_values():
     ]
 
 
+def test_production_rejects_public_password_in_any_account():
+    swapped = {**PUBLIC, "admin_password": "demo123", "demo_password": "senha123", "synthetic_password": "admin123"}
+    problems = Settings(environment="production", **swapped).production_problems()
+    assert {"TASTORY_ADMIN_PASSWORD", "TASTORY_DEMO_PASSWORD", "TASTORY_SYNTHETIC_PASSWORD"} <= set(problems)
+
+
 def test_production_accepts_own_values():
     own = Settings(
         environment="production",
