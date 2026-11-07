@@ -1,6 +1,6 @@
 // Tipos escritos a partir de docs/API.md.
 // Para tipos 100% fiéis ao contrato, rode `npm run gen:types` (openapi-typescript).
-// Campos cujo formato exato o guia não detalha estão marcados como opcionais.
+// Formatos de MediaDetail, MyStatus, DiaryEntry e MediaList conferidos com docs/openapi.json.
 
 export type MediaType = "movie" | "series";
 
@@ -47,14 +47,20 @@ export interface Review {
   consumed_at?: string | null;
 }
 
-// Status do título para o usuário logado (ex.: "seen", "want"). Formato exato definido pela API.
-export type MyStatus = string | null | { [key: string]: unknown };
+// Status do título para o usuário logado (schema MyStatus do openapi.json).
+export interface MyStatus {
+  diary_entry_id?: number | null;
+  rating?: number | null;
+  in_watchlist?: boolean;
+  dismissed?: boolean;
+  list_ids?: number[];
+}
 
 export interface MediaDetail extends Media {
-  average_rating?: number | null;
+  avg_rating?: number | null; // no contrato é "avg_rating", não "average_rating"
   ratings_count?: number;
   reviews?: Review[];
-  my_status?: MyStatus;
+  my_status?: MyStatus | null;
 }
 
 export interface DiaryEntry {
@@ -73,11 +79,17 @@ export interface DiaryInput {
   consumed_at?: string | null;
 }
 
+// Cada item de lista vem embrulhado: { media, added_at } (schema ListItemOut).
+export interface ListItem {
+  media: Media;
+  added_at?: string;
+}
+
 export interface MediaList {
   id: number;
   name: string;
   is_watchlist?: boolean;
-  items?: Media[];
+  items?: ListItem[];
 }
 
 export interface Preferences {

@@ -24,17 +24,25 @@ export default function Search() {
     api.genres().then(setGenres).catch(() => {});
   }, []);
 
+  // mantém o campo de texto em sincronia com a URL (ex.: botão voltar)
+  useEffect(() => setText(q), [q]);
+
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     setError(null);
     api
       .media({ q, type, genre, sort, limit: PAGE, offset: 0 })
       .then((r) => {
+        if (cancelled) return;
         setItems(r.items);
         setTotal(r.total);
       })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+      .catch((e) => !cancelled && setError(e.message))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
   }, [q, type, genre, sort]);
 
   function setParam(k: string, v: string) {
@@ -56,54 +64,62 @@ export default function Search() {
 
   return (
     <>
-      <h1>Buscar</h1>
+      <h1 className="text-3xl font-bold">Buscar</h1>
+
       <form
-        className="filters"
+        className="mt-6 flex flex-wrap gap-2"
         onSubmit={(e) => {
           e.preventDefault();
           setParam("q", text.trim());
         }}
       >
         <input
-          className="input grow"
+          className="input min-w-56 flex-1"
           placeholder="Título, diretor, tag…"
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
-        <select className="input" value={type} onChange={(e) => setParam("type", e.target.value)}>
-          <option value="">Todos</option>
+        <select className="input w-auto" value={type} onChange={(e) => setParam("type", e.target.value)}>
+          <option value="">Filmes e séries</option>
           <option value="movie">Filmes</option>
           <option value="series">Séries</option>
         </select>
-        <select className="input" value={genre} onChange={(e) => setParam("genre", e.target.value)}>
+        <select className="input w-auto" value={genre} onChange={(e) => setParam("genre", e.target.value)}>
           <option value="">Todos os gêneros</option>
           {genres.map((g) => (
             <option key={g}>{g}</option>
           ))}
         </select>
-        <select className="input" value={sort} onChange={(e) => setParam("sort", e.target.value)}>
+        <select className="input w-auto" value={sort} onChange={(e) => setParam("sort", e.target.value)}>
           <option value="popularity">Popularidade</option>
           <option value="title">Título</option>
           <option value="year">Ano</option>
         </select>
-        <button className="btn">Buscar</button>
+        <button className="btn-primary">Buscar</button>
       </form>
 
-      {error && <p className="error">{error}</p>}
+      {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+
       {loading ? (
-        <p className="muted">Carregando…</p>
+        <p className="mt-8 text-muted">Carregando…</p>
       ) : (
         <>
-          <p className="muted small">{total} resultado(s)</p>
-          <div className="grid">
-            {items.map((m) => (
-              <MediaCard key={m.id} media={m} />
-            ))}
-          </div>
+          <p className="mt-6 text-sm text-muted">{total} resultado(s)</p>
+          {items.length === 0 ? (
+            <p className="mt-4 text-muted">Nenhum título encontrado com esses filtros.</p>
+          ) : (
+            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+              {items.map((m) => (
+                <MediaCard key={m.id} media={m} />
+              ))}
+            </div>
+          )}
           {items.length < total && (
-            <button className="btn ghost" onClick={more}>
-              Carregar mais
-            </button>
+            <div className="mt-8 flex justify-center">
+              <button className="btn-ghost" onClick={more}>
+                Carregar mais
+              </button>
+            </div>
           )}
         </>
       )}
