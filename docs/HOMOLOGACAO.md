@@ -10,7 +10,7 @@ prazo. Como a equipe conhece o sistema, o resultado é ilustrativo (decisão D15
 
 ## Antes do teste
 
-- [ ] Concluir o cartão "[QA] Testar a homol em 5 roteiros".
+- [x] Concluir o cartão "[QA] Testar a homol em 5 roteiros".
 - [ ] Confirmar na URL pública que o sistema abre e que o Painel está zerado.
 - [ ] Apagar as contas de teste em **Administração → Usuários → Apagar conta** (ou como no [DEPLOY](DEPLOY.md#apagar-uma-conta)), para elas não entrarem na medição.
 - [ ] Fazer o [backup](DEPLOY.md#5-fazer-backup) e criar a tag `homologacao-09-11`, como no [CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões).
