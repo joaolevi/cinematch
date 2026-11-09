@@ -3,6 +3,9 @@ import { api } from "./api";
 import type { Recommendation } from "./types";
 
 const VISIBLE_SHARE = 0.5;
+// Padrão de mercado para "anúncio visto" (IAB): metade do card na tela por 1 segundo seguido.
+// Quem rola o feed rápido não conta como tendo visto os cards que passaram.
+const VISIBLE_FOR_MS = 1000;
 const SEND_AFTER_MS = 1000;
 
 /** Junta os títulos que apareceram na tela e avisa a API: é isso que conta como exibido. */
@@ -37,7 +40,7 @@ export function useImpressions() {
   return { mark, send };
 }
 
-/** Avisa quando pelo menos metade do card aparece na tela. */
+/** Avisa quando pelo menos metade do card fica na tela por 1 segundo seguido. */
 export function OnScreen({
   rec,
   onSeen,
@@ -51,16 +54,26 @@ export function OnScreen({
 
   useEffect(() => {
     if (!card.current) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return;
-        onSeen(rec);
-        observer.disconnect();
+        if (entry.isIntersecting) {
+          timer ??= setTimeout(() => {
+            onSeen(rec);
+            observer.disconnect();
+          }, VISIBLE_FOR_MS);
+        } else if (timer) {
+          clearTimeout(timer); // saiu da tela antes de 1 s: começa de novo quando voltar
+          timer = null;
+        }
       },
       { threshold: VISIBLE_SHARE },
     );
     observer.observe(card.current);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (timer) clearTimeout(timer);
+    };
   }, [rec, onSeen]);
 
   return (

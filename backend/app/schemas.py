@@ -356,6 +356,7 @@ class MetricsOut(BaseModel):
     diary_entries: int
     real_users: int
     simulated_shown: int
+    trending_shown: int  # exibições "Em alta", fora da comparação A/B
     movies: int
     series: int
     external_neighbors_enabled: bool

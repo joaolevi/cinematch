@@ -151,7 +151,11 @@ function MetricsTab() {
         <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Em resumo:</p>
         <p className="font-display text-2xl leading-tight font-bold">{inWords(m.overall.acceptance_rate)}</p>
         <ul className="mt-2 font-hand text-xl leading-8 font-semibold opacity-85">
-          <li>→ {comparison}</li>
+          <li>
+            → {comparison}
+            {m.trending_shown > 0 &&
+              ` A comparação deixa de fora ${plural(m.trending_shown, "sugestão Em alta", "sugestões Em alta")}, que são iguais nos dois grupos.`}
+          </li>
           <li>
             → {warning.title}: {warning.text}
           </li>
@@ -159,9 +163,9 @@ function MetricsTab() {
       </section>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <VariantCard m={m.overall} label="Todo mundo" note="as duas versões juntas" />
-        <VariantCard m={a} label="Grupo A (híbrido)" note="gosto da pessoa + gosto parecido" />
-        <VariantCard m={b} label="Grupo B (só conteúdo)" note="só o gosto da pessoa" />
+        <VariantCard m={m.overall} label="Todo mundo" note="todas as sugestões, inclusive as Em alta" />
+        <VariantCard m={a} label="Grupo A (híbrido)" note="só as personalizadas: gosto da pessoa + gosto parecido" />
+        <VariantCard m={b} label="Grupo B (só conteúdo)" note="só as personalizadas: gosto da pessoa" />
       </div>
       <div className="mt-4 flex flex-wrap gap-6 text-sm text-muted">
         <span>Pessoas reais: {m.real_users}</span>
@@ -178,7 +182,7 @@ function MetricsTab() {
           <ul className="mt-1 space-y-2 text-sm leading-6">
             <li>
               <b>Taxa de aceitação:</b> das sugestões que apareceram na tela, quantas a pessoa marcou como Quero ver ou
-              Já vi. Uma sugestão só conta quando pelo menos metade do card aparece.
+              Já vi. Uma sugestão só conta quando pelo menos metade do card fica na tela por 1 segundo.
             </li>
             <li>
               <b>Grupo A:</b> recebe o recomendador híbrido, que junta as características dos títulos com o que
@@ -186,6 +190,10 @@ function MetricsTab() {
             </li>
             <li>
               <b>Grupo B:</b> recebe só as características dos títulos. Serve de comparação.
+            </li>
+            <li>
+              Os grupos são comparados só pelas sugestões personalizadas. As "Em alta", de quem ainda não tem
+              histórico, são iguais nos dois grupos e entram só na taxa de todo mundo.
             </li>
             <li>Cada pessoa entra em um grupo ao se cadastrar, e só este painel mostra o grupo.</li>
             <li>O que alguém registra pelo + Registrar não entra na taxa: não veio de uma sugestão.</li>

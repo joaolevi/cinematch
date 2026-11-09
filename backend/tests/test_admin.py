@@ -214,3 +214,26 @@ def test_admin_user_acceptance_counts_only_suggestions_that_appeared(client, adm
     person = next(u for u in client.get("/admin/users", headers=admin_headers).json()["items"] if u["id"] == me["id"])
     assert person["shown"] == len(items)
     assert person["accepted"] == 1
+
+
+def test_ab_comparison_counts_only_personalized_suggestions(client, db, admin_headers, user_headers):
+    """As sugestões "Em alta" são iguais nos dois grupos: entram na taxa geral, mas não na comparação A/B."""
+    trending = see_feed(client, user_headers)  # conta nova, sem histórico: tudo é "Em alta"
+    assert {i["strategy"] for i in trending} == {"trending"}
+    client.post(f"/recommendations/{trending[0]['media']['id']}/feedback", json={"action": "want"}, headers=user_headers)
+
+    m = client.get("/admin/metrics", headers=admin_headers).json()
+    assert m["overall"]["shown"] == len(trending) and m["overall"]["want"] == 1
+    assert m["trending_shown"] == len(trending)
+    assert sum(v["shown"] for v in m["by_variant"]) == 0
+
+    mid = media_id_by_title(client, user_headers, "Matrix")
+    client.post("/diary", json={"media_id": mid, "rating": 5}, headers=user_headers)
+    personalized = [i for i in see_feed(client, user_headers) if i["strategy"] != "trending"]
+    assert personalized
+    m = client.get("/admin/metrics", headers=admin_headers).json()
+    me = client.get("/me", headers=user_headers).json()
+    group = next(v for v in m["by_variant"] if v["variant"] == me["ab_group"])
+    # Cada título conta pela primeira exibição: o que já tinha aparecido como "Em alta" continua de fora
+    first_time = {i["media"]["id"] for i in personalized} - {i["media"]["id"] for i in trending}
+    assert group["shown"] == len(first_time) > 0
