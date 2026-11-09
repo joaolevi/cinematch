@@ -122,7 +122,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db 
 ## Plano B
 
 Se a URL pública falhar, o sistema roda em uma máquina local, com o mesmo banco. Prepare tudo em 08/11, enquanto há internet. A
-escolha entre deploy e execução local sai no domingo (08/11), às 20h (D17).
+escolha entre deploy e execução local sai na manhã de segunda (09/11), com o Vinicius (D17).
 
 **1. Gere uma cópia do banco.** No servidor, use o comando de backup da seção 5. Sem servidor, faça a carga das seções 2 e 3 em
 qualquer máquina com a chave do TMDB. O arquivo tem e-mails e senhas criptografadas, então não o envie para o git nem para grupos.

@@ -100,13 +100,13 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 - **Antonio:** testar `dev.sh` e `demo.sh`.
 - **Bárbara:** preparar a explicação do resultado do A/B; validar as recomendações com o MovieLens.
 - **Lara:** fazer os ajustes finais no front.
-- **Sophia:** decidir entre deploy e execução local, às 20h, e, se for usar o plano B, restaurar no notebook a cópia do banco.
+- **Sophia:** subir a identidade visual, a página Início e a aba Usuários para a `homol` (PR #29). A decisão sobre o deploy passou para a manhã de segunda, com o Vinicius.
 
 ### Seg 09/11
 
 Nesta ordem:
 
-1. **Lara e Sophia:** congelar o front pela manhã, antes do teste interno (D17). **Vinicius:** publicar essa versão.
+1. **Vinicius:** decidir entre deploy e execução local logo cedo (D17). **Lara e Sophia:** congelar o front pela manhã, antes do teste interno. **Vinicius:** publicar essa versão ou, no plano B, a Sophia sobe o sistema no notebook.
 2. **Vinicius e Antonio:** testar o fluxo completo na URL pública.
 3. **Antonio:** conduzir o teste interno com a equipe, que cada pessoa faz até 12h ([#14](https://github.com/joaolevi/cinematch/issues/14)).
 4. **Bárbara:** analisar a taxa de aceitação do teste interno.
@@ -143,7 +143,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | D13 | O onboarding pergunta gêneros, épocas, diretores e títulos, em três passos. Palavras-chave ficam de fora, porque são termos crus e muitos em inglês | Sophia (GP) | 06/11 |
 | D10 | As tarefas entram na branch `homol`, o QA testa ali, e a `main` só recebe a versão aprovada ([CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões)) | Sophia (GP) | 06/11 |
 | D16 | O feed só sugere títulos do TMDB com sinopse, pôster e nome legível, e a popularidade pesa 1 na escolha das séries, sem mudar os filmes nem os lugares das séries | Sophia (GP) | 06/11 |
-| D17 | A escolha entre deploy e execução local sai no domingo (08/11), às 20h. O front é congelado na manhã de segunda (09/11), antes do teste interno, e depois disso só entram correções de erro | Sophia (GP) | 06/11, alterada em 08/11 |
+| D17 | A escolha entre deploy e execução local sai na manhã de segunda (09/11), com o Vinicius. O front é congelado na manhã de segunda (09/11), antes do teste interno, e depois disso só entram correções de erro | Sophia (GP) | 06/11, alterada duas vezes em 08/11 |
 | D18 | No servidor, o Vinicius usa uma chave própria do TMDB, e a senha de admin fica só com Sophia e Antonio, em mensagem privada | Sophia (GP) | 06/11 |
 | D19 | Cada pessoa faz o teste interno por conta própria, até 12h de 09/11. O plano B roda no notebook da Sophia | Sophia (GP) | 06/11 |
 | D21 | No MVP, a Comunidade mostra os registros de todo mundo para quem tem conta. Seguir pessoas e escolher a privacidade ficam para depois da entrega | Sophia (GP) | 06/11 |
@@ -184,6 +184,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | 08/11 | Entram a página Início (RF24), que vira a tela de entrada, e a apresentação para quem não entrou (RF25). O feed passa para `/para-voce` | Faltava uma página que reunisse tudo, como nas plataformas parecidas, e um lugar para explicar o sistema antes do cadastro | Sophia (GP) |
 | 08/11 | Entra a aba Usuários na administração (RF26), com duas rotas novas na API e 6 testes. O painel passa a explicar os números em frases | Pensar a administração como a de um sistema de verdade. Apagar contas de teste deixa de exigir SQL no servidor | Sophia (GP) |
 | 08/11 | A moldura de papel fecha a identidade: cabeçalho de folha pautada com abas de fichário coloridas, menu da pessoa no avatar, login e janelas em papel, recados à mão nas telas vazias. Polaroide fica só para o que a pessoa viu; o Quero ver vira pôster preso com fita | Revisão visual da GP: mais personalidade e uma regra clara para cada elemento | Sophia (GP) |
+| 08/11 | A decisão sobre o deploy passa de 08/11, às 20h, para a manhã de 09/11, com o Vinicius (D17) | O servidor ainda não foi preparado; o Vinicius avalia amanhã cedo | Sophia (GP) |
 
 ## Riscos
 
@@ -196,7 +197,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | Registros visíveis na Comunidade | Quem tem conta vê o que as outras pessoas marcaram como Já vi, sem poder esconder | Avisar no cadastro e na página (RNF20) e aceitar e-mail fictício. A escolha de privacidade fica para depois (RFF11) | Sophia |
 | Resenhas de contas simuladas na publicação | Pessoas que não existem apareceriam no detalhe dos títulos e nas médias | Fazer a carga com `--no-synthetic`, como no [guia](DEPLOY.md#2-fazer-a-carga-inicial) | Vinicius |
 | Mudança no banco depois da publicação | O projeto não tem migrations: uma coluna nova derruba a busca e o feed até alguém ajustar o banco | Não mudar os modelos até a entrega. Se for inevitável, seguir o [guia](DEPLOY.md#atualizar-o-sistema-publicado) | Sophia |
-| O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir no domingo (08/11), às 20h, e, se preciso, apresentar localmente | Vinicius |
+| O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir na manhã de segunda (09/11) e, se preciso, apresentar localmente | Vinicius |
 | Servidor fora do ar | Queda de energia ou de internet na casa do Vinicius derruba o sistema | Conferir a URL antes da apresentação e manter a execução local como plano B | Vinicius |
 | Exposição da rede doméstica | Um site público pode abrir um caminho para a rede da casa | Usar túnel com HTTPS e não abrir portas no roteador | Vinicius |
 | Teste interno só com quem conhece o sistema | Problemas de uso podem passar despercebidos, e a taxa não permite conclusão | Chamar de teste interno na apresentação e tratar o resultado como ilustrativo. Sem deploy, fazer o teste em uma só máquina, porque as métricas ficam em um único banco | Antonio |
