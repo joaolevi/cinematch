@@ -58,7 +58,8 @@ tailscale funnel --bg --https=8443 localhost:8000   # API
 tailscale funnel status
 ```
 
-Depois, preencha `TASTORY_PUBLIC_URL` e `TASTORY_API_URL` com os endereços gerados e rode o `up --build -d` de novo. O
+Depois, preencha `TASTORY_PUBLIC_URL` e `TASTORY_API_URL` com os endereços gerados e rode o `up --build -d` de novo.
+O `TASTORY_PUBLIC_URL` também entra na prévia do link, a imagem que aparece ao mandar o endereço no WhatsApp. O
 Funnel tem limite de banda, e a Tailscale recomenda não expor dados sensíveis, por isso aceite e-mail fictício no
 teste interno (RNF10).
 
@@ -110,7 +111,9 @@ banco, porque ele apaga as contas e o histórico.
 
 ## Apagar uma conta
 
-Use para as contas de teste antes do teste interno e para quem pedir a exclusão. O diário, as listas e os eventos da pessoa saem junto:
+Use para as contas de teste antes do teste interno e para quem pedir a exclusão. O diário, as listas e os eventos da pessoa saem junto.
+
+O jeito mais simples é pela interface: entre como admin e use **Administração → Usuários → Apagar conta**. Contas de administração não saem por ali. Pelo servidor:
 
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db psql -U tastory tastory -c "delete from users where email = 'pessoa@teste.com'"

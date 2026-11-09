@@ -51,6 +51,8 @@ Contas de demonstração: `admin@tastory.dev / admin123`, `demo@tastory.dev / de
 | `POST /admin/tmdb/enrich` | Completar títulos sem pôster com dados do TMDB | → `{checked, enriched, not_found, merged}` |
 | `GET /admin/reviews` · `PATCH /admin/reviews/{id}` | Moderação | `hidden`; corpo `{hidden: bool}` |
 | `GET /admin/metrics` | Taxa de aceitação A/B | — |
+| `GET /admin/users` | Pessoas cadastradas, das mais recentes às mais antigas, com o que cada uma fez | `q` (nome ou e-mail), `kind` (`real` padrão \| `simulated` \| `all`), `limit`, `offset` → `{items: [{id, name, email, role, ab_group, is_synthetic, onboarded, created_at, diary_entries, reviews, shown, accepted, last_active}], total}` |
+| `DELETE /admin/users/{id}` | Apaga a conta e tudo o que é dela (diário, listas, preferências e eventos) | 204; 400 para contas de administração; 404 se não existir |
 
 ## Objeto `Media`
 

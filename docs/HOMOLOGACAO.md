@@ -12,7 +12,7 @@ prazo. Como a equipe conhece o sistema, o resultado é ilustrativo (decisão D15
 
 - [ ] Concluir o cartão "[QA] Testar a homol em 5 roteiros".
 - [ ] Confirmar na URL pública que o sistema abre e que o Painel está zerado.
-- [ ] Pedir ao Vinicius para [apagar as contas de teste](DEPLOY.md#apagar-uma-conta), para elas não entrarem na medição.
+- [ ] Apagar as contas de teste em **Administração → Usuários → Apagar conta** (ou como no [DEPLOY](DEPLOY.md#apagar-uma-conta)), para elas não entrarem na medição.
 - [ ] Fazer o [backup](DEPLOY.md#5-fazer-backup) e criar a tag `homologacao-09-11`, como no [CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões).
 
 Se o sistema não estiver publicado, faça o teste em uma só máquina, com o [plano B](DEPLOY.md#plano-b), porque as métricas ficam
@@ -25,11 +25,12 @@ Use uma conta nova e comum. As contas de admin não entram na medição.
 Os dados ficam no servidor do Vinicius (RNF10), então você pode usar um e-mail fictício. Use uma senha que você não usa em
 nenhum outro lugar. O que você marcar como Já vi fica visível para quem tem conta, na página Comunidade.
 
-1. Crie a conta e responda às perguntas iniciais.
-2. Reaja a pelo menos 10 sugestões do feed, do jeito que faria de verdade: **Quero ver**, **Já vi** ou **Não me interesso**.
-3. Em um título que você já viu, dê uma nota e escreva uma resenha curta.
+1. Abra o endereço, leia a apresentação, clique em **Começar o meu diário**, crie a conta e responda às perguntas iniciais.
+2. Em **Para você**, reaja a pelo menos 10 sugestões, do jeito que faria de verdade: **Quero ver**, **Já vi** ou o **✕** no canto
+   do pôster, que é o **Não me interesso**.
+3. Pelo botão **+ Registrar**, no topo, registre um título que você viu recentemente, com nota e uma resenha curta.
 4. Busque um filme ou uma série de que você gosta e abra os detalhes.
-5. Volte ao feed e veja se as sugestões mudaram.
+5. Volte ao **Para você** e veja se as sugestões mudaram. Depois, abra o **Diário** e a aba **Meu gosto**.
 6. Abra a Comunidade e veja os registros da equipe.
 7. Responda às perguntas abaixo, no grupo ou em um comentário na issue #14.
 
