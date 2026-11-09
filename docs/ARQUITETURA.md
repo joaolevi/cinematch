@@ -195,6 +195,8 @@ Estes requisitos ficam fora do MVP.
 | RFF11 | Escolher quem vê meus registros: todos, quem me segue ou ninguém | Não implementado: no MVP, todo mundo vê todo mundo |
 | RFF12 | Curtir e comentar resenhas na Comunidade, com moderação dos comentários | Não implementado: precisa de tabelas novas |
 | RFF13 | Ver o rank de reviewers, com base nas curtidas recebidas | Depende do RFF12. Hoje, a Comunidade só conta as resenhas |
+| RFF14 | Pedir a nota na hora certa: lembrete no Início para títulos vistos sem nota, estrelas clicáveis na polaroide do diário e "Já viu?" para o Quero ver depois de alguns dias | Não implementado. A nota continua opcional: obrigatória, viraria clique aleatório e enganaria o recomendador, que hoje trata "Já vi" sem nota como "gostou mais ou menos" |
+| RFF15 | Ver no painel a taxa de satisfação: das sugestões aceitas que ganharam nota, quantas ficaram com 3,5 ou mais | Não implementado no painel. A consulta está no [roteiro do teste interno](HOMOLOGACAO.md#análise-bárbara) |
 | RFF09 | Receber recomendações cruzadas entre filmes e música | Evolução, depende de dados da plataforma |
 
 ### Não funcionais
