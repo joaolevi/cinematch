@@ -1,10 +1,19 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "../api";
+import { useAuth } from "../auth";
 import MediaCard from "../components/MediaCard";
+import { useSeen } from "../seen";
+import { MEDIA_GRID, tabColor } from "../ui";
 import type { UserList } from "../types";
+import { usePageTitle } from "../usePageTitle";
+import HandNote from "../components/HandNote";
+import ListName from "../components/ListName";
 
 /** Gerenciar Listas (watchlist "Quero ver" + listas personalizadas). */
 export default function ListsPage() {
+  usePageTitle("Minhas listas");
+  const { user } = useAuth();
+  const seen = useSeen(user?.id);
   const [lists, setLists] = useState<UserList[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [newName, setNewName] = useState("");
@@ -40,26 +49,36 @@ export default function ListsPage() {
       <h1 className="text-3xl font-bold">Listas</h1>
       {error && <p className="mt-4 text-red-300">{error}</p>}
 
-      <div className="mt-6 grid gap-8 md:grid-cols-[240px_1fr]">
-        <aside className="space-y-2">
-          {lists.map((l) => (
+      {/* Cada lista é uma aba de fichário, com a sua cor */}
+      <div className="mt-6 flex flex-wrap items-end gap-x-6 gap-y-3 border-b border-line">
+        <div role="tablist" aria-label="Minhas listas" className="flex flex-wrap gap-1">
+          {lists.map((l, position) => (
             <button
               key={l.id}
+              role="tab"
+              aria-selected={l.id === activeId}
               onClick={() => setActiveId(l.id)}
-              className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
-                l.id === activeId ? "bg-surface-2 text-accent" : "hover:bg-surface"
-              }`}
+              className="nb-tab"
+              style={tabColor(position)}
             >
-              <span className="font-medium">{l.is_watchlist ? "★ " : ""}{l.name}</span>
-              <span className="text-xs text-muted">{l.items.length}</span>
+              {l.is_watchlist ? "★ " : ""}
+              {l.name} <span className="ml-1 text-xs font-semibold opacity-70">{l.items.length}</span>
             </button>
           ))}
-          <form onSubmit={create} className="flex gap-2 pt-3">
-            <input className="input" placeholder="Nova lista" value={newName} onChange={(e) => setNewName(e.target.value)} />
-            <button className="btn-primary px-3">+</button>
-          </form>
-        </aside>
+        </div>
+        <form onSubmit={create} className="ml-auto flex gap-2 pb-2">
+          <input
+            className="input w-44"
+            placeholder="Nova lista"
+            aria-label="Nome da nova lista"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
+          <button className="btn-primary px-3 whitespace-nowrap">Criar lista</button>
+        </form>
+      </div>
 
+      <div className="mt-6">
         <section>
           {active && (
             <>
@@ -95,23 +114,34 @@ export default function ListsPage() {
                 )}
               </div>
               {active.items.length === 0 && (
-                <p className="mt-4 text-sm text-muted">
-                  Sua lista está esperando! Adicione títulos pela página de cada um{active.is_watchlist ? " ou pelo botão “+ Quero” no feed" : ""}.
-                </p>
+                <HandNote className="mt-6">
+                  Esta lista está esperando o primeiro título. Dá para adicionar pela página de cada um
+                  {active.is_watchlist ? <> ou pelo botão <ListName />, no feed</> : ""}.
+                </HandNote>
               )}
-              <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-4 lg:grid-cols-5">
-                {active.items.map(({ media }) => (
-                  <MediaCard key={media.id} media={media}>
-                    <button
-                      className="btn-ghost mt-2 px-2 py-1 text-xs"
-                      onClick={async () => {
-                        await api.removeFromList(active.id, media.id);
-                        load();
-                      }}
-                    >
-                      Remover
-                    </button>
-                  </MediaCard>
+              <div className={`mt-6 ${MEDIA_GRID}`}>
+                {active.items.map(({ media }, position) => (
+                  <MediaCard
+                    key={media.id}
+                    media={media}
+                    pinned={{ position }}
+                    sticker={seen?.has(media.id) ? <span className="text-sm">Visto</span> : undefined}
+                    overlay={
+                      <button
+                        aria-label={`Tirar ${media.title} da lista`}
+                        title="Tirar da lista"
+                        className="absolute top-3 right-2 z-10 grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-bg/80 text-cream shadow-md backdrop-blur-sm transition hover:bg-coral hover:text-bg"
+                        onClick={async () => {
+                          await api.removeFromList(active.id, media.id);
+                          load();
+                        }}
+                      >
+                        <svg viewBox="0 0 16 16" aria-hidden className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                          <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
+                        </svg>
+                      </button>
+                    }
+                  />
                 ))}
               </div>
             </>

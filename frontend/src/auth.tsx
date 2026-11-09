@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { ApiError, api, getToken, setToken } from "./api";
+import { resetSeen } from "./seen";
 import type { User } from "./types";
 
 interface AuthState {
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const { access_token, user } = await api.login(email, password);
+    resetSeen();
     setToken(access_token);
     setUser(user);
     return user;
@@ -44,12 +46,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (name: string, email: string, password: string) => {
     const { access_token, user } = await api.register(name, email, password);
+    resetSeen();
     setToken(access_token);
     setUser(user);
     return user;
   };
 
   const logout = () => {
+    resetSeen();
     setToken(null);
     setUser(null);
   };

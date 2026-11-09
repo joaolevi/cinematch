@@ -2,8 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import Polaroid from "../components/Polaroid";
+import { TAB_COLORS, TAPE_COLORS } from "../ui";
 import Poster from "../components/Poster";
 import type { Media } from "../types";
+import { diaryChanged } from "../seen";
+import { usePageTitle } from "../usePageTitle";
+import HandNote from "../components/HandNote";
 
 const LAST_STEP = 3;
 const TITLE_COUNT = 24;
@@ -52,6 +57,7 @@ function interleave(lists: Media[][]): Media[] {
 
 /** Definir Preferências Iniciais (onboarding opcional do Diagrama de Atividades). */
 export default function OnboardingPage() {
+  usePageTitle("Conte o que você curte");
   const navigate = useNavigate();
   const { user, refresh } = useAuth();
   const [step, setStep] = useState<Step>(1);
@@ -133,7 +139,7 @@ export default function OnboardingPage() {
   async function finish(skip = false) {
     // Quem já tinha feito o onboarding e pula mantém o que escolheu antes
     if (skip && user?.onboarded) {
-      navigate("/");
+      navigate("/para-voce");
       return;
     }
     setSaving(true);
@@ -148,21 +154,31 @@ export default function OnboardingPage() {
               liked_media_ids: [...liked],
             },
       );
+      diaryChanged(); // os títulos marcados entram no diário e ganham o selo Visto
       await refresh();
-      navigate("/");
+      navigate("/para-voce");
     } catch (e) {
       setError((e as Error).message);
       setSaving(false);
     }
   }
 
-  const chip = (active: boolean) =>
-    `chip cursor-pointer px-4 py-1.5 text-sm transition ${
-      active ? "border-accent bg-accent/15 text-accent" : "hover:border-slate-400"
-    }`;
+  // Os gêneros, as épocas e os diretores ficam numa folha do diário; o escolhido fica marcado em tinta vermelha
+  // Cada opção é um pedaço de fita colorida, levemente torto, como as fitas que prendem as polaroides
+  const TILT = [-2, 1.5, -1, 2, -1.5, 1];
+  const tape = (position: number) =>
+    ({ "--tape": TAB_COLORS[position % TAB_COLORS.length], rotate: `${TILT[position % TILT.length]}deg` }) as React.CSSProperties;
+  const page = (note: string, children: React.ReactNode) => (
+    <section className="paper relative -rotate-[0.25deg] rounded-sm py-6 pr-6 pl-14 sm:pl-16">
+      <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[0] }} />
+      <span aria-hidden className="tape -top-2.5 right-16 rotate-3" style={{ background: TAPE_COLORS[2] }} />
+      <p className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">{note}</p>
+      <div className="mt-2">{children}</div>
+    </section>
+  );
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-3">
         <p className="text-xs font-semibold tracking-wider text-accent uppercase">
           Passo {step} de {LAST_STEP}
@@ -180,13 +196,22 @@ export default function OnboardingPage() {
             </h1>
             <p className="mt-1 text-muted">{genreMessage([...selectedGenres])}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {genres.map((g) => (
-              <button key={g} onClick={() => toggle(selectedGenres, g, setSelectedGenres)} className={chip(selectedGenres.has(g))}>
-                {g}
-              </button>
-            ))}
-          </div>
+          {page(
+            "Querido diário, eu curto:",
+            <div className="flex flex-wrap gap-x-3 gap-y-3">
+              {genres.map((g, position) => (
+                <button
+                  key={g}
+                  aria-pressed={selectedGenres.has(g)}
+                  onClick={() => toggle(selectedGenres, g, setSelectedGenres)}
+                  className="tape-chip"
+                  style={tape(position)}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>,
+          )}
           {error && <p className="text-red-300">{error}</p>}
           <div className="flex flex-wrap gap-3">
             <button className="btn-primary px-6" onClick={showInterests}>
@@ -205,31 +230,49 @@ export default function OnboardingPage() {
             <h1 className="text-3xl font-bold">Tem alguma época ou diretor que você ama?</h1>
             <p className="mt-1 text-muted">{interestMessage(interestCount)}</p>
           </div>
-          {loading && <p className="text-muted">Procurando opções a sua cara...</p>}
-          {decades.length > 0 && (
-            <div>
-              <h2 className="text-sm font-semibold text-muted">Épocas</h2>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {decades.map((d) => (
-                  <button key={d} onClick={() => toggle(selectedDecades, d, setSelectedDecades)} className={chip(selectedDecades.has(d))}>
-                    {decadeLabel(d)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {creators.length > 0 && (
-            <div>
-              <h2 className="text-sm font-semibold text-muted">Diretores e criadores</h2>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {creators.map((c) => (
-                  <button key={c} onClick={() => toggle(selectedCreators, c, setSelectedCreators)} className={chip(selectedCreators.has(c))}>
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {loading && <HandNote>Procurando opções a sua cara...</HandNote>}
+          {(decades.length > 0 || creators.length > 0) &&
+            page(
+              "E também gosto de:",
+              <div className="space-y-5">
+                {decades.length > 0 && (
+                  <div>
+                    <h2 className="text-sm font-bold">Épocas</h2>
+                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-3">
+                      {decades.map((d, position) => (
+                        <button
+                          key={d}
+                          aria-pressed={selectedDecades.has(d)}
+                          onClick={() => toggle(selectedDecades, d, setSelectedDecades)}
+                          className="tape-chip"
+                  style={tape(position)}
+                        >
+                          {decadeLabel(d)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {creators.length > 0 && (
+                  <div>
+                    <h2 className="text-sm font-bold">Diretores e criadores</h2>
+                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-3">
+                      {creators.map((c, position) => (
+                        <button
+                          key={c}
+                          aria-pressed={selectedCreators.has(c)}
+                          onClick={() => toggle(selectedCreators, c, setSelectedCreators)}
+                          className="tape-chip"
+                  style={tape(position)}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>,
+            )}
           {error && <p className="text-red-300">{error}</p>}
           <div className="flex flex-wrap gap-3">
             <button className="btn-primary px-6" onClick={showTitles}>
@@ -249,18 +292,22 @@ export default function OnboardingPage() {
             <p className="mt-1 text-muted">{likedMessage(liked.size)}</p>
           </div>
           {loading && <p className="text-muted">Separando títulos para você...</p>}
-          <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
+          <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
             {titles.map((m) => (
               <button
                 key={m.id}
                 onClick={() => toggle(liked, m.id, setLiked)}
-                className={`relative cursor-pointer rounded-lg text-left ring-2 transition ${
-                  liked.has(m.id) ? "ring-accent" : "ring-transparent hover:ring-line"
-                }`}
+                aria-pressed={liked.has(m.id)}
+                aria-label={m.title}
+                className="relative cursor-pointer rounded-lg text-left transition hover:-translate-y-0.5"
               >
-                <Poster media={m} />
-                {liked.has(m.id) && (
-                  <span className="absolute top-2 right-2 rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-bg">✓</span>
+                {/* O que a pessoa marca vira polaroide colada no diário dela */}
+                {liked.has(m.id) ? (
+                  <Polaroid position={titles.indexOf(m)} caption="gostei ♥" straightenOnHover={false}>
+                    <Poster media={m} rounded="rounded-[2px]" />
+                  </Polaroid>
+                ) : (
+                  <Poster media={m} />
                 )}
               </button>
             ))}

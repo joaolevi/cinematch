@@ -13,14 +13,16 @@ export default function Poster({
   media,
   className = "",
   compact = false,
+  rounded = "rounded-lg",
 }: {
   media: Media;
   className?: string;
   compact?: boolean;
+  rounded?: string;
 }) {
   const [broken, setBroken] = useState(false);
   const upcoming = !compact && isUpcoming(media.year) && (
-    <span className="absolute top-2 right-2 z-10 rounded-md bg-amber px-1.5 py-0.5 text-[11px] font-bold text-bg">
+    <span className="absolute top-2 left-2 z-10 rounded-md bg-amber px-1.5 py-0.5 text-[11px] font-bold text-bg">
       Em breve
     </span>
   );
@@ -32,7 +34,7 @@ export default function Poster({
           alt={media.title}
           loading="lazy"
           onError={() => setBroken(true)}
-          className={`aspect-[2/3] w-full rounded-lg object-cover ${className}`}
+          className={`aspect-[2/3] w-full ${rounded} object-cover ${className}`}
         />
         {upcoming}
       </div>
@@ -43,7 +45,7 @@ export default function Poster({
   const hue2 = (hue + 40 + (h % 80)) % 360;
   return (
     <div
-      className={`relative flex aspect-[2/3] w-full flex-col justify-end overflow-hidden rounded-lg p-3 ${className}`}
+      className={`relative flex aspect-[2/3] w-full flex-col justify-end overflow-hidden ${rounded} p-3 ${className}`}
       style={{
         background: `linear-gradient(160deg, hsl(${hue} 55% 32%), hsl(${hue2} 60% 14%) 70%, #0b0d10)`,
       }}

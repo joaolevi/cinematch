@@ -25,7 +25,13 @@ export function timeAgo(isoDate: string): string {
   return days < 30 ? `há ${days} dias` : date.toLocaleDateString("pt-BR");
 }
 
-const COLORS = ["#5ff5e8", "#b69cff", "#ff8a7a", "#ffc857", "#7cc7ff", "#ff9ed8", "#a8e66b"];
+const COLORS = ["#f2b33d", "#e8735a", "#7fa58b", "#e59bb0", "#8fb3c9", "#b39ddb", "#c9b27c"];
+
+/** Cada tipo de mídia tem sua cor. Os álbuns entram em sálvia, quando chegarem. */
+export const MEDIA_STYLE = {
+  movie: { label: "Filme", color: "#e8735a" },
+  series: { label: "Série", color: "#f2b33d" },
+} as const;
 
 /** Cada gênero ou pessoa tem sempre a mesma cor. */
 export function colorFor(text: string): string {
