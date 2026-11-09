@@ -12,7 +12,7 @@ Variante A/B: grupo A = híbrido (conteúdo + colaborativo); grupo B = só conte
 
 from __future__ import annotations
 
-import re
+import unicodedata
 from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -48,7 +48,6 @@ POPULARITY_BONUS = 0.1
 SERIES_POPULARITY_BONUS = 1.0  # sem avaliações reais de séries, a popularidade evita títulos obscuros
 EXTERNAL_CONTENT_WEIGHT = 0.2  # com vizinhos de pessoas reais, o colaborativo pesa mais
 DIVERSITY_PENALTY = 0.85  # multiplicador a cada repetição do gênero principal no topo
-LATIN_LETTER = re.compile(r"[A-Za-zÀ-ÿ]")
 
 
 @dataclass
@@ -65,8 +64,11 @@ def _tok(prefix: str, value: str) -> str:
 
 
 def has_readable_name(title: str) -> bool:
-    """Aceita nomes com letras latinas e nomes só com números, como 1917."""
-    return bool(LATIN_LETTER.search(title)) or not any(char.isalpha() for char in title)
+    """Aceita nomes só com letras latinas (com acentos) e nomes só com números, como 1917.
+
+    Basta uma letra de outro alfabeto para recusar: "KBS 드라마 스페셜" não aparece no feed.
+    """
+    return all(unicodedata.name(char, "").startswith("LATIN") for char in title if char.isalpha())
 
 
 def can_be_suggested(m: Media) -> bool:

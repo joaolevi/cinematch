@@ -64,6 +64,8 @@ def test_feed_only_suggests_tmdb_titles_with_synopsis_poster_and_readable_name(c
         tmdb_title("Sem Sinopse", overview=""),
         tmdb_title("Sem Pôster", poster=None),
         tmdb_title("논스톱"),
+        tmdb_title("KBS 드라마 스페셜"),
+        tmdb_title("Amélie Œuvre Straße"),
     ])
     db.commit()
 
@@ -71,8 +73,8 @@ def test_feed_only_suggests_tmdb_titles_with_synopsis_poster_and_readable_name(c
         r = client.get(path, params={"limit": 50, **params}, headers=user_headers).json()
         return {i["media"]["title"] if "media" in i else i["title"] for i in (r["items"] if isinstance(r, dict) else r)}
 
-    hidden = {"Sem Sinopse", "Sem Pôster", "논스톱"}
-    assert {"Completo", "1917"} <= titles("/recommendations") and not titles("/recommendations") & hidden  # em alta
+    hidden = {"Sem Sinopse", "Sem Pôster", "논스톱", "KBS 드라마 스페셜"}
+    assert {"Completo", "1917", "Amélie Œuvre Straße"} <= titles("/recommendations") and not titles("/recommendations") & hidden  # em alta
     assert "Completo" in titles("/media/trending") and not titles("/media/trending") & hidden
 
     mid = media_id_by_title(client, user_headers, "Completo")
