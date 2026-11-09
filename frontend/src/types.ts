@@ -145,6 +145,7 @@ export interface Metrics {
   diary_entries: number;
   real_users: number;
   simulated_shown: number;
+  trending_shown: number;
   movies: number;
   series: number;
   external_neighbors_enabled: boolean;

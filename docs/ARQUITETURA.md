@@ -206,3 +206,4 @@ Estes requisitos ficam fora do MVP.
 | RNFF03 | Limitar tentativas de login | Não atende |
 | RNFF04 | Sincronizar catálogos em segundo plano | Não atende: a sincronização roda dentro da requisição |
 | RNFF05 | Usar dados reais na parte colaborativa | Parcial: filmes usam o MovieLens 32M quando a opção está ligada; séries e música ainda não têm fonte |
+| RNFF06 | Atribuir a aceitação a uma exibição recente | Não atende: Quero ver e Já vi pela página do título contam se o título foi exibido no feed em qualquer momento antes. Falta uma janela de tempo (por exemplo, 7 dias) |

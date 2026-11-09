@@ -3327,6 +3327,10 @@
             "type": "integer",
             "title": "Simulated Shown"
           },
+          "trending_shown": {
+            "type": "integer",
+            "title": "Trending Shown"
+          },
           "movies": {
             "type": "integer",
             "title": "Movies"
@@ -3353,6 +3357,7 @@
           "diary_entries",
           "real_users",
           "simulated_shown",
+          "trending_shown",
           "movies",
           "series",
           "external_neighbors_enabled",

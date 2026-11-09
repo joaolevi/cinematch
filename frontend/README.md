@@ -40,7 +40,8 @@ Abra http://localhost:5173.
    - **Já vi** em uma sugestão → dê estrelas e escreva uma resenha. O carimbo **Visto!** confirma.
    - **Quero ver** → o título vai para **Listas → Quero ver**.
    - O **✕** no canto do pôster é o **Não me interesso**: tira o título do feed, e o aviso oferece **Desfazer**.
-   - Ao rolar a página, o feed traz novas sugestões, e **↻ Trocar sugestões** recomeça.
+   - **Ver mais sugestões**, no fim da página, traz mais títulos, e **↻ Trocar sugestões** recomeça. Um card só conta
+     como exibido depois de 1 segundo na tela.
 5. Abra o **Diário**:
    - no topo, a frase do gosto ("Sou do time do drama dos anos 2000") e os números em post-its;
    - na **Linha do tempo**, cada título é uma polaroide com a data escrita à mão;

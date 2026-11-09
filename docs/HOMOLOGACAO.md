@@ -49,7 +49,8 @@ Registre na [issue #14](https://github.com/joaolevi/cinematch/issues/14):
 - resumo das respostas e os problemas encontrados, com o link do cartão de cada um.
 
 A Bárbara usa esses dados na análise da taxa de aceitação. Um título só conta como exibido quando pelo menos metade do card
-aparece na tela, mesmo que a pessoa não pare para olhar. A evidência de qualidade do recomendador continua sendo o teste com
+fica 1 segundo na tela, e o feed só traz mais sugestões quando a pessoa clica em **Ver mais sugestões**. A comparação
+entre os grupos usa só as sugestões personalizadas, sem as "Em alta". A evidência de qualidade do recomendador continua sendo o teste com
 o MovieLens ([arquitetura](ARQUITETURA.md#evidências)).
 
 Para um erro que atrapalha a demonstração, crie um cartão com a etiqueta `Bug` no Trello e avise a equipe no mesmo dia.

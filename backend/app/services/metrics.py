@@ -1,4 +1,8 @@
-"""Métrica de sucesso do pitch: taxa de aceitação = (Quero ver + Já vi) ÷ sugestões exibidas."""
+"""Métrica de sucesso do pitch: taxa de aceitação = (Quero ver + Já vi) ÷ sugestões exibidas.
+
+A taxa geral usa todas as sugestões exibidas. A comparação entre os grupos A e B usa só as personalizadas:
+as "Em alta" (estratégia trending) são iguais nos dois grupos e diluiriam a diferença entre eles.
+"""
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -8,8 +12,11 @@ from ..models import DiaryEntry, ItemNeighbor, Media, RecEvent, User
 from ..seed import DEMO_EMAIL
 
 
-def _pairs(db: Session, action: str, variant: str | None) -> set[tuple[int, int]]:
-    """Pares (usuário, título) com o evento, contando cada par uma única vez. Admins ficam de fora."""
+def _pairs(db: Session, action: str, variant: str | None, personalized: bool = False) -> set[tuple[int, int]]:
+    """Pares (usuário, título) com o evento, contando cada par uma única vez. Admins ficam de fora.
+
+    Com `personalized`, só entram exibições geradas pelo recomendador, sem as "Em alta".
+    """
     q = (
         select(RecEvent.user_id, RecEvent.media_id)
         .join(User, User.id == RecEvent.user_id)
@@ -18,11 +25,13 @@ def _pairs(db: Session, action: str, variant: str | None) -> set[tuple[int, int]
     )
     if variant:
         q = q.where(RecEvent.variant == variant)
+    if personalized:
+        q = q.where(RecEvent.strategy != "trending")
     return {(user_id, media_id) for user_id, media_id in db.execute(q)}
 
 
-def _variant_metrics(db: Session, variant: str | None) -> dict:
-    shown = _pairs(db, "shown", variant)
+def _variant_metrics(db: Session, variant: str | None, personalized: bool = False) -> dict:
+    shown = _pairs(db, "shown", variant, personalized)
     # só contam reações a títulos que foram exibidos no feed
     want = _pairs(db, "want", variant) & shown
     seen = _pairs(db, "seen", variant) & shown
@@ -57,7 +66,9 @@ def _simulated_shown(db: Session) -> int:
 def acceptance_metrics(db: Session) -> dict:
     return {
         "overall": _variant_metrics(db, None),
-        "by_variant": [_variant_metrics(db, "A"), _variant_metrics(db, "B")],
+        "by_variant": [_variant_metrics(db, "A", personalized=True), _variant_metrics(db, "B", personalized=True)],
+        # Exibições "Em alta" que ficaram fora da comparação A/B (estão na taxa geral)
+        "trending_shown": len(_pairs(db, "shown", None) - _pairs(db, "shown", None, personalized=True)),
         "catalog_size": int(db.scalar(select(func.count()).select_from(Media)) or 0),
         "users": int(db.scalar(select(func.count()).select_from(User)) or 0),
         "diary_entries": int(

@@ -39,7 +39,6 @@ export default function FeedPage() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreFailed, setMoreFailed] = useState(false);
-  const bottom = useRef<HTMLDivElement>(null);
   const fetching = useRef(false);
   const replacing = useRef(false); // enquanto a lista é substituída, a paginação espera
   const impressions = useImpressions();
@@ -122,13 +121,6 @@ export default function FeedPage() {
     }
   }
 
-  useEffect(() => {
-    const target = bottom.current;
-    if (!target || !hasMore || moreFailed || loading || loadingMore) return;
-    const observer = new IntersectionObserver(([entry]) => entry.isIntersecting && loadMore(), { rootMargin: "400px" });
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [hasMore, loadMore, moreFailed, loading, loadingMore]);
 
   useEffect(() => {
     if (!toast) return;
@@ -246,8 +238,14 @@ export default function FeedPage() {
         ))}
       </div>
 
-      <div ref={bottom} />
-      {loadingMore && <HandNote className="mt-8 text-center">Procurando mais títulos para você...</HandNote>}
+      {/* Mais sugestões só quando a pessoa pede, como na Busca: nada aparece na tela sem ela querer */}
+      {feed && hasMore && !moreFailed && !loading && rest.length > 0 && (
+        <div className="mt-10 text-center">
+          <button className="btn-ghost px-6" disabled={loadingMore} onClick={loadMore}>
+            {loadingMore ? "Procurando mais títulos..." : "Ver mais sugestões"}
+          </button>
+        </div>
+      )}
       {moreFailed && (
         <div className="mt-8 text-center">
           <p className="text-sm text-muted">Não conseguimos trazer mais sugestões agora.</p>

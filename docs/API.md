@@ -74,6 +74,6 @@ placeholder (ex.: gradiente com o título). Exibir dados do TMDB exige o crédit
 ## Fluxo principal (Diagrama de Atividades)
 
 1. Login → se `onboarded == false`, onboarding: gêneros (`GET /media/genres`), épocas e criadores (`GET /media/facets`), títulos (`GET /media` ou, sem escolhas, `GET /media/trending`) → `PUT /me/preferences`.
-2. Feed: `GET /recommendations`. Mostre `reason` em cada card. `strategy == "trending"` indica *cold start*. Ao rolar, peça de novo com `exclude`; lista vazia indica que acabou. Quando um card aparecer na tela, avise em `POST /recommendations/impressions`, antes de enviar a reação a ele.
+2. Feed: `GET /recommendations`. Mostre `reason` em cada card. `strategy == "trending"` indica *cold start*. Para mais sugestões (botão "Ver mais sugestões"), peça de novo com `exclude`; lista vazia indica que acabou. Quando metade de um card ficar 1 segundo na tela, avise em `POST /recommendations/impressions`, antes de enviar a reação a ele.
 3. Botões do card → `POST /recommendations/{id}/feedback` e remova o card da tela.
    Itens registrados, descartados ou na watchlist não voltam ao feed.
