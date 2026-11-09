@@ -7,6 +7,8 @@ import AdminPage from "./pages/AdminPage";
 import CommunityPage from "./pages/CommunityPage";
 import DiaryPage from "./pages/DiaryPage";
 import FeedPage from "./pages/FeedPage";
+import HomePage from "./pages/HomePage";
+import LandingPage from "./pages/LandingPage";
 import ListsPage from "./pages/ListsPage";
 import LoginPage from "./pages/LoginPage";
 import MediaPage from "./pages/MediaPage";
@@ -16,7 +18,7 @@ import SearchPage from "./pages/SearchPage";
 function RequireAuth({ children, admin = false }: { children: ReactNode; admin?: boolean }) {
   const { user, loading } = useAuth();
   if (loading) return <p className="p-8 text-muted">Carregando...</p>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/bem-vindo" replace />; // quem não entrou conhece o sistema antes
   if (admin && user.role !== "admin") return <Navigate to="/" replace />;
   return <>{children}</>;
 }
@@ -35,9 +37,11 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/bem-vindo" element={<PublicOnly><LandingPage /></PublicOnly>} />
           <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
           <Route element={<RequireAuth><Layout /></RequireAuth>}>
-            <Route index element={<FeedPage />} />
+            <Route index element={<HomePage />} />
+            <Route path="para-voce" element={<FeedPage />} />
             <Route path="onboarding" element={<OnboardingPage />} />
             <Route path="buscar" element={<SearchPage />} />
             <Route path="media/:id" element={<MediaPage />} />
