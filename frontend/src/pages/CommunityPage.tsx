@@ -1,22 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
+import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
 import WatchedBy, { Avatar } from "../components/WatchedBy";
 import { plural } from "../format";
 import type { CommunityEntry, Reviewer } from "../types";
+import { TAPE_COLORS } from "../ui";
+import { usePageTitle } from "../usePageTitle";
+import HandNote from "../components/HandNote";
 
 const PAGE = 20;
 
-function Post({ entry }: { entry: CommunityEntry }) {
+function Post({ entry, position }: { entry: CommunityEntry; position: number }) {
   const link = `/media/${entry.media.id}`;
   return (
-    <article className="flex gap-4 py-5">
-      <Link to={link} className="w-16 shrink-0 sm:w-20" aria-label={entry.media.title}>
-        <Poster media={entry.media} compact />
+    <article className="flex gap-4 border-b border-line/60 py-5">
+      <Link to={link} className="group w-16 shrink-0 sm:w-20" aria-label={entry.media.title}>
+        <Polaroid position={position} small>
+          <Poster media={entry.media} compact rounded="rounded-[1px]" />
+        </Polaroid>
       </Link>
       <div className="min-w-0 flex-1">
-        <h2 className="text-lg leading-snug font-bold">
+        <h2 className="font-display text-lg leading-snug font-bold">
           <Link to={link} className="hover:text-accent">
             {entry.media.title}
           </Link>{" "}
@@ -30,7 +36,7 @@ function Post({ entry }: { entry: CommunityEntry }) {
             createdAt={entry.created_at}
           />
         </div>
-        {entry.review && <p className="mt-2 break-words whitespace-pre-line text-slate-200">{entry.review}</p>}
+        {entry.review && <p className="mt-2 break-words whitespace-pre-line text-stone-200">{entry.review}</p>}
       </div>
     </article>
   );
@@ -39,11 +45,11 @@ function Post({ entry }: { entry: CommunityEntry }) {
 function Reviewers({ people }: { people: Reviewer[] }) {
   if (people.length === 0) return null;
   return (
-    <aside className="order-first lg:order-none">
-      <h2 className="border-b border-line/60 pb-2 text-xs font-semibold tracking-wider text-muted uppercase">
-        Quem mais escreve
-      </h2>
-      <ul className="flex flex-wrap gap-x-6 lg:block lg:divide-y lg:divide-line/60">
+    // O ranking de quem mais escreve fica num bilhete colado ao lado da timeline
+    <aside className="paper relative order-first self-start rounded-sm py-5 pr-5 pl-12 lg:order-none lg:rotate-1">
+      <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 -rotate-3" style={{ background: TAPE_COLORS[1] }} />
+      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Quem mais escreve</h2>
+      <ul className="flex flex-wrap gap-x-6 lg:block">
         {people.map((person, position) => (
           <li key={position} className="flex items-center gap-3 py-3">
             <Avatar name={person.name} size="h-10 w-10" />
@@ -62,6 +68,7 @@ function Reviewers({ people }: { people: Reviewer[] }) {
 
 /** Comunidade: o que as pessoas andam vendo. No MVP, todo mundo vê todo mundo. */
 export default function CommunityPage() {
+  usePageTitle("Comunidade");
   const [entries, setEntries] = useState<CommunityEntry[] | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -110,20 +117,21 @@ export default function CommunityPage() {
       {entries?.length === 0 && !hasMore && (
         <p className="mt-8 text-muted">
           Ainda não tem nada por aqui. Marque "Já vi" no{" "}
-          <Link to="/" className="text-accent underline">feed</Link> e seja a primeira pessoa!
+          <Link to="/para-voce" className="text-accent underline">feed</Link> e seja a primeira pessoa!
         </p>
       )}
 
-      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-10">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12">
         <div>
           {entries && entries.length > 0 && (
             <h2 className="border-b border-line/60 pb-2 text-xs font-semibold tracking-wider text-muted uppercase">
               Registros recentes
             </h2>
           )}
-          <div className="divide-y divide-line/60">
-            {entries?.map((e) => (
-              <Post key={e.id} entry={e} />
+          {/* Em telas largas, a timeline vira duas colunas, para usar a largura toda sem linhas longas demais */}
+          <div className="grid xl:grid-cols-2 xl:gap-x-12">
+            {entries?.map((e, position) => (
+              <Post key={e.id} entry={e} position={position} />
             ))}
           </div>
           <div ref={bottom} />
@@ -131,7 +139,7 @@ export default function CommunityPage() {
         <Reviewers people={reviewers} />
       </div>
 
-      {loading && <p className="mt-8 text-center text-sm text-muted">Procurando o que a galera anda vendo...</p>}
+      {loading && <HandNote className="mt-8 text-center">Procurando o que a galera anda vendo...</HandNote>}
       {failed && (
         <div className="mt-8 text-center">
           <p className="text-sm text-muted">Não conseguimos carregar a Comunidade agora.</p>

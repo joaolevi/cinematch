@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { localDate } from "../format";
 import type { Media } from "../types";
+import { TAB_COLORS, TAPE_COLORS } from "../ui";
+import { useFocusTrap } from "../useFocusTrap";
+import CloseButton from "./CloseButton";
 import { StarsInput } from "./Stars";
 
 const QUICK_DATES = [
@@ -16,6 +19,7 @@ export default function SeenModal({
   initialDate = null,
   onClose,
   onConfirm,
+  onDelete,
 }: {
   media: Media;
   initialRating?: number | null;
@@ -23,11 +27,21 @@ export default function SeenModal({
   initialDate?: string | null;
   onClose: () => void;
   onConfirm: (rating: number | null, review: string, consumedAt: string | null) => Promise<void> | void;
+  /** Só na edição: tira o título do diário */
+  onDelete?: () => Promise<void> | void;
 }) {
   const [rating, setRating] = useState<number | null>(initialRating);
   const [review, setReview] = useState(initialReview);
   const [date, setDate] = useState(initialDate ?? "");
   const [saving, setSaving] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useFocusTrap(box);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   return (
     <div
@@ -36,26 +50,35 @@ export default function SeenModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="card w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
-        <p className="text-xs font-semibold tracking-wider text-accent uppercase">Que bom que você viu!</p>
-        <h2 className="mt-1 text-xl font-bold">{media.title}</h2>
+      {/* Uma página do diário: é aqui que a pessoa escreve */}
+      <div
+        ref={box}
+        className="paper relative max-h-[92vh] w-full max-w-md -rotate-[0.6deg] overflow-y-auto rounded-sm py-6 pr-6 pl-14"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span aria-hidden className="tape -top-2 left-1/2 -translate-x-1/2 rotate-2" style={{ background: TAPE_COLORS[0] }} />
+        <CloseButton onClick={onClose} />
+        <p className="font-hand text-2xl leading-none font-bold text-[#b9452f]">Querido diário, eu vi:</p>
+        <h2 className="mt-1 font-display text-2xl font-bold">{media.title}</h2>
 
-        <label className="mt-5 block text-sm font-medium">Nota (opcional)</label>
+        <label className="mt-5 block text-sm font-medium">Minha nota (opcional)</label>
         <div className="mt-2">
           <StarsInput value={rating} onChange={setRating} />
         </div>
 
         <label className="mt-5 block text-sm font-medium" htmlFor="seen-date">
-          Quando você viu? (opcional)
+          Quando eu vi? (opcional)
         </label>
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-3">
           {QUICK_DATES.map(({ label, daysAgo }) => {
             const value = localDate(daysAgo);
             return (
               <button
                 key={label}
                 type="button"
-                className={`chip cursor-pointer px-4 py-2 text-sm ${date === value ? "border-accent bg-accent/15 text-accent" : ""}`}
+                aria-pressed={date === value}
+                className="tape-chip"
+                style={{ "--tape": TAB_COLORS[daysAgo === 0 ? 0 : 2], rotate: `${daysAgo === 0 ? -2 : 1.5}deg` } as CSSProperties}
                 onClick={() => setDate(date === value ? "" : value)}
               >
                 {label}
@@ -73,21 +96,29 @@ export default function SeenModal({
         </div>
 
         <label className="mt-5 block text-sm font-medium" htmlFor="seen-review">
-          Resenha (opcional)
+          O que eu achei (opcional)
         </label>
         <textarea
           id="seen-review"
-          className="input mt-2 min-h-24"
-          placeholder="O que achou?"
+          className="input ruled mt-2 min-h-28 font-hand text-xl! [background-position:0_0.5rem]"
+          placeholder="Escreva aqui..."
           value={review}
           maxLength={2000}
           onChange={(e) => setReview(e.target.value)}
         />
 
-        <div className="mt-6 flex justify-end gap-2">
-          <button className="btn-ghost" onClick={onClose}>
-            Cancelar
-          </button>
+        <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
+          {onDelete && (
+            <button
+              type="button"
+              className="mr-auto cursor-pointer text-sm font-bold text-[#b42318] hover:underline"
+              onClick={async () => {
+                if (confirm(`Remover "${media.title}" do diário?`)) await onDelete();
+              }}
+            >
+              Remover do diário
+            </button>
+          )}
           <button
             className="btn-primary"
             disabled={saving}

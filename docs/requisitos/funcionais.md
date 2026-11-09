@@ -11,22 +11,25 @@ As situações abaixo consideram o código da branch `homol`, que ainda não sub
 | RF01 | Cadastrar conta com nome, e-mail e senha | Atende | Deve |
 | RF02 | Entrar com e-mail e senha e receber um token válido por 24 h | Atende | Deve |
 | RF03 | Escolher gêneros, épocas, diretores e títulos favoritos em um onboarding opcional de três passos | Atende | Deve |
+| RF25 | Ver, antes de entrar, uma apresentação do sistema: o que é, como funciona e o aviso de que os registros aparecem na Comunidade | Atende | Deve |
 
 ## Uso geral
 
 | ID | Requisito | Situação | MVP |
 |---|---|---|---|
-| RF04 | Buscar por título, criador, ator ou tag, filtrar por tipo e gênero e ordenar | Atende | Deve |
+| RF04 | Buscar por título, criador, ator ou tag, filtrar por tipo e gênero e ordenar, vendo o que a pessoa já viu | Atende | Deve |
 | RF05 | Ver o detalhe de um título: dados, elenco, nota média, resenhas e status do usuário | Atende | Deve |
-| RF06 | Registrar que viu um título, com data opcional, e editar ou apagar o registro | Atende | Deve |
+| RF06 | Registrar que viu um título, com data opcional, de qualquer tela pelo botão Registrar, e editar ou apagar o registro | Atende | Deve |
 | RF07 | Dar nota e escrever resenha, ambas opcionais | Atende | Deve |
 | RF08 | Criar, renomear e excluir listas, incluir e remover títulos e usar a watchlist "Quero ver" | Atende | Deve |
 | RF09 | Ver o feed "Para você", com filtro por tipo, novas sugestões ao rolar a página e opção de trocar as sugestões | Atende | Deve |
-| RF10 | Reagir a uma sugestão com Quero ver, Já vi ou Não me interesso | Atende | Deve |
-| RF19 | Ver no diário o top 10 dos títulos mais amados e o dos mais odiados | Atende | Deve |
+| RF10 | Reagir a uma sugestão com Quero ver, Já vi ou Não me interesso, que pode ser desfeito | Atende | Deve |
+| RF19 | Ver no diário, na aba Meu gosto, o top 10 dos títulos mais amados e o dos mais odiados | Atende | Deve |
 | RF20 | Ver a página Comunidade, com os registros mais recentes de todas as pessoas (pessoa, título, nota, resenha e quando a pessoa viu) e com quem mais escreve resenhas | Atende | Deve |
 | RF21 | Ver títulos parecidos no detalhe, sem o que a pessoa já viu, descartou ou guardou | Atende | Deve |
 | RF22 | Explorar por gênero, diretor, criador e ator: clicar no detalhe abre a Busca filtrada, com endereço próprio | Atende | Deve |
+| RF23 | Ver o próprio gosto no diário: uma frase que resume o gosto, números do diário e gráficos de gêneros, décadas, notas, filmes e séries e de quem dirige ou cria o que a pessoa mais vê, por período, com clique que filtra a linha do tempo | Atende | Deve |
+| RF24 | Ver a página Início, que reúne a aposta do dia, a lista Quero ver, o que está em alta, um pedaço do diário, a Comunidade e os lançamentos | Atende | Deve |
 
 ## Inteligência
 
@@ -44,7 +47,8 @@ As situações abaixo consideram o código da branch `homol`, que ainda não sub
 | RF15a | Admin sincroniza o catálogo mockado, sem internet | Atende | Deve |
 | RF15b | Admin sincroniza, busca e importa títulos do TMDB real | Atende: os 13 testes com o TMDB real passaram em 06/11 | Deve |
 | RF16 | Admin lista, oculta e restaura resenhas | Atende | Deve |
-| RF17 | Admin vê a taxa de aceitação geral e por grupo A/B | Atende | Deve |
+| RF17 | Admin vê a taxa de aceitação geral e por grupo A/B, explicada em frases | Atende | Deve |
+| RF26 | Admin vê as pessoas cadastradas (reais e simuladas, à parte), o que cada uma fez, e apaga uma conta com tudo o que é dela | Atende | Deve |
 
 ## Interface
 
@@ -81,3 +85,7 @@ Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backen
 | RF20 | Pedido da GP, 06/11 | 2.3 | `routers/community.py`, `frontend/src/pages/CommunityPage.tsx` | `test_community.py` |
 | RF21 | Pedido da GP, 06/11 | 2.3 | `routers/media.py`, `services/recommender.py` | `test_recommendations.py` |
 | RF22 | Pedido da GP, 06/11 | 2.3 | `routers/media.py`, `frontend/src/pages/SearchPage.tsx` | `test_diary_lists.py` |
+| RF23 | Pedido da GP, 08/11; parte do RFF08 | 2.2 | `frontend/src/taste.ts`, `frontend/src/components/TasteCharts.tsx` | Sem testes automatizados; fluxo testado no navegador |
+| RF24 | Pedido da GP, 08/11 | 2.3 | `frontend/src/pages/HomePage.tsx` | Sem testes automatizados; fluxo testado no navegador |
+| RF25 | Pedido da GP, 08/11 | 2.1 | `frontend/src/pages/LandingPage.tsx` | Sem testes automatizados; fluxo testado no navegador |
+| RF26 | Pedido da GP, 08/11 | 2.4 | `routers/admin.py`, `frontend/src/pages/AdminPage.tsx` | `test_admin.py` |

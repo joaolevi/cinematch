@@ -1,5 +1,6 @@
 import type {
   AdminReview,
+  AdminUser,
   CommunityEntry,
   DiaryEntry,
   ExternalTitle,
@@ -169,4 +170,7 @@ export const api = {
   adminModerate: (id: number, hidden: boolean) =>
     request<AdminReview>(`/admin/reviews/${id}`, { method: "PATCH", body: { hidden } }),
   adminMetrics: () => request<Metrics>("/admin/metrics"),
+  adminUsers: (query: { q?: string; kind?: "real" | "simulated" | "all"; limit?: number }) =>
+    request<{ items: AdminUser[]; total: number }>("/admin/users", { query }),
+  adminDeleteUser: (id: number) => request<void>(`/admin/users/${id}`, { method: "DELETE" }),
 };

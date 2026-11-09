@@ -148,3 +148,69 @@ def test_required_fields_cannot_be_cleared(client, admin_headers, user_headers):
     r = client.patch(f"/admin/media/{mid}", json={"title": None, "genres": None}, headers=admin_headers)
     assert r.status_code == 200
     assert r.json()["title"] == "Matrix" and r.json()["genres"]
+
+
+def test_admin_users_require_admin(client, user_headers):
+    assert client.get("/admin/users", headers=user_headers).status_code == 403
+    assert client.delete("/admin/users/1", headers=user_headers).status_code == 403
+
+
+def test_admin_lists_real_users_with_their_activity(client, admin_headers, user_headers):
+    mid = media_id_by_title(client, user_headers, "Matrix")
+    client.post("/diary", json={"media_id": mid, "rating": 5, "review": "Revi e amei."}, headers=user_headers)
+    items = see_feed(client, user_headers)
+    client.post(f"/recommendations/{items[0]['media']['id']}/feedback", json={"action": "want"}, headers=user_headers)
+    me = client.get("/me", headers=user_headers).json()
+
+    page = client.get("/admin/users", headers=admin_headers).json()
+    person = next(u for u in page["items"] if u["id"] == me["id"])
+    assert person["diary_entries"] == 1 and person["reviews"] == 1
+    assert person["shown"] == len(items) and person["accepted"] == 1
+    assert not person["is_synthetic"] and person["ab_group"] in ("A", "B")
+    assert page["total"] == len(page["items"])
+
+    found = client.get("/admin/users", params={"q": me["email"].upper()}, headers=admin_headers).json()
+    assert [u["id"] for u in found["items"]] == [me["id"]]
+    assert all(not u["is_synthetic"] for u in page["items"])
+
+
+def test_admin_lists_simulated_users_apart(client, db, admin_headers):
+    create_synthetic_users(db, 3)
+    simulated = client.get("/admin/users", params={"kind": "simulated"}, headers=admin_headers).json()
+    assert simulated["total"] >= 3 and all(u["is_synthetic"] for u in simulated["items"])
+    real = client.get("/admin/users", headers=admin_headers).json()
+    assert all(not u["is_synthetic"] for u in real["items"])
+
+
+def test_admin_deletes_account_and_its_data(client, db, admin_headers, user_headers):
+    mid = media_id_by_title(client, user_headers, "Matrix")
+    client.post("/diary", json={"media_id": mid, "rating": 4}, headers=user_headers)
+    me = client.get("/me", headers=user_headers).json()
+
+    assert client.delete(f"/admin/users/{me['id']}", headers=admin_headers).status_code == 204
+    assert db.get(User, me["id"]) is None
+    assert client.get("/diary", headers=user_headers).status_code == 401
+    assert client.delete(f"/admin/users/{me['id']}", headers=admin_headers).status_code == 404
+
+
+def test_admin_accounts_cannot_be_deleted_here(client, admin_headers):
+    admin = client.get("/me", headers=admin_headers).json()
+    assert client.delete(f"/admin/users/{admin['id']}", headers=admin_headers).status_code == 400
+
+
+def test_admin_user_acceptance_counts_only_suggestions_that_appeared(client, admin_headers, user_headers):
+    """Mesma regra da métrica geral: "Já vi" fora do feed não conta, e repetir a reação não soma de novo."""
+    items = see_feed(client, user_headers)
+    first, second = items[0]["media"]["id"], items[1]["media"]["id"]
+    client.post(f"/recommendations/{first}/feedback", json={"action": "want"}, headers=user_headers)
+    client.post(f"/recommendations/{first}/feedback", json={"action": "seen", "rating": 4}, headers=user_headers)
+    client.post(f"/recommendations/{second}/feedback", json={"action": "dismiss"}, headers=user_headers)
+    shown_ids = {i["media"]["id"] for i in items}
+    catalog = client.get("/media", params={"limit": 100}, headers=user_headers).json()["items"]
+    never_shown = next(m["id"] for m in catalog if m["id"] not in shown_ids)
+    client.post(f"/recommendations/{never_shown}/feedback", json={"action": "seen"}, headers=user_headers)
+
+    me = client.get("/me", headers=user_headers).json()
+    person = next(u for u in client.get("/admin/users", headers=admin_headers).json()["items"] if u["id"] == me["id"])
+    assert person["shown"] == len(items)
+    assert person["accepted"] == 1

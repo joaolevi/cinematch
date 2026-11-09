@@ -121,6 +121,22 @@ export interface VariantMetrics {
   acceptance_rate: number;
 }
 
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  role: "user" | "admin";
+  ab_group: "A" | "B";
+  is_synthetic: boolean;
+  onboarded: boolean;
+  created_at: string;
+  diary_entries: number;
+  reviews: number;
+  shown: number;
+  accepted: number;
+  last_active: string;
+}
+
 export interface Metrics {
   overall: VariantMetrics;
   by_variant: VariantMetrics[];

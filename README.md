@@ -1,4 +1,4 @@
-# Tastory 🎬
+# Tastory 📔
 
 > **A história do seu gosto**: diário de filmes e séries com motor de recomendação híbrido.
 > Protótipo acadêmico da disciplina **Gerência de Projeto, 2026.2** (UFAL).
@@ -15,7 +15,14 @@ Este repositório tem a **API (backend)**, com integração real com o **TMDB**,
 ./demo.sh --reset    # recria o banco (mock + TMDB) e sobe API + interface → http://localhost:5173
 ```
 
-![Interface do Tastory](frontend/screenshots/feed.png)
+![Início do Tastory](frontend/screenshots/inicio.png)
+
+A interface tem a identidade **"diário aconchegante"**: papel pautado, polaroides, post-its e letra à mão sobre um
+fundo escuro e quente. O guia está em [`frontend/README.md`](frontend/README.md#identidade-visual-diário-aconchegante).
+
+| Diário | Administração |
+|---|---|
+| ![Diário](frontend/screenshots/diario.png) | ![Painel da administração](frontend/screenshots/metricas.png) |
 
 ---
 
@@ -34,6 +41,7 @@ Este repositório tem a **API (backend)**, com integração real com o **TMDB**,
 | Administração | Gerenciar catálogo | `/admin/media` |
 | Administração | Sincronizar catálogo externo | `POST /admin/sync`, `/admin/tmdb/search`, `/admin/tmdb/import` |
 | Administração | Moderar avaliações | `/admin/reviews` |
+| Administração | Acompanhar e apagar contas | `GET /admin/users`, `DELETE /admin/users/{id}` |
 | Métrica | Taxa de aceitação + teste A/B | `GET /admin/metrics` |
 
 **Taxa de aceitação** = (Quero ver + Já vi) ÷ sugestões exibidas. Usuários do **grupo A** recebem o
@@ -156,12 +164,12 @@ Diagrama de Atividades do pitch:
 ```bash
 cd backend
 pip install -r requirements-dev.txt   # o dev.sh instala só o necessário para rodar a API
-python -m pytest -q                    # todos (121): é o que roda no CI, onde os 13 de integração são pulados
-python -m pytest -q -m "not integration"   # só offline (108)
+python -m pytest -q                    # todos (127): é o que roda no CI, onde os 13 de integração são pulados
+python -m pytest -q -m "not integration"   # só offline (114)
 python -m pytest -q -m integration     # só integração real com TMDB + banco (13, precisa da chave)
 ```
 
-- **Offline:** acesso, diário, listas, feed, cold start, A/B, admin, métricas e o provider do TMDB com
+- **Offline:** acesso, diário, listas, feed, cold start, A/B, admin (inclusive usuários), métricas e o provider do TMDB com
   respostas simuladas (`httpx.MockTransport`).
 - **Integração** (`tests/integration/`): chamam a API real do TMDB e verificam normalização em português,
   sincronização persistida no banco, idempotência, deduplicação com o mock, busca/importação,

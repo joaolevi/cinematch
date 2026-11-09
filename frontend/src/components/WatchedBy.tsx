@@ -36,7 +36,7 @@ export default function WatchedBy({
       <Avatar name={name} size="h-6 w-6 text-xs" />
       {rating != null && <StarsDisplay value={rating} size={14} />}
       <span>
-        {consumedAt ? "Visto" : "Registrado"} por <strong className="text-slate-200">{name}</strong>{" "}
+        {consumedAt ? "Visto" : "Registrado"} por <strong className="text-stone-200">{name}</strong>{" "}
         {consumedAt ? watchedWhen(consumedAt) : timeAgo(createdAt)}
       </span>
     </div>

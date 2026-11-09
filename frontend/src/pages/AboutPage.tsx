@@ -1,8 +1,15 @@
+import { TAPE_COLORS } from "../ui";
+import { usePageTitle } from "../usePageTitle";
+
 /** Sobre: apresenta o projeto e traz o crédito exigido pelo TMDB. */
 export default function AboutPage() {
+  usePageTitle("Sobre");
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="paper relative mx-auto max-w-2xl -rotate-[0.3deg] space-y-8 rounded-sm py-8 pr-8 pl-16">
+      <span aria-hidden className="tape -top-2.5 left-14 -rotate-6" style={{ background: TAPE_COLORS[0] }} />
+      <span aria-hidden className="tape -top-2.5 right-14 rotate-3" style={{ background: TAPE_COLORS[2] }} />
       <div>
+        <p className="font-hand text-2xl font-bold text-[#b9452f]">Querido leitor,</p>
         <h1 className="text-3xl font-bold">Sobre o Tastory</h1>
         <p className="mt-2 text-muted">
           O Tastory é o diário da história do seu gosto: você registra o que assiste, e ele aprende com isso para

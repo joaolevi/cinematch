@@ -1911,6 +1911,141 @@
         }
       }
     },
+    "/admin/users": {
+      "get": {
+        "tags": [
+          "administração"
+        ],
+        "summary": "List Users",
+        "description": "Pessoas cadastradas, das mais recentes para as mais antigas, com o que cada uma fez.\n\nPor padrão, só pessoas reais: os usuários simulados do seed ficam em kind=simulated.",
+        "operationId": "list_users_admin_users_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 120
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "real",
+                "simulated",
+                "all"
+              ],
+              "type": "string",
+              "default": "real",
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUsersOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{user_id}": {
+      "delete": {
+        "tags": [
+          "administração"
+        ],
+        "summary": "Delete User",
+        "description": "Apaga a conta e tudo o que é dela (diário, listas, preferências e eventos). Contas de admin não saem por aqui.",
+        "operationId": "delete_user_admin_users__user_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/metrics": {
       "get": {
         "tags": [
@@ -2019,6 +2154,103 @@
           "created_at"
         ],
         "title": "AdminReviewOut"
+      },
+      "AdminUserOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "ab_group": {
+            "type": "string",
+            "title": "Ab Group"
+          },
+          "is_synthetic": {
+            "type": "boolean",
+            "title": "Is Synthetic"
+          },
+          "onboarded": {
+            "type": "boolean",
+            "title": "Onboarded"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "diary_entries": {
+            "type": "integer",
+            "title": "Diary Entries"
+          },
+          "reviews": {
+            "type": "integer",
+            "title": "Reviews"
+          },
+          "shown": {
+            "type": "integer",
+            "title": "Shown"
+          },
+          "accepted": {
+            "type": "integer",
+            "title": "Accepted"
+          },
+          "last_active": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "ab_group",
+          "is_synthetic",
+          "onboarded",
+          "created_at",
+          "diary_entries",
+          "reviews",
+          "shown",
+          "accepted",
+          "last_active"
+        ],
+        "title": "AdminUserOut",
+        "description": "Uma pessoa na aba Usuários da administração, com o que ela já fez no sistema."
+      },
+      "AdminUsersOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminUserOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "AdminUsersOut"
       },
       "CommunityEntryOut": {
         "properties": {

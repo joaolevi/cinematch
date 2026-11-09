@@ -58,7 +58,8 @@ tailscale funnel --bg --https=8443 localhost:8000   # API
 tailscale funnel status
 ```
 
-Depois, preencha `TASTORY_PUBLIC_URL` e `TASTORY_API_URL` com os endereços gerados e rode o `up --build -d` de novo. O
+Depois, preencha `TASTORY_PUBLIC_URL` e `TASTORY_API_URL` com os endereços gerados e rode o `up --build -d` de novo.
+O `TASTORY_PUBLIC_URL` também entra na prévia do link, a imagem que aparece ao mandar o endereço no WhatsApp. O
 Funnel tem limite de banda, e a Tailscale recomenda não expor dados sensíveis, por isso aceite e-mail fictício no
 teste interno (RNF10).
 
@@ -110,7 +111,9 @@ banco, porque ele apaga as contas e o histórico.
 
 ## Apagar uma conta
 
-Use para as contas de teste antes do teste interno e para quem pedir a exclusão. O diário, as listas e os eventos da pessoa saem junto:
+Use para as contas de teste antes do teste interno e para quem pedir a exclusão. O diário, as listas e os eventos da pessoa saem junto.
+
+O jeito mais simples é pela interface: entre como admin e use **Administração → Usuários → Apagar conta**. Contas de administração não saem por ali. Pelo servidor:
 
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db psql -U tastory tastory -c "delete from users where email = 'pessoa@teste.com'"
@@ -119,7 +122,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db 
 ## Plano B
 
 Se a URL pública falhar, o sistema roda em uma máquina local, com o mesmo banco. Prepare tudo em 08/11, enquanto há internet. A
-escolha entre deploy e execução local sai no domingo (08/11), às 20h (D17).
+escolha entre deploy e execução local sai na manhã de segunda (09/11), com o Vinicius (D17).
 
 **1. Gere uma cópia do banco.** No servidor, use o comando de backup da seção 5. Sem servidor, faça a carga das seções 2 e 3 em
 qualquer máquina com a chave do TMDB. O arquivo tem e-mails e senhas criptografadas, então não o envie para o git nem para grupos.

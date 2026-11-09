@@ -1,11 +1,11 @@
 # Escopo do MVP
 
-> **Versão 22, 06/11/2026.** Entrega: **terça-feira, 10/11/2026**, às 17h, com 10 a 15 minutos de apresentação (a confirmar) e deploy como meta. Gerente de projeto: Sophia.
+> **Versão 24, 08/11/2026.** Entrega: **terça-feira, 10/11/2026**, às 17h, com 10 a 15 minutos de apresentação (a confirmar) e deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [teste interno](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
 
-A API cobre os 13 casos de uso do pitch para filmes e séries. Os 108 testes offline e os 13 com o TMDB real
+A API cobre os 13 casos de uso do pitch para filmes e séries. Os 114 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
 credenciais estão na branch `homol`, com o CI passando. Falta o QA testar a `homol`, publicar o sistema, ajustar o
 design, fazer o teste interno e preparar a demonstração.
@@ -99,18 +99,19 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 - **Vinicius:** publicar a interface e configurar o CORS.
 - **Antonio:** testar `dev.sh` e `demo.sh`.
 - **Bárbara:** preparar a explicação do resultado do A/B; validar as recomendações com o MovieLens.
-- **Lara:** fazer os ajustes finais no front, até 20h.
-- **Sophia:** decidir entre deploy e execução local, às 20h, e, se for usar o plano B, restaurar no notebook a cópia do banco.
+- **Lara:** fazer os ajustes finais no front.
+- **Sophia:** subir a identidade visual, a página Início e a aba Usuários para a `homol` (PR #29). A decisão sobre o deploy passou para a manhã de segunda, com o Vinicius.
 
 ### Seg 09/11
 
 Nesta ordem:
 
-1. **Vinicius e Antonio:** testar o fluxo completo na URL pública.
-2. **Antonio:** conduzir o teste interno com a equipe, que cada pessoa faz até 12h ([#14](https://github.com/joaolevi/cinematch/issues/14)).
-3. **Bárbara:** analisar a taxa de aceitação do teste interno.
-4. **Levi:** conduzir o ensaio e preparar o plano B em vídeo ou prints ([#15](https://github.com/joaolevi/cinematch/issues/15)).
-5. **Levi:** com a aprovação do Antonio, subir a `homol` para a `main`.
+1. **Vinicius:** decidir entre deploy e execução local logo cedo (D17). **Lara e Sophia:** congelar o front pela manhã, antes do teste interno. **Vinicius:** publicar essa versão ou, no plano B, a Sophia sobe o sistema no notebook.
+2. **Vinicius e Antonio:** testar o fluxo completo na URL pública.
+3. **Antonio:** conduzir o teste interno com a equipe, que cada pessoa faz até 12h ([#14](https://github.com/joaolevi/cinematch/issues/14)).
+4. **Bárbara:** analisar a taxa de aceitação do teste interno.
+5. **Levi:** conduzir o ensaio e preparar o plano B em vídeo ou prints ([#15](https://github.com/joaolevi/cinematch/issues/15)).
+6. **Levi:** com a aprovação do Antonio, subir a `homol` para a `main`.
 
 ### Ter 10/11
 
@@ -142,7 +143,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | D13 | O onboarding pergunta gêneros, épocas, diretores e títulos, em três passos. Palavras-chave ficam de fora, porque são termos crus e muitos em inglês | Sophia (GP) | 06/11 |
 | D10 | As tarefas entram na branch `homol`, o QA testa ali, e a `main` só recebe a versão aprovada ([CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões)) | Sophia (GP) | 06/11 |
 | D16 | O feed só sugere títulos do TMDB com sinopse, pôster e nome legível, e a popularidade pesa 1 na escolha das séries, sem mudar os filmes nem os lugares das séries | Sophia (GP) | 06/11 |
-| D17 | A escolha entre deploy e execução local sai no domingo (08/11), às 20h. No mesmo horário, o front é congelado, e depois disso só entram correções de erro | Sophia (GP) | 06/11 |
+| D17 | A escolha entre deploy e execução local sai na manhã de segunda (09/11), com o Vinicius. O front é congelado na manhã de segunda (09/11), antes do teste interno, e depois disso só entram correções de erro | Sophia (GP) | 06/11, alterada duas vezes em 08/11 |
 | D18 | No servidor, o Vinicius usa uma chave própria do TMDB, e a senha de admin fica só com Sophia e Antonio, em mensagem privada | Sophia (GP) | 06/11 |
 | D19 | Cada pessoa faz o teste interno por conta própria, até 12h de 09/11. O plano B roda no notebook da Sophia | Sophia (GP) | 06/11 |
 | D21 | No MVP, a Comunidade mostra os registros de todo mundo para quem tem conta. Seguir pessoas e escolher a privacidade ficam para depois da entrega | Sophia (GP) | 06/11 |
@@ -174,6 +175,16 @@ Nenhuma decisão pendente em 06/11/2026.
 | 06/11 | Entra no MVP a página Comunidade (RF20) | Foi o item com maior valor para a demonstração e o menor risco entre os deixados para depois: não muda o banco | Sophia (GP) |
 | 06/11 | Entram no MVP o filtro do feed e o peso maior da popularidade nas séries (D16) | Títulos sem sinopse, sem tradução ou obscuros prejudicavam a demonstração | Sophia (GP) |
 | 06/11 | A homologação com 5 a 10 colegas vira um teste interno com as 6 pessoas da equipe, e a homologação com pessoas de fora fica para depois da entrega | Prazo curto, e o resultado já era ilustrativo (D15). Perde-se o olhar de quem não conhece o sistema | Sophia (GP) |
+| 08/11 | O congelamento do front passa de 08/11, às 20h, para a manhã de 09/11 (D17). A decisão sobre o deploy continua às 20h | Dar tempo à nova identidade visual e à aba Meu gosto | Sophia (GP) |
+| 08/11 | A interface ganha a identidade "diário aconchegante": cores quentes, fontes Fraunces e Nunito, selo de data, carimbo "Visto!" e destaque no topo do feed. Os botões maiores, os rótulos do login e os gêneros coloridos vêm da branch da Lara | A identidade do pitch não combinava com um diário nem com a música do incremento 2, e a interface estava sem personalidade | Sophia (GP) |
+| 08/11 | Entra no MVP a aba Meu gosto do diário (RF23, parte do RFF08), e o top 10 passa para ela | Retrospectiva como a dos apps parecidos, feita só com os dados do diário, sem mudar a API | Sophia (GP) |
+| 08/11 | Entram o botão Registrar em todas as telas (RF06), o selo "Visto" na Busca (RF04) e o "Não me interesso" como ✕ no pôster, com Desfazer (RF10). O diário vira polaroides e folha pautada, e as telas passam a usar a largura toda | Pedido da GP ao ver a nova identidade: facilitar o registro, mostrar o que já foi visto e deixar a interface com mais cara de diário | Sophia (GP) |
+| 08/11 | O estilo de diário se espalha: "ory" escrito à mão no logo, números em post-its sobre a folha, polaroides no top 10, nas listas, na Comunidade, no detalhe e no onboarding, gráficos com período e clique que filtra a linha do tempo, e o diário escrito na primeira pessoa | A GP aprovou a identidade de papel e polaroide e pediu para aplicá-la em mais lugares | Sophia (GP) |
+| 08/11 | O link do sistema ganha prévia com imagem, cada página dá nome à aba do navegador, e os termos técnicos saem da tela (RNF04) | A URL vai circular no grupo e na apresentação | Sophia (GP) |
+| 08/11 | Entram a página Início (RF24), que vira a tela de entrada, e a apresentação para quem não entrou (RF25). O feed passa para `/para-voce` | Faltava uma página que reunisse tudo, como nas plataformas parecidas, e um lugar para explicar o sistema antes do cadastro | Sophia (GP) |
+| 08/11 | Entra a aba Usuários na administração (RF26), com duas rotas novas na API e 6 testes. O painel passa a explicar os números em frases | Pensar a administração como a de um sistema de verdade. Apagar contas de teste deixa de exigir SQL no servidor | Sophia (GP) |
+| 08/11 | A moldura de papel fecha a identidade: cabeçalho de folha pautada com abas de fichário coloridas, menu da pessoa no avatar, login e janelas em papel, recados à mão nas telas vazias. Polaroide fica só para o que a pessoa viu; o Quero ver vira pôster preso com fita | Revisão visual da GP: mais personalidade e uma regra clara para cada elemento | Sophia (GP) |
+| 08/11 | A decisão sobre o deploy passa de 08/11, às 20h, para a manhã de 09/11, com o Vinicius (D17) | O servidor ainda não foi preparado; o Vinicius avalia amanhã cedo | Sophia (GP) |
 
 ## Riscos
 
@@ -186,7 +197,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | Registros visíveis na Comunidade | Quem tem conta vê o que as outras pessoas marcaram como Já vi, sem poder esconder | Avisar no cadastro e na página (RNF20) e aceitar e-mail fictício. A escolha de privacidade fica para depois (RFF11) | Sophia |
 | Resenhas de contas simuladas na publicação | Pessoas que não existem apareceriam no detalhe dos títulos e nas médias | Fazer a carga com `--no-synthetic`, como no [guia](DEPLOY.md#2-fazer-a-carga-inicial) | Vinicius |
 | Mudança no banco depois da publicação | O projeto não tem migrations: uma coluna nova derruba a busca e o feed até alguém ajustar o banco | Não mudar os modelos até a entrega. Se for inevitável, seguir o [guia](DEPLOY.md#atualizar-o-sistema-publicado) | Sophia |
-| O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir no domingo (08/11), às 20h, e, se preciso, apresentar localmente | Vinicius |
+| O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir na manhã de segunda (09/11) e, se preciso, apresentar localmente | Vinicius |
 | Servidor fora do ar | Queda de energia ou de internet na casa do Vinicius derruba o sistema | Conferir a URL antes da apresentação e manter a execução local como plano B | Vinicius |
 | Exposição da rede doméstica | Um site público pode abrir um caminho para a rede da casa | Usar túnel com HTTPS e não abrir portas no roteador | Vinicius |
 | Teste interno só com quem conhece o sistema | Problemas de uso podem passar despercebidos, e a taxa não permite conclusão | Chamar de teste interno na apresentação e tratar o resultado como ilustrativo. Sem deploy, fazer o teste em uma só máquina, porque as métricas ficam em um único banco | Antonio |

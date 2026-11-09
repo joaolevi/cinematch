@@ -189,8 +189,8 @@ Estes requisitos ficam fora do MVP.
 | RFF04 | Buscar e adicionar qualquer título, sem depender do admin | Não implementado: a busca externa é só para admin |
 | RFF05 | Acompanhar séries por temporada e com o estado "assistindo" | Não implementado |
 | RFF06 | Recuperar a senha e verificar o e-mail | Não implementado |
-| RFF07 | Excluir a própria conta e os dados pessoais | Não implementado |
-| RFF08 | Ver a página de perfil, com a história do gosto ([#16](https://github.com/joaolevi/cinematch/issues/16)) | Não implementado |
+| RFF07 | Excluir a própria conta e os dados pessoais | Parcial: o admin já apaga uma conta com tudo o que é dela (RF26). Falta a própria pessoa fazer isso |
+| RFF08 | Ver a página de perfil, com a história do gosto ([#16](https://github.com/joaolevi/cinematch/issues/16)) | Parcial: o diário já mostra a frase do gosto, os números e os gráficos (RF23), e o avatar abre o menu da pessoa. Falta o perfil que outras pessoas veem, ao clicar no nome na Comunidade |
 | RFF10 | Seguir e deixar de seguir pessoas, e filtrar a Comunidade por quem sigo | Não implementado: precisa de uma tabela nova |
 | RFF11 | Escolher quem vê meus registros: todos, quem me segue ou ninguém | Não implementado: no MVP, todo mundo vê todo mundo |
 | RFF12 | Curtir e comentar resenhas na Comunidade, com moderação dos comentários | Não implementado: precisa de tabelas novas |

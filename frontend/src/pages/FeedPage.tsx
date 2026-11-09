@@ -1,11 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import Highlight, { Buttons, DismissButton } from "../components/Highlight";
 import MediaCard from "../components/MediaCard";
 import SeenModal from "../components/SeenModal";
+import SeenStamp from "../components/SeenStamp";
+import Toast from "../components/Toast";
 import { OnScreen, useImpressions } from "../impressions";
+import { diaryChanged, useSeen } from "../seen";
 import type { Feed, FeedbackAction, Media, MediaType } from "../types";
+import { MEDIA_GRID } from "../ui";
+import { usePageTitle } from "../usePageTitle";
+import HandNote from "../components/HandNote";
+import ListName from "../components/ListName";
 
 const PAGE = 18;
 
@@ -15,15 +23,19 @@ const STRATEGY_LABEL: Record<Feed["strategy"], string> = {
   trending: "O que está em alta agora. Conte o que você curte e isso aqui fica com a sua cara",
 };
 
-/** Ver Recomendações: feed com Quero ver / Já vi / Não me interesso. */
 export default function FeedPage() {
+  usePageTitle("Para você");
   const { user } = useAuth();
   const [type, setType] = useState<MediaType | "">("");
   const [feed, setFeed] = useState<Feed | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [seenTarget, setSeenTarget] = useState<Media | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    text: ReactNode;
+    undo?: () => void;
+  } | null>(null);
+  const [stamp, setStamp] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreFailed, setMoreFailed] = useState(false);
@@ -31,6 +43,7 @@ export default function FeedPage() {
   const fetching = useRef(false);
   const replacing = useRef(false); // enquanto a lista é substituída, a paginação espera
   const impressions = useImpressions();
+  const seen = useSeen(user?.id);
   const latestLoad = useRef(0); // respostas de um filtro antigo são ignoradas
   const alreadyShown = useRef(new Set<number>()); // tudo o que apareceu desde o último recomeço
 
@@ -119,28 +132,63 @@ export default function FeedPage() {
 
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2500);
+    const t = setTimeout(() => setToast(null), toast.undo ? 5000 : 2500);
     return () => clearTimeout(t);
   }, [toast]);
 
-  async function act(media: Media, action: FeedbackAction, rating?: number | null, review?: string, date?: string | null) {
+  async function act(
+    media: Media,
+    action: FeedbackAction,
+    rating?: number | null,
+    review?: string,
+    date?: string | null,
+  ) {
     // A reação só conta se o título tiver sido exibido, mesmo com o card quase saindo da tela
     const rec = feed?.items.find((i) => i.media.id === media.id);
     if (rec) impressions.mark(rec);
     await impressions.send();
     await api.feedback(media.id, action, rating, review, date);
+    const position = feed?.items.findIndex((i) => i.media.id === media.id) ?? -1;
+    const generation = latestLoad.current;
     setFeed((f) => (f ? { ...f, items: f.items.filter((i) => i.media.id !== media.id) } : f));
-    setToast(
-      action === "want"
-        ? `Anotado! "${media.title}" está na sua lista Quero ver`
-        : action === "seen"
-          ? `Boa! "${media.title}" entrou no seu diário`
-          : `Combinado, não vamos mais sugerir "${media.title}"`,
-    );
+    if (action === "seen") {
+      setStamp(Date.now());
+      diaryChanged();
+      setToast({ text: `Boa! "${media.title}" entrou no seu diário` });
+    } else if (action === "want") {
+      setToast({
+        text: (
+          <>
+            Anotado! "{media.title}" está na sua lista <ListName />
+          </>
+        ),
+      });
+    } else {
+      setToast({
+        text: `Combinado, não vamos mais sugerir "${media.title}"`,
+        undo: rec
+          ? async () => {
+              setToast(null);
+              await api.undoDismiss(media.id);
+              if (generation !== latestLoad.current) return; // o filtro mudou: o card não pertence mais a esta lista
+              setFeed((f) => {
+                if (!f || f.items.some((i) => i.media.id === media.id)) return f;
+                const items = [...f.items];
+                items.splice(Math.max(position, 0), 0, rec);
+                return { ...f, items };
+              });
+            }
+          : undefined,
+      });
+    }
   }
+
+  // O que a pessoa registrou em outra tela (como o Registrar) sai das sugestões
+  const [highlight, ...rest] = (feed?.items ?? []).filter((i) => !seen?.has(i.media.id));
 
   return (
     <div>
+      <SeenStamp id={stamp} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Para você, {user?.name.split(" ")[0]}</h1>
@@ -172,33 +220,34 @@ export default function FeedPage() {
       )}
 
       {error && <p className="mt-6 text-red-300">{error}</p>}
-      {loading && !feed && <p className="mt-6 text-muted">Procurando algo a sua cara...</p>}
+      {loading && !feed && <HandNote className="mt-6">Procurando algo a sua cara...</HandNote>}
 
-      <div className="mt-6 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-6">
-        {feed?.items.map((rec) => (
+      {highlight && (
+        <OnScreen key={highlight.media.id} rec={highlight} onSeen={impressions.mark}>
+          <Highlight
+            rec={highlight}
+            label={feed?.strategy === "trending" ? "Em alta agora" : "Nossa aposta para você"}
+            act={act}
+            onSeen={() => setSeenTarget(highlight.media)}
+          />
+        </OnScreen>
+      )}
+
+      <div className={`mt-8 ${MEDIA_GRID}`}>
+        {rest.map((rec) => (
           <OnScreen key={rec.media.id} rec={rec} onSeen={impressions.mark}>
-            <MediaCard media={rec.media}>
-              <p className="mt-1 line-clamp-2 text-xs text-accent/90" title={rec.reason}>
+            <MediaCard media={rec.media} overlay={<DismissButton onClick={() => act(rec.media, "dismiss")} />}>
+              <p className="mt-1.5 line-clamp-2 text-xs text-muted" title={rec.reason}>
                 {rec.reason}
               </p>
-              <div className="mt-2 grid grid-cols-[1fr_1fr_auto] gap-1">
-                <button className="btn-want px-1 py-1 text-[11px]" onClick={() => act(rec.media, "want")}>
-                  Quero ver
-                </button>
-                <button className="btn-seen px-1 py-1 text-[11px]" onClick={() => setSeenTarget(rec.media)}>
-                  Já vi
-                </button>
-                <button className="btn-skip px-2 py-1 text-[11px]" title="Não me interesso" aria-label="Não me interesso" onClick={() => act(rec.media, "dismiss")}>
-                  ✕
-                </button>
-              </div>
+              <Buttons rec={rec} act={act} onSeen={() => setSeenTarget(rec.media)} />
             </MediaCard>
           </OnScreen>
         ))}
       </div>
 
       <div ref={bottom} />
-      {loadingMore && <p className="mt-8 text-center text-sm text-muted">Procurando mais títulos para você...</p>}
+      {loadingMore && <HandNote className="mt-8 text-center">Procurando mais títulos para você...</HandNote>}
       {moreFailed && (
         <div className="mt-8 text-center">
           <p className="text-sm text-muted">Não conseguimos trazer mais sugestões agora.</p>
@@ -208,7 +257,9 @@ export default function FeedPage() {
         </div>
       )}
       {feed && !hasMore && !loading && (
-        <p className="mt-8 text-center text-muted">Você viu tudo por aqui! Clique em Trocar sugestões para recomeçar.</p>
+        <p className="mt-8 text-center text-muted">
+          Você viu tudo por aqui! Clique em Trocar sugestões para recomeçar.
+        </p>
       )}
 
       {seenTarget && (
@@ -223,9 +274,14 @@ export default function FeedPage() {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-accent/40 bg-surface px-4 py-2 text-sm shadow-xl">
-          {toast}
-        </div>
+        <Toast>
+          <span>{toast.text}</span>
+          {toast.undo && (
+            <button className="cursor-pointer font-extrabold text-[#b9452f] hover:underline" onClick={toast.undo}>
+              Desfazer
+            </button>
+          )}
+        </Toast>
       )}
     </div>
   );
