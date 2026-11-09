@@ -8,7 +8,7 @@ import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
 import Toast from "../components/Toast";
 import { OnScreen, useImpressions } from "../impressions";
-import { diaryChanged } from "../seen";
+import { diaryChanged, useSeen } from "../seen";
 import type { Feed, FeedbackAction, Media, MediaType } from "../types";
 import { MEDIA_GRID } from "../ui";
 import { usePageTitle } from "../usePageTitle";
@@ -43,6 +43,7 @@ export default function FeedPage() {
   const fetching = useRef(false);
   const replacing = useRef(false); // enquanto a lista é substituída, a paginação espera
   const impressions = useImpressions();
+  const seen = useSeen(user?.id);
   const latestLoad = useRef(0); // respostas de um filtro antigo são ignoradas
   const alreadyShown = useRef(new Set<number>()); // tudo o que apareceu desde o último recomeço
 
@@ -148,6 +149,7 @@ export default function FeedPage() {
     await impressions.send();
     await api.feedback(media.id, action, rating, review, date);
     const position = feed?.items.findIndex((i) => i.media.id === media.id) ?? -1;
+    const generation = latestLoad.current;
     setFeed((f) => (f ? { ...f, items: f.items.filter((i) => i.media.id !== media.id) } : f));
     if (action === "seen") {
       setStamp(Date.now());
@@ -155,7 +157,11 @@ export default function FeedPage() {
       setToast({ text: `Boa! "${media.title}" entrou no seu diário` });
     } else if (action === "want") {
       setToast({
-        text: <>Anotado! "{media.title}" está na sua lista <ListName /></>,
+        text: (
+          <>
+            Anotado! "{media.title}" está na sua lista <ListName />
+          </>
+        ),
       });
     } else {
       setToast({
@@ -164,6 +170,7 @@ export default function FeedPage() {
           ? async () => {
               setToast(null);
               await api.undoDismiss(media.id);
+              if (generation !== latestLoad.current) return; // o filtro mudou: o card não pertence mais a esta lista
               setFeed((f) => {
                 if (!f || f.items.some((i) => i.media.id === media.id)) return f;
                 const items = [...f.items];
@@ -176,7 +183,8 @@ export default function FeedPage() {
     }
   }
 
-  const [highlight, ...rest] = feed?.items ?? [];
+  // O que a pessoa registrou em outra tela (como o Registrar) sai das sugestões
+  const [highlight, ...rest] = (feed?.items ?? []).filter((i) => !seen?.has(i.media.id));
 
   return (
     <div>

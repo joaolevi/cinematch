@@ -7,7 +7,7 @@ import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
 import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
-import { diaryChanged } from "../seen";
+import { diaryChanged, useDiaryVersion } from "../seen";
 import { StarsDisplay } from "../components/Stars";
 import WatchedBy from "../components/WatchedBy";
 import { colorFor, formatDate, formatRating, MEDIA_STYLE, plural } from "../format";
@@ -69,9 +69,11 @@ function MediaView({ mediaId }: { mediaId: number }) {
     }
   }, [mediaId]);
 
+  // Recarrega quando o diário muda em outra janela, como o Registrar
+  const version = useDiaryVersion();
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, version]);
 
   useEffect(() => {
     api.similar(mediaId).then(setSimilar).catch(() => {});
@@ -155,9 +157,9 @@ function MediaView({ mediaId }: { mediaId: number }) {
                 );
               })}
             </div>
-            <p className="mt-5 max-w-2xl leading-relaxed text-stone-300">{media.overview}</p>
+            <p className="mt-5 max-w-6xl leading-relaxed text-stone-300">{media.overview}</p>
 
-            <dl className="mt-5 max-w-2xl space-y-1.5 text-sm">
+            <dl className="mt-5 max-w-6xl space-y-1.5 text-sm">
               {media.creators.length > 0 && (
                 <div className="flex gap-3">
                   <dt className="w-16 shrink-0 text-muted">{media.type === "movie" ? "Direção" : "Criação"}</dt>

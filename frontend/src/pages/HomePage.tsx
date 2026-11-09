@@ -62,11 +62,20 @@ function SectionHeader({
   );
 }
 
-function Shelf(props: { title: ReactNode; label?: string; note?: string; to?: string; linkLabel?: string; children: ReactNode }) {
+function Shelf(props: {
+  title: ReactNode;
+  label?: string;
+  note?: string;
+  to?: string;
+  linkLabel?: string;
+  children: ReactNode;
+}) {
   return (
     <section>
       <SectionHeader {...props} />
-      <Carousel label={props.label ?? (typeof props.title === "string" ? props.title : "fileira")}>{props.children}</Carousel>
+      <Carousel label={props.label ?? (typeof props.title === "string" ? props.title : "fileira")}>
+        {props.children}
+      </Carousel>
     </section>
   );
 }
@@ -131,7 +140,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2500);
+    const t = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(t);
   }, [toast]);
 
@@ -153,16 +162,37 @@ export default function HomePage() {
       diaryChanged();
     }
     if (action === "want") loadWatchlist();
+    if (action === "dismiss" && rec) {
+      setToast(
+        <>
+          Combinado, não vamos mais sugerir "{media.title}"
+          <button
+            className="ml-3 cursor-pointer font-extrabold text-[#b9452f] hover:underline"
+            onClick={async () => {
+              setToast(null);
+              await api.undoDismiss(media.id);
+              setRecs((list) => (list && !list.some((r) => r.media.id === media.id) ? [rec, ...list] : list));
+            }}
+          >
+            Desfazer
+          </button>
+        </>,
+      );
+      return;
+    }
     setToast(
-      action === "want"
-        ? <>Anotado! "{media.title}" está na sua lista <ListName /></>
-        : action === "seen"
-          ? `Boa! "${media.title}" entrou no seu diário`
-          : `Combinado, não vamos mais sugerir "${media.title}"`,
+      action === "want" ? (
+        <>
+          Anotado! "{media.title}" está na sua lista <ListName />
+        </>
+      ) : (
+        `Boa! "${media.title}" entrou no seu diário`
+      ),
     );
   }
 
-  const hero = recs?.[0];
+  // O que a pessoa registrou em outra tela sai da aposta do dia
+  const hero = recs?.find((r) => !seen?.has(r.media.id));
   const taste = diary ? tasteOf(diary) : null;
   const visto = (id: number) => (seen?.has(id) ? <span className="text-sm">Visto</span> : undefined);
 
@@ -198,7 +228,17 @@ export default function HomePage() {
       </div>
 
       {watchlist.length > 0 && (
-        <Shelf title={<>Da sua lista <ListName /></>} label="Da sua lista Quero ver" note="pra não esquecer" to="/listas" linkLabel="Ver lista">
+        <Shelf
+          title={
+            <>
+              Da sua lista <ListName />
+            </>
+          }
+          label="Da sua lista Quero ver"
+          note="pra não esquecer"
+          to="/listas"
+          linkLabel="Ver lista"
+        >
           {watchlist.slice(0, SHELF).map(({ media }, position) => (
             <div key={media.id} className={shelfItem}>
               <MediaCard media={media} pinned={{ position }} sticker={visto(media.id)} compact />

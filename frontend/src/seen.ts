@@ -20,11 +20,17 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-async function load(userId: number) {
+async function load(userId: number): Promise<void> {
   loadingFor = userId;
+  const startedAt = version;
   try {
     const entries = await api.diary();
     if (loadingFor !== userId) return; // outra pessoa entrou enquanto carregava
+    if (version !== startedAt) {
+      // O diário mudou enquanto esta resposta vinha: ela já está velha, então carrega de novo
+      loadingFor = null;
+      return load(userId);
+    }
     owner = userId;
     seen = new Map(entries.map((entry) => [entry.media.id, entry]));
     emit();

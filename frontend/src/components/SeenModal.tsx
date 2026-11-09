@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { localDate } from "../format";
 import type { Media } from "../types";
 import { TAPE_COLORS } from "../ui";
+import { useFocusTrap } from "../useFocusTrap";
 import CloseButton from "./CloseButton";
 import { StarsInput } from "./Stars";
 
@@ -33,6 +34,8 @@ export default function SeenModal({
   const [review, setReview] = useState(initialReview);
   const [date, setDate] = useState(initialDate ?? "");
   const [saving, setSaving] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useFocusTrap(box);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -49,6 +52,7 @@ export default function SeenModal({
     >
       {/* Uma página do diário: é aqui que a pessoa escreve */}
       <div
+        ref={box}
         className="paper relative max-h-[92vh] w-full max-w-md -rotate-[0.6deg] overflow-y-auto rounded-sm py-6 pr-6 pl-14"
         onClick={(e) => e.stopPropagation()}
       >

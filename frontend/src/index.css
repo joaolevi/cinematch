@@ -54,6 +54,16 @@ body::before {
   box-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
 }
 
+/* A janela recebe o foco ao abrir; o contorno fica para os controles dentro dela */
+[role="dialog"] .paper:focus {
+  outline: none;
+}
+
+/* Estrelas sobre o papel: âmbar escuro, com contraste de 4,2:1 (o âmbar normal some no papel) */
+.paper {
+  --color-amber: #a15c00;
+}
+
 /* Formulários e textos sobre o papel: tinta escura no lugar do creme */
 .paper .text-muted {
   color: rgb(43 33 28 / 0.62);

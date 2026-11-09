@@ -3,6 +3,7 @@ import { api } from "../api";
 import { useAuth } from "../auth";
 import { MEDIA_STYLE } from "../format";
 import { TAPE_COLORS } from "../ui";
+import { useFocusTrap } from "../useFocusTrap";
 import { diaryChanged, useSeen } from "../seen";
 import type { Media } from "../types";
 import CloseButton from "./CloseButton";
@@ -53,6 +54,8 @@ export default function QuickLog({ onClose, onSaved }: { onClose: () => void; on
   const [watchlist, setWatchlist] = useState<Media[]>([]);
   const [picked, setPicked] = useState<Media | null>(null);
   const latest = useRef(0);
+  const box = useRef<HTMLDivElement>(null);
+  useFocusTrap(box, !picked);
 
   useEffect(() => {
     api
@@ -71,7 +74,9 @@ export default function QuickLog({ onClose, onSaved }: { onClose: () => void; on
   useEffect(() => {
     const term = q.trim();
     if (!term) {
+      latest.current++; // uma busca a caminho não pode mais trocar a lista
       setResults(null);
+      setResultsFor("");
       return;
     }
     const thisSearch = ++latest.current;
@@ -97,6 +102,24 @@ export default function QuickLog({ onClose, onSaved }: { onClose: () => void; on
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, picked]);
+
+  if (picked && seen == null) {
+    // Sem o diário carregado, não dá para saber se o título já tem nota e resenha: espera em vez de abrir vazio
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 p-4 pt-[12vh]"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="paper relative w-full max-w-lg rounded-sm py-6 pr-6 pl-14">
+          <p className="font-hand text-2xl font-bold text-[#b9452f]">Abrindo o meu diário...</p>
+          <button className="btn-ghost mt-4" onClick={() => setPicked(null)}>
+            Voltar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (picked) {
     const entry = seen?.get(picked.id);
@@ -132,6 +155,7 @@ export default function QuickLog({ onClose, onSaved }: { onClose: () => void; on
       aria-labelledby="quicklog-title"
     >
       <div
+        ref={box}
         className="paper relative w-full max-w-lg -rotate-[0.6deg] rounded-sm pt-6 pr-6 pb-8 pl-14"
         onClick={(e) => e.stopPropagation()}
       >

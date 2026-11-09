@@ -73,9 +73,9 @@ function VariantCard({ m, label, note }: { m: VariantMetrics; label: string; not
       <p className="mt-3 text-4xl font-extrabold text-accent">{pct(m.acceptance_rate)}</p>
       <p className="text-sm text-stone-300">{inWords(m.acceptance_rate)}</p>
       {/* O que aconteceu com as sugestões exibidas, em uma barra só */}
+      {/* A barra usa a taxa de aceitação: Quero ver e Já vi no mesmo título contam uma vez só */}
       <div className="mt-4 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-bg" aria-hidden>
-        <div className="bg-coral" style={{ width: share(m.want) }} title={`Quero ver: ${m.want}`} />
-        <div className="bg-accent" style={{ width: share(m.seen) }} title={`Já vi: ${m.seen}`} />
+        <div className="bg-accent" style={{ width: pct(m.acceptance_rate) }} title={`Aceitas: ${pct(m.acceptance_rate)}`} />
         <div className="bg-[#76655b]" style={{ width: share(m.dismiss) }} title={`Não me interesso: ${m.dismiss}`} />
       </div>
       <dl className="mt-4 grid grid-cols-[1fr_auto] gap-y-1 text-sm">
@@ -84,12 +84,12 @@ function VariantCard({ m, label, note }: { m: VariantMetrics; label: string; not
         <dt className="text-muted">Sugestões que apareceram na tela</dt>
         <dd className="text-right">{m.shown}</dd>
         <dt className="flex items-center gap-2 text-muted">
-          <span className="h-2.5 w-2.5 rounded-sm bg-coral" /> Quero ver
+          <span className="h-2.5 w-2.5 rounded-sm bg-accent" /> Aceitas
         </dt>
+        <dd className="text-right">{pct(m.acceptance_rate)}</dd>
+        <dt className="pl-[18px] text-muted">Quero ver</dt>
         <dd className="text-right">{m.want}</dd>
-        <dt className="flex items-center gap-2 text-muted">
-          <span className="h-2.5 w-2.5 rounded-sm bg-accent" /> Já vi
-        </dt>
+        <dt className="pl-[18px] text-muted">Já vi</dt>
         <dd className="text-right">{m.seen}</dd>
         <dt className="flex items-center gap-2 text-muted">
           <span className="h-2.5 w-2.5 rounded-sm bg-[#76655b]" /> Não me interesso
@@ -225,16 +225,22 @@ function UsersTab() {
   const [data, setData] = useState<{ items: AdminUser[]; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const load = () =>
-    api
-      .adminUsers({ q: q.trim() || undefined, kind, limit: 500 })
-      .then(setData)
-      .catch((e) => setError(e.message));
+  const [reload, setReload] = useState(0);
+  const load = () => setReload((n) => n + 1);
 
   useEffect(() => {
-    const timer = setTimeout(load, 250);
-    return () => clearTimeout(timer);
-  }, [q, kind]);
+    let current = true; // a resposta de um filtro antigo não sobrescreve o filtro atual
+    const timer = setTimeout(() => {
+      api
+        .adminUsers({ q: q.trim() || undefined, kind, limit: 500 })
+        .then((d) => current && setData(d))
+        .catch((e) => current && setError(e.message));
+    }, 250);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+  }, [q, kind, reload]);
 
   const notes = useMemo(() => {
     const items = data?.items ?? [];

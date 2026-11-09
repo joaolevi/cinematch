@@ -2,12 +2,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import MediaCard from "../components/MediaCard";
-import { useSeen } from "../seen";
 import { MEDIA_GRID, tabColor } from "../ui";
 import type { UserList } from "../types";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
 import ListName from "../components/ListName";
+import { useDiaryVersion, useSeen } from "../seen";
 
 /** Gerenciar Listas (watchlist "Quero ver" + listas personalizadas). */
 export default function ListsPage() {
@@ -29,9 +29,11 @@ export default function ListsPage() {
     }
   };
 
+  // O Registrar tira o título do Quero ver: recarrega quando o diário muda
+  const version = useDiaryVersion();
   useEffect(() => {
     load();
-  }, []);
+  }, [version]);
 
   const active = lists.find((l) => l.id === activeId) ?? null;
 
