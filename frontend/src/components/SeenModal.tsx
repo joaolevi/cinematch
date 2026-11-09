@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { localDate } from "../format";
 import type { Media } from "../types";
-import { TAPE_COLORS } from "../ui";
+import { TAB_COLORS, TAPE_COLORS } from "../ui";
 import { useFocusTrap } from "../useFocusTrap";
 import CloseButton from "./CloseButton";
 import { StarsInput } from "./Stars";
@@ -69,7 +69,7 @@ export default function SeenModal({
         <label className="mt-5 block text-sm font-medium" htmlFor="seen-date">
           Quando eu vi? (opcional)
         </label>
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-3">
           {QUICK_DATES.map(({ label, daysAgo }) => {
             const value = localDate(daysAgo);
             return (
@@ -77,7 +77,8 @@ export default function SeenModal({
                 key={label}
                 type="button"
                 aria-pressed={date === value}
-                className={`chip cursor-pointer px-4 py-2 text-sm ${date === value ? "border-accent bg-accent/15 text-accent" : ""}`}
+                className="tape-chip"
+                style={{ "--tape": TAB_COLORS[daysAgo === 0 ? 0 : 2], rotate: `${daysAgo === 0 ? -2 : 1.5}deg` } as CSSProperties}
                 onClick={() => setDate(date === value ? "" : value)}
               >
                 {label}

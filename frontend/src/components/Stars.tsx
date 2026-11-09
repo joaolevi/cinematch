@@ -55,26 +55,38 @@ export function StarsInput({
   size?: number;
 }) {
   const [hover, setHover] = useState<number | null>(null);
+  const [burst, setBurst] = useState(0); // muda a cada nota escolhida, para as estrelas pularem de novo
   const shown = hover ?? value ?? 0;
+  const pick = (v: number) => {
+    onChange(v);
+    setBurst((b) => b + 1);
+  };
   return (
     <div className="flex items-center gap-3">
       <div className="flex" onMouseLeave={() => setHover(null)}>
         {[0, 1, 2, 3, 4].map((i) => (
           <span key={i} className="relative cursor-pointer" style={{ width: size, height: size }}>
-            <Star fill={fillFor(shown, i)} />
+            {/* Ao escolher a nota, as estrelas preenchidas dão um pulo, uma depois da outra */}
+            <span
+              key={burst > 0 && value != null && i < Math.ceil(value) ? `pop-${burst}` : "parada"}
+              className={`block h-full w-full ${burst > 0 && value != null && i < Math.ceil(value) ? "star-pop" : ""}`}
+              style={{ animationDelay: `${i * 70}ms` }}
+            >
+              <Star fill={fillFor(shown, i)} />
+            </span>
             <button
               type="button"
               aria-label={`${i + 0.5} estrelas`}
               className="absolute inset-y-0 left-0 w-1/2 cursor-pointer"
               onMouseEnter={() => setHover(i + 0.5)}
-              onClick={() => onChange(i + 0.5)}
+              onClick={() => pick(i + 0.5)}
             />
             <button
               type="button"
               aria-label={`${i + 1} estrelas`}
               className="absolute inset-y-0 right-0 w-1/2 cursor-pointer"
               onMouseEnter={() => setHover(i + 1)}
-              onClick={() => onChange(i + 1)}
+              onClick={() => pick(i + 1)}
             />
           </span>
         ))}
