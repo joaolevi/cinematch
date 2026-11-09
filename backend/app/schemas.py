@@ -280,6 +280,29 @@ class AdminReviewOut(BaseModel):
     created_at: datetime
 
 
+class AdminUserOut(BaseModel):
+    """Uma pessoa na aba Usuários da administração, com o que ela já fez no sistema."""
+
+    id: int
+    name: str
+    email: str
+    role: str
+    ab_group: str
+    is_synthetic: bool
+    onboarded: bool
+    created_at: datetime
+    diary_entries: int
+    reviews: int
+    shown: int  # sugestões que apareceram na tela
+    accepted: int  # Quero ver + Já vi vindos de sugestões
+    last_active: datetime
+
+
+class AdminUsersOut(BaseModel):
+    items: list[AdminUserOut]
+    total: int
+
+
 class ReviewModerationIn(BaseModel):
     hidden: bool
 
