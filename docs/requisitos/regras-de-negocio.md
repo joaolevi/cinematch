@@ -33,7 +33,7 @@ RN12, RN13 e RN14 foram aprovadas por Sophia (GP) em 05/11/2026.
 | RN07 | O feed não mostra títulos registrados, descartados ou na watchlist | Atende |
 | RN20 | O feed só sugere títulos do TMDB com sinopse, pôster e nome com letras latinas ou só números, como 1917. A busca mostra todos | Atende |
 | RN11 | O grupo A/B alterna pela ordem de cadastro | Atende |
-| RN12 | Taxa de aceitação = títulos aceitos (Quero ver ou Já vi) ÷ títulos exibidos, contando cada par usuário e título uma única vez e apenas títulos exibidos no feed. Um título conta como exibido quando pelo menos metade do card aparece na tela | Atende |
+| RN12 | Taxa de aceitação = títulos aceitos (Quero ver ou Já vi) ÷ títulos exibidos, contando cada par usuário e título uma única vez e apenas títulos exibidos no feed. Um título conta como exibido quando pelo menos metade do card fica na tela por 1 segundo seguido, ou quando a pessoa reage a ele. A comparação entre os grupos A e B usa só as sugestões personalizadas: as "Em alta" entram apenas na taxa geral | Atende |
 
 ## Catálogo
 

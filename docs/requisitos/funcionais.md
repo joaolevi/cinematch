@@ -22,7 +22,7 @@ As situações abaixo consideram o código da branch `homol`, que ainda não sub
 | RF06 | Registrar que viu um título, com data opcional, de qualquer tela pelo botão Registrar, e editar ou apagar o registro | Atende | Deve |
 | RF07 | Dar nota e escrever resenha, ambas opcionais | Atende | Deve |
 | RF08 | Criar, renomear e excluir listas, incluir e remover títulos e usar a watchlist "Quero ver" | Atende | Deve |
-| RF09 | Ver o feed "Para você", com filtro por tipo, novas sugestões ao rolar a página e opção de trocar as sugestões | Atende | Deve |
+| RF09 | Ver o feed "Para você", com filtro por tipo, botão "Ver mais sugestões" e opção de trocar as sugestões | Atende | Deve |
 | RF10 | Reagir a uma sugestão com Quero ver, Já vi ou Não me interesso, que pode ser desfeito | Atende | Deve |
 | RF19 | Ver no diário, na aba Meu gosto, o top 10 dos títulos mais amados e o dos mais odiados | Atende | Deve |
 | RF20 | Ver a página Comunidade, com os registros mais recentes de todas as pessoas (pessoa, título, nota, resenha e quando a pessoa viu) e com quem mais escreve resenhas | Atende | Deve |

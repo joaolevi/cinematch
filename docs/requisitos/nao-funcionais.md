@@ -13,7 +13,7 @@ A coluna Situação mostra o que foi verificado em 05 e 06/11/2026.
 | RNF03 | Senhas guardadas com bcrypt; rotas protegidas exigem JWT | PLANO §3 | Atende |
 | RNF04 | Textos e documentação em português | CLAUDE.md | Atende: telas revisadas em 08/11. O aviso do TMDB na página Sobre fica em inglês, como o TMDB escreve |
 | RNF05 | `docs/openapi.json` reflete as rotas reais | CONTRIBUTING | Atende: as 41 rotas coincidem com a aplicação (regerado em 08/11) |
-| RNF06 | Testes offline verdes, e toda rota tem teste | CLAUDE.md | Atende: 114 testes offline e 13 de integração passam em 08/11. As rotas novas de usuários na administração ganharam 6 testes |
+| RNF06 | Testes offline verdes, e toda rota tem teste | CLAUDE.md | Atende: 115 testes offline e 13 de integração passam em 08/11. As rotas novas de usuários na administração ganharam 6 testes |
 | RNF07 | Compatível com Python 3.12+ | README | Rodou em 3.13.5; o CI e o Docker usam 3.12. As versões fixas do numpy e do scipy não instalam em Python mais antigo |
 | RNF08 | A interface exibe o crédito do TMDB | `docs/API.md` | Atende: o aviso e o logo estão na página Sobre e no rodapé da apresentação, como o TMDB exige |
 | RNF09 | O feed responde em até 1 s na máquina da demo | Aprovado em 06/11 | Atende: cerca de 115 ms com 3.966 títulos, no Docker |

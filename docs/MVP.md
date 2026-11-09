@@ -5,7 +5,7 @@
 
 ## Situação atual
 
-A API cobre os 13 casos de uso do pitch para filmes e séries. Os 114 testes offline e os 13 com o TMDB real
+A API cobre os 13 casos de uso do pitch para filmes e séries. Os 115 testes offline e os 13 com o TMDB real
 passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
 credenciais estão na branch `homol`, com o CI passando. Falta o QA testar a `homol`, publicar o sistema, ajustar o
 design, fazer o teste interno e preparar a demonstração.
@@ -185,6 +185,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | 08/11 | Entra a aba Usuários na administração (RF26), com duas rotas novas na API e 6 testes. O painel passa a explicar os números em frases | Pensar a administração como a de um sistema de verdade. Apagar contas de teste deixa de exigir SQL no servidor | Sophia (GP) |
 | 08/11 | A moldura de papel fecha a identidade: cabeçalho de folha pautada com abas de fichário coloridas, menu da pessoa no avatar, login e janelas em papel, recados à mão nas telas vazias. Polaroide fica só para o que a pessoa viu; o Quero ver vira pôster preso com fita | Revisão visual da GP: mais personalidade e uma regra clara para cada elemento | Sophia (GP) |
 | 08/11 | A decisão sobre o deploy passa de 08/11, às 20h, para a manhã de 09/11, com o Vinicius (D17) | O servidor ainda não foi preparado; o Vinicius avalia amanhã cedo | Sophia (GP) |
+| 09/11 | Um título passa a contar como exibido só depois de 1 segundo na tela; o feed troca a rolagem infinita pelo botão "Ver mais sugestões" (RF09); e a comparação A/B passa a usar só as sugestões personalizadas (RN12). Substitui o "feed ao rolar" aprovado em 06/11 | Quem rolava rápido "exibia" cards que não viu, e as sugestões "Em alta", iguais nos dois grupos, diluíam a diferença entre A e B | Sophia (GP) |
 
 ## Riscos
 
