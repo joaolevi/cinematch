@@ -16,12 +16,13 @@ de forma didática e prefira soluções simples e legíveis a soluções "espert
 - **Proposta:** diário de filmes e séries + **motor de recomendação híbrido** (conteúdo + colaborativo).
 - **Métrica de sucesso:** taxa de aceitação = (Quero ver + Já vi) ÷ sugestões exibidas, comparada num
   **teste A/B** (grupo A = híbrido, grupo B = só conteúdo).
-- **Este repositório = API e interface.** A interface fica em `frontend/`, e o contrato, em `docs/API.md` e
-  `docs/openapi.json`.
-- **Fora do escopo:** álbuns/MusicBrainz (incremento 2) e recursos sociais.
-- Documentos: `docs/MVP.md` (escopo e decisões), `docs/requisitos/`, `docs/ENTREGAS.md` (equipe e critérios),
-  `docs/ARQUITETURA.md` (sistema final e evidências), `docs/DEPLOY.md`, `docs/HOMOLOGACAO.md`, `docs/API.md` e
-  `docs/pitch-tastory.pdf` (DCU, DA, EAP, RACI, PRINCE2). `docs/PLANO.md` é histórico.
+- **Este repositório = API e interface.** A interface fica em `frontend/`, e o contrato, em `docs/tecnico/API.md` e
+  `docs/tecnico/openapi.json`.
+- **MVP entregue em 10/11/2026.** O plano depois dele está em `docs/requisitos/incrementos.md`: 2a (base, medição e
+  grafo de conteúdo), 2b (álbuns via MusicBrainz), 3 (beta, social e controle), 4 e 5.
+- Documentos (índice em `docs/README.md`): `docs/gestao/` (MVP, EAP e RACI em ENTREGAS, roteiro de homologação, pitch
+  com DCU, DA, EAP, RACI e PRINCE2, e o PLANO histórico), `docs/requisitos/` (do MVP, futuros e o plano de incrementos)
+  e `docs/tecnico/` (ARQUITETURA, AVALIACAO com evidências e experimentos, DEPLOY, API e `openapi.json`).
 
 ## Rastreabilidade (DCU → EAP → código)
 
@@ -109,11 +110,11 @@ Antes de commitar, confira `git status` e garanta que `.env` não está listado.
 1. Antes de mudar algo, leia os arquivos envolvidos e confirme como o fluxo atual funciona.
 2. Mantenha o escopo de protótipo: a menor mudança que entrega a funcionalidade de forma clara.
 3. Toda rota nova ou mudança de regra ganha teste. Mantenha a suíte verde.
-4. Mudou rotas/schemas? Atualize `docs/API.md` e regenere `docs/openapi.json` (comando no `CLAUDE.md`),
+4. Mudou rotas/schemas? Atualize `docs/tecnico/API.md` e regenere `docs/tecnico/openapi.json` (comando no `CLAUDE.md`),
    porque o frontend depende desse contrato.
 5. Para conferir manualmente: `./dev.sh` e abra http://localhost:8000/docs.
 6. Commits e PRs em português, pequenos (`feat:`, `fix:`, `docs:`, `test:`), vinculados à issue
    (`Closes #N`). Nunca faça push direto na `main` sem o usuário pedir.
 7. Ao revisar PRs de colegas, aponte bugs concretos e explique o porquê de forma gentil e didática.
-8. Se um pedido sair do escopo (ex.: álbuns), avise e sugira registrar como issue do incremento 2. O deploy faz
-   parte do MVP: veja `docs/DEPLOY.md`.
+8. Se um pedido não estiver no plano de incrementos, avise e sugira registrá-lo em `docs/requisitos/` e no Pós-MVP do
+   Trello. O sistema publicado e o plano B estão em `docs/tecnico/DEPLOY.md`.

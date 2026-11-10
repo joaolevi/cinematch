@@ -1,6 +1,6 @@
 # frontend: interface do Tastory
 
-> Responsável: Lara. A interface consome a API pelo contrato em [`../docs/API.md`](../docs/API.md).
+> Responsável: Lara. A interface consome a API pelo contrato em [`../docs/tecnico/API.md`](../docs/tecnico/API.md).
 
 React + Vite + TypeScript + Tailwind. Telas:
 

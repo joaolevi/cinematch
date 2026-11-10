@@ -8,10 +8,10 @@
 > execução **apenas local** (sem deploy) · **filmes e séries** neste incremento; álbuns ficam para depois.
 >
 > **Status (2026-11-05):** backend completo (API, recomendador, admin, métricas A/B), **integração real com o TMDB**
-> e testes automatizados. A interface está em `frontend/`, e o contrato, em `docs/API.md`/`docs/openapi.json`.
+> e testes automatizados. A interface está em `frontend/`, e o contrato, em `docs/tecnico/API.md`/`docs/tecnico/openapi.json`.
 >
-> **Este documento registra o plano original.** O que vale hoje está em `docs/MVP.md`, `docs/requisitos/` e
-> `docs/ARQUITETURA.md`.
+> **Este documento registra o plano original.** O que vale hoje está em `docs/gestao/MVP.md`, `docs/requisitos/` e
+> `docs/tecnico/ARQUITETURA.md`.
 
 ---
 

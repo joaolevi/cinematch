@@ -1,7 +1,7 @@
 # Equipe e entregas
 
-> **Versão 1, 06/11/2026.** Liga a EAP do pitch aos responsáveis, aos requisitos e aos critérios de aceite.
-> O que entra na entrega de 10/11 está em [MVP.md](MVP.md), e os requisitos, em [requisitos/](requisitos/README.md).
+> **Versão 2, 10/11/2026.** Liga a EAP do pitch aos responsáveis, aos requisitos e aos critérios de aceite.
+> O que foi entregue em 10/11 está em [MVP.md](MVP.md), e os requisitos, em [requisitos/](../requisitos/README.md).
 
 ## Equipe
 
@@ -42,7 +42,7 @@ Na coluna **I**, "Equipe" são as demais pessoas.
 
 Os critérios de 1.1 a 4.1 são os "Critério de conclusão" que a equipe registrou nos cartões da EAP no Trello.
 Os cartões de 4.2 e 4.3 foram criados em 06/11, e seus critérios foram aprovados por Sophia (GP) no mesmo dia. A coluna Situação reflete
-09/11/2026.
+10/11/2026, o dia da entrega.
 
 | Pacote | Requisitos | Critério de aceite | Situação |
 |---|---|---|---|
@@ -58,5 +58,5 @@ Os cartões de 4.2 e 4.3 foram criados em 06/11, e seus critérios foram aprovad
 | 3.3 | RF15a, RF15b, RN15 | Catálogo audiovisual pesquisável e sincronizável; catálogo musical validado antes da liberação de álbuns | Funciona com o mock e o TMDB real. A parte musical está fora do MVP |
 | 3.4 | RF11 a RF13, RN07 | Serviço retorna recomendações mesmo sem histórico; exclui itens descartados ou já registrados conforme regra do produto; feedback alimenta futuras sugestões | Concluído |
 | 4.1 | RNF06, RNF07, RNF09 | Principais casos de uso executados, falhas registradas e corrigidas antes do teste interno | Concluído: 115 testes offline e 13 de integração passam, toda rota tem teste, o CI roda em todo PR e os roteiros do QA foram concluídos na `homol` |
-| 4.2 | RF17, RN11, RN12, RNF10, RNF14 | Taxa entre 0% e 100% por grupo; teste interno com a equipe registrado na issue [#14](https://github.com/joaolevi/cinematch/issues/14) | Em andamento: teste interno com a equipe em 09/11; a análise segue o [roteiro](HOMOLOGACAO.md) |
-| 4.3 | RNF01 a RNF04, RNF11 a RNF15, RNF18, RNF19 | Fluxo completo funcionando em URL com HTTPS, sem credencial pública, e documentação atualizada | Em andamento: documentação atualizada; publicação no servidor do Vinicius em 09/11 ([guia](DEPLOY.md)) |
+| 4.2 | RF17, RN11, RN12, RNF10, RNF14 | Taxa entre 0% e 100% por grupo; teste interno com a equipe registrado na issue [#14](https://github.com/joaolevi/cinematch/issues/14) | Parcial: o teste A/B e o painel estão prontos; o teste interno não aconteceu, e a homologação com pessoas passa para a beta do incremento 3 ([roteiro](HOMOLOGACAO.md)) |
+| 4.3 | RNF01 a RNF04, RNF11 a RNF15, RNF18, RNF19 | Fluxo completo funcionando em URL com HTTPS, sem credencial pública, e documentação atualizada | Parcial: documentação atualizada e sistema publicado no servidor do Vinicius, com acesso liberado só para um IP; falta abrir a URL pública com HTTPS e carregar o MovieLens ([guia](../tecnico/DEPLOY.md)) |

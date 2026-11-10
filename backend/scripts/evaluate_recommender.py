@@ -1,4 +1,4 @@
-"""Avalia o recomendador com avaliações reais do MovieLens (teste exploratório, ver docs/ARQUITETURA.md).
+"""Avalia o recomendador com avaliações reais do MovieLens (teste exploratório, ver docs/tecnico/AVALIACAO.md).
 
 Reproduz a fórmula de `app/services/recommender.py`, sem a etapa de diversidade, e compara as variantes.
 A base não fica no repositório: baixe `ml-latest-small` em https://grouplens.org/datasets/movielens/latest/

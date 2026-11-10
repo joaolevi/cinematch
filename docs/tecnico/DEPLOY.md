@@ -1,9 +1,10 @@
 # Guia para o deploy
 
-> Responsável: Vinicius. Parte do [MVP](MVP.md). Os requisitos estão em [nao-funcionais.md](requisitos/nao-funcionais.md) (RNF11 a RNF19).
+> **Versão 2, 10/11/2026.** Responsável: Vinicius. Parte do [MVP](../gestao/MVP.md). Os requisitos estão em [nao-funcionais.md](../requisitos/nao-funcionais.md) (RNF11 a RNF19).
 
-A publicação será no servidor do Vinicius, sem custo (decisão D12), com o arquivo `docker-compose.prod.yml`. Os passos
-abaixo foram testados localmente em 06/11/2026, exceto o acesso externo.
+O sistema está publicado no servidor do Vinicius, sem custo (decisão D12), com o arquivo `docker-compose.prod.yml`. Foi
+o sistema usado na apresentação de 10/11/2026. Por enquanto, o acesso está liberado só para um IP: falta abrir a URL
+pública (seção 4) e carregar o MovieLens (seção 3).
 
 Os comandos abaixo têm atalhos no `Makefile`: `make prod-up`, `make prod-logs`, `make prod-seed CONFIRMAR=sim`,
 `make prod-movielens DATA=/caminho/ml-32m` e `make backup`.
@@ -37,15 +38,30 @@ métricas vazio, e o `--no-synthetic` evita contas simuladas, para só aparecere
 
 ## 3. Carregar as recomendações de filmes
 
-É o que mais melhora as sugestões, e deve ser ligado na publicação (D14). Baixe o [MovieLens 32M](https://grouplens.org/datasets/movielens/32m/), que
-fica fora do repositório, e rode depois da carga inicial:
+É o que mais melhora as sugestões (D14): sem ele, o grupo A usa peso 0,5 no conteúdo e fica abaixo de recomendar só os
+mais populares ([avaliação](AVALIACAO.md#resultado-do-exp01)). O [MovieLens 32M](https://grouplens.org/datasets/movielens/32m/)
+fica fora do repositório. Rode depois da carga inicial, porque a importação liga os filmes do MovieLens aos do catálogo
+pelo ID do TMDB; se o catálogo for recarregado, importe de novo:
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env.production run --rm -v /caminho/ml-32m:/data:ro api python -m scripts.import_movielens /data
+# 1. Baixar e descompactar no servidor
+cd ~ && curl -LO https://files.grouplens.org/datasets/movielens/ml-32m.zip && unzip ml-32m.zip
+
+# 2. Importar, a partir da pasta do repositório (no teste: 31 s e 71.835 vizinhos para 1.438 filmes)
+make prod-movielens DATA=$HOME/ml-32m
+
+# 3. Ligar: no .env.production, TASTORY_USE_EXTERNAL_NEIGHBORS=true (acrescente a linha se não existir), e subir de novo
+make prod-up
 ```
 
-Em teste, levou 31 s e gerou 71.835 vizinhos para 1.438 filmes. Depois, defina `TASTORY_USE_EXTERNAL_NEIGHBORS=true` no
-`.env.production` e rode o `up -d` de novo. A licença não permite uso comercial sem permissão.
+Para conferir, as duas coisas precisam ser verdade: a contagem bem maior que zero e a opção `=true`.
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.production exec db psql -U tastory -d tastory -c "select count(*) from item_neighbors;"
+docker compose -f docker-compose.prod.yml --env-file .env.production exec api env | grep TASTORY_USE_EXTERNAL_NEIGHBORS
+```
+
+A licença não permite uso comercial sem permissão.
 
 ## 4. Abrir o acesso externo
 
@@ -60,12 +76,12 @@ tailscale funnel status
 
 Depois, preencha `TASTORY_PUBLIC_URL` e `TASTORY_API_URL` com os endereços gerados e rode o `up --build -d` de novo.
 O `TASTORY_PUBLIC_URL` também entra na prévia do link, a imagem que aparece ao mandar o endereço no WhatsApp. O
-Funnel tem limite de banda, e a Tailscale recomenda não expor dados sensíveis, por isso aceite e-mail fictício no
-teste interno (RNF10).
+Funnel tem limite de banda, e a Tailscale recomenda não expor dados sensíveis, por isso aceite e-mail fictício nos
+testes com pessoas (RNF10).
 
 ## 5. Fazer backup
 
-Antes do teste interno e da entrega:
+Antes de um teste com pessoas, de uma apresentação ou de atualizar a versão publicada:
 
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db pg_dump -U tastory tastory > backup-$(date +%F).sql
@@ -111,7 +127,7 @@ banco, porque ele apaga as contas e o histórico.
 
 ## Apagar uma conta
 
-Use para as contas de teste antes do teste interno e para quem pedir a exclusão. O diário, as listas e os eventos da pessoa saem junto.
+Use para as contas de teste antes de um teste com pessoas e para quem pedir a exclusão. O diário, as listas e os eventos da pessoa saem junto.
 
 O jeito mais simples é pela interface: entre como admin e use **Administração → Usuários → Apagar conta**. Contas de administração não saem por ali. Pelo servidor:
 
@@ -121,8 +137,8 @@ docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db 
 
 ## Plano B
 
-Se a URL pública falhar, o sistema roda em uma máquina local, com o mesmo banco. Prepare tudo em 08/11, enquanto há internet. A
-escolha entre deploy e execução local sai na manhã de segunda (09/11), com o Vinicius (D17).
+Se a URL pública falhar, o sistema roda em uma máquina local, com o mesmo banco. Prepare tudo antes, enquanto há internet.
+Na entrega de 10/11 o plano B não foi preciso, mas ele continua valendo para as próximas apresentações.
 
 **1. Gere uma cópia do banco.** No servidor, use o comando de backup da seção 5. Sem servidor, faça a carga das seções 2 e 3 em
 qualquer máquina com a chave do TMDB. O arquivo tem e-mails e senhas criptografadas, então não o envie para o git nem para grupos.

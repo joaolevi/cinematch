@@ -1,43 +1,47 @@
-# Arquitetura e sistema final
+# Avaliação do recomendador e das fontes
 
-> **Versão 2, 06/11/2026.** Validação técnica: Bárbara (IA) e Levi (TL). Aprovação: Sophia (GP).
-> Este documento trata do sistema final, com filmes, séries e música. O que será entregue em 10/11 está em [MVP.md](MVP.md).
+> **Versão 1, 10/11/2026.** Reúne as evidências, as fontes avaliadas e os experimentos que saíram de
+> [ARQUITETURA.md](ARQUITETURA.md). Lá ficam as decisões; aqui, os números e como repetir cada teste.
 
-## Decisões
+## Experimentos
 
-| ID | Decisão | Motivo | Quem aprovou |
-|---|---|---|---|
-| D7 | Filmes e séries são recomendados juntos; música é recomendada separadamente | Filmes e séries já compartilham gêneros, diretores e dados. Cruzar com música exige pessoas que consomem as duas coisas, e ainda não temos esses dados | Sophia (GP), 06/11 |
-| D8 | O MVP mantém o cálculo atual; a mudança de arquitetura fica para depois de 10/11. As exceções são a tabela de vizinhos do MovieLens (D14) e o ajuste nas séries (D16) | Com o catálogo atual, o feed responde em milissegundos, e trocar agora colocaria a entrega em risco | Sophia (GP), 06/11 |
-| D14 | Os vizinhos do MovieLens 32M substituem os usuários inventados nos filmes, com a opção desligada por padrão | Foi a maior melhora medida, e a opção desligada protege a entrega | Sophia (GP), 06/11 |
+Avaliações planejadas, na ordem de implementação. O lugar de cada uma no plano está em
+[incrementos.md](../requisitos/incrementos.md).
 
-A recomendação cruzada entre filmes e música fica como evolução: o diário unificado vai gerar esses dados com o tempo.
+| ID | Requisito | Situação | Depende de | Esforço | Incremento | Antes |
+|---|---|---|---|---|---|---|
+| <a id="exp01"></a>EXP01 | Comparar offline, nos filmes do MovieLens, o modelo atual, o mesmo com *embeddings* e o grafo de gosto; fica o que ganhar (ver [O modelo depois do MVP](ARQUITETURA.md#o-modelo-depois-do-mvp)) | **Feito em 10/11:** empate com dados colaborativos; só com conteúdo, o grafo vence. Scripts `compare_models.py` e `check_popularity.py` | — | M | 2a | novo |
+| <a id="exp04"></a>EXP04 | Confirmar no MovieLens 32M o resultado do EXP01, antes de construir o grafo de conteúdo (RNFF12) | Não feito. A base grande exige guardar só os vizinhos mais próximos de cada título, em vez da matriz inteira | EXP01 | P a M | 2a | novo |
+| <a id="exp02"></a>EXP02 | Comparar, num teste A/B, o motivo escrito por modelo fixo com o mesmo motivo reescrito por IA | Não feito. Depende de guardar o motivo de forma estruturada e de orçamento | RNFF02 | P a M | 3 | RFF33 |
+| <a id="exp03"></a>EXP03 | Medir, no teste A/B, a aceitação das sugestões cruzadas por tipo de ponte | Não feito | RFF27 | P | 5 | novo |
 
-## O que mantemos
+### Resultado do EXP01
 
-- API única em FastAPI, com PostgreSQL em produção.
-- Recomendador dentro do backend, sem serviço separado.
-- Abordagem híbrida, explicação de cada sugestão e teste A/B.
-- Interface `CatalogProvider`, que permite incluir o MusicBrainz sem mudar o restante do sistema.
+Feito em 10/11/2026. MovieLens pequeno (100.836 notas, 610 pessoas, 3.650 filmes), sem nenhum dado do
+TMDB. Os parâmetros de cada forma foram escolhidos no corte temporal, e o resultado foi medido nos últimos 20% de cada
+pessoa (589 pessoas), com intervalo de confiança de 95% por bootstrap. Para repetir:
+`backend/scripts/compare_models.py` e `backend/scripts/check_popularity.py`.
 
-## O que muda depois do MVP
+| Variante | NDCG@20 |
+|---|---|
+| Só conteúdo, TF-IDF (como o grupo B) | 0,022 |
+| Só conteúdo, *embeddings* | 0,024 |
+| Grafo só com conteúdo | 0,058 |
+| Híbrido com peso 0,5 no conteúdo | 0,070 |
+| Só os mais populares | 0,083 |
+| Grafo completo | 0,122 |
+| Híbrido TF-IDF com peso 0,2 no conteúdo | 0,124 |
+| Híbrido com *embeddings* e peso 0,2 | 0,127 |
 
-### Calcular antes, consultar depois
+- **Com dados colaborativos, as três formas empatam:** as diferenças ficam abaixo de 0,006, dentro da margem de erro.
+  O que muda é o peso: 0,2 no conteúdo quase dobra a qualidade em relação a 0,5. O recomendador já usa 0,2 quando o
+  MovieLens está ligado; sem ele, o grupo A usa 0,5 e fica abaixo de "só os mais populares".
+- **Só com conteúdo, o grafo fica bem à frente:** +0,037 sobre o TF-IDF (IC +0,028 a +0,046). Com o mesmo bônus de
+  popularidade nos dois, a vantagem se mantém (+0,040; IC +0,030 a +0,051). Na cauda longa, sem os 10% de filmes mais
+  avaliados, ela cai para cerca de +0,01, e o grafo acerta o mesmo sugerindo títulos menos famosos.
+- **Os *embeddings*,** com só título, gênero e tags como texto, empatam com o TF-IDF.
 
-Hoje o recomendador refaz todos os cálculos a cada abertura do feed. No sistema final, um processo separado
-calcula os títulos mais parecidos com cada título e guarda esses vizinhos em uma tabela. Ao abrir o feed, o
-sistema só lê os vizinhos do histórico da pessoa, soma as pontuações, filtra e explica.
-
-### Uma tabela, várias fontes
-
-A mesma tabela recebe vizinhos de origens diferentes, o que permite tratar cada mídia com a fonte adequada:
-
-| Mídia | Fonte de "quem curtiu X curtiu Y" | Observação |
-|---|---|---|
-| Filmes | MovieLens 32M | Já implementado, com a opção `TASTORY_USE_EXTERNAL_NEIGHBORS`. A licença proíbe uso comercial sem permissão |
-| Séries | Rotas de recomendação do TMDB | Ainda não implementado. Não há base pública com avaliações de séries por pessoa e ID do TMDB |
-| Música | ListenBrainz | Dados abertos; a similaridade por álbum ainda precisa ser confirmada |
-| Entre mídias | Interações da própria plataforma | Só funciona com usuários reais |
+A decisão tomada a partir deste resultado está em [O modelo depois do MVP](ARQUITETURA.md#o-modelo-depois-do-mvp) (D22).
 
 ## Evidências
 
@@ -162,6 +166,11 @@ e filtrar por palavra-chave também não, porque "adult" aparece em títulos com
 | MovieLens 32M | 32 milhões de avaliações, com ID do TMDB, só filmes | Usado nos filmes |
 | IMDb | Filmes, séries, episódios e elenco; só médias, sem avaliações por pessoa | Opção para elenco, com uso não comercial |
 | ListenBrainz | Dados abertos de música | Candidato para música |
+| Last.fm | Tags de álbuns e artistas, artistas e faixas parecidos, histórico público de quem usa | Candidato para as tags de clima e os artistas parecidos; só uso não comercial, com atribuição, teto de 100 MB guardados e contato prévio exigido até para uso acadêmico |
+| MusicBrainz e Cover Art Archive | Catálogo de música e capas; dados centrais CC0, tags CC BY-NC-SA; 1 requisição por segundo | Catálogo de música (RFF01), carregado por dumps ou em segundo plano |
+| Wikidata | Ligações entre filmes, séries, pessoas e músicas (compositor, trilha, assunto, tema); CC0 | Fonte das pontes entre mídias, consultada offline pelo QLever ou por dumps |
+| Spotify Web API | Busca e links; desde 2024, sem Recommendations e Audio Features para apps novos | Fora: em 2026, o modo de desenvolvimento aceita 5 pessoas e exige Premium, e os termos proíbem treinar modelos com os dados |
+| Deezer API | Busca pública de álbuns, sem login | Só para links "onde ouvir": o cadastro de apps novos está bloqueado |
 | Yambda | 4,79 bilhões de interações de música, com IDs anônimos | Não liga com o catálogo |
 | Douban e Amazon Reviews | Mesmas pessoas em filmes e música, mas difíceis de ligar ao catálogo | Só para estudo |
 
@@ -174,38 +183,3 @@ e filtrar por palavra-chave também não, porque "adult" aparece em títulos com
 | Memória com 20 mil títulos | 3,3 GB na API | 68 MB no banco, em disco |
 
 Os tempos não são diretamente comparáveis, porque o segundo não inclui filtros nem explicação.
-
-## Requisitos do sistema final
-
-Estes requisitos ficam fora do MVP.
-
-### Funcionais
-
-| ID | Requisito | Situação |
-|---|---|---|
-| RFF01 | Registrar álbuns como terceira mídia ([#19](https://github.com/joaolevi/cinematch/issues/19)) | Não implementado: a API só aceita `movie` e `series` |
-| RFF02 | Recomendar música a partir do que a pessoa ouve | Não implementado |
-| RFF03 | Registrar o mesmo título mais de uma vez, preservando notas, datas e resenhas anteriores | **Substitui a RN05:** hoje rever um filme apaga o registro anterior |
-| RFF04 | Buscar e adicionar qualquer título, sem depender do admin | Não implementado: a busca externa é só para admin |
-| RFF05 | Acompanhar séries por temporada e com o estado "assistindo" | Não implementado |
-| RFF06 | Recuperar a senha e verificar o e-mail | Não implementado |
-| RFF07 | Excluir a própria conta e os dados pessoais | Parcial: o admin já apaga uma conta com tudo o que é dela (RF26). Falta a própria pessoa fazer isso |
-| RFF08 | Ver a página de perfil, com a história do gosto ([#16](https://github.com/joaolevi/cinematch/issues/16)) | Parcial: o diário já mostra a frase do gosto, os números e os gráficos (RF23), e o avatar abre o menu da pessoa. Falta o perfil que outras pessoas veem, ao clicar no nome na Comunidade |
-| RFF10 | Seguir e deixar de seguir pessoas, e filtrar a Comunidade por quem sigo | Não implementado: precisa de uma tabela nova |
-| RFF11 | Escolher quem vê meus registros: todos, quem me segue ou ninguém | Não implementado: no MVP, todo mundo vê todo mundo |
-| RFF12 | Curtir e comentar resenhas na Comunidade, com moderação dos comentários | Não implementado: precisa de tabelas novas |
-| RFF13 | Ver o rank de reviewers, com base nas curtidas recebidas | Depende do RFF12. Hoje, a Comunidade só conta as resenhas |
-| RFF14 | Pedir a nota na hora certa: lembrete no Início para títulos vistos sem nota, estrelas clicáveis na polaroide do diário e "Já viu?" para o Quero ver depois de alguns dias | Não implementado. A nota continua opcional: obrigatória, viraria clique aleatório e enganaria o recomendador, que hoje trata "Já vi" sem nota como "gostou mais ou menos" |
-| RFF15 | Ver no painel a taxa de satisfação: das sugestões aceitas que ganharam nota, quantas ficaram com 3,5 ou mais | Não implementado no painel. A consulta está no [roteiro do teste interno](HOMOLOGACAO.md#análise-bárbara) |
-| RFF09 | Receber recomendações cruzadas entre filmes e música | Evolução, depende de dados da plataforma |
-
-### Não funcionais
-
-| ID | Requisito | Situação |
-|---|---|---|
-| RNFF01 | Mudar o banco sem apagar dados, com migrações | Não atende: mudar o modelo exige recriar o banco |
-| RNFF02 | Tempo e memória do feed não dependem do tamanho do catálogo | Não atende: ver as evidências acima |
-| RNFF03 | Limitar tentativas de login | Não atende |
-| RNFF04 | Sincronizar catálogos em segundo plano | Não atende: a sincronização roda dentro da requisição |
-| RNFF05 | Usar dados reais na parte colaborativa | Parcial: filmes usam o MovieLens 32M quando a opção está ligada; séries e música ainda não têm fonte |
-| RNFF06 | Atribuir a aceitação a uma exibição recente | Não atende: Quero ver e Já vi pela página do título contam se o título foi exibido no feed em qualquer momento antes. Falta uma janela de tempo (por exemplo, 7 dias) |

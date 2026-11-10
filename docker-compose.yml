@@ -1,4 +1,4 @@
-# Ambiente local. As senhas daqui não valem para produção: veja docs/DEPLOY.md.
+# Ambiente local. As senhas daqui não valem para produção: veja docs/tecnico/DEPLOY.md.
 name: tastory
 
 services:
