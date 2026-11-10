@@ -3,7 +3,7 @@
 - **Base URL (local):** `http://localhost:8000`
 - **Documentação interativa:** `http://localhost:8000/docs` (Swagger, dá para testar todas as rotas)
 - **Contrato OpenAPI:** [`openapi.json`](openapi.json). Serve para gerar clientes/tipos, ex.:
-  `npx openapi-typescript docs/openapi.json -o src/api-types.ts`
+  `npx openapi-typescript docs/tecnico/openapi.json -o src/api-types.ts`
 - **CORS:** liberado por padrão para `localhost:5173` (Vite) e `localhost:3000` (Next/CRA).
   Outras origens vão em `TASTORY_CORS_ORIGINS` no `.env`.
 - Erros vêm como `{"detail": "mensagem"}` (validação: `detail` é uma lista com `msg`).

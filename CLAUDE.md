@@ -1,11 +1,12 @@
 # Tastory: contexto para o Claude Code
 
 Protótipo acadêmico (UFAL, Gerência de Projeto 2026.2): API de diário de filmes/séries + recomendador
-híbrido, com integração real ao TMDB. Guia da API em `docs/API.md`; pitch em `docs/pitch-tastory.pdf`;
-`docs/PLANO.md` é histórico. Para tarefas maiores, use o agente `.claude/agents/tastory-expert.md`.
+híbrido, com integração real ao TMDB. Guia da API em `docs/tecnico/API.md`; pitch em `docs/gestao/pitch-tastory.pdf`;
+`docs/gestao/PLANO.md` é histórico. Para tarefas maiores, use o agente `.claude/agents/tastory-expert.md`.
 
 A interface fica em `frontend/`, sob responsabilidade da Lara. Mudanças nela precisam respeitar o contrato
-de `docs/API.md`. O escopo atual está em `docs/MVP.md`, e os requisitos, em `docs/requisitos/`.
+de `docs/tecnico/API.md`. O MVP foi entregue em 10/11/2026 (`docs/gestao/MVP.md`). O que vem depois está em
+`docs/requisitos/incrementos.md`, e os requisitos, em `docs/requisitos/`. O índice da documentação é `docs/README.md`.
 
 ## Comandos
 
@@ -16,13 +17,13 @@ de `docs/API.md`. O escopo atual está em `docs/MVP.md`, e os requisitos, em `do
   `cd backend && ../.venv/bin/python -m pytest -q`
   (`-m "not integration"` = offline; `-m integration` = TMDB real, precisa da chave no `.env`)
 - Recriar banco: `cd backend && ../.venv/bin/python -m scripts.seed`
-- Mudou rotas/schemas? Regere `docs/openapi.json`:
-  `cd backend && TASTORY_AUTO_SEED=false ../.venv/bin/python -c "import json; from app.main import app; json.dump(app.openapi(), open('../docs/openapi.json','w'), ensure_ascii=False, indent=2)"`
+- Mudou rotas/schemas? Regere `docs/tecnico/openapi.json`:
+  `cd backend && TASTORY_AUTO_SEED=false ../.venv/bin/python -c "import json; from app.main import app; json.dump(app.openapi(), open('../docs/tecnico/openapi.json','w'), ensure_ascii=False, indent=2)"`
 
 ## Regras
 
 - Escopo: protótipo. Priorize funcionar e ser fácil de explicar, não perfeição.
-- Fora do escopo agora: álbuns (incremento 2).
+- Próximo incremento: o 2a (base, medição e grafo de conteúdo). Os álbuns entram no 2b.
 - As tarefas sobem para a branch `homol`; a `main` só recebe a versão aprovada pelo QA.
 - **Segredos:** a chave do TMDB fica só no `.env` (gitignored). Nunca a escreva em código, testes,
   commits, issues ou logs. O repositório é público.

@@ -1,14 +1,22 @@
 # Escopo do MVP
 
-> **Versão 26, 10/11/2026.** Entrega: **terça-feira, 10/11/2026**, às 17h, com 10 a 15 minutos de apresentação focada no negócio e na demonstração, e deploy como meta. Gerente de projeto: Sophia.
-> Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [teste interno](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
+> **Versão 27, 10/11/2026. MVP entregue e apresentado em 10/11/2026, às 17h, com o sistema publicado.** Gerente de projeto: Sophia.
+> Documentos ligados: [requisitos](../requisitos/README.md), [plano de incrementos](../requisitos/incrementos.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](../tecnico/DEPLOY.md), [teste com pessoas](HOMOLOGACAO.md) e [arquitetura](../tecnico/ARQUITETURA.md).
 
-## Situação atual
+## Resultado da entrega
 
-A API cobre os 13 casos de uso do pitch para filmes e séries. Os 115 testes offline e os 13 com o TMDB real
-passam, e o fluxo completo foi testado no navegador, em Docker com PostgreSQL. As correções e a retirada das
-credenciais estão na branch `homol`, com o CI passando. Falta o QA testar a `homol`, publicar o sistema, ajustar o
-design, fazer o teste interno e preparar a demonstração.
+O MVP foi entregue e apresentado em 10/11/2026, às 17h, com a demonstração feita no sistema publicado. A API cobre os
+13 casos de uso do pitch para filmes e séries, e os 27 requisitos funcionais **Deve** foram atendidos e testados pelo
+QA na `homol`. Os 115 testes offline e os 13 com o TMDB real passam, e o CI roda em todo PR.
+
+Ficaram de fora do combinado:
+
+- **Teste interno:** não aconteceu. A homologação com pessoas passa para a beta do incremento 3
+  ([roteiro](HOMOLOGACAO.md)).
+- **Acesso público:** o sistema está publicado no servidor do Vinicius, mas com acesso liberado só para um IP. Falta
+  abrir a URL pública com HTTPS e carregar o MovieLens no servidor.
+
+O que vem depois está no [plano de incrementos](../requisitos/incrementos.md).
 
 ## Objetivo
 
@@ -21,16 +29,16 @@ corretamente. O benefício do recomendador será avaliado depois, com dados reai
 
 ## Dentro do MVP
 
-- Todos os requisitos marcados como **Deve** em [funcionais.md](requisitos/funcionais.md), para filmes e séries.
-- Quatro correções na API, com teste: RN02, RN12, RN13 e RN14 ([regras de negócio](requisitos/regras-de-negocio.md)).
+- Todos os requisitos marcados como **Deve** em [funcionais.md](../requisitos/funcionais.md), para filmes e séries.
+- Quatro correções na API, com teste: RN02, RN12, RN13 e RN14 ([regras de negócio](../requisitos/regras-de-negocio.md)).
 - Testes para as quatro rotas descobertas (RNF06).
 - Três ajustes para o sistema publicado: tamanho dos campos (RNF16), consultas do diário e das listas (RNF17) e versões fixas das dependências (RNF18).
 - Catálogo ampliado com o TMDB (RF15b), para a equipe encontrar os títulos no teste interno.
-- Recomendações de filmes com o MovieLens 32M, ligadas na publicação ([arquitetura](ARQUITETURA.md)).
+- Recomendações de filmes com o MovieLens 32M, ligadas na publicação ([arquitetura](../tecnico/ARQUITETURA.md)).
 - Feed sem títulos incompletos e com séries mais conhecidas (D16, RN20).
 - Página Comunidade, em que todo mundo vê os registros de todo mundo (RF20, D21). Só entra se estiver estável até sábado à noite.
 - Títulos parecidos no detalhe (RF21) e gêneros, diretores e atores clicáveis (RF22), com o mesmo limite.
-- Deploy da API e da interface (RNF11 a RNF19), com a execução local como plano B ([guia](DEPLOY.md)).
+- Deploy da API e da interface (RNF11 a RNF19), com a execução local como plano B ([guia](../tecnico/DEPLOY.md)).
 - Teste interno com as 6 pessoas da equipe, no sistema publicado ([#14](https://github.com/joaolevi/cinematch/issues/14)).
 - Interface em `frontend/`, com o design revisado pela Lara, e demonstração ensaiada.
 - Busca que ignora acentos (RN16), que estava em "se houver tempo" e já foi feita.
@@ -42,7 +50,7 @@ corretamente. O benefício do recomendador será avaliado depois, com dados reai
 - Página de perfil ([#16](https://github.com/joaolevi/cinematch/issues/16)) e filtro por década ([#17](https://github.com/joaolevi/cinematch/issues/17)).
 - Testes do frontend ([#18](https://github.com/joaolevi/cinematch/issues/18)).
 - Seguir pessoas, comentários, recuperação de senha e auditoria de acessibilidade.
-- Os demais [requisitos do sistema final](ARQUITETURA.md#requisitos-do-sistema-final).
+- Os demais [requisitos do sistema final](../tecnico/ARQUITETURA.md#requisitos-do-sistema-final).
 
 ## Premissas e restrições
 
@@ -62,21 +70,24 @@ As premissas foram confirmadas por Sophia (GP) em 06/11/2026.
 
 ## Critérios de pronto
 
-Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critérios-de-aceite-por-pacote).
+Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critérios-de-aceite-por-pacote). Situação em 10/11/2026:
 
-- [ ] Usuário novo se cadastra e vê um feed não vazio.
-- [ ] Depois de marcar de 3 a 5 títulos no onboarding, o feed muda e explica as sugestões.
-- [ ] Quero ver, Já vi e Não me interesso funcionam, e o título não volta ao feed.
-- [ ] A busca encontra filmes e séries, e listas podem ser criadas e editadas.
-- [ ] Admin sincroniza o mock, edita e remove títulos e oculta resenhas; resenha oculta e editada continua oculta.
-- [ ] O painel mostra a taxa total e por grupo, sempre entre 0% e 100%.
-- [ ] Depois de clonar, um único comando (`./dev.sh`) sobe a API, sem chave de API.
+- [x] Usuário novo se cadastra e vê um feed não vazio.
+- [x] Depois de marcar de 3 a 5 títulos no onboarding, o feed muda e explica as sugestões.
+- [x] Quero ver, Já vi e Não me interesso funcionam, e o título não volta ao feed.
+- [x] A busca encontra filmes e séries, e listas podem ser criadas e editadas.
+- [x] Admin sincroniza o mock, edita e remove títulos e oculta resenhas; resenha oculta e editada continua oculta.
+- [x] O painel mostra a taxa total e por grupo, sempre entre 0% e 100%.
+- [x] Depois de clonar, um único comando (`./dev.sh`) sobe a API, sem chave de API.
 - [x] Testes offline verdes e CI verde.
-- [ ] Sistema publicado em URL com HTTPS e sem credencial pública, ou decisão registrada de apresentar localmente.
-- [ ] Teste interno feito com a equipe, com o resultado registrado na issue [#14](https://github.com/joaolevi/cinematch/issues/14).
-- [ ] Demo ensaiada do início ao fim, com plano B em vídeo ou prints.
+- [ ] Sistema publicado em URL com HTTPS e sem credencial pública, ou decisão registrada de apresentar localmente. Parcial: publicado no servidor do Vinicius, com acesso liberado só para um IP.
+- [ ] Teste interno feito com a equipe, com o resultado registrado na issue [#14](https://github.com/joaolevi/cinematch/issues/14). Não aconteceu.
+- [ ] Demo ensaiada do início ao fim, com plano B em vídeo ou prints. A demonstração foi feita no sistema publicado; o ensaio não foi registrado.
 
-## Cronograma
+## Cronograma planejado
+
+Mantido como registro do planejamento. O teste interno de 09/11 (itens 3 e 4 de segunda) não aconteceu, e a
+subida da `homol` para a `main` (item 6) ficou para depois da entrega.
 
 ### Sex 06/11
 
@@ -133,7 +144,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | D4 | A homologação do MVP é um teste interno com a equipe. A homologação com pessoas de fora fica para depois da entrega | Sophia (GP) | 06/11 |
 | D5 | Cargos da equipe, em [ENTREGAS.md](ENTREGAS.md#equipe) | Equipe | 06/11 |
 | D6 | O Sponsor do pitch é o Professor Rafael, professor da disciplina | Sophia (GP) | 06/11 |
-| D7 | Filmes e séries são recomendados juntos; música, separadamente ([arquitetura](ARQUITETURA.md#decisões)) | Sophia (GP) | 06/11 |
+| D7 | Filmes e séries são recomendados juntos; música, separadamente ([arquitetura](../tecnico/ARQUITETURA.md#decisões)) | Sophia (GP) | 06/11 |
 | D8 | O MVP mantém o cálculo atual do recomendador. As exceções são a tabela de vizinhos do MovieLens (D14) e o ajuste nas séries (D16) | Sophia (GP) | 06/11 |
 | D9 | O nome do produto é Tastory, inclusive no código | Sophia (GP) | 06/11 |
 | D11 | O sistema roda em Docker, com API, interface e PostgreSQL (RNF19) | Sophia (GP) | 06/11 |
@@ -141,7 +152,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | D14 | Os vizinhos do MovieLens 32M substituem os usuários inventados nos filmes. A opção vem desligada no código e será ligada na publicação | Sophia (GP) | 06/11 |
 | D15 | O teste A/B continua no sistema, mas no MVP mostra que a medição funciona. A evidência de qualidade vem do teste com o MovieLens, e o teste interno é ilustrativo | Sophia (GP) | 06/11 |
 | D13 | O onboarding pergunta gêneros, épocas, diretores e títulos, em três passos. Palavras-chave ficam de fora, porque são termos crus e muitos em inglês | Sophia (GP) | 06/11 |
-| D10 | As tarefas entram na branch `homol`, o QA testa ali, e a `main` só recebe a versão aprovada ([CONTRIBUTING](../CONTRIBUTING.md#branches-e-versões)) | Sophia (GP) | 06/11 |
+| D10 | As tarefas entram na branch `homol`, o QA testa ali, e a `main` só recebe a versão aprovada ([CONTRIBUTING](../../CONTRIBUTING.md#branches-e-versões)) | Sophia (GP) | 06/11 |
 | D16 | O feed só sugere títulos do TMDB com sinopse, pôster e nome legível, e a popularidade pesa 1 na escolha das séries, sem mudar os filmes nem os lugares das séries | Sophia (GP) | 06/11 |
 | D17 | A escolha entre deploy e execução local sai na manhã de segunda (09/11), com o Vinicius. O front é congelado na manhã de segunda (09/11), antes do teste interno, e depois disso só entram correções de erro | Sophia (GP) | 06/11, alterada duas vezes em 08/11 |
 | D18 | No servidor, o Vinicius usa uma chave própria do TMDB, e a senha de admin fica só com Sophia e Antonio, em mensagem privada | Sophia (GP) | 06/11 |
@@ -193,15 +204,15 @@ Nenhuma decisão pendente em 06/11/2026.
 |---|---|---|---|
 | O design não ficar pronto a tempo | Interface funcional, mas sem o acabamento planejado | A interface atual já cobre o fluxo completo; priorizar o que aparece na demonstração | Lara |
 | Painel do A/B lido como conclusão | Na simulação, A tem 65,0% e B tem 66,7%, mas ela não serve para essa comparação. Com dados reais do MovieLens, A supera B | O painel avisa de onde vêm os números; na apresentação, usar o teste com o MovieLens como evidência exploratória | Bárbara |
-| Séries com sugestões fracas | Sem dados reais, as séries dependem só do conteúdo e aparecem títulos obscuros | Filtro do feed e peso maior da popularidade na ordem das séries (D16, [arquitetura](ARQUITETURA.md#séries-sem-dados-reais)) | Bárbara |
+| Séries com sugestões fracas | Sem dados reais, as séries dependem só do conteúdo e aparecem títulos obscuros | Filtro do feed e peso maior da popularidade na ordem das séries (D16, [arquitetura](../tecnico/AVALIACAO.md#séries-sem-dados-reais)) | Bárbara |
 | Publicar com as credenciais do repositório | Qualquer pessoa entra como administrador | Tratar o RNF12 como condição para publicar | Sophia |
 | Registros visíveis na Comunidade | Quem tem conta vê o que as outras pessoas marcaram como Já vi, sem poder esconder | Avisar no cadastro e na página (RNF20) e aceitar e-mail fictício. A escolha de privacidade fica para depois (RFF10) | Sophia |
-| Resenhas de contas simuladas na publicação | Pessoas que não existem apareceriam no detalhe dos títulos e nas médias | Fazer a carga com `--no-synthetic`, como no [guia](DEPLOY.md#2-fazer-a-carga-inicial) | Vinicius |
-| Mudança no banco depois da publicação | O projeto não tem migrations: uma coluna nova derruba a busca e o feed até alguém ajustar o banco | Não mudar os modelos até a entrega. Se for inevitável, seguir o [guia](DEPLOY.md#atualizar-o-sistema-publicado) | Sophia |
+| Resenhas de contas simuladas na publicação | Pessoas que não existem apareceriam no detalhe dos títulos e nas médias | Fazer a carga com `--no-synthetic`, como no [guia](../tecnico/DEPLOY.md#2-fazer-a-carga-inicial) | Vinicius |
+| Mudança no banco depois da publicação | O projeto não tem migrations: uma coluna nova derruba a busca e o feed até alguém ajustar o banco | Não mudar os modelos até a entrega. Se for inevitável, seguir o [guia](../tecnico/DEPLOY.md#atualizar-o-sistema-publicado) | Sophia |
 | O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir na manhã de segunda (09/11) e, se preciso, apresentar localmente | Vinicius |
 | Servidor fora do ar | Queda de energia ou de internet na casa do Vinicius derruba o sistema | Conferir a URL antes da apresentação e manter a execução local como plano B | Vinicius |
 | Exposição da rede doméstica | Um site público pode abrir um caminho para a rede da casa | Usar túnel com HTTPS e não abrir portas no roteador | Vinicius |
 | Teste interno só com quem conhece o sistema | Problemas de uso podem passar despercebidos, e a taxa não permite conclusão | Chamar de teste interno na apresentação e tratar o resultado como ilustrativo. Sem deploy, fazer o teste em uma só máquina, porque as métricas ficam em um único banco | Antonio |
-| Sem internet na demo | Títulos sem pôster real | O sistema local mostra um pôster gerado no lugar da imagem ([plano B](DEPLOY.md#plano-b)). Testado em 06/11, com o Wi-Fi desligado | Antonio |
+| Sem internet na demo | Títulos sem pôster real | O sistema local mostra um pôster gerado no lugar da imagem ([plano B](../tecnico/DEPLOY.md#plano-b)). Testado em 06/11, com o Wi-Fi desligado | Antonio |
 | Título procurado fora do catálogo | Com cerca de 3.950 títulos, a maioria aparece, mas o catálogo ainda não cobre tudo | Importar pelo painel de admin os títulos que faltarem | Antonio |
-| Termos do TMDB restringem o uso com aplicações de ML ou IA | O recomendador usa gêneros, palavras-chave e diretores do TMDB, e os termos também limitam a 6 meses o tempo de guardar os dados | Risco aceito para o uso acadêmico e citado nas limitações do trabalho; nenhum dado do TMDB é redistribuído. Numa versão comercial, consultar o TMDB e trocar a fonte de conteúdo do recomendador pelo Wikidata ([RNFF02](ARQUITETURA.md#incremento-2a-base-medição-e-o-grafo-de-conteúdo)) | Sophia (GP) |
+| Termos do TMDB restringem o uso com aplicações de ML ou IA | O recomendador usa gêneros, palavras-chave e diretores do TMDB, e os termos também limitam a 6 meses o tempo de guardar os dados | Risco aceito para o uso acadêmico e citado nas limitações do trabalho; nenhum dado do TMDB é redistribuído. Numa versão comercial, consultar o TMDB e trocar a fonte de conteúdo do recomendador pelo Wikidata ([RNFF02](../requisitos/nao-funcionais.md#rnff02)) | Sophia (GP) |

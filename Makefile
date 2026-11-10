@@ -40,10 +40,10 @@ test-offline: deps ## Roda os testes que não usam o TMDB real
 seed: deps ## Recria o banco SQLite local
 	cd backend && $(PYTHON) -m scripts.seed
 
-openapi: deps ## Regenera docs/openapi.json
-	cd backend && TASTORY_AUTO_SEED=false $(PYTHON) -c "import json; from app.main import app; json.dump(app.openapi(), open('../docs/openapi.json','w'), ensure_ascii=False, indent=2)"
+openapi: deps ## Regenera docs/tecnico/openapi.json
+	cd backend && TASTORY_AUTO_SEED=false $(PYTHON) -c "import json; from app.main import app; json.dump(app.openapi(), open('../docs/tecnico/openapi.json','w'), ensure_ascii=False, indent=2)"
 
-# ---------- Produção (veja docs/DEPLOY.md)
+# ---------- Produção (veja docs/tecnico/DEPLOY.md)
 prod-up: ## Sobe ou atualiza o sistema publicado
 	$(PROD) up --build -d
 

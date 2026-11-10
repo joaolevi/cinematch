@@ -1,7 +1,7 @@
 # Tastory 📔
 
 > **A história do seu gosto**: diário de filmes e séries com motor de recomendação híbrido.
-> Protótipo acadêmico da disciplina **Gerência de Projeto, 2026.2** (UFAL).
+> Protótipo acadêmico da disciplina **Gerência de Projeto, 2026.2** (UFAL). **MVP entregue em 10/11/2026.**
 
 Plataformas de diário (como o Letterboxd) registram tudo o que você assiste, mas não usam esse acervo
 para sugerir o próximo título. Netflix e Spotify recomendam, mas só dentro do próprio catálogo.
@@ -9,7 +9,7 @@ O Tastory une as duas coisas: **um diário** + **um recomendador** que combina o
 (gênero, tags, diretor, década) com o gosto de usuários parecidos com você.
 
 Este repositório tem a **API (backend)**, com integração real com o **TMDB**, e a **interface** em
-[`frontend/`](frontend/). O contrato entre as duas partes está em [`docs/API.md`](docs/API.md).
+[`frontend/`](frontend). O contrato entre as duas partes está em [`docs/tecnico/API.md`](docs/tecnico/API.md).
 
 ```bash
 ./demo.sh --reset    # recria o banco (mock + TMDB) e sobe API + interface → http://localhost:5173
@@ -95,7 +95,7 @@ Se o `.env` tiver `TASTORY_TMDB_API_KEY`, o Docker usa essa chave.
 
 ### Contas de demonstração
 
-Essas senhas valem só para uso local. Em produção, elas são recusadas (veja `docs/DEPLOY.md`).
+Essas senhas valem só para uso local. Em produção, elas são recusadas (veja `docs/tecnico/DEPLOY.md`).
 
 | Perfil | E-mail | Senha |
 |---|---|---|
@@ -184,12 +184,12 @@ cinematch/
 ├── backend/
 │   ├── app/            # main, models, schemas, auth, crud, seed, routers/, services/ (recommender, catalog, tmdb, metrics)
 │   ├── data/           # catálogos mockados (JSON)
-│   ├── scripts/        # seed, avaliação do recomendador e importação do MovieLens
+│   ├── scripts/        # seed, avaliação e comparação de modelos do recomendador, importação do MovieLens
 │   └── tests/          # pytest (+ integration/ com o TMDB real)
 ├── frontend/           # interface (React, TypeScript e Tailwind)
 ├── demo.sh             # sobe API + interface
 ├── docker-compose.yml  # API, interface e PostgreSQL (docker-compose.prod.yml é o da publicação)
-├── docs/               # MVP, requisitos/, ENTREGAS, ARQUITETURA, DEPLOY, HOMOLOGACAO, API, openapi.json, pitch
+├── docs/               # índice em docs/README.md: gestao/, requisitos/ e tecnico/
 ├── .claude/agents/     # agente do Claude Code especialista no projeto
 └── dev.sh
 ```
@@ -201,7 +201,14 @@ pequenos, abra um Pull Request vinculado à issue (`Closes #N`) e espere o CI fi
 
 ## 🗺️ Próximos incrementos
 
-- **Álbuns** (MusicBrainz) como terceira mídia, previsto no pitch para o segundo incremento.
+O MVP foi entregue em 10/11/2026 ([registro](docs/gestao/MVP.md)). O que vem depois está no
+[plano de incrementos](docs/requisitos/incrementos.md):
+
+- **2a:** base técnica, a métrica corrigida e o grafo de conteúdo para séries e para o grupo B.
+- **2b:** álbuns como terceira mídia, previstos no pitch, e o Meu gosto nas três mídias.
+- **3:** beta aberta, social mínimo e controle sobre o próprio gosto.
+- **4:** clima, sugestões pelo momento e onde assistir ou ouvir.
+- **5:** pontes entre filmes, séries e música, e sugestões para assistir junto.
 
 ## 👥 Equipe
 

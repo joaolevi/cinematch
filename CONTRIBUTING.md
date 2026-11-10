@@ -23,21 +23,28 @@
 
 ## Branches e versões
 
-- **`main`:** versão estável, com o MVP de apresentação. Só recebe a `homol` depois da aprovação do QA.
+- **`main`:** versão estável. Recebe o MVP entregue em 10/11/2026 e, depois, cada incremento aprovado pelo QA.
 - **`homol`:** recebe os Pull Requests. É a versão que o QA testa e que fica publicada durante os testes.
 - **Branches de tarefa:** saem da `homol` e voltam para ela.
 
 Para marcar versões estáveis, usamos tags:
 
-- **Teste interno:** ninguém faz merge durante o teste, e a versão testada na `homol` ganha a tag `homologacao-09-11`.
+- **Teste com pessoas:** ninguém faz merge durante o teste, e a versão testada na `homol` ganha a tag
+  `homologacao-AAAA-MM-DD` ([roteiro](docs/gestao/HOMOLOGACAO.md)).
 - **Problema encontrado:** a correção entra por Pull Request na `homol` depois da sessão, e o QA testa de novo.
-- **Entrega:** com a aprovação do QA, a `homol` sobe para a `main`, que ganha a tag `entrega-10-11`.
+- **Entrega:** com a aprovação do QA, a `homol` sobe para a `main`, que ganha uma tag. O MVP fica com
+  `entrega-10-11`, e cada incremento com `incremento-<número>`, como `incremento-2a`.
 
 ```bash
-git switch homol && git pull
-git tag homologacao-09-11
-git push origin homologacao-09-11
+git switch main && git pull
+git tag entrega-10-11
+git push origin entrega-10-11
 ```
+
+## Documentação
+
+O índice está em [docs/README.md](docs/README.md). Ao mudar a situação de um requisito futuro, atualize a linha dele
+no arquivo do tipo (`funcionais.md` ou `nao-funcionais.md`) e no [plano de incrementos](docs/requisitos/incrementos.md).
 
 ## Organização no GitHub
 
@@ -50,7 +57,7 @@ git push origin homologacao-09-11
 - Backend: Python 3.12+, FastAPI, SQLAlchemy 2. Regras de domínio em `app/crud.py` e `app/services/`;
   os routers só validam a entrada e chamam essas funções.
 - Novas rotas precisam de teste em `backend/tests/`.
-- Mudou rotas ou schemas? Atualize `docs/API.md` e regenere `docs/openapi.json` (comando no `CLAUDE.md`):
+- Mudou rotas ou schemas? Atualize `docs/tecnico/API.md` e regenere `docs/tecnico/openapi.json` (comando no `CLAUDE.md`):
   é o contrato que o frontend usa.
 - **Nunca** commite a chave do TMDB nem o `.env`. O repositório é público.
 - Textos da interface em português.
