@@ -198,6 +198,7 @@ Estes requisitos ficam fora do MVP.
 | RFF14 | Pedir a nota na hora certa: lembrete no Início para títulos vistos sem nota, estrelas clicáveis na polaroide do diário e "Já viu?" para o Quero ver depois de alguns dias | Não implementado. A nota continua opcional: obrigatória, viraria clique aleatório e enganaria o recomendador, que hoje trata "Já vi" sem nota como "gostou mais ou menos" |
 | RFF15 | Ver no painel a taxa de satisfação: das sugestões aceitas que ganharam nota, quantas ficaram com 3,5 ou mais | Não implementado no painel. A consulta está no [roteiro do teste interno](HOMOLOGACAO.md#análise-bárbara) |
 | RFF09 | Receber recomendações cruzadas entre filmes e música | Evolução, depende de dados da plataforma |
+| RFF16 | Ver o próprio histórico de atividades, em ordem de data e com filtro por tipo: títulos registrados, notas, resenhas, itens adicionados a listas e, quando existirem, curtidas e pessoas seguidas | Não implementado: hoje o diário mostra os registros, mas não as listas, curtidas ou quem a pessoa segue. Precisa de uma tabela de eventos de atividade. Depende do RFF10 e do RFF12; quem vê o histórico de outra pessoa segue o RFF11 |
 
 ### Não funcionais
 
