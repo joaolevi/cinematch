@@ -95,14 +95,44 @@ Muda o que o alimenta e como ele decide pesos e motivos:
 
 O cálculo pesado passa a ser feito antes, por rotinas (RNFF03), e o feed só lê o que já foi calculado (RNFF07).
 
-**Decisão aguardando o EXP01.** Há três formas de organizar o conteúdo e as pontes, e a escolha sai da comparação
-offline nos filmes do MovieLens, com a mesma divisão de dados e a mesma métrica:
+**As três formas comparadas no EXP01:**
 
 | Forma | Ponto forte | Ponto fraco |
 |---|---|---|
 | Atual com pontes somadas | Já existe e é fácil de explicar | Cada ponte nova vira mais um sinal com peso próprio |
 | *Embeddings* de texto no lugar do TF-IDF | Acha parecidos pelo sentido, inclusive entre mídias | Explica mal sozinho; precisa de texto (o MovieLens só tem título, gênero e tags) |
 | Grafo de gosto (títulos, pessoas, gêneros, climas, décadas e países como nós; passeio a partir do gosto) | Um só cálculo para tudo; o caminho vira o motivo; encadeia pontes em até 2 passos | Caminhos longos podem levar a sugestões estranhas; pesos das ligações a calibrar |
+
+**Resultado do EXP01 (10/11/2026).** MovieLens pequeno (100.836 notas, 610 pessoas, 3.650 filmes), sem nenhum dado do
+TMDB. Os parâmetros de cada forma foram escolhidos no corte temporal, e o resultado foi medido nos últimos 20% de cada
+pessoa (589 pessoas), com intervalo de confiança de 95% por bootstrap. Para repetir:
+`backend/scripts/compare_models.py` e `backend/scripts/check_popularity.py`.
+
+| Variante | NDCG@20 |
+|---|---|
+| Só conteúdo, TF-IDF (como o grupo B) | 0,022 |
+| Só conteúdo, *embeddings* | 0,024 |
+| Grafo só com conteúdo | 0,058 |
+| Híbrido com peso 0,5 no conteúdo | 0,070 |
+| Só os mais populares | 0,083 |
+| Grafo completo | 0,122 |
+| Híbrido TF-IDF com peso 0,2 no conteúdo | 0,124 |
+| Híbrido com *embeddings* e peso 0,2 | 0,127 |
+
+- **Com dados colaborativos, as três formas empatam:** as diferenças ficam abaixo de 0,006, dentro da margem de erro.
+  O que muda é o peso: 0,2 no conteúdo quase dobra a qualidade em relação a 0,5. O recomendador já usa 0,2 quando o
+  MovieLens está ligado; sem ele, o grupo A usa 0,5 e fica abaixo de "só os mais populares".
+- **Só com conteúdo, o grafo fica bem à frente:** +0,037 sobre o TF-IDF (IC +0,028 a +0,046). Com o mesmo bônus de
+  popularidade nos dois, a vantagem se mantém (+0,040; IC +0,030 a +0,051). Na cauda longa, sem os 10% de filmes mais
+  avaliados, ela cai para cerca de +0,01, e o grafo acerta o mesmo sugerindo títulos menos famosos.
+- **Os *embeddings*,** com só título, gênero e tags como texto, empatam com o TF-IDF.
+
+**Decisão:** os filmes mantêm o híbrido atual, com peso 0,2 no conteúdo quando houver MovieLens. Séries, música e
+pontes entre mídias usam o grafo no lado do conteúdo, e as pontes viram ligações do grafo, com o caminho mais forte
+como motivo. Os *embeddings* ficam de fora. O bônus de popularidade não muda por causa deste teste: testes offline
+favorecem os populares, e quem decide é o A/B, junto com a satisfação. Limites: base pequena, 27 pessoas no corte usado
+para escolher os parâmetros (o melhor amortecimento do grafo variou entre 0,5 e 0,85) e uma rodada só. O EXP04
+confirma o resultado no MovieLens 32M.
 
 O cruzamento entre mídias não tem base pública para medir offline: ele é decidido pelo teste A/B (EXP03).
 
@@ -270,7 +300,7 @@ Base técnica, música, medição e o Meu gosto. Cumpre a única promessa do pit
 |---|---|---|---|---|---|
 | RNFF01 | Mudar o banco sem apagar dados, com migrações | Não atende: mudar o modelo exige recriar o banco | — | P | RNFF01 |
 | RNFF02 | Respeitar os termos e as licenças das fontes: créditos ao TMDB, à JustWatch, ao Last.fm e ao MusicBrainz, fonte e licença registradas em cada dado, e nenhum dado do TMDB redistribuído | Não atende. Os termos do TMDB restringem o uso com aplicações de ML ou IA e limitam a 6 meses o tempo de guardar dados; o risco foi aceito para o uso acadêmico (ver Riscos no [MVP.md](MVP.md)). Numa versão comercial, é preciso consultar o TMDB e trocar a fonte de conteúdo do recomendador pelo Wikidata. O Last.fm exige contato antes de qualquer uso | — | P | RNFF09 |
-| RNFF03 | Rodar em segundo plano, fora das requisições: sincronizar os catálogos, atualizar os dados do TMDB antes de 6 meses e calcular os vizinhos e as pontes entre mídias | Não atende: a sincronização roda dentro da requisição. As pontes saem do QLever ou dos dumps do Wikidata e do MusicBrainz | RNFF01 | M | RNFF04, RNFF08 |
+| RNFF03 | Rodar em segundo plano, fora das requisições: sincronizar os catálogos, atualizar os dados do TMDB antes de 6 meses, calcular os vizinhos e as pontes entre mídias e montar o grafo de conteúdo | Não atende: a sincronização roda dentro da requisição. As pontes saem do QLever ou dos dumps do Wikidata e do MusicBrainz | RNFF01 | M | RNFF04, RNFF08 |
 | RNFF04 | Contar a aceitação só quando ela vier até 7 dias depois de a sugestão aparecer | Não atende: Quero ver e Já vi pela página do título contam se o título foi exibido em qualquer momento antes | — | P | RNFF06 |
 | RNFF05 | Limitar as tentativas de login | Não atende | — | P | RNFF03 |
 | RNFF06 | Usar dados reais na parte colaborativa: MovieLens nos filmes, rota de recomendações do TMDB nas séries e ListenBrainz na música | Parcial: os filmes usam o MovieLens 32M quando a opção está ligada; no servidor publicado, falta carregar. Séries e música ainda não têm fonte | RFF01 (música) | M | RNFF05 |
@@ -281,7 +311,7 @@ Base técnica, música, medição e o Meu gosto. Cumpre a única promessa do pit
 | RFF04 | Ver no painel a taxa de satisfação: das sugestões aceitas que ganharam nota, quantas ficaram com 3,5 ou mais | Não implementado no painel. A consulta está no [roteiro do teste interno](HOMOLOGACAO.md#análise-bárbara) | — | P | RFF15 |
 | RFF05 | Ver a retrospectiva do gosto por mês e por ano: títulos mais vistos e mais bem avaliados, gêneros, décadas, a frase do gosto, a idade do gosto e um arquétipo, com um cartão para compartilhar | Não implementado: reaproveita os dados e os gráficos do Meu gosto (RF23) | — | P a M | RFF17, RFF37 |
 | RFF06 | Excluir a própria conta e exportar os próprios dados | Parcial: o admin já apaga uma conta com tudo o que é dela (RF26). Falta a própria pessoa excluir e exportar | — | P | RFF07, parte do RFF38 |
-| EXP01 | Comparar offline, nos filmes do MovieLens, o modelo atual, o mesmo com *embeddings* e o grafo de gosto; fica o que ganhar (ver [O modelo depois do MVP](#o-modelo-depois-do-mvp)) | Não feito. Usa o `backend/scripts/evaluate_recommender.py` | — | M | novo |
+| EXP01 | Comparar offline, nos filmes do MovieLens, o modelo atual, o mesmo com *embeddings* e o grafo de gosto; fica o que ganhar (ver [O modelo depois do MVP](#o-modelo-depois-do-mvp)) | **Feito em 10/11:** empate com dados colaborativos; só com conteúdo, o grafo vence. Scripts `compare_models.py` e `check_popularity.py` | — | M | novo |
 
 ### Incremento 3: beta aberta, social e controle
 
@@ -303,6 +333,7 @@ Preparar a abertura para pessoas de fora, o social mínimo e o controle sobre o 
 | RFF17 | Ler a página "Como recomendamos", em português simples, com a opção de sair dos experimentos | Não implementado | RNFF08 | P | parte do RFF38 |
 | RFF18 | Importar o histórico de outros apps, como Letterboxd e TV Time, a partir do arquivo exportado pela pessoa | Não implementado; **prioridade a definir pela equipe**. Os termos do Letterboxd proíbem coleta automática | RFF12, RFF13, RFF01 | M | RFF39 |
 | EXP02 | Comparar, num teste A/B, o motivo escrito por modelo fixo com o mesmo motivo reescrito por IA | Não feito. Depende de guardar o motivo de forma estruturada e de orçamento | RNFF02 | P a M | RFF33 |
+| EXP04 | Confirmar no MovieLens 32M o resultado do EXP01, antes do incremento 4 | Não feito. A base grande exige guardar só os vizinhos mais próximos de cada título, em vez da matriz inteira | EXP01 | P a M | novo |
 
 ### Incremento 4: clima, momento e onde assistir
 
@@ -326,7 +357,7 @@ As sugestões que cruzam filmes, séries e música, e assistir ou ouvir junto.
 | ID | Requisito | Situação | Depende de | Esforço | Antes |
 |---|---|---|---|---|---|
 | RNFF10 | Calcular os vizinhos de coocorrência sem que os títulos muito populares dominem (normalização por popularidade) | Não atende: hoje a similaridade colaborativa é o cosseno simples | RNFF06 | P a M | RNFF11 |
-| RFF26 | Ver no detalhe do título as ligações com outras mídias, nas seções "Para ouvir depois" e "Para ver depois": trilha sonora, compositor, quem atua e também canta, cinebiografias e documentários | Não implementado. Começa por compositor e trilha, as pontes com cobertura medida (esforço M nessa versão) | RFF01, RNFF03 | G | RFF22, RFF24 |
+| RFF26 | Ver no detalhe do título as ligações com outras mídias, nas seções "Para ouvir depois" e "Para ver depois": trilha sonora, compositor, quem atua e também canta, cinebiografias e documentários | Não implementado. Começa por compositor e trilha, as pontes com cobertura medida (esforço M nessa versão). As pontes entram como ligações do grafo de conteúdo (decisão do EXP01) | RFF01, RNFF03 | G | RFF22, RFF24 |
 | RFF27 | Receber no Para você sugestões de outra mídia, como o par filme e álbum, sempre com a ponte no motivo e em lugares fixos | Não implementado | RFF26, RNFF09 | G | RFF09, RFF23 |
 | RFF28 | Receber sugestões para assistir ou ouvir junto, combinando o gosto de duas ou mais pessoas | Não implementado | RFF15 | M | RFF20 |
 | EXP03 | Medir, no teste A/B, a aceitação das sugestões cruzadas por tipo de ponte | Não feito | RFF27 | P | novo |
@@ -404,4 +435,5 @@ O fim das cadeias de dependência e o que precisa de muitas aceitações reais.
 | RNFF11 | RNFF10 | Renumerado |
 | — | EXP01 | Novo |
 | — | EXP03 | Novo |
+| — | EXP04 | Novo |
 | — | RNFF08 | Novo |
