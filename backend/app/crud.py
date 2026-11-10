@@ -3,10 +3,10 @@
 from datetime import date
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from .models import DiaryEntry, Dismissed, ListItem, Media, User, UserList
+from .models import DiaryEntry, Dismissed, ListItem, Media, RecEvent, User, UserList
 
 
 def get_media_or_404(db: Session, media_id: int) -> Media:
@@ -59,7 +59,7 @@ def upsert_diary(
         entry = DiaryEntry(
             user_id=user.id,
             media_id=media_id,
-            consumed_at=consumed_at if consumed_at or from_onboarding else date.today(),
+            consumed_at=consumed_at,
             from_onboarding=from_onboarding,
         )
         db.add(entry)
@@ -76,6 +76,25 @@ def upsert_diary(
         db.delete(d)
     db.flush()
     return entry
+
+
+def add_onboarding_like(db: Session, user: User, media_id: int) -> None:
+    """Registra um título curtido no onboarding, sem alterar o que já está no diário."""
+    entry = db.scalar(
+        select(DiaryEntry).where(DiaryEntry.user_id == user.id, DiaryEntry.media_id == media_id)
+    )
+    if entry is None:
+        upsert_diary(db, user, media_id, from_onboarding=True)
+
+
+def undo_dismiss(db: Session, user: User, media_id: int) -> None:
+    """Volta o título para as sugestões, como se o descarte não tivesse acontecido."""
+    db.execute(delete(Dismissed).where(Dismissed.user_id == user.id, Dismissed.media_id == media_id))
+    db.execute(
+        delete(RecEvent).where(
+            RecEvent.user_id == user.id, RecEvent.media_id == media_id, RecEvent.action == "dismiss"
+        )
+    )
 
 
 def dismiss(db: Session, user: User, media_id: int) -> None:

@@ -2,9 +2,9 @@
 
 Implementa a mesma interface do `MockCatalogProvider` (`fetch_titles()`), então o resto do sistema
 não sabe de onde os títulos vêm. Requer uma chave gratuita de themoviedb.org em
-`CINEMATCH_TMDB_API_KEY` (no `.env`, que NÃO vai para o git).
+`TASTORY_TMDB_API_KEY` (no `.env`, que NÃO vai para o git).
 
-Os gêneros do TMDB são convertidos para o vocabulário do CineMatch (o mesmo do catálogo mockado),
+Os gêneros do TMDB são convertidos para o vocabulário do Tastory (o mesmo do catálogo mockado),
 para que preferências do onboarding e o recomendador funcionem com títulos das duas origens.
 """
 
@@ -20,8 +20,9 @@ from .catalog import ExternalTitle
 
 BASE_URL = "https://api.themoviedb.org/3"
 IMAGE_URL = "https://image.tmdb.org/t/p/w342"
+MAX_ACTORS = 8
 
-# IDs de gênero do TMDB -> gêneros do CineMatch (IDs são estáveis e independem do idioma)
+# IDs de gênero do TMDB -> gêneros do Tastory (IDs são estáveis e independem do idioma)
 MOVIE_GENRES: dict[int, list[str]] = {
     28: ["Ação"], 12: ["Aventura"], 16: ["Animação"], 35: ["Comédia"], 80: ["Crime"],
     99: ["Documentário"], 18: ["Drama"], 10751: ["Família"], 14: ["Fantasia"], 36: ["Histórico"],
@@ -86,7 +87,7 @@ class TmdbCatalogProvider:
         max_workers: int = 8,
     ):
         if not api_key:
-            raise TmdbError("CINEMATCH_TMDB_API_KEY não configurada", status_code=400)
+            raise TmdbError("TASTORY_TMDB_API_KEY não configurada", status_code=400)
         self.language = language
         self.region = region
         self.pages = max(1, pages)
@@ -134,6 +135,7 @@ class TmdbCatalogProvider:
             "genres": map_genres(media_type, genre_ids),
             "tags": [],
             "creators": [],
+            "actors": [],
             "popularity": normalize_popularity(item.get("popularity"), item.get("vote_average")),
         }
 
@@ -143,13 +145,16 @@ class TmdbCatalogProvider:
         if tmdb_type == "movie":
             d = self._get(f"/movie/{tmdb_id}", append_to_response="credits,keywords")
             creators = [c["name"] for c in d.get("credits", {}).get("crew", []) if c.get("job") == "Director"]
+            cast = d.get("credits", {}).get("cast", [])
             keywords = d.get("keywords", {}).get("keywords", [])
         else:
-            d = self._get(f"/tv/{tmdb_id}", append_to_response="keywords")
+            d = self._get(f"/tv/{tmdb_id}", append_to_response="aggregate_credits,keywords")
             creators = [c["name"] for c in d.get("created_by", [])]
+            cast = d.get("aggregate_credits", {}).get("cast", [])
             keywords = d.get("keywords", {}).get("results", [])
         full = self._from_item(d, tmdb_type) or t
         full["creators"] = list(dict.fromkeys(creators))[:3]
+        full["actors"] = [c["name"] for c in cast][:MAX_ACTORS]
         full["tags"] = [k["name"].lower() for k in keywords][:8]
         return full
 
@@ -203,18 +208,22 @@ def enrich_catalog(db, provider: TmdbCatalogProvider, only_missing_posters: bool
     """Procura no TMDB cada título do catálogo (mock/manual) por tipo + título + ano.
 
     Quando encontra, o registro passa a ser do TMDB e ganha pôster, sinopse oficial e gêneros mapeados,
-    mantendo as tags e criadores que já tinha. Títulos não encontrados ficam como estão.
+    mantendo as tags e criadores que já tinha, e o elenco. Se o TMDB já trouxe o mesmo título com outro nome, os dois
+    viram um só. Títulos não encontrados ficam como estão.
     """
     from sqlalchemy import select
 
     from ..models import Media
-    from .catalog import title_key
+    from .catalog import merge_media, title_key
 
     rows = [
         m for m in db.scalars(select(Media).where(Media.source != "tmdb"))
         if not (only_missing_posters and m.poster_url)
     ]
-    taken = set(db.scalars(select(Media.external_id).where(Media.source == "tmdb")))
+    taken = {
+        external_id: media_id
+        for media_id, external_id in db.execute(select(Media.id, Media.external_id).where(Media.source == "tmdb"))
+    }
 
     def best_match(m: Media) -> ExternalTitle | None:
         tmdb_type = TYPE_TO_TMDB[m.type]
@@ -231,28 +240,30 @@ def enrich_catalog(db, provider: TmdbCatalogProvider, only_missing_posters: bool
             same_year = m.year is None or (t["year"] is not None and abs(t["year"] - m.year) <= 1)
             same_title = title_key(m.type, t["title"], None)[1] == key
             if same_year and (same_title or r is results[0]):
-                return t
+                return provider._enrich(t)
         return None
 
     with ThreadPoolExecutor(max_workers=provider.max_workers) as pool:
         matches = list(pool.map(best_match, rows))
 
-    enriched = not_found = conflicts = 0
+    enriched = not_found = merged = 0
     for m, t in zip(rows, matches):
         if t is None:
             not_found += 1
             continue
-        if t["external_id"] in taken:  # já existe outro registro com esse título do TMDB
-            conflicts += 1
+        if t["external_id"] in taken:  # ex.: "Rick and Morty" no mock e "Rick e Morty" no TMDB
+            merge_media(db, m, taken[t["external_id"]])
+            merged += 1
             continue
-        taken.add(t["external_id"])
+        taken[t["external_id"]] = m.id
         m.source, m.external_id = "tmdb", t["external_id"]
         m.poster_url = t["poster_url"] or m.poster_url
         m.overview = t["overview"] or m.overview
         m.genres = t["genres"] or m.genres
+        m.actors = t["actors"]
         enriched += 1
     db.commit()
-    return {"checked": len(rows), "enriched": enriched, "not_found": not_found, "conflicts": conflicts}
+    return {"checked": len(rows), "enriched": enriched, "not_found": not_found, "merged": merged}
 
 
 class StaticProvider:

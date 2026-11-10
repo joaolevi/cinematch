@@ -1,22 +1,28 @@
-# CineMatch 🎬
+# Tastory 📔
 
 > **A história do seu gosto**: diário de filmes e séries com motor de recomendação híbrido.
-> Protótipo acadêmico da disciplina **Gerência de Projeto, 2026.2** (UFAL).
+> Protótipo acadêmico da disciplina **Gerência de Projeto, 2026.2** (UFAL). **MVP entregue em 10/11/2026.**
 
 Plataformas de diário (como o Letterboxd) registram tudo o que você assiste, mas não usam esse acervo
 para sugerir o próximo título. Netflix e Spotify recomendam, mas só dentro do próprio catálogo.
-O CineMatch une as duas coisas: **um diário** + **um recomendador** que combina os atributos dos títulos
+O Tastory une as duas coisas: **um diário** + **um recomendador** que combina os atributos dos títulos
 (gênero, tags, diretor, década) com o gosto de usuários parecidos com você.
 
-Este repositório tem a **API (backend)**, com integração real com o **TMDB**. O frontend oficial está a
-cargo de outro integrante e consome esta API. O guia para ele está em [`docs/API.md`](docs/API.md).
-Em [`demo-front/`](demo-front/) há um **protótipo de interface só para apresentação**:
+Este repositório tem a **API (backend)**, com integração real com o **TMDB**, e a **interface** em
+[`frontend/`](frontend). O contrato entre as duas partes está em [`docs/tecnico/API.md`](docs/tecnico/API.md).
 
 ```bash
 ./demo.sh --reset    # recria o banco (mock + TMDB) e sobe API + interface → http://localhost:5173
 ```
 
-![Protótipo de interface](demo-front/screenshots/feed.png)
+![Início do Tastory](frontend/screenshots/inicio.png)
+
+A interface tem a identidade **"diário aconchegante"**: papel pautado, polaroides, post-its e letra à mão sobre um
+fundo escuro e quente. O guia está em [`frontend/README.md`](frontend/README.md#identidade-visual-diário-aconchegante).
+
+| Diário | Administração |
+|---|---|
+| ![Diário](frontend/screenshots/diario.png) | ![Painel da administração](frontend/screenshots/metricas.png) |
 
 ---
 
@@ -26,14 +32,16 @@ Em [`demo-front/`](demo-front/) há um **protótipo de interface só para aprese
 |---|---|---|
 | Acesso | Cadastrar conta, Fazer login | `POST /auth/register`, `POST /auth/login` |
 | Acesso | Definir preferências iniciais | `PUT /me/preferences` |
-| Uso Geral | Buscar mídias | `GET /media`, `GET /media/{id}` |
+| Uso Geral | Buscar mídias | `GET /media`, `GET /media/{id}`, `GET /media/{id}/similar` |
 | Uso Geral | Registrar consumo / Avaliar mídia | `/diary` (nota 0,5–5 ★ e resenha opcionais) |
 | Uso Geral | Gerenciar listas | `/lists` (watchlist "Quero ver" + listas próprias) |
 | Uso Geral | Ver / Descartar recomendação | `GET /recommendations`, `POST /recommendations/{id}/feedback` |
+| Uso Geral | Ver a Comunidade | `GET /community`, `GET /community/reviewers` |
 | Inteligência | Gerar recomendações | `app/services/recommender.py` (híbrido + cold start) |
 | Administração | Gerenciar catálogo | `/admin/media` |
 | Administração | Sincronizar catálogo externo | `POST /admin/sync`, `/admin/tmdb/search`, `/admin/tmdb/import` |
 | Administração | Moderar avaliações | `/admin/reviews` |
+| Administração | Acompanhar e apagar contas | `GET /admin/users`, `DELETE /admin/users/{id}` |
 | Métrica | Taxa de aceitação + teste A/B | `GET /admin/metrics` |
 
 **Taxa de aceitação** = (Quero ver + Já vi) ÷ sugestões exibidas. Usuários do **grupo A** recebem o
@@ -43,12 +51,12 @@ recomendador **híbrido**; os do **grupo B**, só o **baseado em conteúdo**.
 
 ## 🚀 Como rodar (local)
 
-Pré-requisito: **Python 3.11+**.
+Pré-requisitos: **Python 3.12+** e, para o `demo.sh`, **Node.js 22**.
 
 ```bash
 git clone https://github.com/joaolevi/cinematch.git
 cd cinematch
-cp .env.example .env     # opcional: coloque sua chave do TMDB em CINEMATCH_TMDB_API_KEY
+cp .env.example .env     # opcional: coloque sua chave do TMDB em TASTORY_TMDB_API_KEY
 ./dev.sh                 # instala dependências e sobe a API em http://localhost:8000/docs
 ./dev.sh --reset         # mesmo, mas recria o banco com os dados de demonstração
 ```
@@ -65,16 +73,35 @@ cd backend
 uvicorn app.main:app --reload
 ```
 
-Na primeira execução o banco SQLite (`backend/cinematch.db`) é criado e populado automaticamente com
+Na primeira execução o banco SQLite (`backend/tastory.db`) é criado e populado automaticamente com
 o catálogo mockado. Para recriar do zero: `cd backend && python -m scripts.seed`.
+
+### Atalhos com make
+
+No Linux, no macOS ou no WSL, `make` lista os atalhos do projeto. Os principais são `make up`, `make down`, `make test`,
+`make test-offline` e `make openapi`. No Windows sem WSL, use os comandos desta seção.
+
+### Com Docker
+
+Sobe a API, a interface e o PostgreSQL com um comando. Pré-requisito: Docker.
+
+```bash
+docker compose up --build    # API em :8000 e interface em :5173
+docker compose down          # para tudo e mantém os dados
+docker compose down -v       # para tudo e apaga o banco
+```
+
+Se o `.env` tiver `TASTORY_TMDB_API_KEY`, o Docker usa essa chave.
 
 ### Contas de demonstração
 
+Essas senhas valem só para uso local. Em produção, elas são recusadas (veja `docs/tecnico/DEPLOY.md`).
+
 | Perfil | E-mail | Senha |
 |---|---|---|
-| Administrador | `admin@cinematch.dev` | `admin123` |
-| Usuário (sem histórico, cai no *cold start*) | `demo@cinematch.dev` | `demo123` |
-| 30 usuários sintéticos (personas de gosto) | `terror.1@seed.cinematch.dev` … `comedia.5@seed.cinematch.dev` | `senha123` |
+| Administrador | `admin@tastory.dev` | `admin123` |
+| Usuário (sem histórico, cai no *cold start*) | `demo@tastory.dev` | `demo123` |
+| 30 usuários sintéticos (personas de gosto) | `terror.1@seed.tastory.dev` … `comedia.5@seed.tastory.dev` | `senha123` |
 
 ---
 
@@ -82,7 +109,7 @@ o catálogo mockado. Para recriar do zero: `cd backend && python -m scripts.seed
 
 - **Mock (offline):** `backend/data/seed_catalog.json` (153 títulos carregados no início) e
   `mock_external_catalog.json` (45 extras). Funciona sem internet e sem chave.
-- **TMDB (real):** com `CINEMATCH_TMDB_API_KEY` no `.env`, o admin pode:
+- **TMDB (real):** com `TASTORY_TMDB_API_KEY` no `.env`, o admin pode:
   - `POST /admin/sync?provider=tmdb&pages=2`: importa filmes e séries populares no Brasil, com
     pôster, sinopse em português, diretor/criadores e palavras-chave;
   - `GET /admin/tmdb/search?q=...` + `POST /admin/tmdb/import`: busca e importa um título específico;
@@ -92,6 +119,16 @@ o catálogo mockado. Para recriar do zero: `cd backend && python -m scripts.seed
 - Os gêneros do TMDB são convertidos para o mesmo vocabulário do mock, e um título que já existe
   no mock (mesmo tipo, título e ano) é **atualizado com os dados do TMDB em vez de duplicado**.
 - Tudo passa pela interface `CatalogProvider` (`services/catalog.py`, `services/tmdb.py`).
+
+### Como obter a chave do TMDB
+
+É grátis para uso não comercial, desde que o TMDB seja creditado, e a interface já mostra esse crédito.
+
+1. Crie uma conta em [themoviedb.org](https://www.themoviedb.org/signup) e confirme o e-mail.
+2. No computador, abra [Configurações > API](https://www.themoviedb.org/settings/api), solicite a chave e aceite os termos.
+3. Copie o **API Read Access Token**, o código longo que começa com `eyJ`. A API Key também funciona.
+4. Rode `cp .env.example .env` e preencha `TASTORY_TMDB_API_KEY=` no `.env`.
+5. Para confirmar, rode `cd backend && python -m pytest -q -m integration`.
 
 > 🔐 A chave do TMDB fica **só no `.env`**, que está no `.gitignore`. Nunca a coloque no código.
 
@@ -106,13 +143,18 @@ Diagrama de Atividades do pitch:
 2. **Sem dados → mídias em alta** (popularidade do catálogo + títulos mais registrados na plataforma).
 3. **Com dados → híbrido:**
    - **Conteúdo:** cada título vira um vetor TF‑IDF de gêneros, tags, criadores, década e tipo. O perfil do
-     usuário é a soma ponderada dos títulos com que interagiu (nota → `(nota − 2,5)/2,5`, watchlist `+0,5`,
-     descarte `−0,7`, gêneros do onboarding `+1`). O score é a similaridade de cosseno.
+     usuário é a soma ponderada dos títulos com que interagiu (nota → `(nota − 2,5)/2,5`, já vi sem nota `+0,6`,
+     título marcado no onboarding `+0,8`, listas `+0,5`, descarte `−0,7`; gêneros, épocas e criadores do onboarding `+1`). O score é a similaridade
+     de cosseno.
    - **Colaborativo (item‑item):** similaridade de cosseno entre títulos na matriz usuário × título, ou seja,
-     *"quem curtiu X também curtiu Y"*.
+     *"quem curtiu X também curtiu Y"*. Com `TASTORY_USE_EXTERNAL_NEIGHBORS=true`, os filmes usam os vizinhos
+     calculados com o MovieLens 32M, e os usuários simulados deixam de contar.
    - **Combinação:** `α·conteúdo + (1−α)·colaborativo + 0,1·popularidade`, com `α = 0,8` para quem tem
-     pouco histórico e `0,5` depois. O grupo B usa `α = 1` (só conteúdo).
-4. **Filtra** já registrados, descartados e itens da watchlist; aplica **diversidade** de gênero no topo.
+     pouco histórico e `0,5` depois. Com o MovieLens, `α = 0,2` nos filmes e `1` nas séries, que não têm esses
+     dados. O grupo B usa `α = 1` (só conteúdo).
+4. **Filtra** já registrados, descartados, itens da watchlist e títulos do TMDB sem sinopse, pôster ou nome legível;
+   aplica **diversidade** de gênero no topo. Nas séries, a popularidade pesa `1`, mas só muda quais séries
+   ocupam os lugares delas no feed.
 5. **Explica** cada sugestão a partir do item do histórico que mais contribuiu.
 
 ---
@@ -121,12 +163,13 @@ Diagrama de Atividades do pitch:
 
 ```bash
 cd backend
-python -m pytest -q                    # todos (52)
-python -m pytest -q -m "not integration"   # só offline (39): é o que roda no CI
+pip install -r requirements-dev.txt   # o dev.sh instala só o necessário para rodar a API
+python -m pytest -q                    # todos (128): é o que roda no CI, onde os 13 de integração são pulados
+python -m pytest -q -m "not integration"   # só offline (115)
 python -m pytest -q -m integration     # só integração real com TMDB + banco (13, precisa da chave)
 ```
 
-- **Offline:** acesso, diário, listas, feed, cold start, A/B, admin, métricas e o provider do TMDB com
+- **Offline:** acesso, diário, listas, feed, cold start, A/B, admin (inclusive usuários), métricas e o provider do TMDB com
   respostas simuladas (`httpx.MockTransport`).
 - **Integração** (`tests/integration/`): chamam a API real do TMDB e verificam normalização em português,
   sincronização persistida no banco, idempotência, deduplicação com o mock, busca/importação,
@@ -141,25 +184,31 @@ cinematch/
 ├── backend/
 │   ├── app/            # main, models, schemas, auth, crud, seed, routers/, services/ (recommender, catalog, tmdb, metrics)
 │   ├── data/           # catálogos mockados (JSON)
-│   ├── scripts/seed.py # recria o banco
+│   ├── scripts/        # seed, avaliação e comparação de modelos do recomendador, importação do MovieLens
 │   └── tests/          # pytest (+ integration/ com o TMDB real)
-├── demo-front/         # protótipo de interface para apresentação (não é o front oficial)
-├── demo.sh             # sobe API + demo-front
-├── docs/               # PLANO.md, API.md, openapi.json, pitch
+├── frontend/           # interface (React, TypeScript e Tailwind)
+├── demo.sh             # sobe API + interface
+├── docker-compose.yml  # API, interface e PostgreSQL (docker-compose.prod.yml é o da publicação)
+├── docs/               # índice em docs/README.md: gestao/, requisitos/ e tecnico/
 ├── .claude/agents/     # agente do Claude Code especialista no projeto
 └── dev.sh
 ```
 
 ## 🤝 Como contribuir
 
-Veja [CONTRIBUTING.md](CONTRIBUTING.md). Resumo: crie uma branch a partir da `main`, faça commits
+Veja [CONTRIBUTING.md](CONTRIBUTING.md). Resumo: crie uma branch a partir da `homol`, faça commits
 pequenos, abra um Pull Request vinculado à issue (`Closes #N`) e espere o CI ficar verde.
 
 ## 🗺️ Próximos incrementos
 
-- **Frontend oficial** consumindo esta API (guia em `docs/API.md`).
-- **Álbuns** (MusicBrainz) como terceira mídia, previsto no pitch para o segundo incremento.
-- Deploy em nuvem.
+O MVP foi entregue em 10/11/2026 ([registro](docs/gestao/MVP.md)). O que vem depois está no
+[plano de incrementos](docs/requisitos/incrementos.md):
+
+- **2a:** base técnica, a métrica corrigida e o grafo de conteúdo para séries e para o grupo B.
+- **2b:** álbuns como terceira mídia, previstos no pitch, e o Meu gosto nas três mídias.
+- **3:** beta aberta, social mínimo e controle sobre o próprio gosto.
+- **4:** clima, sugestões pelo momento e onde assistir ou ouvir.
+- **5:** pontes entre filmes, séries e música, e sugestões para assistir junto.
 
 ## 👥 Equipe
 

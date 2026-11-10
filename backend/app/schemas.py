@@ -1,11 +1,12 @@
 """Schemas Pydantic de entrada e saída da API."""
 
 from datetime import date, datetime
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 MediaType = Literal["movie", "series"]
+MAX_PASSWORD_BYTES = 72  # limite do bcrypt
 FeedbackAction = Literal["want", "seen", "dismiss"]
 
 
@@ -17,7 +18,21 @@ class ORM(BaseModel):
 class RegisterIn(BaseModel):
     name: str = Field(min_length=2, max_length=120)
     email: EmailStr
-    password: str = Field(min_length=6, max_length=128)
+    password: str = Field(min_length=6)
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        if len(v.strip()) < 2:
+            raise ValueError("o nome deve ter pelo menos 2 caracteres")
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if len(v.encode()) > MAX_PASSWORD_BYTES:
+            raise ValueError(f"a senha deve ter no máximo {MAX_PASSWORD_BYTES} bytes")
+        return v
 
 
 class LoginIn(BaseModel):
@@ -42,12 +57,16 @@ class TokenOut(BaseModel):
 
 # ---------- Preferências ----------
 class PreferencesIn(BaseModel):
-    genres: list[str] = []
+    genres: list[Annotated[str, Field(max_length=60)]] = []
+    decades: list[Annotated[int, Field(ge=1880, le=2100)]] = []
+    creators: list[Annotated[str, Field(max_length=120)]] = []
     liked_media_ids: list[int] = []
 
 
 class PreferencesOut(BaseModel):
     genres: list[str]
+    decades: list[int]
+    creators: list[str]
     onboarded: bool
 
 
@@ -72,7 +91,7 @@ class MediaIn(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     year: int | None = Field(default=None, ge=1880, le=2100)
     overview: str = ""
-    poster_url: str | None = None
+    poster_url: str | None = Field(default=None, max_length=500)
     genres: list[str] = []
     tags: list[str] = []
     creators: list[str] = []
@@ -84,7 +103,7 @@ class MediaUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     year: int | None = Field(default=None, ge=1880, le=2100)
     overview: str | None = None
-    poster_url: str | None = None
+    poster_url: str | None = Field(default=None, max_length=500)
     genres: list[str] | None = None
     tags: list[str] | None = None
     creators: list[str] | None = None
@@ -103,16 +122,23 @@ class ReviewOut(BaseModel):
 class MyStatus(BaseModel):
     diary_entry_id: int | None = None
     rating: float | None = None
+    consumed_at: date | None = None
     in_watchlist: bool = False
     dismissed: bool = False
     list_ids: list[int] = []
 
 
 class MediaDetailOut(MediaOut):
+    actors: list[str]
     avg_rating: float | None
     ratings_count: int
     reviews: list[ReviewOut]
     my_status: MyStatus
+
+
+class MediaFacetsOut(BaseModel):
+    decades: list[int]
+    creators: list[str]
 
 
 class MediaPage(BaseModel):
@@ -199,10 +225,41 @@ class FeedOut(BaseModel):
     items: list[RecommendationOut]
 
 
+class CommunityEntryOut(BaseModel):
+    id: int
+    user_name: str
+    media: MediaOut
+    rating: float | None
+    review: str | None
+    consumed_at: date | None
+    created_at: datetime
+
+
+class CommunityPage(BaseModel):
+    items: list[CommunityEntryOut]
+
+
+class ReviewerOut(BaseModel):
+    name: str
+    titles: int
+    reviews: int
+
+
+class ImpressionIn(BaseModel):
+    media_id: int
+    strategy: Literal["hybrid", "content", "trending"]
+    score: float
+
+
+class ImpressionsIn(BaseModel):
+    items: list[ImpressionIn] = Field(max_length=100)
+
+
 class FeedbackIn(BaseModel):
     action: FeedbackAction
     rating: float | None = None
     review: str | None = Field(default=None, max_length=2000)
+    consumed_at: date | None = None
 
     @field_validator("rating")
     @classmethod
@@ -221,6 +278,29 @@ class AdminReviewOut(BaseModel):
     review: str
     review_hidden: bool
     created_at: datetime
+
+
+class AdminUserOut(BaseModel):
+    """Uma pessoa na aba Usuários da administração, com o que ela já fez no sistema."""
+
+    id: int
+    name: str
+    email: str
+    role: str
+    ab_group: str
+    is_synthetic: bool
+    onboarded: bool
+    created_at: datetime
+    diary_entries: int
+    reviews: int
+    shown: int  # sugestões que apareceram na tela
+    accepted: int  # Quero ver + Já vi vindos de sugestões
+    last_active: datetime
+
+
+class AdminUsersOut(BaseModel):
+    items: list[AdminUserOut]
+    total: int
 
 
 class ReviewModerationIn(BaseModel):
@@ -274,3 +354,10 @@ class MetricsOut(BaseModel):
     catalog_size: int
     users: int
     diary_entries: int
+    real_users: int
+    simulated_shown: int
+    trending_shown: int  # exibições "Em alta", fora da comparação A/B
+    movies: int
+    series: int
+    external_neighbors_enabled: bool
+    titles_with_neighbors: int

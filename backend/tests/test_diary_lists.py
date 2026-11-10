@@ -1,3 +1,11 @@
+from datetime import date
+
+from sqlalchemy import event
+
+from app.db import engine
+from app.models import Media
+from app.services.catalog import search_text
+
 from .conftest import media_id_by_title
 
 
@@ -22,6 +30,7 @@ def test_register_consumption_with_rating(client, user_headers):
     assert detail["my_status"]["diary_entry_id"] == entry["id"]
     assert detail["ratings_count"] == 1
     assert detail["reviews"][0]["review"] == "Genial"
+    assert detail["actors"] == []  # o catálogo mock não tem elenco
 
 
 def test_rating_is_optional_and_validated(client, user_headers):
@@ -66,3 +75,118 @@ def test_cannot_touch_other_users_list(client, user_headers):
     other = register(client, email="outro@teste.com")
     lst = client.post("/lists", json={"name": "Minha"}, headers=other).json()
     assert client.get(f"/lists/{lst['id']}", headers=user_headers).status_code == 404
+
+
+def test_onboarding_keeps_existing_rating(client, user_headers):
+    mid = media_id_by_title(client, user_headers, "Parasita")
+    client.post("/diary", json={"media_id": mid, "rating": 1}, headers=user_headers)
+
+    r = client.put("/me/preferences", json={"genres": [], "liked_media_ids": [mid]}, headers=user_headers)
+    assert r.status_code == 200
+    assert client.get("/diary", headers=user_headers).json()[0]["rating"] == 1
+
+
+def count_queries(client, path, headers) -> int:
+    statements = []
+
+    def record(_conn, _cursor, statement, *_args):
+        statements.append(statement)
+
+    event.listen(engine, "before_cursor_execute", record)
+    try:
+        assert client.get(path, headers=headers).status_code == 200
+    finally:
+        event.remove(engine, "before_cursor_execute", record)
+    return len(statements)
+
+
+def test_queries_do_not_grow_with_items(client, user_headers):
+    ids = [m["id"] for m in client.get("/media", params={"limit": 12}, headers=user_headers).json()["items"]]
+    lst = client.post("/lists", json={"name": "Grande"}, headers=user_headers).json()
+
+    def add(media_ids):
+        for mid in media_ids:
+            client.post("/diary", json={"media_id": mid}, headers=user_headers)
+            client.post(f"/lists/{lst['id']}/items", json={"media_id": mid}, headers=user_headers)
+
+    add(ids[:2])
+    diary_before = count_queries(client, "/diary", user_headers)
+    lists_before = count_queries(client, "/lists", user_headers)
+    add(ids[2:])
+    assert count_queries(client, "/diary", user_headers) == diary_before
+    assert count_queries(client, "/lists", user_headers) == lists_before
+
+
+def test_search_ignores_accents(client, user_headers):
+    for query in ("chefao", "CHEFÃO"):
+        items = client.get("/media", params={"q": query}, headers=user_headers).json()["items"]
+        assert "O Poderoso Chefão" in [m["title"] for m in items]
+
+
+def test_facets_follow_chosen_genres(client):
+    facets = client.get("/media/facets", params={"genre": ["Terror"], "limit": 5}).json()
+    assert len(facets["creators"]) == 5
+    assert facets["decades"] == sorted(facets["decades"], reverse=True)
+
+    everything = client.get("/media/facets", params={"limit": 50}).json()
+    assert set(facets["decades"]) <= set(everything["decades"])
+    assert set(facets["creators"]) <= set(everything["creators"])
+
+
+def test_trending_is_public_and_respects_filters(client):
+    series = client.get("/media/trending", params={"type": "series", "limit": 3}).json()
+    assert len(series) == 3
+    assert all(m["type"] == "series" for m in series)
+
+
+def test_search_filters_by_genre_and_sorts(client, user_headers):
+    def search(**params):
+        return client.get("/media", params={"limit": 100, **params}, headers=user_headers).json()["items"]
+
+    assert all("Terror" in m["genres"] for m in search(genre="Terror"))
+
+    popular = [m["popularity"] for m in search()]
+    assert popular == sorted(popular, reverse=True)
+    years = [m["year"] for m in search(sort="year")]
+    assert years == sorted(years, reverse=True)
+    titles = [search_text(m["title"]) for m in search(sort="title")]
+    assert titles == sorted(titles)
+
+    # a ordem escolhida vale também para quem digitou um termo
+    years = [m["year"] for m in search(q="a", sort="year")]
+    assert len(years) > 1 and years == sorted(years, reverse=True)
+
+
+def test_most_recent_order_leaves_upcoming_titles_last(client, user_headers, db):
+    next_year = date.today().year + 1
+    db.add(Media(type="movie", title="Ainda Vai Estrear", year=next_year, source="manual"))
+    db.commit()
+    total = client.get("/media", params={"limit": 1}, headers=user_headers).json()["total"]
+    page = {"sort": "year", "limit": 1}
+    newest = client.get("/media", params=page, headers=user_headers).json()["items"][0]
+    last = client.get("/media", params={**page, "offset": total - 1}, headers=user_headers).json()["items"][0]
+    assert newest["year"] <= date.today().year
+    assert last["title"] == "Ainda Vai Estrear"
+
+
+def test_search_by_person_finds_directors_and_actors(client, db, user_headers):
+    db.add_all([
+        Media(type="movie", title="Com Diretora", source="manual", creators=["Fulana de Tal"]),
+        Media(type="series", title="Com Atriz", source="manual", actors=["Fulana de Tal", "Outra Pessoa"]),
+        Media(type="movie", title="Nome Parecido", source="manual", actors=["Fulana de Talvez"]),
+    ])
+    db.commit()
+
+    def titles(**params):
+        items = client.get("/media", params=params, headers=user_headers).json()["items"]
+        return {m["title"] for m in items}
+
+    assert titles(person="Fulana de Tal") == {"Com Diretora", "Com Atriz"}  # nome exato
+    assert titles(person="fulana de tal", type="series") == {"Com Atriz"}
+    assert "Com Atriz" in titles(q="outra pessoa")  # a busca também encontra atores
+
+
+def test_genres_are_public_and_sorted(client):
+    genres = client.get("/media/genres").json()
+    assert "Terror" in genres
+    assert genres == sorted(genres)

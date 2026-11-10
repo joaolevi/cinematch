@@ -1,5 +1,8 @@
 """Buscar Mídias, detalhe e mídias em alta."""
 
+from collections import Counter
+from datetime import date
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -8,17 +11,21 @@ from .. import crud
 from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList
-from ..schemas import MediaDetailOut, MediaOut, MediaPage, MediaType, MyStatus, ReviewOut
-from ..services.recommender import trending as trending_service
+from ..schemas import MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MyStatus, ReviewOut
+from ..services.catalog import search_text
+from ..services.recommender import similar_titles, trending as trending_service
 
 router = APIRouter(prefix="/media", tags=["mídias"])
+
+MIN_TITLES_PER_DECADE = 3
 
 
 @router.get("", response_model=MediaPage)
 def search_media(
-    q: str | None = Query(default=None, description="Trecho do título, criador ou tag"),
+    q: str | None = Query(default=None, description="Trecho do título, criador, ator ou tag"),
     type: MediaType | None = None,
     genre: str | None = None,
+    person: str | None = Query(default=None, description="Nome exato de um diretor, criador ou ator"),
     sort: str = Query(default="popularity", pattern="^(popularity|title|year)$"),
     limit: int = Query(default=24, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -30,21 +37,27 @@ def search_media(
         items = [m for m in items if m.type == type]
     if genre:
         items = [m for m in items if genre in (m.genres or [])]
+    if person:
+        wanted = search_text(person.strip())
+        items = [m for m in items if wanted in {search_text(n) for n in (m.creators or []) + (m.actors or [])}]
     if q:
-        needle = q.strip().lower()
+        needle = search_text(q.strip())
         items = [
             m
             for m in items
-            if needle in m.title.lower()
-            or any(needle in c.lower() for c in m.creators or [])
-            or any(needle in t.lower() for t in m.tags or [])
+            if needle in search_text(m.title)
+            or any(needle in search_text(c) for c in m.creators or [])
+            or any(needle in search_text(a) for a in m.actors or [])
+            or any(needle in search_text(t) for t in m.tags or [])
         ]
-        # títulos que começam com o termo vêm primeiro
-        items.sort(key=lambda m: (not m.title.lower().startswith(needle), -m.popularity))
-    elif sort == "title":
-        items.sort(key=lambda m: m.title.lower())
+    if sort == "title":
+        items.sort(key=lambda m: search_text(m.title))
     elif sort == "year":
-        items.sort(key=lambda m: -(m.year or 0))
+        this_year = date.today().year  # o que ainda não estreou fica no fim da lista
+        items.sort(key=lambda m: ((m.year or 0) > this_year, -(m.year or 0), -m.popularity))
+    elif q:
+        # títulos que começam com o termo vêm primeiro
+        items.sort(key=lambda m: (not search_text(m.title).startswith(needle), -m.popularity))
     else:
         items.sort(key=lambda m: -m.popularity)
     return MediaPage(items=items[offset : offset + limit], total=len(items))
@@ -58,6 +71,27 @@ def list_genres(db: Session = Depends(get_db)):
     return sorted(genres)
 
 
+@router.get("/facets", response_model=MediaFacetsOut)
+def media_facets(
+    genre: list[str] = Query(default=[]),
+    limit: int = Query(default=12, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    """Décadas e criadores do catálogo, para o onboarding. Criadores vêm ordenados pela popularidade."""
+    items = list(db.scalars(select(Media)))
+    if genre:
+        items = [m for m in items if set(genre) & set(m.genres or [])]
+    decades = Counter((m.year // 10) * 10 for m in items if m.year)
+    creators: Counter[str] = Counter()
+    for m in items:
+        for creator in m.creators or []:
+            creators[creator] += m.popularity
+    return MediaFacetsOut(
+        decades=sorted((d for d, count in decades.items() if count >= MIN_TITLES_PER_DECADE), reverse=True),
+        creators=[name for name, _ in creators.most_common(limit)],
+    )
+
+
 @router.get("/trending", response_model=list[MediaOut])
 def trending(
     type: MediaType | None = None,
@@ -65,6 +99,17 @@ def trending(
     db: Session = Depends(get_db),
 ):
     return [r.media for r in trending_service(db, type, limit)]
+
+
+@router.get("/{media_id}/similar", response_model=list[MediaOut])
+def similar(
+    media_id: int,
+    limit: int = Query(default=12, ge=1, le=24),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    crud.get_media_or_404(db, media_id)
+    return similar_titles(db, user, media_id, limit)
 
 
 @router.get("/{media_id}", response_model=MediaDetailOut)
@@ -113,12 +158,14 @@ def media_detail(
     status = MyStatus(
         diary_entry_id=mine.id if mine else None,
         rating=mine.rating if mine else None,
+        consumed_at=mine.consumed_at if mine else None,
         in_watchlist=any(is_wl for _, is_wl in lists),
         dismissed=dismissed is not None,
         list_ids=[lid for lid, is_wl in lists if not is_wl],
     )
     return MediaDetailOut(
         **MediaOut.model_validate(media).model_dump(),
+        actors=media.actors or [],
         avg_rating=round(float(avg), 2) if avg is not None else None,
         ratings_count=int(count or 0),
         reviews=reviews,
