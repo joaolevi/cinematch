@@ -1,6 +1,6 @@
 # Arquitetura e sistema final
 
-> **Versão 3, 10/11/2026.** Requisitos do sistema final renumerados na ordem de implementação. Validação técnica: Bárbara (IA) e Levi (TL). Aprovação: Sophia (GP).
+> **Versão 4, 10/11/2026.** Requisitos do sistema final renumerados na ordem de implementação; resultado do EXP01 e incremento 2 dividido em 2a e 2b. Validação técnica: Bárbara (IA) e Levi (TL). Aprovação: Sophia (GP).
 > Este documento trata do sistema final, com filmes, séries e música. O que será entregue em 10/11 está em [MVP.md](MVP.md).
 
 ## Decisões
@@ -10,6 +10,9 @@
 | D7 | Filmes e séries são recomendados juntos; música é recomendada separadamente | Filmes e séries já compartilham gêneros, diretores e dados. Cruzar com música exige pessoas que consomem as duas coisas, e ainda não temos esses dados | Sophia (GP), 06/11 |
 | D8 | O MVP mantém o cálculo atual; a mudança de arquitetura fica para depois de 10/11. As exceções são a tabela de vizinhos do MovieLens (D14) e o ajuste nas séries (D16) | Com o catálogo atual, o feed responde em milissegundos, e trocar agora colocaria a entrega em risco | Sophia (GP), 06/11 |
 | D14 | Os vizinhos do MovieLens 32M substituem os usuários inventados nos filmes, com a opção desligada por padrão | Foi a maior melhora medida, e a opção desligada protege a entrega | Sophia (GP), 06/11 |
+| D22 | Os filmes mantêm o híbrido atual; séries, música e pontes entre mídias usam o grafo no lado do conteúdo (RNFF12) | No EXP01, com dados colaborativos os modelos empataram, e só com conteúdo o grafo venceu o TF-IDF | Sophia (GP), 10/11 |
+| D23 | O incremento 2 se divide em 2a (base, medição e grafo) e 2b (música) | A música (RFF01) é o único item grande e travaria o resto; o 2a já entrega melhora visível | Sophia (GP), 10/11 |
+| D24 | O grupo B passa a usar o grafo de conteúdo quando o RNFF12 estiver pronto; a contagem do A/B no painel recomeça nessa data | O A/B continua comparando completo com só conteúdo, agora com o conteúdo melhor; os números de antes e de depois não se comparam | Sophia (GP), 10/11 |
 
 A recomendação cruzada entre filmes e música fica como evolução: o diário unificado vai gerar esses dados com o tempo.
 
@@ -133,6 +136,9 @@ como motivo. Os *embeddings* ficam de fora. O bônus de popularidade não muda p
 favorecem os populares, e quem decide é o A/B, junto com a satisfação. Limites: base pequena, 27 pessoas no corte usado
 para escolher os parâmetros (o melhor amortecimento do grafo variou entre 0,5 e 0,85) e uma rodada só. O EXP04
 confirma o resultado no MovieLens 32M.
+
+Na prática, o grafo vira o RNFF12, no incremento 2a, porque séries, música e grupo B já ganham com ele (D22). O grupo B
+passa a usá-lo, e a contagem do A/B recomeça na data da troca (D24).
 
 O cruzamento entre mídias não tem base pública para medir offline: ele é decidido pelo teste A/B (EXP03).
 
@@ -287,31 +293,40 @@ Os tempos não são diretamente comparáveis, porque o segundo não inclui filtr
 ## Requisitos do sistema final
 
 Estes requisitos ficam fora do MVP. Estão na ordem de implementação, agrupados por incremento, e foram renumerados
-nessa ordem em 10/11/2026: a coluna "Antes" mostra o número anterior, e a [tabela no fim](#numeração-anterior) mostra
+nessa ordem em 10/11/2026 (o RNFF12 e o EXP04 vieram depois e mantêm o próximo número livre): a coluna "Antes" mostra o número anterior, e a [tabela no fim](#numeração-anterior) mostra
 o que aconteceu com cada um. RNFF são não funcionais, e EXP são experimentos de avaliação. Esforço: P até uma semana,
 M de 1 a 3 semanas, G várias semanas. Os requisitos entregues no MVP (RF01 a RF26) estão em
 [requisitos/funcionais.md](requisitos/funcionais.md).
 
-### Incremento 2: a história do seu gosto em três mídias
+### Incremento 2a: base, medição e o grafo de conteúdo
 
-Base técnica, música, medição e o Meu gosto. Cumpre a única promessa do pitch que falta.
+Base técnica, a métrica corrigida e o grafo de conteúdo, que já melhora as séries e o grupo B antes da música. É a primeira metade do incremento 2 (D23).
 
 | ID | Requisito | Situação | Depende de | Esforço | Antes |
 |---|---|---|---|---|---|
 | RNFF01 | Mudar o banco sem apagar dados, com migrações | Não atende: mudar o modelo exige recriar o banco | — | P | RNFF01 |
 | RNFF02 | Respeitar os termos e as licenças das fontes: créditos ao TMDB, à JustWatch, ao Last.fm e ao MusicBrainz, fonte e licença registradas em cada dado, e nenhum dado do TMDB redistribuído | Não atende. Os termos do TMDB restringem o uso com aplicações de ML ou IA e limitam a 6 meses o tempo de guardar dados; o risco foi aceito para o uso acadêmico (ver Riscos no [MVP.md](MVP.md)). Numa versão comercial, é preciso consultar o TMDB e trocar a fonte de conteúdo do recomendador pelo Wikidata. O Last.fm exige contato antes de qualquer uso | — | P | RNFF09 |
-| RNFF03 | Rodar em segundo plano, fora das requisições: sincronizar os catálogos, atualizar os dados do TMDB antes de 6 meses, calcular os vizinhos e as pontes entre mídias e montar o grafo de conteúdo | Não atende: a sincronização roda dentro da requisição. As pontes saem do QLever ou dos dumps do Wikidata e do MusicBrainz | RNFF01 | M | RNFF04, RNFF08 |
 | RNFF04 | Contar a aceitação só quando ela vier até 7 dias depois de a sugestão aparecer | Não atende: Quero ver e Já vi pela página do título contam se o título foi exibido em qualquer momento antes | — | P | RNFF06 |
 | RNFF05 | Limitar as tentativas de login | Não atende | — | P | RNFF03 |
+| RFF03 | Pedir a nota na hora certa: lembrete no Início para títulos vistos sem nota, estrelas clicáveis na polaroide do diário e "Já viu?" para o Quero ver depois de alguns dias | Não implementado. A nota continua opcional: obrigatória, viraria clique aleatório e enganaria o recomendador | — | P | RFF14 |
+| RFF04 | Ver no painel a taxa de satisfação: das sugestões aceitas que ganharam nota, quantas ficaram com 3,5 ou mais | Não implementado no painel. A consulta está no [roteiro do teste interno](HOMOLOGACAO.md#análise-bárbara) | — | P | RFF15 |
+| EXP01 | Comparar offline, nos filmes do MovieLens, o modelo atual, o mesmo com *embeddings* e o grafo de gosto; fica o que ganhar (ver [O modelo depois do MVP](#o-modelo-depois-do-mvp)) | **Feito em 10/11:** empate com dados colaborativos; só com conteúdo, o grafo vence. Scripts `compare_models.py` e `check_popularity.py` | — | M | novo |
+| EXP04 | Confirmar no MovieLens 32M o resultado do EXP01, antes de construir o grafo de conteúdo (RNFF12) | Não feito. A base grande exige guardar só os vizinhos mais próximos de cada título, em vez da matriz inteira | EXP01 | P a M | novo |
+| RNFF12 | Calcular o conteúdo das séries, da música e do grupo B por um grafo de gosto (títulos, gêneros, tags, décadas, pessoas e, depois, climas e pontes como nós), com passeio a partir do que a pessoa curtiu e o caminho mais forte como motivo | Não atende: hoje o conteúdo é TF-IDF. No EXP01, só com conteúdo, o grafo teve NDCG@20 de 0,058 contra 0,022 do TF-IDF. Ao trocar o grupo B, a contagem do A/B recomeça (D24) | EXP04 | M | novo |
+
+### Incremento 2b: a história do seu gosto em três mídias
+
+A música como terceira mídia, já pelo grafo, e o Meu gosto nas três mídias. Cumpre a única promessa do pitch que falta.
+
+| ID | Requisito | Situação | Depende de | Esforço | Antes |
+|---|---|---|---|---|---|
+| RNFF03 | Rodar em segundo plano, fora das requisições: sincronizar os catálogos, atualizar os dados do TMDB antes de 6 meses, calcular os vizinhos e as pontes entre mídias e montar o grafo de conteúdo | Não atende: a sincronização roda dentro da requisição. As pontes saem do QLever ou dos dumps do Wikidata e do MusicBrainz | RNFF01 | M | RNFF04, RNFF08 |
 | RNFF06 | Usar dados reais na parte colaborativa: MovieLens nos filmes, rota de recomendações do TMDB nas séries e ListenBrainz na música | Parcial: os filmes usam o MovieLens 32M quando a opção está ligada; no servidor publicado, falta carregar. Séries e música ainda não têm fonte | RFF01 (música) | M | RNFF05 |
 | RNFF07 | Manter o feed rápido com o catálogo grande, lendo vizinhos já calculados | Não atende: ver as evidências acima. Entra quando o catálogo passar de 10 mil títulos | RNFF03 | M | RNFF02 |
 | RFF01 | Registrar álbuns como terceira mídia ([#19](https://github.com/joaolevi/cinematch/issues/19)), com capas, e levar o Meu gosto, a frase do gosto e a retrospectiva para as três mídias | Não implementado: a API só aceita `movie` e `series`. Pronto quando uma amostra de 100 a 200 álbuns brasileiros atingir a cobertura combinada (o pitch fala em ingestão validada sem definir o critério) | RNFF01, RNFF03 | G | RFF01, RFF26 |
-| RFF02 | Recomendar música a partir dos álbuns registrados no diário, em feed próprio e com o motivo em cada sugestão | Não implementado | RFF01 | M | RFF02 |
-| RFF03 | Pedir a nota na hora certa: lembrete no Início para títulos vistos sem nota, estrelas clicáveis na polaroide do diário e "Já viu?" para o Quero ver depois de alguns dias | Não implementado. A nota continua opcional: obrigatória, viraria clique aleatório e enganaria o recomendador | — | P | RFF14 |
-| RFF04 | Ver no painel a taxa de satisfação: das sugestões aceitas que ganharam nota, quantas ficaram com 3,5 ou mais | Não implementado no painel. A consulta está no [roteiro do teste interno](HOMOLOGACAO.md#análise-bárbara) | — | P | RFF15 |
+| RFF02 | Recomendar música a partir dos álbuns registrados no diário, em feed próprio e com o motivo em cada sugestão | Não implementado. O conteúdo vem do grafo (RNFF12), porque a música começa sem dados colaborativos | RFF01, RNFF12 | M | RFF02 |
 | RFF05 | Ver a retrospectiva do gosto por mês e por ano: títulos mais vistos e mais bem avaliados, gêneros, décadas, a frase do gosto, a idade do gosto e um arquétipo, com um cartão para compartilhar | Não implementado: reaproveita os dados e os gráficos do Meu gosto (RF23) | — | P a M | RFF17, RFF37 |
 | RFF06 | Excluir a própria conta e exportar os próprios dados | Parcial: o admin já apaga uma conta com tudo o que é dela (RF26). Falta a própria pessoa excluir e exportar | — | P | RFF07, parte do RFF38 |
-| EXP01 | Comparar offline, nos filmes do MovieLens, o modelo atual, o mesmo com *embeddings* e o grafo de gosto; fica o que ganhar (ver [O modelo depois do MVP](#o-modelo-depois-do-mvp)) | **Feito em 10/11:** empate com dados colaborativos; só com conteúdo, o grafo vence. Scripts `compare_models.py` e `check_popularity.py` | — | M | novo |
 
 ### Incremento 3: beta aberta, social e controle
 
@@ -333,7 +348,6 @@ Preparar a abertura para pessoas de fora, o social mínimo e o controle sobre o 
 | RFF17 | Ler a página "Como recomendamos", em português simples, com a opção de sair dos experimentos | Não implementado | RNFF08 | P | parte do RFF38 |
 | RFF18 | Importar o histórico de outros apps, como Letterboxd e TV Time, a partir do arquivo exportado pela pessoa | Não implementado; **prioridade a definir pela equipe**. Os termos do Letterboxd proíbem coleta automática | RFF12, RFF13, RFF01 | M | RFF39 |
 | EXP02 | Comparar, num teste A/B, o motivo escrito por modelo fixo com o mesmo motivo reescrito por IA | Não feito. Depende de guardar o motivo de forma estruturada e de orçamento | RNFF02 | P a M | RFF33 |
-| EXP04 | Confirmar no MovieLens 32M o resultado do EXP01, antes do incremento 4 | Não feito. A base grande exige guardar só os vizinhos mais próximos de cada título, em vez da matriz inteira | EXP01 | P a M | novo |
 
 ### Incremento 4: clima, momento e onde assistir
 
@@ -436,4 +450,5 @@ O fim das cadeias de dependência e o que precisa de muitas aceitações reais.
 | — | EXP01 | Novo |
 | — | EXP03 | Novo |
 | — | EXP04 | Novo |
+| — | RNFF12 | Novo |
 | — | RNFF08 | Novo |
