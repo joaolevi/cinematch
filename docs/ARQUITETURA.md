@@ -63,7 +63,12 @@ Cobertura medida no Wikidata em 10/11/2026, por contagem direta (subestima um po
 
 - **Regra de corte:** uma ponte de peso baixo sozinha não vira sugestão. A sugestão cruzada exige uma ponte de peso
   alto, ou pelo menos três sinais de peso médio ou baixo juntos ("anos 80, synth e Estados Unidos").
-- **Motivo:** mostra a ponte de maior peso; no empate, a mais específica.
+- **Motivo:** mostra a ponte de maior peso; no empate, a mais específica. Na escolha, vale preferir o motivo ligado a
+  um registro recente e a uma entidade menos famosa ("do compositor de X" diz mais que "anos 80"), e variar o tipo de
+  motivo ao longo do feed. "Em alta" fica por último: no estudo do Spotify (BaRT, RecSys 2018), "porque é popular"
+  foi a explicação com pior resultado, e motivos vagos não mudaram a aceitação.
+- **Pesos:** começam fixos, como nesta tabela, e passam a ser aprendidos com as aceitações por tipo de ponte
+  (RNFF10). Com dezenas de pessoas, os resultados são exploratórios.
 - **Cálculo:** offline, numa rotina (RNFF08), a partir do QLever ou dos dumps do Wikidata e do MusicBrainz. O serviço
   público do Wikidata limita as consultas. As ligações são sempre por ID, nunca por nome: buscar "Interstellar" no
   MusicBrainz não traz o álbum do Hans Zimmer entre os três primeiros.
@@ -279,3 +284,5 @@ Estes requisitos ficam fora do MVP.
 | RNFF07 | Ter um vocabulário de clima comum a filmes, séries e música | Não atende. Destrava o RFF21, o RFF23, o RFF25 e o RFF09. Depende do RNFF09 |
 | RNFF08 | Calcular as pontes entre mídias offline, numa rotina | Não atende. Depende do RFF01 e do RNFF04 |
 | RNFF09 | Respeitar os termos e as licenças das fontes: atribuições, fonte e licença em cada dado, atualização antes de 6 meses e consulta prévia ao TMDB e ao Last.fm | Não atende. Os termos do TMDB limitam o tempo de guardar os dados a 6 meses e restringem o uso com IA; o Last.fm exige contato antes de uso acadêmico |
+| RNFF10 | Aprender com as aceitações quanto pesa cada fonte, cada ponte e cada tipo de motivo, testando um pouco de cada um (explorar e aproveitar) | Não atende: os pesos são fixos no código. Usa os eventos de exibição e aceitação que já existem, com a probabilidade de cada escolha guardada. Inspirado no BaRT, do Spotify |
+| RNFF11 | Calcular os vizinhos de coocorrência sem que os títulos muito populares dominem (normalização por popularidade) | Não atende: hoje a similaridade colaborativa é o cosseno simples. Vale para a coocorrência da própria plataforma e para as fontes novas da tabela de vizinhos |
