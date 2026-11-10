@@ -1,6 +1,6 @@
 # Escopo do MVP
 
-> **Versão 24, 08/11/2026.** Entrega: **terça-feira, 10/11/2026**, às 17h, com 10 a 15 minutos de apresentação (a confirmar) e deploy como meta. Gerente de projeto: Sophia.
+> **Versão 25, 09/11/2026.** Entrega: **terça-feira, 10/11/2026**, às 17h, com 10 a 15 minutos de apresentação focada no negócio e na demonstração, e deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [teste interno](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
