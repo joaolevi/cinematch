@@ -39,6 +39,26 @@ A mesma tabela recebe vizinhos de origens diferentes, o que permite tratar cada 
 | Música | ListenBrainz | Dados abertos; a similaridade por álbum ainda precisa ser confirmada |
 | Entre mídias | Interações da própria plataforma | Só funciona com usuários reais |
 
+### Recomendação entre mídias
+
+Quase não há base pública com as mesmas pessoas avaliando filmes e música (por isso a D7). A saída é ligar as
+mídias por pontes, em três camadas, da mais barata para a que depende de dados:
+
+| Camada | Como liga as mídias | Fonte | Exemplo de motivo |
+|---|---|---|---|
+| 1. Pontes explícitas | Trilha sonora, compositor, artista no elenco, cinebiografia | Wikidata e MusicBrainz | "Trilha de Interestelar, que você curtiu" |
+| 2. Clima e tema | Um vocabulário comum: clima (sombrio, leve, nostálgico, épico), década, país e temas | Palavras-chave do TMDB; tags de música do Last.fm, do MusicBrainz e do ListenBrainz | "Mesmo clima sombrio dos anos 80" |
+| 3. Gosto da plataforma | Quem registra as duas mídias no diário: "quem curtiu este filme também curtiu este álbum" | O próprio Tastory | "Quem curtiu Twin Peaks também ouviu…" |
+
+- A camada 2 traduz as palavras-chave e as tags para o mesmo vocabulário. Assim, o cálculo de conteúdo atual
+  (TF-IDF) passa a achar parecidos entre mídias.
+- As camadas 1 e 3 entram na tabela de vizinhos como fontes novas, ao lado do MovieLens.
+- Cada mídia mantém o próprio feed (D7). As sugestões cruzadas ocupam poucos lugares fixos, e a taxa de aceitação
+  delas é medida à parte, no teste A/B.
+- Ordem: camada 1, depois 2; a camada 3 ganha peso conforme o diário cresce.
+- Na interface, o "par perfeito" (polaroide do filme e capa do álbum presas pela mesma fita), as seções "Para ouvir
+  depois" e "Para ver depois" no detalhe, e o motivo que sempre mostra a ponte.
+
 ## Evidências
 
 Testes feitos em 05 e 06/11/2026. Para repetir o teste de qualidade, baixe o
@@ -162,6 +182,7 @@ e filtrar por palavra-chave também não, porque "adult" aparece em títulos com
 | MovieLens 32M | 32 milhões de avaliações, com ID do TMDB, só filmes | Usado nos filmes |
 | IMDb | Filmes, séries, episódios e elenco; só médias, sem avaliações por pessoa | Opção para elenco, com uso não comercial |
 | ListenBrainz | Dados abertos de música | Candidato para música |
+| Last.fm | Tags de álbuns e artistas, artistas e faixas parecidos, histórico público de quem usa | Candidato para as tags de clima e para os artistas parecidos na música; uso não comercial, com atribuição |
 | Yambda | 4,79 bilhões de interações de música, com IDs anônimos | Não liga com o catálogo |
 | Douban e Amazon Reviews | Mesmas pessoas em filmes e música, mas difíceis de ligar ao catálogo | Só para estudo |
 
@@ -200,10 +221,20 @@ Estes requisitos ficam fora do MVP.
 | RFF09 | Receber recomendações cruzadas entre filmes e música | Evolução, depende de dados da plataforma |
 | RFF16 | Ver o próprio histórico de atividades, em ordem de data e com filtro por tipo: títulos registrados, notas, resenhas, itens adicionados a listas e, quando existirem, curtidas e pessoas seguidas | Não implementado: hoje o diário mostra os registros, mas não as listas, curtidas ou quem a pessoa segue. Precisa de uma tabela de eventos de atividade. Depende do RFF10 e do RFF12; quem vê o histórico de outra pessoa segue o RFF11 |
 | RFF17 | Ver a retrospectiva do gosto por mês e por ano: títulos mais vistos e mais bem avaliados, gêneros, décadas e a frase do gosto, com uma versão para compartilhar | Não implementado: reaproveita os dados e os gráficos do Meu gosto (RF23) |
-| RFF18 | Reagir ao motivo de uma sugestão ("não quero mais por esse motivo") e ajustar o próprio perfil (mais ou menos de um gênero, uma época ou uma pessoa), com efeito nas próximas sugestões | Não implementado: hoje o motivo só informa (RF13), e o descarte vale para um título (RF10) |
-| RFF19 | Ver onde assistir ou ouvir cada título, por país, com link para o serviço | Não implementado: o TMDB tem a rota de provedores de filmes e séries, que exige citar a JustWatch; para música, falta escolher a fonte |
+| RFF18 | Reagir ao motivo de uma sugestão ("não quero mais por esse motivo") e ajustar o próprio perfil (mais ou menos de um gênero, uma época ou uma pessoa), numa página que mostra o que o Tastory acha do seu gosto, com efeito nas próximas sugestões | Não implementado: hoje o motivo só informa (RF13), e o descarte vale para um título (RF10) |
+| RFF19 | Ver onde assistir ou ouvir cada título, por país, com link para o serviço: no detalhe, os serviços em três grupos (assinatura, aluguel e compra); no card do feed, os logos dos serviços | Não implementado. Filmes e séries: a rota de provedores do TMDB, guardada junto do título e atualizada toda semana, exige exibir "Dados de disponibilidade: JustWatch"; sem API pública dos serviços, o link abre a página do título no TMDB ou a busca do serviço. Música: a busca do Deezer devolve o link do álbum sem login; a do Spotify exige registrar o app; o YouTube Music abre pela busca |
 | RFF20 | Receber sugestões para assistir ou ouvir junto, combinando o gosto de duas ou mais pessoas | Não implementado. Depende do RFF10 |
 | RFF21 | Pedir sugestões pelo momento: tom (leve ou intenso), duração máxima e ocasião | Não implementado: o TMDB tem a duração; o tom precisa ser derivado das palavras-chave e dos gêneros |
+| RFF22 | Ver a trilha do que viu: para cada filme ou série do diário, a trilha sonora, o compositor e os álbuns dele; ao registrar um título, o Tastory sugere a trilha | Não implementado. Depende do RFF01. Ponte explícita entre mídias (Wikidata e MusicBrainz) |
+| RFF23 | Receber uma sessão completa: um filme ou uma série e um álbum para depois, no mesmo clima | Não implementado. Depende do RFF01 e do vocabulário de clima (camada 2 abaixo) |
+| RFF24 | Descobrir pessoas que atravessam mídias: cinebiografias e documentários dos artistas que a pessoa ouve, e álbuns de quem atua nos filmes e séries que ela vê | Não implementado. Depende do RFF01. Ponte explícita entre mídias |
+| RFF25 | Buscar por clima ("melancólico", "épico", "leve") e receber filmes, séries e álbuns juntos | Não implementado. Depende do vocabulário de clima (camada 2 abaixo) |
+| RFF26 | Ver o gosto unificado: a frase do gosto, o Meu gosto e a retrospectiva cruzando filmes, séries e música | Não implementado. Depende do RFF01 e do RFF17 |
+| RFF27 | Marcar os serviços que assina e filtrar o Para você por "só o que eu tenho"; o motivo pode citar o serviço ("está na sua Netflix") | Não implementado. Depende do RFF19 |
+| RFF28 | Receber um aviso no Início quando um título do Quero ver entrar em um dos seus serviços ou estiver para sair | Não implementado. Depende do RFF19 e do RFF27 |
+| RFF29 | Pedir uma sugestão para "hoje à noite", combinando o momento, os seus serviços e, se quiser, outra pessoa | Não implementado. Depende do RFF20, do RFF21 e do RFF27 |
+| RFF30 | Ver a compatibilidade de gosto com outra pessoa ("vocês combinam 72%"), com o que têm em comum e onde divergem | Não implementado. Usa o mesmo cálculo de títulos parecidos do recomendador; prepara o RFF20 |
+| RFF31 | Ordenar o Quero ver pelo que mais combina agora, juntando o gosto, a disponibilidade nos seus serviços e o momento | Não implementado. Depende do RFF19 e do RFF21 para a disponibilidade e o momento |
 
 ### Não funcionais
 
