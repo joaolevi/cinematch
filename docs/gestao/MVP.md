@@ -1,13 +1,14 @@
 # Escopo do MVP
 
-> **Versão 27, 10/11/2026. MVP entregue e apresentado em 10/11/2026, às 17h, com o sistema publicado.** Gerente de projeto: Sophia.
+> **Versão 28, 10/11/2026. MVP entregue e apresentado em 10/11/2026, às 17h, com o sistema publicado.** Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](../requisitos/README.md), [plano de incrementos](../requisitos/incrementos.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](../tecnico/DEPLOY.md), [teste com pessoas](HOMOLOGACAO.md) e [arquitetura](../tecnico/ARQUITETURA.md).
 
 ## Resultado da entrega
 
 O MVP foi entregue e apresentado em 10/11/2026, às 17h, com a demonstração feita no sistema publicado. A API cobre os
 13 casos de uso do pitch para filmes e séries, e os 27 requisitos funcionais **Deve** foram atendidos e testados pelo
-QA na `homol`. Os 115 testes offline e os 13 com o TMDB real passam, e o CI roda em todo PR.
+QA na `homol`. Os 115 testes offline e os 13 com o TMDB real passam, e o CI roda em todo PR. Depois da apresentação,
+a `homol` subiu para a `main` ([#35](https://github.com/joaolevi/cinematch/pull/35)), que ganhou a tag `entrega-10-11`.
 
 Ficaram de fora do combinado:
 
@@ -87,7 +88,7 @@ Os critérios de cada pacote da EAP estão em [ENTREGAS.md](ENTREGAS.md#critéri
 ## Cronograma planejado
 
 Mantido como registro do planejamento. O teste interno de 09/11 (itens 3 e 4 de segunda) não aconteceu, e a
-subida da `homol` para a `main` (item 6) ficou para depois da entrega.
+subida da `homol` para a `main` (item 6) foi feita depois da apresentação, em 10/11 ([#35](https://github.com/joaolevi/cinematch/pull/35)).
 
 ### Sex 06/11
 

@@ -2,7 +2,7 @@
 
 > [Voltar ao índice](README.md) · A ligação com código e testes está no fim deste arquivo.
 
-As situações dos requisitos do MVP consideram o código da branch `homol`, que ainda não subiu para a `main`.
+As situações dos requisitos do MVP consideram a versão entregue, que está na `main` com a tag `entrega-10-11` ([#35](https://github.com/joaolevi/cinematch/pull/35)).
 
 ## Acesso
 
