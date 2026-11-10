@@ -199,6 +199,11 @@ Estes requisitos ficam fora do MVP.
 | RFF15 | Ver no painel a taxa de satisfação: das sugestões aceitas que ganharam nota, quantas ficaram com 3,5 ou mais | Não implementado no painel. A consulta está no [roteiro do teste interno](HOMOLOGACAO.md#análise-bárbara) |
 | RFF09 | Receber recomendações cruzadas entre filmes e música | Evolução, depende de dados da plataforma |
 | RFF16 | Ver o próprio histórico de atividades, em ordem de data e com filtro por tipo: títulos registrados, notas, resenhas, itens adicionados a listas e, quando existirem, curtidas e pessoas seguidas | Não implementado: hoje o diário mostra os registros, mas não as listas, curtidas ou quem a pessoa segue. Precisa de uma tabela de eventos de atividade. Depende do RFF10 e do RFF12; quem vê o histórico de outra pessoa segue o RFF11 |
+| RFF17 | Ver a retrospectiva do gosto por mês e por ano: títulos mais vistos e mais bem avaliados, gêneros, décadas e a frase do gosto, com uma versão para compartilhar | Não implementado: reaproveita os dados e os gráficos do Meu gosto (RF23) |
+| RFF18 | Reagir ao motivo de uma sugestão ("não quero mais por esse motivo") e ajustar o próprio perfil (mais ou menos de um gênero, uma época ou uma pessoa), com efeito nas próximas sugestões | Não implementado: hoje o motivo só informa (RF13), e o descarte vale para um título (RF10) |
+| RFF19 | Ver onde assistir ou ouvir cada título, por país, com link para o serviço | Não implementado: o TMDB tem a rota de provedores de filmes e séries, que exige citar a JustWatch; para música, falta escolher a fonte |
+| RFF20 | Receber sugestões para assistir ou ouvir junto, combinando o gosto de duas ou mais pessoas | Não implementado. Depende do RFF10 |
+| RFF21 | Pedir sugestões pelo momento: tom (leve ou intenso), duração máxima e ocasião | Não implementado: o TMDB tem a duração; o tom precisa ser derivado das palavras-chave e dos gêneros |
 
 ### Não funcionais
 
