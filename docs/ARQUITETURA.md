@@ -36,26 +36,41 @@ A mesma tabela recebe vizinhos de origens diferentes, o que permite tratar cada 
 |---|---|---|
 | Filmes | MovieLens 32M | Já implementado, com a opção `TASTORY_USE_EXTERNAL_NEIGHBORS`. A licença proíbe uso comercial sem permissão |
 | Séries | Rotas de recomendação do TMDB | Ainda não implementado. Não há base pública com avaliações de séries por pessoa e ID do TMDB |
-| Música | ListenBrainz | Dados abertos; a similaridade por álbum ainda precisa ser confirmada |
+| Música | ListenBrainz | Dados abertos (CC0), ligados ao MusicBrainz. Não há similaridade por álbum pronta: ela sai dos artistas e das gravações |
 | Entre mídias | Interações da própria plataforma | Só funciona com usuários reais |
 
 ### Recomendação entre mídias
 
 Quase não há base pública com as mesmas pessoas avaliando filmes e música (por isso a D7). A saída é ligar as
-mídias por pontes, em três camadas, da mais barata para a que depende de dados:
+mídias por pontes de metadados, calculadas antes e guardadas na tabela de vizinhos, cada uma com um peso.
+Cobertura medida no Wikidata em 10/11/2026, por contagem direta (subestima um pouco):
 
-| Camada | Como liga as mídias | Fonte | Exemplo de motivo |
-|---|---|---|---|
-| 1. Pontes explícitas | Trilha sonora, compositor, artista no elenco, cinebiografia | Wikidata e MusicBrainz | "Trilha de Interestelar, que você curtiu" |
-| 2. Clima e tema | Um vocabulário comum: clima (sombrio, leve, nostálgico, épico), década, país e temas | Palavras-chave do TMDB; tags de música do Last.fm, do MusicBrainz e do ListenBrainz | "Mesmo clima sombrio dos anos 80" |
-| 3. Gosto da plataforma | Quem registra as duas mídias no diário: "quem curtiu este filme também curtiu este álbum" | O próprio Tastory | "Quem curtiu Twin Peaks também ouviu…" |
+| Ponte | Liga | Fonte | Peso | Exemplo de motivo | Cobertura |
+|---|---|---|---|---|---|
+| Compositor | Filme ou série e os álbuns do compositor | Créditos do TMDB; o Wikidata liga a pessoa do TMDB (P4985) ao artista do MusicBrainz (P434) | Alto | "Do compositor de Interestelar" | 36,7% dos filmes e 13,2% das séries com ID do TMDB |
+| Trilha sonora oficial | Filme e o álbum da trilha | Wikidata (P406); MusicBrainz (tipo Soundtrack) | Alto | "Trilha de Interestelar, que você curtiu" | 1,0% dos filmes |
+| Mesma pessoa | Quem atua e também canta | Elenco do TMDB, ligado pelo Wikidata | Alto | "Seu Jorge, de Cidade de Deus, também canta" | Não medida |
+| Cinebiografia e filmes sobre música | Filme e o artista retratado | Wikidata (P921); gênero Música do TMDB | Alto | "O filme Elis conta a história de Elis Regina" | 1.208 filmes com músico ou banda como assunto |
+| Música-tema | Série e a faixa ou o álbum do tema | Wikidata (P942) | Alto | "O tema de abertura de Twin Peaks" | 206 séries e 146 filmes |
+| Movimento cultural | Gênero, década e país de uma geração | Lista curada pela equipe | Médio | "Tropicália e Cinema Novo, a mesma geração" | A montar |
+| Lugar | Onde a história se passa e a cidade ou região do artista | Palavras-chave do TMDB e Wikidata; área do artista no MusicBrainz | Médio | "Passa no Rio, como os artistas que você ouve" | Não medida |
+| Época retratada | A época da história e a década do álbum | Palavras-chave do TMDB ("1970s") | Médio | "Passa nos anos 70, como estes discos" | Não medida |
+| Clima | O vocabulário comum de clima (RNFF07) | Palavras-chave do TMDB; tags do MusicBrainz e do ListenBrainz | Médio | "Mesmo clima melancólico" | Depende do RNFF07 |
+| Década de lançamento | A década do filme, da série e do álbum | TMDB; MusicBrainz | Baixo | "Anos 80, como os filmes que você vê" | Quase total |
+| País de origem | O país de produção e o país do artista ou do lançamento | TMDB; MusicBrainz | Baixo | "Feito no Brasil" | Quase total |
+| Idioma | O idioma original e o idioma do lançamento | TMDB; MusicBrainz | Baixo | "Em coreano, como os doramas que você vê" | Alta |
+| Gênero | Uma tabela curta de correspondência, feita à mão (Musical e trilhas; Faroeste, country e folk; Ficção científica e eletrônica) | Equipe | Baixo | "Ficção científica pede eletrônica" | Só os pares da tabela |
 
-- A camada 2 traduz as palavras-chave e as tags para o mesmo vocabulário. Assim, o cálculo de conteúdo atual
-  (TF-IDF) passa a achar parecidos entre mídias.
-- As camadas 1 e 3 entram na tabela de vizinhos como fontes novas, ao lado do MovieLens.
+- **Regra de corte:** uma ponte de peso baixo sozinha não vira sugestão. A sugestão cruzada exige uma ponte de peso
+  alto, ou pelo menos três sinais de peso médio ou baixo juntos ("anos 80, synth e Estados Unidos").
+- **Motivo:** mostra a ponte de maior peso; no empate, a mais específica.
+- **Cálculo:** offline, numa rotina (RNFF08), a partir do QLever ou dos dumps do Wikidata e do MusicBrainz. O serviço
+  público do Wikidata limita as consultas. As ligações são sempre por ID, nunca por nome: buscar "Interstellar" no
+  MusicBrainz não traz o álbum do Hans Zimmer entre os três primeiros.
+- **Gosto da plataforma:** quando houver pessoas registrando filmes e música, "quem curtiu este filme também curtiu
+  este álbum" entra como mais uma fonte na mesma tabela, com peso crescente.
 - Cada mídia mantém o próprio feed (D7). As sugestões cruzadas ocupam poucos lugares fixos, e a taxa de aceitação
-  delas é medida à parte, no teste A/B.
-- Ordem: camada 1, depois 2; a camada 3 ganha peso conforme o diário cresce.
+  delas é medida à parte, por tipo de ponte, no teste A/B.
 - Na interface, o "par perfeito" (polaroide do filme e capa do álbum presas pela mesma fita), as seções "Para ouvir
   depois" e "Para ver depois" no detalhe, e o motivo que sempre mostra a ponte.
 
@@ -182,7 +197,11 @@ e filtrar por palavra-chave também não, porque "adult" aparece em títulos com
 | MovieLens 32M | 32 milhões de avaliações, com ID do TMDB, só filmes | Usado nos filmes |
 | IMDb | Filmes, séries, episódios e elenco; só médias, sem avaliações por pessoa | Opção para elenco, com uso não comercial |
 | ListenBrainz | Dados abertos de música | Candidato para música |
-| Last.fm | Tags de álbuns e artistas, artistas e faixas parecidos, histórico público de quem usa | Candidato para as tags de clima e para os artistas parecidos na música; uso não comercial, com atribuição |
+| Last.fm | Tags de álbuns e artistas, artistas e faixas parecidos, histórico público de quem usa | Candidato para as tags de clima e os artistas parecidos; só uso não comercial, com atribuição, teto de 100 MB guardados e contato prévio exigido até para uso acadêmico |
+| MusicBrainz e Cover Art Archive | Catálogo de música e capas; dados centrais CC0, tags CC BY-NC-SA; 1 requisição por segundo | Catálogo de música (RFF01), carregado por dumps ou em segundo plano |
+| Wikidata | Ligações entre filmes, séries, pessoas e músicas (compositor, trilha, assunto, tema); CC0 | Fonte das pontes entre mídias, consultada offline pelo QLever ou por dumps |
+| Spotify Web API | Busca e links; desde 2024, sem Recommendations e Audio Features para apps novos | Fora: em 2026, o modo de desenvolvimento aceita 5 pessoas e exige Premium, e os termos proíbem treinar modelos com os dados |
+| Deezer API | Busca pública de álbuns, sem login | Só para links "onde ouvir": o cadastro de apps novos está bloqueado |
 | Yambda | 4,79 bilhões de interações de música, com IDs anônimos | Não liga com o catálogo |
 | Douban e Amazon Reviews | Mesmas pessoas em filmes e música, mas difíceis de ligar ao catálogo | Só para estudo |
 
@@ -222,7 +241,7 @@ Estes requisitos ficam fora do MVP.
 | RFF16 | Ver o próprio histórico de atividades, em ordem de data e com filtro por tipo: títulos registrados, notas, resenhas, itens adicionados a listas e, quando existirem, curtidas e pessoas seguidas | Não implementado: hoje o diário mostra os registros, mas não as listas, curtidas ou quem a pessoa segue. Precisa de uma tabela de eventos de atividade. Depende do RFF10 e do RFF12; quem vê o histórico de outra pessoa segue o RFF11 |
 | RFF17 | Ver a retrospectiva do gosto por mês e por ano: títulos mais vistos e mais bem avaliados, gêneros, décadas e a frase do gosto, com uma versão para compartilhar | Não implementado: reaproveita os dados e os gráficos do Meu gosto (RF23) |
 | RFF18 | Reagir ao motivo de uma sugestão ("não quero mais por esse motivo") e ajustar o próprio perfil (mais ou menos de um gênero, uma época ou uma pessoa), numa página que mostra o que o Tastory acha do seu gosto, com efeito nas próximas sugestões | Não implementado: hoje o motivo só informa (RF13), e o descarte vale para um título (RF10) |
-| RFF19 | Ver onde assistir ou ouvir cada título, por país, com link para o serviço: no detalhe, os serviços em três grupos (assinatura, aluguel e compra); no card do feed, os logos dos serviços | Não implementado. Filmes e séries: a rota de provedores do TMDB, guardada junto do título e atualizada toda semana, exige exibir "Dados de disponibilidade: JustWatch"; sem API pública dos serviços, o link abre a página do título no TMDB ou a busca do serviço. Música: a busca do Deezer devolve o link do álbum sem login; a do Spotify exige registrar o app; o YouTube Music abre pela busca |
+| RFF19 | Ver onde assistir ou ouvir cada título, por país, com link para o serviço: no detalhe, os serviços em três grupos (assinatura, aluguel e compra); no card do feed, os logos dos serviços | Não implementado. Filmes e séries: a rota de provedores do TMDB, guardada junto do título e atualizada toda semana, exige exibir "Dados de disponibilidade: JustWatch"; sem API pública dos serviços, o link abre a página do título no TMDB ou a busca do serviço. Música: os IDs do Spotify e do Deezer vêm das ligações do MusicBrainz e do Wikidata; na falta, a busca pública do Deezer e a do iTunes; o YouTube Music abre pela busca. A API do Spotify fica de fora: em 2026, o modo de desenvolvimento aceita 5 pessoas e exige Premium |
 | RFF20 | Receber sugestões para assistir ou ouvir junto, combinando o gosto de duas ou mais pessoas | Não implementado. Depende do RFF10 |
 | RFF21 | Pedir sugestões pelo momento: tom (leve ou intenso), duração máxima e ocasião | Não implementado: o TMDB tem a duração; o tom precisa ser derivado das palavras-chave e dos gêneros |
 | RFF22 | Ver a trilha do que viu: para cada filme ou série do diário, a trilha sonora, o compositor e os álbuns dele; ao registrar um título, o Tastory sugere a trilha | Não implementado. Depende do RFF01. Ponte explícita entre mídias (Wikidata e MusicBrainz) |
@@ -235,6 +254,17 @@ Estes requisitos ficam fora do MVP.
 | RFF29 | Pedir uma sugestão para "hoje à noite", combinando o momento, os seus serviços e, se quiser, outra pessoa | Não implementado. Depende do RFF20, do RFF21 e do RFF27 |
 | RFF30 | Ver a compatibilidade de gosto com outra pessoa ("vocês combinam 72%"), com o que têm em comum e onde divergem | Não implementado. Usa o mesmo cálculo de títulos parecidos do recomendador; prepara o RFF20 |
 | RFF31 | Ordenar o Quero ver pelo que mais combina agora, juntando o gosto, a disponibilidade nos seus serviços e o momento | Não implementado. Depende do RFF19 e do RFF21 para a disponibilidade e o momento |
+| RFF32 | Marcar um registro para não contar no meu gosto | Não implementado. Precisa de uma coluna nova (RNFF01) |
+| RFF33 | Comparar, num teste A/B, o motivo escrito por modelo fixo com o motivo reescrito por IA | Não implementado. Depende de guardar o motivo de forma estruturada, de orçamento e do RNFF09: os termos do TMDB restringem o uso dos dados com IA |
+| RFF34 | Criticar uma sugestão ("mais leve", "mais curto", "menos famoso") e receber um novo lote | Não implementado. Depende do RFF21 e do RNFF07 |
+| RFF35 | Pedir sugestões em português, com expressões brasileiras ("algo para a Sessão da Tarde") | Não implementado. Depende do RFF21, do RNFF07 e de orçamento |
+| RFF36 | Escolher o modo descoberta em três opções, com o rótulo "Fora da sua bolha" nas sugestões menos óbvias | Não implementado |
+| RFF37 | Ver a idade do gosto e um arquétipo num cartão para compartilhar | Não implementado. Depende do RFF17 (e do RFF26 para as três mídias) |
+| RFF38 | Exportar os próprios dados e ler a página "Como recomendamos", com a opção de sair dos experimentos | Não implementado |
+| RFF39 | Importar o histórico de outros apps, como Letterboxd e TV Time, a partir do arquivo exportado pela pessoa | Não implementado; prioridade a definir pela equipe. Depende do RFF04, do RFF03 e do RFF01. Os termos do Letterboxd proíbem coleta automática |
+| RFF40 | Participar de desafios com selos, inclusive uma lente Brasil | Não implementado. Depende do país de origem no TMDB e no MusicBrainz |
+| RFF41 | Receber sugestões de quem seguir por gosto parecido ("almas gêmeas") | Não implementado. Depende do RFF30, do RFF10 e do RFF11 |
+| RFF42 | Ver prateleiras temáticas com prazo, como "Feito em Alagoas" | Não implementado. Usa as listas que já existem |
 
 ### Não funcionais
 
@@ -246,3 +276,6 @@ Estes requisitos ficam fora do MVP.
 | RNFF04 | Sincronizar catálogos em segundo plano | Não atende: a sincronização roda dentro da requisição |
 | RNFF05 | Usar dados reais na parte colaborativa | Parcial: filmes usam o MovieLens 32M quando a opção está ligada; séries e música ainda não têm fonte |
 | RNFF06 | Atribuir a aceitação a uma exibição recente | Não atende: Quero ver e Já vi pela página do título contam se o título foi exibido no feed em qualquer momento antes. Falta uma janela de tempo (por exemplo, 7 dias) |
+| RNFF07 | Ter um vocabulário de clima comum a filmes, séries e música | Não atende. Destrava o RFF21, o RFF23, o RFF25 e o RFF09. Depende do RNFF09 |
+| RNFF08 | Calcular as pontes entre mídias offline, numa rotina | Não atende. Depende do RFF01 e do RNFF04 |
+| RNFF09 | Respeitar os termos e as licenças das fontes: atribuições, fonte e licença em cada dado, atualização antes de 6 meses e consulta prévia ao TMDB e ao Last.fm | Não atende. Os termos do TMDB limitam o tempo de guardar os dados a 6 meses e restringem o uso com IA; o Last.fm exige contato antes de uso acadêmico |
