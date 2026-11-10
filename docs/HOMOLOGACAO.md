@@ -101,6 +101,6 @@ docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db 
 | B (só conteúdo) | | | | | | | |
 
 Com 6 pessoas, os números são ilustrativos (D15): apresente-os como prova de que a medição funciona, ao lado do teste com o
-MovieLens. A satisfação terá poucos casos, porque a nota é opcional; ela entra como próximo passo (RFF15).
+MovieLens. A satisfação terá poucos casos, porque a nota é opcional; ela entra como próximo passo (RFF04).
 
 Para um erro que atrapalha a demonstração, crie um cartão com a etiqueta `Bug` no Trello e avise a equipe no mesmo dia.

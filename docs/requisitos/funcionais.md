@@ -85,7 +85,7 @@ Os caminhos de código são relativos a `backend/app/`, e os de teste, a `backen
 | RF20 | Pedido da GP, 06/11 | 2.3 | `routers/community.py`, `frontend/src/pages/CommunityPage.tsx` | `test_community.py` |
 | RF21 | Pedido da GP, 06/11 | 2.3 | `routers/media.py`, `services/recommender.py` | `test_recommendations.py` |
 | RF22 | Pedido da GP, 06/11 | 2.3 | `routers/media.py`, `frontend/src/pages/SearchPage.tsx` | `test_diary_lists.py` |
-| RF23 | Pedido da GP, 08/11; parte do RFF08 | 2.2 | `frontend/src/taste.ts`, `frontend/src/components/TasteCharts.tsx` | Sem testes automatizados; fluxo testado no navegador |
+| RF23 | Pedido da GP, 08/11; parte do RFF11 | 2.2 | `frontend/src/taste.ts`, `frontend/src/components/TasteCharts.tsx` | Sem testes automatizados; fluxo testado no navegador |
 | RF24 | Pedido da GP, 08/11 | 2.3 | `frontend/src/pages/HomePage.tsx` | Sem testes automatizados; fluxo testado no navegador |
 | RF25 | Pedido da GP, 08/11 | 2.1 | `frontend/src/pages/LandingPage.tsx` | Sem testes automatizados; fluxo testado no navegador |
 | RF26 | Pedido da GP, 08/11 | 2.4 | `routers/admin.py`, `frontend/src/pages/AdminPage.tsx` | `test_admin.py` |

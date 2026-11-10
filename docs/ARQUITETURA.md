@@ -1,6 +1,6 @@
 # Arquitetura e sistema final
 
-> **Versão 2, 06/11/2026.** Validação técnica: Bárbara (IA) e Levi (TL). Aprovação: Sophia (GP).
+> **Versão 3, 10/11/2026.** Requisitos do sistema final renumerados na ordem de implementação. Validação técnica: Bárbara (IA) e Levi (TL). Aprovação: Sophia (GP).
 > Este documento trata do sistema final, com filmes, séries e música. O que será entregue em 10/11 está em [MVP.md](MVP.md).
 
 ## Decisões
@@ -55,7 +55,7 @@ Cobertura medida no Wikidata em 10/11/2026, por contagem direta (subestima um po
 | Movimento cultural | Gênero, década e país de uma geração | Lista curada pela equipe | Médio | "Tropicália e Cinema Novo, a mesma geração" | A montar |
 | Lugar | Onde a história se passa e a cidade ou região do artista | Palavras-chave do TMDB e Wikidata; área do artista no MusicBrainz | Médio | "Passa no Rio, como os artistas que você ouve" | Não medida |
 | Época retratada | A época da história e a década do álbum | Palavras-chave do TMDB ("1970s") | Médio | "Passa nos anos 70, como estes discos" | Não medida |
-| Clima | O vocabulário comum de clima (RNFF07) | Palavras-chave do TMDB; tags do MusicBrainz e do ListenBrainz | Médio | "Mesmo clima melancólico" | Depende do RNFF07 |
+| Clima | O vocabulário comum de clima (RNFF09) | Palavras-chave do TMDB; tags do MusicBrainz e do ListenBrainz | Médio | "Mesmo clima melancólico" | Depende do RNFF09 |
 | Década de lançamento | A década do filme, da série e do álbum | TMDB; MusicBrainz | Baixo | "Anos 80, como os filmes que você vê" | Quase total |
 | País de origem | O país de produção e o país do artista ou do lançamento | TMDB; MusicBrainz | Baixo | "Feito no Brasil" | Quase total |
 | Idioma | O idioma original e o idioma do lançamento | TMDB; MusicBrainz | Baixo | "Em coreano, como os doramas que você vê" | Alta |
@@ -68,8 +68,8 @@ Cobertura medida no Wikidata em 10/11/2026, por contagem direta (subestima um po
   motivo ao longo do feed. "Em alta" fica por último: no estudo do Spotify (BaRT, RecSys 2018), "porque é popular"
   foi a explicação com pior resultado, e motivos vagos não mudaram a aceitação.
 - **Pesos:** começam fixos, como nesta tabela, e passam a ser aprendidos com as aceitações por tipo de ponte
-  (RNFF10). Com dezenas de pessoas, os resultados são exploratórios.
-- **Cálculo:** offline, numa rotina (RNFF08), a partir do QLever ou dos dumps do Wikidata e do MusicBrainz. O serviço
+  (RNFF11). Com dezenas de pessoas, os resultados são exploratórios.
+- **Cálculo:** offline, numa rotina (RNFF03), a partir do QLever ou dos dumps do Wikidata e do MusicBrainz. O serviço
   público do Wikidata limita as consultas. As ligações são sempre por ID, nunca por nome: buscar "Interstellar" no
   MusicBrainz não traz o álbum do Hans Zimmer entre os três primeiros.
 - **Gosto da plataforma:** quando houver pessoas registrando filmes e música, "quem curtiu este filme também curtiu
@@ -78,6 +78,40 @@ Cobertura medida no Wikidata em 10/11/2026, por contagem direta (subestima um po
   delas é medida à parte, por tipo de ponte, no teste A/B.
 - Na interface, o "par perfeito" (polaroide do filme e capa do álbum presas pela mesma fita), as seções "Para ouvir
   depois" e "Para ver depois" no detalhe, e o motivo que sempre mostra a ponte.
+
+### O modelo depois do MVP
+
+O recomendador continua híbrido (conteúdo, "quem curtiu X também curtiu Y" e o motivo em cada sugestão), que é o tipo
+indicado para poucas pessoas, motivo obrigatório e três mídias com quase nenhuma pessoa em comum nas bases públicas.
+Muda o que o alimenta e como ele decide pesos e motivos:
+
+| Passo | Hoje | Depois |
+|---|---|---|
+| Perfil | Registros, notas e questionário | O mesmo, mais os registros fora do cálculo e o perfil corrigido pela pessoa (RFF07) |
+| Conteúdo | TF-IDF com gênero, palavras-chave, direção e década | O mesmo cálculo com mais vocabulário: clima (RNFF09), país e idioma, para achar parecidos entre mídias |
+| Gosto parecido | Tabela de vizinhos com o MovieLens, só nos filmes | A mesma tabela com várias fontes: MovieLens, TMDB nas séries, ListenBrainz na música, pontes entre mídias e o diário do próprio Tastory (RNFF06), normalizada por popularidade (RNFF10) |
+| Mistura | Pesos fixos no código | Os mesmos pesos no começo, depois aprendidos com as aceitações (RNFF11), com lugares fixos para as sugestões cruzadas e o modo descoberta (RFF16) |
+| Motivo | A razão mais forte | As regras da seção acima (recente, específico, variado; "Em alta" por último) e o teste do motivo reescrito por IA (EXP02) |
+
+O cálculo pesado passa a ser feito antes, por rotinas (RNFF03), e o feed só lê o que já foi calculado (RNFF07).
+
+**Decisão aguardando o EXP01.** Há três formas de organizar o conteúdo e as pontes, e a escolha sai da comparação
+offline nos filmes do MovieLens, com a mesma divisão de dados e a mesma métrica:
+
+| Forma | Ponto forte | Ponto fraco |
+|---|---|---|
+| Atual com pontes somadas | Já existe e é fácil de explicar | Cada ponte nova vira mais um sinal com peso próprio |
+| *Embeddings* de texto no lugar do TF-IDF | Acha parecidos pelo sentido, inclusive entre mídias | Explica mal sozinho; precisa de texto (o MovieLens só tem título, gênero e tags) |
+| Grafo de gosto (títulos, pessoas, gêneros, climas, décadas e países como nós; passeio a partir do gosto) | Um só cálculo para tudo; o caminho vira o motivo; encadeia pontes em até 2 passos | Caminhos longos podem levar a sugestões estranhas; pesos das ligações a calibrar |
+
+O cruzamento entre mídias não tem base pública para medir offline: ele é decidido pelo teste A/B (EXP03).
+
+**Fica de fora:** modelos de áudio (não temos o áudio), redes neurais grandes e recomendação gerada por IA (precisam de
+milhões de pessoas ou não dão para conferir). A IA entra no máximo para reescrever o motivo, num teste controlado.
+
+**Retorno das pessoas:** as notas (RFF03), as correções do perfil (RFF07) e o retorno sobre as sugestões (RFF08) deixam o
+perfil mais fiel e alimentam os pesos aprendidos. Como o sistema mostra mais do que já foi aceito, o "explorar um pouco"
+do RNFF11 e o modo descoberta evitam que ele se feche no óbvio. Com dezenas de pessoas, os resultados são exploratórios.
 
 ## Evidências
 
@@ -222,67 +256,152 @@ Os tempos não são diretamente comparáveis, porque o segundo não inclui filtr
 
 ## Requisitos do sistema final
 
-Estes requisitos ficam fora do MVP.
+Estes requisitos ficam fora do MVP. Estão na ordem de implementação, agrupados por incremento, e foram renumerados
+nessa ordem em 10/11/2026: a coluna "Antes" mostra o número anterior, e a [tabela no fim](#numeração-anterior) mostra
+o que aconteceu com cada um. RNFF são não funcionais, e EXP são experimentos de avaliação. Esforço: P até uma semana,
+M de 1 a 3 semanas, G várias semanas. Os requisitos entregues no MVP (RF01 a RF26) estão em
+[requisitos/funcionais.md](requisitos/funcionais.md).
 
-### Funcionais
+### Incremento 2: a história do seu gosto em três mídias
 
-| ID | Requisito | Situação |
+Base técnica, música, medição e o Meu gosto. Cumpre a única promessa do pitch que falta.
+
+| ID | Requisito | Situação | Depende de | Esforço | Antes |
+|---|---|---|---|---|---|
+| RNFF01 | Mudar o banco sem apagar dados, com migrações | Não atende: mudar o modelo exige recriar o banco | — | P | RNFF01 |
+| RNFF02 | Respeitar os termos e as licenças das fontes: créditos ao TMDB, à JustWatch, ao Last.fm e ao MusicBrainz, fonte e licença registradas em cada dado, e nenhum dado do TMDB redistribuído | Não atende. Os termos do TMDB restringem o uso com aplicações de ML ou IA e limitam a 6 meses o tempo de guardar dados; o risco foi aceito para o uso acadêmico (ver Riscos no [MVP.md](MVP.md)). Numa versão comercial, é preciso consultar o TMDB e trocar a fonte de conteúdo do recomendador pelo Wikidata. O Last.fm exige contato antes de qualquer uso | — | P | RNFF09 |
+| RNFF03 | Rodar em segundo plano, fora das requisições: sincronizar os catálogos, atualizar os dados do TMDB antes de 6 meses e calcular os vizinhos e as pontes entre mídias | Não atende: a sincronização roda dentro da requisição. As pontes saem do QLever ou dos dumps do Wikidata e do MusicBrainz | RNFF01 | M | RNFF04, RNFF08 |
+| RNFF04 | Contar a aceitação só quando ela vier até 7 dias depois de a sugestão aparecer | Não atende: Quero ver e Já vi pela página do título contam se o título foi exibido em qualquer momento antes | — | P | RNFF06 |
+| RNFF05 | Limitar as tentativas de login | Não atende | — | P | RNFF03 |
+| RNFF06 | Usar dados reais na parte colaborativa: MovieLens nos filmes, rota de recomendações do TMDB nas séries e ListenBrainz na música | Parcial: os filmes usam o MovieLens 32M quando a opção está ligada; no servidor publicado, falta carregar. Séries e música ainda não têm fonte | RFF01 (música) | M | RNFF05 |
+| RNFF07 | Manter o feed rápido com o catálogo grande, lendo vizinhos já calculados | Não atende: ver as evidências acima. Entra quando o catálogo passar de 10 mil títulos | RNFF03 | M | RNFF02 |
+| RFF01 | Registrar álbuns como terceira mídia ([#19](https://github.com/joaolevi/cinematch/issues/19)), com capas, e levar o Meu gosto, a frase do gosto e a retrospectiva para as três mídias | Não implementado: a API só aceita `movie` e `series`. Pronto quando uma amostra de 100 a 200 álbuns brasileiros atingir a cobertura combinada (o pitch fala em ingestão validada sem definir o critério) | RNFF01, RNFF03 | G | RFF01, RFF26 |
+| RFF02 | Recomendar música a partir dos álbuns registrados no diário, em feed próprio e com o motivo em cada sugestão | Não implementado | RFF01 | M | RFF02 |
+| RFF03 | Pedir a nota na hora certa: lembrete no Início para títulos vistos sem nota, estrelas clicáveis na polaroide do diário e "Já viu?" para o Quero ver depois de alguns dias | Não implementado. A nota continua opcional: obrigatória, viraria clique aleatório e enganaria o recomendador | — | P | RFF14 |
+| RFF04 | Ver no painel a taxa de satisfação: das sugestões aceitas que ganharam nota, quantas ficaram com 3,5 ou mais | Não implementado no painel. A consulta está no [roteiro do teste interno](HOMOLOGACAO.md#análise-bárbara) | — | P | RFF15 |
+| RFF05 | Ver a retrospectiva do gosto por mês e por ano: títulos mais vistos e mais bem avaliados, gêneros, décadas, a frase do gosto, a idade do gosto e um arquétipo, com um cartão para compartilhar | Não implementado: reaproveita os dados e os gráficos do Meu gosto (RF23) | — | P a M | RFF17, RFF37 |
+| RFF06 | Excluir a própria conta e exportar os próprios dados | Parcial: o admin já apaga uma conta com tudo o que é dela (RF26). Falta a própria pessoa excluir e exportar | — | P | RFF07, parte do RFF38 |
+| EXP01 | Comparar offline, nos filmes do MovieLens, o modelo atual, o mesmo com *embeddings* e o grafo de gosto; fica o que ganhar (ver [O modelo depois do MVP](#o-modelo-depois-do-mvp)) | Não feito. Usa o `backend/scripts/evaluate_recommender.py` | — | M | novo |
+
+### Incremento 3: beta aberta, social e controle
+
+Preparar a abertura para pessoas de fora, o social mínimo e o controle sobre o próprio gosto.
+
+| ID | Requisito | Situação | Depende de | Esforço | Antes |
+|---|---|---|---|---|---|
+| RNFF08 | Cumprir a LGPD: consentimento para os experimentos, política de privacidade e direitos sobre os dados | Não atende. Precisa estar pronto antes de abrir a beta | — | P a M | novo |
+| RFF07 | Ver e corrigir o próprio perfil de gosto, numa página que mostra o que o Tastory acha do seu gosto: mais ou menos de um gênero, uma época ou uma pessoa, e registros que não contam no cálculo | Não implementado: hoje o perfil só existe dentro do recomendador | RNFF01 | M | parte do RFF18, RFF32 |
+| RFF08 | Dar retorno sobre uma sugestão ("não por esse motivo", "mais curto", "menos famoso", "mais leve") e receber um novo lote | Não implementado: hoje o motivo só informa (RF13), e o descarte vale para um título (RF10). O "mais leve" depende do RNFF09 | RFF07 | M | parte do RFF18, RFF34 |
+| RFF09 | Seguir e deixar de seguir pessoas, e filtrar a Comunidade por quem sigo | Não implementado: precisa de uma tabela nova | RNFF01 | M | RFF10 |
+| RFF10 | Escolher quem vê meus registros: todos, quem me segue ou ninguém | Não implementado: no MVP, todo mundo vê todo mundo | RFF09 | P a M | RFF11 |
+| RFF11 | Ver a página de perfil, com a história do gosto ([#16](https://github.com/joaolevi/cinematch/issues/16)) | Parcial: o diário já mostra a frase do gosto, os números e os gráficos (RF23), e o avatar abre o menu da pessoa. Falta o perfil que outras pessoas veem, ao clicar no nome na Comunidade | RFF10 | M | RFF08 |
+| RFF12 | Registrar o mesmo título mais de uma vez, preservando notas, datas e resenhas anteriores | Não implementado. **Substitui a RN05:** hoje rever um filme apaga o registro anterior | RNFF01 | M | RFF03 |
+| RFF13 | Buscar e adicionar qualquer título, sem depender do admin | Parcial: o admin já busca e importa do TMDB; falta a própria pessoa poder fazer isso, com limite de uso | — | P | RFF04 |
+| RFF14 | Recuperar a senha e verificar o e-mail | Não implementado. Pede decidir sobre os e-mails fictícios aceitos hoje e o custo de envio | RNFF01 | M | RFF06 |
+| RFF15 | Ver a compatibilidade de gosto com outra pessoa ("vocês combinam 72%"), com o que têm em comum e onde divergem, e receber sugestões de quem seguir por gosto parecido | Não implementado. Usa o mesmo cálculo de parecidos do recomendador | RFF11 | P a M | RFF30, RFF41 |
+| RFF16 | Escolher o modo descoberta em três opções, com o rótulo "Fora da sua bolha" nas sugestões menos óbvias | Não implementado | — | P | RFF36 |
+| RFF17 | Ler a página "Como recomendamos", em português simples, com a opção de sair dos experimentos | Não implementado | RNFF08 | P | parte do RFF38 |
+| RFF18 | Importar o histórico de outros apps, como Letterboxd e TV Time, a partir do arquivo exportado pela pessoa | Não implementado; **prioridade a definir pela equipe**. Os termos do Letterboxd proíbem coleta automática | RFF12, RFF13, RFF01 | M | RFF39 |
+| EXP02 | Comparar, num teste A/B, o motivo escrito por modelo fixo com o mesmo motivo reescrito por IA | Não feito. Depende de guardar o motivo de forma estruturada e de orçamento | RNFF02 | P a M | RFF33 |
+
+### Incremento 4: clima, momento e onde assistir
+
+O vocabulário de clima e tudo que depende dele, mais os serviços de streaming.
+
+| ID | Requisito | Situação | Depende de | Esforço | Antes |
+|---|---|---|---|---|---|
+| RNFF09 | Ter um vocabulário de clima comum a filmes, séries e música: cerca de 20 a 25 rótulos em pt-BR, com as palavras-chave do TMDB e as tags de música ligadas a eles | Não atende | RNFF02 | M a G | RNFF07 |
+| RFF19 | Ver onde assistir ou ouvir cada título, por país, com link para o serviço: no detalhe, os serviços em três grupos (assinatura, aluguel e compra); no card do feed, os logos dos serviços | Não implementado. Filmes e séries: a rota de provedores do TMDB, guardada junto do título e atualizada toda semana, exige exibir "Dados de disponibilidade: JustWatch"; sem API pública dos serviços, o link abre a página do título no TMDB ou a busca do serviço. Música: os IDs do Spotify e do Deezer vêm das ligações do MusicBrainz e do Wikidata; na falta, a busca pública do Deezer e a do iTunes; o YouTube Music abre pela busca. A API do Spotify fica de fora: em 2026, o modo de desenvolvimento aceita 5 pessoas e exige Premium | RNFF03; RFF01 (música) | M a G | RFF19 |
+| RFF20 | Pedir sugestões pelo momento: tom (leve ou intenso), duração máxima e ocasião, com o atalho "Hoje à noite" que junta o momento, os seus serviços e, se quiser, outra pessoa | Não implementado: o TMDB tem a duração; o tom vem do vocabulário de clima. O "Hoje à noite" com outra pessoa vem com o RFF28 | RNFF09 | M | RFF21, RFF29 |
+| RFF21 | Marcar os serviços que assina e filtrar o Para você por "só o que eu tenho"; o motivo pode citar o serviço ("está na sua Netflix") | Não implementado | RFF19 | P a M | RFF27 |
+| RFF22 | Ordenar o Quero ver pelo que mais combina agora, juntando o gosto, a disponibilidade nos seus serviços e o momento | Não implementado | RFF19, RFF20 | P a M | RFF31 |
+| RFF23 | Buscar por clima ("melancólico", "épico", "leve") e receber filmes, séries e álbuns juntos | Não implementado | RNFF09, RFF01 | M | RFF25 |
+| RFF24 | Acompanhar séries por temporada e com o estado "assistindo" | Não implementado | RFF12 | M | RFF05 |
+| RFF25 | Pedir sugestões em português, com expressões brasileiras ("algo para a Sessão da Tarde"), que viram os filtros do RFF20 | Não implementado. A IA só interpreta o pedido; quem recomenda continua sendo o recomendador. Precisa de orçamento | RFF20, RNFF09 | M | RFF35 |
+
+### Incremento 5: pontes entre mídias e grupo
+
+As sugestões que cruzam filmes, séries e música, e assistir ou ouvir junto.
+
+| ID | Requisito | Situação | Depende de | Esforço | Antes |
+|---|---|---|---|---|---|
+| RNFF10 | Calcular os vizinhos de coocorrência sem que os títulos muito populares dominem (normalização por popularidade) | Não atende: hoje a similaridade colaborativa é o cosseno simples | RNFF06 | P a M | RNFF11 |
+| RFF26 | Ver no detalhe do título as ligações com outras mídias, nas seções "Para ouvir depois" e "Para ver depois": trilha sonora, compositor, quem atua e também canta, cinebiografias e documentários | Não implementado. Começa por compositor e trilha, as pontes com cobertura medida (esforço M nessa versão) | RFF01, RNFF03 | G | RFF22, RFF24 |
+| RFF27 | Receber no Para você sugestões de outra mídia, como o par filme e álbum, sempre com a ponte no motivo e em lugares fixos | Não implementado | RFF26, RNFF09 | G | RFF09, RFF23 |
+| RFF28 | Receber sugestões para assistir ou ouvir junto, combinando o gosto de duas ou mais pessoas | Não implementado | RFF15 | M | RFF20 |
+| EXP03 | Medir, no teste A/B, a aceitação das sugestões cruzadas por tipo de ponte | Não feito | RFF27 | P | novo |
+
+### Depois: com dados reais ou folga
+
+O fim das cadeias de dependência e o que precisa de muitas aceitações reais.
+
+| ID | Requisito | Situação | Depende de | Esforço | Antes |
+|---|---|---|---|---|---|
+| RNFF11 | Aprender com as aceitações quanto pesa cada fonte, cada ponte e cada tipo de motivo, testando um pouco de cada um (explorar e aproveitar) | Não atende: os pesos são fixos no código. Usa os eventos de exibição e aceitação que já existem, guardando a probabilidade de cada escolha. Inspirado no BaRT, do Spotify. Até haver aceitações suficientes, os pesos ficam fixos | EXP03 | M | RNFF10 |
+| RFF29 | Receber um aviso no Início quando um título do Quero ver entrar em um dos seus serviços | Não implementado. O aviso de que vai sair fica como extensão: não há fonte gratuita que cubra a Globoplay | RFF21 | M | RFF28 |
+| RFF30 | Curtir e comentar resenhas na Comunidade, com moderação dos comentários e o rank de quem escreve, pelas curtidas recebidas | Não implementado: precisa de tabelas novas. Hoje a Comunidade só conta as resenhas | RNFF01 | M | RFF12, RFF13 |
+| RFF31 | Ver o próprio histórico de atividades, em ordem de data e com filtro por tipo: registros, notas, resenhas, itens adicionados a listas, curtidas e pessoas seguidas | Não implementado. Quem vê o histórico de outra pessoa segue o RFF10 | RFF09, RFF30, RFF10 | M | RFF16 |
+| RFF32 | Ver o tema do mês: uma prateleira curada e um desafio com selo, como "Feito em Alagoas" | Não implementado. Usa as listas que já existem | — | P a M | RFF40, RFF42 |
+
+### Numeração anterior
+
+| Antes | Agora | O que aconteceu |
 |---|---|---|
-| RFF01 | Registrar álbuns como terceira mídia ([#19](https://github.com/joaolevi/cinematch/issues/19)) | Não implementado: a API só aceita `movie` e `series` |
-| RFF02 | Recomendar música a partir do que a pessoa ouve | Não implementado |
-| RFF03 | Registrar o mesmo título mais de uma vez, preservando notas, datas e resenhas anteriores | **Substitui a RN05:** hoje rever um filme apaga o registro anterior |
-| RFF04 | Buscar e adicionar qualquer título, sem depender do admin | Não implementado: a busca externa é só para admin |
-| RFF05 | Acompanhar séries por temporada e com o estado "assistindo" | Não implementado |
-| RFF06 | Recuperar a senha e verificar o e-mail | Não implementado |
-| RFF07 | Excluir a própria conta e os dados pessoais | Parcial: o admin já apaga uma conta com tudo o que é dela (RF26). Falta a própria pessoa fazer isso |
-| RFF08 | Ver a página de perfil, com a história do gosto ([#16](https://github.com/joaolevi/cinematch/issues/16)) | Parcial: o diário já mostra a frase do gosto, os números e os gráficos (RF23), e o avatar abre o menu da pessoa. Falta o perfil que outras pessoas veem, ao clicar no nome na Comunidade |
-| RFF10 | Seguir e deixar de seguir pessoas, e filtrar a Comunidade por quem sigo | Não implementado: precisa de uma tabela nova |
-| RFF11 | Escolher quem vê meus registros: todos, quem me segue ou ninguém | Não implementado: no MVP, todo mundo vê todo mundo |
-| RFF12 | Curtir e comentar resenhas na Comunidade, com moderação dos comentários | Não implementado: precisa de tabelas novas |
-| RFF13 | Ver o rank de reviewers, com base nas curtidas recebidas | Depende do RFF12. Hoje, a Comunidade só conta as resenhas |
-| RFF14 | Pedir a nota na hora certa: lembrete no Início para títulos vistos sem nota, estrelas clicáveis na polaroide do diário e "Já viu?" para o Quero ver depois de alguns dias | Não implementado. A nota continua opcional: obrigatória, viraria clique aleatório e enganaria o recomendador, que hoje trata "Já vi" sem nota como "gostou mais ou menos" |
-| RFF15 | Ver no painel a taxa de satisfação: das sugestões aceitas que ganharam nota, quantas ficaram com 3,5 ou mais | Não implementado no painel. A consulta está no [roteiro do teste interno](HOMOLOGACAO.md#análise-bárbara) |
-| RFF09 | Receber recomendações cruzadas entre filmes e música | Evolução, depende de dados da plataforma |
-| RFF16 | Ver o próprio histórico de atividades, em ordem de data e com filtro por tipo: títulos registrados, notas, resenhas, itens adicionados a listas e, quando existirem, curtidas e pessoas seguidas | Não implementado: hoje o diário mostra os registros, mas não as listas, curtidas ou quem a pessoa segue. Precisa de uma tabela de eventos de atividade. Depende do RFF10 e do RFF12; quem vê o histórico de outra pessoa segue o RFF11 |
-| RFF17 | Ver a retrospectiva do gosto por mês e por ano: títulos mais vistos e mais bem avaliados, gêneros, décadas e a frase do gosto, com uma versão para compartilhar | Não implementado: reaproveita os dados e os gráficos do Meu gosto (RF23) |
-| RFF18 | Reagir ao motivo de uma sugestão ("não quero mais por esse motivo") e ajustar o próprio perfil (mais ou menos de um gênero, uma época ou uma pessoa), numa página que mostra o que o Tastory acha do seu gosto, com efeito nas próximas sugestões | Não implementado: hoje o motivo só informa (RF13), e o descarte vale para um título (RF10) |
-| RFF19 | Ver onde assistir ou ouvir cada título, por país, com link para o serviço: no detalhe, os serviços em três grupos (assinatura, aluguel e compra); no card do feed, os logos dos serviços | Não implementado. Filmes e séries: a rota de provedores do TMDB, guardada junto do título e atualizada toda semana, exige exibir "Dados de disponibilidade: JustWatch"; sem API pública dos serviços, o link abre a página do título no TMDB ou a busca do serviço. Música: os IDs do Spotify e do Deezer vêm das ligações do MusicBrainz e do Wikidata; na falta, a busca pública do Deezer e a do iTunes; o YouTube Music abre pela busca. A API do Spotify fica de fora: em 2026, o modo de desenvolvimento aceita 5 pessoas e exige Premium |
-| RFF20 | Receber sugestões para assistir ou ouvir junto, combinando o gosto de duas ou mais pessoas | Não implementado. Depende do RFF10 |
-| RFF21 | Pedir sugestões pelo momento: tom (leve ou intenso), duração máxima e ocasião | Não implementado: o TMDB tem a duração; o tom precisa ser derivado das palavras-chave e dos gêneros |
-| RFF22 | Ver a trilha do que viu: para cada filme ou série do diário, a trilha sonora, o compositor e os álbuns dele; ao registrar um título, o Tastory sugere a trilha | Não implementado. Depende do RFF01. Ponte explícita entre mídias (Wikidata e MusicBrainz) |
-| RFF23 | Receber uma sessão completa: um filme ou uma série e um álbum para depois, no mesmo clima | Não implementado. Depende do RFF01 e do vocabulário de clima (camada 2 abaixo) |
-| RFF24 | Descobrir pessoas que atravessam mídias: cinebiografias e documentários dos artistas que a pessoa ouve, e álbuns de quem atua nos filmes e séries que ela vê | Não implementado. Depende do RFF01. Ponte explícita entre mídias |
-| RFF25 | Buscar por clima ("melancólico", "épico", "leve") e receber filmes, séries e álbuns juntos | Não implementado. Depende do vocabulário de clima (camada 2 abaixo) |
-| RFF26 | Ver o gosto unificado: a frase do gosto, o Meu gosto e a retrospectiva cruzando filmes, séries e música | Não implementado. Depende do RFF01 e do RFF17 |
-| RFF27 | Marcar os serviços que assina e filtrar o Para você por "só o que eu tenho"; o motivo pode citar o serviço ("está na sua Netflix") | Não implementado. Depende do RFF19 |
-| RFF28 | Receber um aviso no Início quando um título do Quero ver entrar em um dos seus serviços ou estiver para sair | Não implementado. Depende do RFF19 e do RFF27 |
-| RFF29 | Pedir uma sugestão para "hoje à noite", combinando o momento, os seus serviços e, se quiser, outra pessoa | Não implementado. Depende do RFF20, do RFF21 e do RFF27 |
-| RFF30 | Ver a compatibilidade de gosto com outra pessoa ("vocês combinam 72%"), com o que têm em comum e onde divergem | Não implementado. Usa o mesmo cálculo de títulos parecidos do recomendador; prepara o RFF20 |
-| RFF31 | Ordenar o Quero ver pelo que mais combina agora, juntando o gosto, a disponibilidade nos seus serviços e o momento | Não implementado. Depende do RFF19 e do RFF21 para a disponibilidade e o momento |
-| RFF32 | Marcar um registro para não contar no meu gosto | Não implementado. Precisa de uma coluna nova (RNFF01) |
-| RFF33 | Comparar, num teste A/B, o motivo escrito por modelo fixo com o motivo reescrito por IA | Não implementado. Depende de guardar o motivo de forma estruturada, de orçamento e do RNFF09: os termos do TMDB restringem o uso dos dados com IA |
-| RFF34 | Criticar uma sugestão ("mais leve", "mais curto", "menos famoso") e receber um novo lote | Não implementado. Depende do RFF21 e do RNFF07 |
-| RFF35 | Pedir sugestões em português, com expressões brasileiras ("algo para a Sessão da Tarde") | Não implementado. Depende do RFF21, do RNFF07 e de orçamento |
-| RFF36 | Escolher o modo descoberta em três opções, com o rótulo "Fora da sua bolha" nas sugestões menos óbvias | Não implementado |
-| RFF37 | Ver a idade do gosto e um arquétipo num cartão para compartilhar | Não implementado. Depende do RFF17 (e do RFF26 para as três mídias) |
-| RFF38 | Exportar os próprios dados e ler a página "Como recomendamos", com a opção de sair dos experimentos | Não implementado |
-| RFF39 | Importar o histórico de outros apps, como Letterboxd e TV Time, a partir do arquivo exportado pela pessoa | Não implementado; prioridade a definir pela equipe. Depende do RFF04, do RFF03 e do RFF01. Os termos do Letterboxd proíbem coleta automática |
-| RFF40 | Participar de desafios com selos, inclusive uma lente Brasil | Não implementado. Depende do país de origem no TMDB e no MusicBrainz |
-| RFF41 | Receber sugestões de quem seguir por gosto parecido ("almas gêmeas") | Não implementado. Depende do RFF30, do RFF10 e do RFF11 |
-| RFF42 | Ver prateleiras temáticas com prazo, como "Feito em Alagoas" | Não implementado. Usa as listas que já existem |
-
-### Não funcionais
-
-| ID | Requisito | Situação |
-|---|---|---|
-| RNFF01 | Mudar o banco sem apagar dados, com migrações | Não atende: mudar o modelo exige recriar o banco |
-| RNFF02 | Tempo e memória do feed não dependem do tamanho do catálogo | Não atende: ver as evidências acima |
-| RNFF03 | Limitar tentativas de login | Não atende |
-| RNFF04 | Sincronizar catálogos em segundo plano | Não atende: a sincronização roda dentro da requisição |
-| RNFF05 | Usar dados reais na parte colaborativa | Parcial: filmes usam o MovieLens 32M quando a opção está ligada; séries e música ainda não têm fonte |
-| RNFF06 | Atribuir a aceitação a uma exibição recente | Não atende: Quero ver e Já vi pela página do título contam se o título foi exibido no feed em qualquer momento antes. Falta uma janela de tempo (por exemplo, 7 dias) |
-| RNFF07 | Ter um vocabulário de clima comum a filmes, séries e música | Não atende. Destrava o RFF21, o RFF23, o RFF25 e o RFF09. Depende do RNFF09 |
-| RNFF08 | Calcular as pontes entre mídias offline, numa rotina | Não atende. Depende do RFF01 e do RNFF04 |
-| RNFF09 | Respeitar os termos e as licenças das fontes: atribuições, fonte e licença em cada dado, atualização antes de 6 meses e consulta prévia ao TMDB e ao Last.fm | Não atende. Os termos do TMDB limitam o tempo de guardar os dados a 6 meses e restringem o uso com IA; o Last.fm exige contato antes de uso acadêmico |
-| RNFF10 | Aprender com as aceitações quanto pesa cada fonte, cada ponte e cada tipo de motivo, testando um pouco de cada um (explorar e aproveitar) | Não atende: os pesos são fixos no código. Usa os eventos de exibição e aceitação que já existem, com a probabilidade de cada escolha guardada. Inspirado no BaRT, do Spotify |
-| RNFF11 | Calcular os vizinhos de coocorrência sem que os títulos muito populares dominem (normalização por popularidade) | Não atende: hoje a similaridade colaborativa é o cosseno simples. Vale para a coocorrência da própria plataforma e para as fontes novas da tabela de vizinhos |
+| RFF01 | RFF01 | Unificado em RFF01 |
+| RFF02 | RFF02 | Mantido |
+| RFF03 | RFF12 | Renumerado |
+| RFF04 | RFF13 | Renumerado |
+| RFF05 | RFF24 | Renumerado |
+| RFF06 | RFF14 | Renumerado |
+| RFF07 | RFF06 | Unificado em RFF06 |
+| RFF08 | RFF11 | Renumerado |
+| RFF09 | RFF27 | Unificado em RFF27 |
+| RFF10 | RFF09 | Renumerado |
+| RFF11 | RFF10 | Renumerado |
+| RFF12 | RFF30 | Unificado em RFF30 |
+| RFF13 | RFF30 | Unificado em RFF30 |
+| RFF14 | RFF03 | Renumerado |
+| RFF15 | RFF04 | Renumerado |
+| RFF16 | RFF31 | Renumerado |
+| RFF17 | RFF05 | Unificado em RFF05 |
+| RFF18 | RFF07 | Parte foi para RFF07 |
+| RFF18 | RFF08 | Parte foi para RFF08 |
+| RFF19 | RFF19 | Mantido |
+| RFF20 | RFF28 | Renumerado |
+| RFF21 | RFF20 | Unificado em RFF20 |
+| RFF22 | RFF26 | Unificado em RFF26 |
+| RFF23 | RFF27 | Unificado em RFF27 |
+| RFF24 | RFF26 | Unificado em RFF26 |
+| RFF25 | RFF23 | Renumerado |
+| RFF26 | RFF01 | Unificado em RFF01 |
+| RFF27 | RFF21 | Renumerado |
+| RFF28 | RFF29 | Renumerado |
+| RFF29 | RFF20 | Unificado em RFF20 |
+| RFF30 | RFF15 | Unificado em RFF15 |
+| RFF31 | RFF22 | Renumerado |
+| RFF32 | RFF07 | Unificado em RFF07 |
+| RFF33 | EXP02 | Renumerado |
+| RFF34 | RFF08 | Unificado em RFF08 |
+| RFF35 | RFF25 | Renumerado |
+| RFF36 | RFF16 | Renumerado |
+| RFF37 | RFF05 | Unificado em RFF05 |
+| RFF38 | RFF06 | Parte foi para RFF06 |
+| RFF38 | RFF17 | Parte foi para RFF17 |
+| RFF39 | RFF18 | Renumerado |
+| RFF40 | RFF32 | Unificado em RFF32 |
+| RFF41 | RFF15 | Unificado em RFF15 |
+| RFF42 | RFF32 | Unificado em RFF32 |
+| RNFF01 | RNFF01 | Mantido |
+| RNFF02 | RNFF07 | Renumerado |
+| RNFF03 | RNFF05 | Renumerado |
+| RNFF04 | RNFF03 | Unificado em RNFF03 |
+| RNFF05 | RNFF06 | Renumerado |
+| RNFF06 | RNFF04 | Renumerado |
+| RNFF07 | RNFF09 | Renumerado |
+| RNFF08 | RNFF03 | Unificado em RNFF03 |
+| RNFF09 | RNFF02 | Renumerado |
+| RNFF10 | RNFF11 | Renumerado |
+| RNFF11 | RNFF10 | Renumerado |
+| — | EXP01 | Novo |
+| — | EXP03 | Novo |
+| — | RNFF08 | Novo |

@@ -1,6 +1,6 @@
 # Escopo do MVP
 
-> **Versão 25, 09/11/2026.** Entrega: **terça-feira, 10/11/2026**, às 17h, com 10 a 15 minutos de apresentação focada no negócio e na demonstração, e deploy como meta. Gerente de projeto: Sophia.
+> **Versão 26, 10/11/2026.** Entrega: **terça-feira, 10/11/2026**, às 17h, com 10 a 15 minutos de apresentação focada no negócio e na demonstração, e deploy como meta. Gerente de projeto: Sophia.
 > Documentos ligados: [requisitos](requisitos/README.md), [equipe e entregas](ENTREGAS.md), [guia de deploy](DEPLOY.md), [teste interno](HOMOLOGACAO.md) e [arquitetura e sistema final](ARQUITETURA.md).
 
 ## Situação atual
@@ -177,7 +177,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | 06/11 | A homologação com 5 a 10 colegas vira um teste interno com as 6 pessoas da equipe, e a homologação com pessoas de fora fica para depois da entrega | Prazo curto, e o resultado já era ilustrativo (D15). Perde-se o olhar de quem não conhece o sistema | Sophia (GP) |
 | 08/11 | O congelamento do front passa de 08/11, às 20h, para a manhã de 09/11 (D17). A decisão sobre o deploy continua às 20h | Dar tempo à nova identidade visual e à aba Meu gosto | Sophia (GP) |
 | 08/11 | A interface ganha a identidade "diário aconchegante": cores quentes, fontes Fraunces e Nunito, selo de data, carimbo "Visto!" e destaque no topo do feed. Os botões maiores, os rótulos do login e os gêneros coloridos vêm da branch da Lara | A identidade do pitch não combinava com um diário nem com a música do incremento 2, e a interface estava sem personalidade | Sophia (GP) |
-| 08/11 | Entra no MVP a aba Meu gosto do diário (RF23, parte do RFF08), e o top 10 passa para ela | Retrospectiva como a dos apps parecidos, feita só com os dados do diário, sem mudar a API | Sophia (GP) |
+| 08/11 | Entra no MVP a aba Meu gosto do diário (RF23, parte do RFF11), e o top 10 passa para ela | Retrospectiva como a dos apps parecidos, feita só com os dados do diário, sem mudar a API | Sophia (GP) |
 | 08/11 | Entram o botão Registrar em todas as telas (RF06), o selo "Visto" na Busca (RF04) e o "Não me interesso" como ✕ no pôster, com Desfazer (RF10). O diário vira polaroides e folha pautada, e as telas passam a usar a largura toda | Pedido da GP ao ver a nova identidade: facilitar o registro, mostrar o que já foi visto e deixar a interface com mais cara de diário | Sophia (GP) |
 | 08/11 | O estilo de diário se espalha: "ory" escrito à mão no logo, números em post-its sobre a folha, polaroides no top 10, nas listas, na Comunidade, no detalhe e no onboarding, gráficos com período e clique que filtra a linha do tempo, e o diário escrito na primeira pessoa | A GP aprovou a identidade de papel e polaroide e pediu para aplicá-la em mais lugares | Sophia (GP) |
 | 08/11 | O link do sistema ganha prévia com imagem, cada página dá nome à aba do navegador, e os termos técnicos saem da tela (RNF04) | A URL vai circular no grupo e na apresentação | Sophia (GP) |
@@ -195,7 +195,7 @@ Nenhuma decisão pendente em 06/11/2026.
 | Painel do A/B lido como conclusão | Na simulação, A tem 65,0% e B tem 66,7%, mas ela não serve para essa comparação. Com dados reais do MovieLens, A supera B | O painel avisa de onde vêm os números; na apresentação, usar o teste com o MovieLens como evidência exploratória | Bárbara |
 | Séries com sugestões fracas | Sem dados reais, as séries dependem só do conteúdo e aparecem títulos obscuros | Filtro do feed e peso maior da popularidade na ordem das séries (D16, [arquitetura](ARQUITETURA.md#séries-sem-dados-reais)) | Bárbara |
 | Publicar com as credenciais do repositório | Qualquer pessoa entra como administrador | Tratar o RNF12 como condição para publicar | Sophia |
-| Registros visíveis na Comunidade | Quem tem conta vê o que as outras pessoas marcaram como Já vi, sem poder esconder | Avisar no cadastro e na página (RNF20) e aceitar e-mail fictício. A escolha de privacidade fica para depois (RFF11) | Sophia |
+| Registros visíveis na Comunidade | Quem tem conta vê o que as outras pessoas marcaram como Já vi, sem poder esconder | Avisar no cadastro e na página (RNF20) e aceitar e-mail fictício. A escolha de privacidade fica para depois (RFF10) | Sophia |
 | Resenhas de contas simuladas na publicação | Pessoas que não existem apareceriam no detalhe dos títulos e nas médias | Fazer a carga com `--no-synthetic`, como no [guia](DEPLOY.md#2-fazer-a-carga-inicial) | Vinicius |
 | Mudança no banco depois da publicação | O projeto não tem migrations: uma coluna nova derruba a busca e o feed até alguém ajustar o banco | Não mudar os modelos até a entrega. Se for inevitável, seguir o [guia](DEPLOY.md#atualizar-o-sistema-publicado) | Sophia |
 | O deploy não ficar estável a tempo | Sem URL pública na entrega | Decidir na manhã de segunda (09/11) e, se preciso, apresentar localmente | Vinicius |
@@ -204,3 +204,4 @@ Nenhuma decisão pendente em 06/11/2026.
 | Teste interno só com quem conhece o sistema | Problemas de uso podem passar despercebidos, e a taxa não permite conclusão | Chamar de teste interno na apresentação e tratar o resultado como ilustrativo. Sem deploy, fazer o teste em uma só máquina, porque as métricas ficam em um único banco | Antonio |
 | Sem internet na demo | Títulos sem pôster real | O sistema local mostra um pôster gerado no lugar da imagem ([plano B](DEPLOY.md#plano-b)). Testado em 06/11, com o Wi-Fi desligado | Antonio |
 | Título procurado fora do catálogo | Com cerca de 3.950 títulos, a maioria aparece, mas o catálogo ainda não cobre tudo | Importar pelo painel de admin os títulos que faltarem | Antonio |
+| Termos do TMDB restringem o uso com aplicações de ML ou IA | O recomendador usa gêneros, palavras-chave e diretores do TMDB, e os termos também limitam a 6 meses o tempo de guardar os dados | Risco aceito para o uso acadêmico e citado nas limitações do trabalho; nenhum dado do TMDB é redistribuído. Numa versão comercial, consultar o TMDB e trocar a fonte de conteúdo do recomendador pelo Wikidata ([RNFF02](ARQUITETURA.md#incremento-2-a-história-do-seu-gosto-em-três-mídias)) | Sophia (GP) |

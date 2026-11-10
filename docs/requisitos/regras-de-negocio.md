@@ -20,7 +20,7 @@ RN12, RN13 e RN14 foram aprovadas por Sophia (GP) em 05/11/2026.
 |---|---|---|
 | RN03 | A nota é opcional e vai de 0,5 a 5 em passos de 0,5 | Atende |
 | RN04 | A resenha é opcional e tem até 2000 caracteres | Atende, sem teste |
-| RN05 | Há um registro de diário por usuário e título; registrar de novo atualiza o existente | Atende, sem teste. Vale só para o MVP: o sistema final deve preservar o histórico ([RFF03](../ARQUITETURA.md#funcionais)) |
+| RN05 | Há um registro de diário por usuário e título; registrar de novo atualiza o existente | Atende, sem teste. Vale só para o MVP: o sistema final deve preservar o histórico ([RFF12](../ARQUITETURA.md#incremento-3-beta-aberta-social-e-controle)) |
 | RN06 | Registrar consumo tira o título da watchlist e dos descartes | Atende, sem teste |
 | RN08 | A watchlist é criada no cadastro e não pode ser excluída nem renomeada | Atende |
 | RN13 | Resenha oculta continua oculta quando o autor a edita; só o admin restaura | Atende |
