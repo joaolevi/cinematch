@@ -225,7 +225,8 @@
                 {
                   "enum": [
                     "movie",
-                    "series"
+                    "series",
+                    "album"
                   ],
                   "type": "string"
                 },
@@ -336,17 +337,52 @@
         ],
         "summary": "List Genres",
         "operationId": "list_genres_media_genres_get",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "movie",
+                    "series",
+                    "album"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sem tipo, só os gêneros de filmes e séries; `album` traz os gêneros musicais",
+              "title": "Type"
+            },
+            "description": "Sem tipo, só os gêneros de filmes e séries; `album` traz os gêneros musicais"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "array",
                   "items": {
                     "type": "string"
                   },
-                  "type": "array",
                   "title": "Response List Genres Media Genres Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -375,6 +411,29 @@
               "default": [],
               "title": "Genre"
             }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "movie",
+                    "series",
+                    "album"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sem tipo, filmes e séries; `album` traz décadas e artistas",
+              "title": "Type"
+            },
+            "description": "Sem tipo, filmes e séries; `album` traz décadas e artistas"
           },
           {
             "name": "limit",
@@ -430,7 +489,8 @@
                 {
                   "enum": [
                     "movie",
-                    "series"
+                    "series",
+                    "album"
                   ],
                   "type": "string"
                 },
@@ -1103,7 +1163,8 @@
                 {
                   "enum": [
                     "movie",
-                    "series"
+                    "series",
+                    "album"
                   ],
                   "type": "string"
                 },
@@ -1784,6 +1845,106 @@
         ]
       }
     },
+    "/admin/musicbrainz/search": {
+      "get": {
+        "tags": [
+          "administração"
+        ],
+        "summary": "Musicbrainz Search",
+        "description": "Busca álbuns no MusicBrainz para o admin escolher o que importar.\n\nAceita a sintaxe de busca do MusicBrainz, como `releasegroup:\"Construção\" AND artist:\"Chico Buarque\"`.\n`media_id` vem preenchido se o álbum já está no catálogo.",
+        "operationId": "musicbrainz_search_admin_musicbrainz_search_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExternalTitleOut"
+                  },
+                  "title": "Response Musicbrainz Search Admin Musicbrainz Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/musicbrainz/import": {
+      "post": {
+        "tags": [
+          "administração"
+        ],
+        "summary": "Musicbrainz Import",
+        "description": "Importa (ou atualiza) um álbum do MusicBrainz pelo ID, com capa, gêneros, duração, idioma e links.\n\nFaz de três a cinco consultas ao MusicBrainz, que aceita uma por segundo: leva alguns segundos.",
+        "operationId": "musicbrainz_import_admin_musicbrainz_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlbumImportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumImportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/admin/reviews": {
       "get": {
         "tags": [
@@ -2251,6 +2412,37 @@
           "total"
         ],
         "title": "AdminUsersOut"
+      },
+      "AlbumImportIn": {
+        "properties": {
+          "mbid": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "title": "Mbid",
+            "description": "ID do álbum (release group) no MusicBrainz"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mbid"
+        ],
+        "title": "AlbumImportIn"
+      },
+      "AlbumImportOut": {
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "result": {
+            "$ref": "#/components/schemas/SyncOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media",
+          "result"
+        ],
+        "title": "AlbumImportOut"
       },
       "CommunityEntryOut": {
         "properties": {
@@ -2887,6 +3079,49 @@
             "type": "number",
             "title": "Popularity"
           },
+          "duration_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min",
+            "description": "Filme: duração; série: episódio; álbum: soma das faixas"
+          },
+          "countries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Countries",
+            "description": "Países de origem, em códigos ISO, como BR",
+            "default": []
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "Idioma original ou, no álbum, das letras, como pt"
+          },
+          "links": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Links",
+            "description": "Álbum: onde ouvir, [{\"service\", \"url\", \"level\"}]. level \"artist\" leva à página do artista, quando o disco não tem link próprio",
+            "default": []
+          },
           "actors": {
             "items": {
               "type": "string"
@@ -2972,7 +3207,8 @@
             "type": "string",
             "enum": [
               "movie",
-              "series"
+              "series",
+              "album"
             ],
             "title": "Type"
           },
@@ -3130,6 +3366,49 @@
           "popularity": {
             "type": "number",
             "title": "Popularity"
+          },
+          "duration_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min",
+            "description": "Filme: duração; série: episódio; álbum: soma das faixas"
+          },
+          "countries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Countries",
+            "description": "Países de origem, em códigos ISO, como BR",
+            "default": []
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "Idioma original ou, no álbum, das letras, como pt"
+          },
+          "links": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Links",
+            "description": "Álbum: onde ouvir, [{\"service\", \"url\", \"level\"}]. level \"artist\" leva à página do artista, quando o disco não tem link próprio",
+            "default": []
           }
         },
         "type": "object",
@@ -3178,7 +3457,8 @@
                 "type": "string",
                 "enum": [
                   "movie",
-                  "series"
+                  "series",
+                  "album"
                 ]
               },
               {

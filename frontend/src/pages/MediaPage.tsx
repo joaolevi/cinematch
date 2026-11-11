@@ -162,7 +162,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
             <dl className="mt-5 max-w-6xl space-y-1.5 text-sm">
               {media.creators.length > 0 && (
                 <div className="flex gap-3">
-                  <dt className="w-16 shrink-0 text-muted">{media.type === "movie" ? "Direção" : "Criação"}</dt>
+                  <dt className="w-16 shrink-0 text-muted">{media.type === "movie" ? "Direção" : media.type === "album" ? "Artista" : "Criação"}</dt>
                   <PeopleLinks names={media.creators} />
                 </div>
               )}

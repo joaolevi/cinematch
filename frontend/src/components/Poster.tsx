@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isUpcoming } from "../format";
+import { MEDIA_STYLE, isUpcoming } from "../format";
 import type { Media } from "../types";
 
 function hash(text: string): number {
@@ -59,7 +59,7 @@ export default function Poster({
       ) : (
         <>
       <span className="absolute top-2 left-2 rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/80 uppercase">
-        {media.type === "movie" ? "Filme" : "Série"}
+        {MEDIA_STYLE[media.type].label}
       </span>
       <span
         className="pointer-events-none absolute -top-4 -right-3 text-[96px] leading-none font-extrabold text-white/10 select-none"

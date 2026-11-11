@@ -1,4 +1,4 @@
-export type MediaType = "movie" | "series";
+export type MediaType = "movie" | "series" | "album";
 export type FeedbackAction = "want" | "seen" | "dismiss";
 
 export interface User {

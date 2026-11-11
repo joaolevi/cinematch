@@ -71,6 +71,13 @@ class Settings:
     )
     seed_catalog_path: Path = DATA_DIR / "seed_catalog.json"
     external_catalog_path: Path = DATA_DIR / "mock_external_catalog.json"
+    # Álbuns (RFF01): retrato do catálogo de demonstração, gerado por scripts/import_albums.py
+    albums_catalog_path: Path = DATA_DIR / "albums_catalog.json"
+    music_genres_path: Path = DATA_DIR / "generos_musicais.csv"
+    # O MusicBrainz pede um User-Agent que identifique a aplicação; em produção, dá para pôr um contato
+    musicbrainz_user_agent: str = field(
+        default_factory=lambda: os.getenv("TASTORY_MUSICBRAINZ_USER_AGENT", "TastoryAcademico/0.1")
+    )
 
     # TMDB (themoviedb.org) — opcional. Sem chave, a sincronização usa o catálogo mockado.
     tmdb_api_key: str = field(default_factory=lambda: os.getenv("TASTORY_TMDB_API_KEY", "").strip())
