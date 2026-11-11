@@ -74,7 +74,8 @@ uvicorn app.main:app --reload
 ```
 
 Na primeira execução o banco SQLite (`backend/tastory.db`) é criado e populado automaticamente com
-o catálogo mockado. Para recriar do zero: `cd backend && python -m scripts.seed`.
+o catálogo mockado. Para recriar do zero: `cd backend && python -m scripts.seed`. O banco muda por migrações
+(`backend/migrations/`): veja "Mudanças no banco" no [CONTRIBUTING](CONTRIBUTING.md#mudanças-no-banco).
 
 ### Atalhos com make
 
@@ -184,6 +185,7 @@ cinematch/
 ├── backend/
 │   ├── app/            # main, models, schemas, auth, crud, seed, routers/, services/ (recommender, catalog, tmdb, metrics)
 │   ├── data/           # catálogos mockados (JSON)
+│   ├── migrations/     # migrações do banco (Alembic)
 │   ├── scripts/        # seed, avaliação e comparação de modelos do recomendador, importação do MovieLens
 │   └── tests/          # pytest (+ integration/ com o TMDB real)
 ├── frontend/           # interface (React, TypeScript e Tailwind)

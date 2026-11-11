@@ -12,6 +12,21 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    # As migrações também rodam num PostgreSQL, o banco do servidor (tests/test_migrations.py)
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: tastory
+          POSTGRES_USER: tastory
+          POSTGRES_PASSWORD: tastory
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tastory -d tastory"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      TASTORY_TEST_POSTGRES_URL: postgresql+psycopg://tastory:tastory@localhost:5432/tastory
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

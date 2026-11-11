@@ -41,6 +41,26 @@ git tag entrega-10-11
 git push origin entrega-10-11
 ```
 
+## Mudanças no banco
+
+O banco muda só por migrações do Alembic (D25), em `backend/migrations/versions/`. A API aplica as pendentes ao subir.
+
+1. Altere o modelo em `backend/app/models.py`.
+2. Rode `make migration MSG="o que mudou"`. A migração sai numerada em sequência (`0002`, `0003`…), a partir da
+   diferença entre os modelos e o banco local.
+3. Revise o arquivo gerado: o Alembic não percebe renomeações (vê uma coluna apagada e outra criada) e não preenche dados.
+   Coluna nova obrigatória em tabela com dados precisa de `server_default`.
+4. Rode `make test`. O `test_migrations.py` falha se os modelos e as migrações divergirem.
+
+Regras:
+
+- Uma migração por PR.
+- Uma migração que já chegou na `homol` nunca é editada. Para corrigir, crie outra.
+- Não use `create_all` nem `ALTER TABLE` à mão. No código, use `atualizar_banco` (`app/migrations.py`); na linha de
+  comando, `make migrate`. No SQLite, os dois desligam as chaves estrangeiras durante a migração: recriar uma tabela
+  com elas ligadas apagaria, pelo `ON DELETE CASCADE`, os registros das tabelas filhas.
+- `make seed` continua recriando o banco local do zero.
+
 ## Documentação
 
 O índice está em [docs/README.md](docs/README.md). Ao mudar a situação de um requisito futuro, atualize a linha dele
@@ -61,7 +81,7 @@ no arquivo do tipo (`funcionais.md` ou `nao-funcionais.md`) e no [plano de incre
   é o contrato que o frontend usa.
 - **Nunca** commite a chave do TMDB nem o `.env`. O repositório é público.
 - Textos da interface em português.
-- Se mudar o modelo de dados, rode `python -m scripts.seed` para recriar o banco local (não há migrações).
+- Mudou o modelo de dados? Crie uma migração, como na seção abaixo.
 
 ## Usando o Claude Code
 

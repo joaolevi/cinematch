@@ -52,7 +52,7 @@ Administrador herda tudo do Usuário (generalização): é só `User.role == "ad
   (type movie|series, source mock|tmdb|manual, external_id, genres/tags/creators/actors em JSON, popularity 0–100,
   poster_url), `DiaryEntry` (rating 0,5–5 opcional, review, review_hidden, from_onboarding),
   `UserList`/`ListItem` (is_watchlist), `RecEvent` (shown|want|seen|dismiss + variant), `Dismissed`.
-  Sem migrações: mudou o modelo → `python -m scripts.seed`.
+  Mudou o modelo → crie a migração com `make migration MSG="..."` e revise o arquivo ("Mudanças no banco" no CONTRIBUTING.md). Nunca `create_all` nem `ALTER TABLE` à mão.
 - **Recomendador** (`services/recommender.py`):
   1. `user_signals`: diário (peso `(nota−2,5)/2,5`, sem nota `0,6`, marcado no onboarding `0,8`), listas `0,5`,
      descartes `−0,7`;

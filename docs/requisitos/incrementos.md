@@ -15,7 +15,7 @@ Base técnica, a métrica corrigida e o grafo de conteúdo, que já melhora as s
 
 | ID | Requisito | Tipo | Situação | Esforço | Prio. | Nec. | Inov. | Depende de |
 |---|---|---|---|---|---|---|---|---|
-| [RNFF01](nao-funcionais.md#rnff01) | Mudar o banco sem apagar dados, com migrações | Não funcional | Não iniciado | P | 5 | 5 | 1 | — |
+| [RNFF01](nao-funcionais.md#rnff01) | Mudar o banco sem apagar dados, com migrações | Não funcional | Feito | P | 5 | 5 | 1 | — |
 | [RNFF02](nao-funcionais.md#rnff02) | Respeitar os termos e as licenças das fontes | Não funcional | Não iniciado | P | 5 | 4 | 1 | — |
 | [RNFF04](nao-funcionais.md#rnff04) | Contar a aceitação só perto da exibição | Não funcional | Não iniciado | P | 5 | 4 | 1 | — |
 | [RNFF05](nao-funcionais.md#rnff05) | Limitar tentativas de login | Não funcional | Não iniciado | P | 4 | 3 | 1 | — |

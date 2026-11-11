@@ -12,7 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func, select
 
 from .config import settings
-from .db import Base, SessionLocal, engine
+from .db import SessionLocal, engine
+from .migrations import atualizar_banco
 from .models import Media
 from .routers import admin, auth, community, diary, lists, media, recommendations
 
@@ -23,7 +24,7 @@ log = logging.getLogger("tastory")
 async def lifespan(_app: FastAPI):
     if problems := settings.production_problems():
         raise RuntimeError(f"Valores públicos em produção: {', '.join(problems)}")
-    Base.metadata.create_all(engine)
+    atualizar_banco(engine)
     if settings.auto_seed:
         with SessionLocal() as db:
             if not db.scalar(select(func.count()).select_from(Media)):

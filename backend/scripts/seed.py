@@ -10,7 +10,8 @@ import argparse
 import json
 
 from app.config import settings
-from app.db import Base, SessionLocal, engine
+from app.db import SessionLocal, engine
+from app.migrations import apagar_banco, atualizar_banco
 from app.seed import seed_all
 from app.services.catalog import sync_catalog
 from app.services.tmdb import TmdbCatalogProvider, TmdbError, enrich_catalog
@@ -26,8 +27,8 @@ def main() -> None:
     if problems := settings.production_problems():
         raise SystemExit(f"Valores públicos em produção: {', '.join(problems)}")
 
-    Base.metadata.drop_all(engine)
-    Base.metadata.create_all(engine)
+    apagar_banco(engine)
+    atualizar_banco(engine)
     with SessionLocal() as db:
         summary = seed_all(db, synthetic=not args.no_synthetic, simulate=not args.no_sim)
         if args.tmdb:
