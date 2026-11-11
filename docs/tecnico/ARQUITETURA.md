@@ -1,6 +1,6 @@
 # Arquitetura e sistema final
 
-> **Versão 4, 10/11/2026.** Requisitos do sistema final renumerados na ordem de implementação; resultado do EXP01 e incremento 2 dividido em 2a e 2b. Validação técnica: Bárbara (IA) e Levi (TL). Aprovação: Sophia (GP).
+> **Versão 5, 10/11/2026.** Migrações (D25), o Swagger como contrato (D26), o álbum como mídia (D27) e o modelo de dados da entrega final. Validação técnica: Bárbara (IA) e Levi (TL). Aprovação: Sophia (GP).
 > Este documento trata do sistema final, com filmes, séries e música. O MVP, entregue em 10/11/2026, está em [MVP.md](../gestao/MVP.md).
 
 ## Decisões
@@ -14,6 +14,8 @@
 | D23 | O incremento 2 se divide em 2a (base, medição e grafo) e 2b (música) | A música (RFF01) é o único item grande e travaria o resto; o 2a já entrega melhora visível | Sophia (GP), 10/11 |
 | D24 | O grupo B passa a usar o grafo de conteúdo quando o RNFF12 estiver pronto; a contagem do A/B no painel recomeça nessa data | O A/B continua comparando completo com só conteúdo, agora com o conteúdo melhor; os números de antes e de depois não se comparam | Sophia (GP), 10/11 |
 | D25 | O banco muda só por migrações do Alembic, aplicadas pela própria API ao subir. Um banco criado antes delas é adotado na versão 0001 se conferir com o banco do MVP; se não conferir, a API não sobe (RNFF01) | Sem migrações, toda coluna nova obrigava a recriar o banco ou a rodar `ALTER TABLE` à mão no servidor. Adotar sozinho poupa o passo manual no deploy, e recusar o que não confere evita marcar um banco errado | Sophia (GP), 10/11 |
+| D26 | O contrato da API é o Swagger, gerado pelo código; o `API.md` guarda só autenticação, fluxo e regras gerais | A mesma equipe faz a API e a interface. Um contrato escrito à mão antes do código vira trabalho dobrado e se desatualiza; o Swagger nunca diverge do que a API faz | Sophia (GP), 10/11 |
+| D27 | O álbum é mais um tipo de `Media` (`type = "album"`), com o artista em `creators`, e não uma tabela à parte | Busca, diário, listas, feed e grafo tratam as três mídias do mesmo jeito; os campos só de uma mídia ficam opcionais | Sophia (GP), 10/11 |
 
 A recomendação cruzada entre filmes e música fica como evolução: o diário unificado vai gerar esses dados com o tempo.
 
@@ -25,6 +27,24 @@ A recomendação cruzada entre filmes e música fica como evolução: o diário 
 - Interface `CatalogProvider`, que permite incluir o MusicBrainz sem mudar o restante do sistema.
 
 ## O que muda depois do MVP
+
+### Modelo de dados da entrega final
+
+Criado de uma vez na migração 0002, para os PRs da entrega final não precisarem mexer no banco ao mesmo tempo.
+
+| Onde | O que entra | Requisitos |
+|---|---|---|
+| `media` | `type = "album"` (D27), `duration_min`, `countries`, `language`, `moods`, `links` (onde ouvir), `providers` e `providers_updated_at` (onde assistir no Brasil), `seasons` | RFF01, RFF19, RFF20, RFF24, RFF26, RNFF09 |
+| `media_bridges` (nova) | Ligação entre dois títulos: tipo da ponte, texto do motivo, peso e fonte | RFF26, RFF27 |
+| `users` | `visibility` (todos, quem segue ou só eu) e `services` (os serviços que assina) | RFF10, RFF21 |
+| `follows` (nova) | Quem segue quem | RFF09, RFF11 |
+| `review_likes` e `review_comments` (novas) | Curtidas e comentários nas resenhas, com moderação | RFF30 |
+| `taste_adjustments` (nova) | Os "mais" e "menos" da pessoa sobre gêneros, décadas, pessoas, climas e pontes | RFF07, RFF08 |
+| `diary_entries` | `status` (visto ou assistindo), `season` e `excluded` (fora do cálculo) | RFF07, RFF12, RFF24 |
+| `lists` | `featured` e `description`, para o Tema do mês | RFF32 |
+
+O diário já permitia mais de um registro do mesmo título no banco; a regra de substituir o anterior está no código, e o
+RFF12 muda só o código.
 
 ### Calcular antes, consultar depois
 
