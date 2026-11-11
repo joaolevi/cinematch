@@ -13,6 +13,7 @@
 | D22 | Os filmes mantêm o híbrido atual; séries, música e pontes entre mídias usam o grafo no lado do conteúdo (RNFF12) | No EXP01, com dados colaborativos os modelos empataram, e só com conteúdo o grafo venceu o TF-IDF | Sophia (GP), 10/11 |
 | D23 | O incremento 2 se divide em 2a (base, medição e grafo) e 2b (música) | A música (RFF01) é o único item grande e travaria o resto; o 2a já entrega melhora visível | Sophia (GP), 10/11 |
 | D24 | O grupo B passa a usar o grafo de conteúdo quando o RNFF12 estiver pronto; a contagem do A/B no painel recomeça nessa data | O A/B continua comparando completo com só conteúdo, agora com o conteúdo melhor; os números de antes e de depois não se comparam | Sophia (GP), 10/11 |
+| D25 | O banco muda só por migrações do Alembic, aplicadas pela própria API ao subir. Um banco criado antes delas é adotado na versão 0001 se conferir com o banco do MVP; se não conferir, a API não sobe (RNFF01) | Sem migrações, toda coluna nova obrigava a recriar o banco ou a rodar `ALTER TABLE` à mão no servidor. Adotar sozinho poupa o passo manual no deploy, e recusar o que não confere evita marcar um banco errado | Sophia (GP), 10/11 |
 
 A recomendação cruzada entre filmes e música fica como evolução: o diário unificado vai gerar esses dados com o tempo.
 

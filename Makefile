@@ -1,6 +1,6 @@
 # Atalhos do projeto. Rode `make` para ver a lista.
 .DEFAULT_GOAL := help
-.PHONY: help api demo up down logs deps test test-offline seed openapi prod-up prod-logs prod-seed prod-movielens backup
+.PHONY: help api demo up down logs deps test test-offline seed migrate migration openapi prod-up prod-logs prod-seed prod-movielens backup
 
 PROD := docker compose -f docker-compose.prod.yml --env-file .env.production
 PYTHON := ../.venv/bin/python
@@ -39,6 +39,13 @@ test-offline: deps ## Roda os testes que não usam o TMDB real
 
 seed: deps ## Recria o banco SQLite local
 	cd backend && $(PYTHON) -m scripts.seed
+
+migrate: deps ## Aplica as migrações pendentes no banco local
+	cd backend && $(PYTHON) -m alembic upgrade head
+
+migration: deps ## Cria uma migração a partir dos modelos (exige MSG="o que mudou")
+	@test -n "$(MSG)" || { echo 'Descreva a mudança: make migration MSG="álbuns como terceira mídia"'; exit 1; }
+	cd backend && $(PYTHON) -m alembic upgrade head && $(PYTHON) -m alembic revision --autogenerate -m "$(MSG)"
 
 openapi: deps ## Regenera docs/tecnico/openapi.json
 	cd backend && TASTORY_AUTO_SEED=false $(PYTHON) -c "import json; from app.main import app; json.dump(app.openapi(), open('../docs/tecnico/openapi.json','w'), ensure_ascii=False, indent=2)"

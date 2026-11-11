@@ -17,6 +17,7 @@ de `docs/tecnico/API.md`. O MVP foi entregue em 10/11/2026 (`docs/gestao/MVP.md`
   `cd backend && ../.venv/bin/python -m pytest -q`
   (`-m "not integration"` = offline; `-m integration` = TMDB real, precisa da chave no `.env`)
 - Recriar banco: `cd backend && ../.venv/bin/python -m scripts.seed`
+- Mudou `models.py`? Crie a migração: `make migration MSG="o que mudou"` (veja "Mudanças no banco" no CONTRIBUTING.md)
 - Mudou rotas/schemas? Regere `docs/tecnico/openapi.json`:
   `cd backend && TASTORY_AUTO_SEED=false ../.venv/bin/python -c "import json; from app.main import app; json.dump(app.openapi(), open('../docs/tecnico/openapi.json','w'), ensure_ascii=False, indent=2)"`
 

@@ -1,6 +1,6 @@
 # Guia para o deploy
 
-> **Versão 2, 10/11/2026.** Responsável: Vinicius. Parte do [MVP](../gestao/MVP.md). Os requisitos estão em [nao-funcionais.md](../requisitos/nao-funcionais.md) (RNF11 a RNF19).
+> **Versão 3, 10/11/2026.** O banco passa a mudar por migrações (RNFF01). Responsável: Vinicius. Parte do [MVP](../gestao/MVP.md). Os requisitos estão em [nao-funcionais.md](../requisitos/nao-funcionais.md) (RNF11 a RNF19).
 
 O sistema está publicado no servidor do Vinicius, sem custo (decisão D12), com o arquivo `docker-compose.prod.yml`. Foi
 o sistema usado na apresentação de 10/11/2026. Por enquanto, o acesso está liberado só para um IP: falta abrir a URL
@@ -102,22 +102,28 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d
 Para publicar uma nova versão, rode `git pull` e `make prod-up`. Os dados continuam no banco, desde que você não use `down -v`
 nem `make prod-seed`.
 
-O projeto não tem migrations. Ao subir, a API cria as tabelas que faltam, mas **não altera as que já existem**:
-
-| Mudança no código | O que acontece | O que fazer |
-|---|---|---|
-| Nada nos modelos | Atualiza normalmente | Só publicar |
-| Tabela nova | A API cria sozinha | Só publicar |
-| Coluna nova em tabela existente | A API sobe, mas busca e feed dão erro 500 | Fazer backup, rodar o `ALTER TABLE` e publicar |
-
-Exemplo de coluna nova, sempre com valor padrão, para a versão antiga continuar funcionando:
+O banco muda por migrações (D25). Ao subir, a API aplica sozinha as que faltam, sem apagar dados. Antes de publicar uma
+versão que traz migração nova (um arquivo novo em `backend/migrations/versions/`), faça o backup:
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db psql -U tastory tastory -c "alter table media add column exemplo json not null default '[]'"
+make backup
+git pull
+make prod-up
+make prod-logs   # procure "Banco atualizado: versão 0001 -> 0002"
 ```
 
-Depois da carga inicial, evite mudar `backend/app/models.py` até a entrega. Nunca use `make prod-seed` para resolver erro de
-banco, porque ele apaga as contas e o histórico.
+**Na primeira publicação com migrações**, o banco do servidor, criado antes delas, é adotado na versão `0001`. O log mostra
+"Banco criado antes das migrações: adotado na versão 0001". Se o banco não conferir com o do MVP, a API não sobe, e o log
+lista o que está diferente. Nesse caso, nada no banco foi alterado: chame a Sophia antes de mexer.
+
+Para ver em que versão o banco está:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.production exec api python -m alembic current
+```
+
+Se uma migração der errado, restaure o backup da seção 5 e publique a versão anterior. Nunca use `make prod-seed` para
+resolver erro de banco, porque ele apaga as contas e o histórico.
 
 ## Antes de apresentar
 

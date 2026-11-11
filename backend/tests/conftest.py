@@ -8,17 +8,27 @@ os.environ["TASTORY_AUTO_SEED"] = "false"
 os.environ["TASTORY_USE_EXTERNAL_NEIGHBORS"] = "false"
 
 import pytest  # noqa: E402
+from alembic import command  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app.db import Base, SessionLocal, engine  # noqa: E402
 from app.main import app  # noqa: E402
+from app.migrations import alembic_config, apagar_banco  # noqa: E402
 from app.seed import ADMIN_EMAIL, ADMIN_PASSWORD, create_demo_accounts, load_catalog  # noqa: E402
+
+
+def criar_banco_de_teste() -> None:
+    """Banco novo a cada teste. O create_all é mais rápido que rodar as migrações, e o test_migrations.py garante
+    que modelos e migrações nunca divergem; por isso o banco é só marcado na última versão."""
+    apagar_banco(engine)
+    Base.metadata.create_all(engine)
+    with engine.begin() as conn:
+        command.stamp(alembic_config(conn), "head")
 
 
 @pytest.fixture()
 def db():
-    Base.metadata.drop_all(engine)
-    Base.metadata.create_all(engine)
+    criar_banco_de_teste()
     session = SessionLocal()
     load_catalog(session)
     create_demo_accounts(session)

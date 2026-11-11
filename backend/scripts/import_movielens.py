@@ -19,7 +19,8 @@ from scipy import sparse
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.db import Base, SessionLocal, engine
+from app.db import SessionLocal, engine
+from app.migrations import atualizar_banco
 from app.models import ItemNeighbor, Media
 from app.services.recommender import rating_weight
 
@@ -112,7 +113,7 @@ def main() -> None:
     parser.add_argument("dataset", type=Path, help="pasta do ml-32m")
     args = parser.parse_args()
 
-    Base.metadata.create_all(engine)
+    atualizar_banco(engine)
     with SessionLocal() as db:
         print(import_movielens(db, args.dataset))
 

@@ -43,7 +43,7 @@ a 3 semanas, G várias semanas. Ao mudar a situação de um requisito, atualize 
 
 | ID | Requisito | Situação | Depende de | Esforço | Incremento | Antes |
 |---|---|---|---|---|---|---|
-| <a id="rnff01"></a>RNFF01 | Mudar o banco sem apagar dados, com migrações | Não atende: mudar o modelo exige recriar o banco | — | P | 2a | RNFF01 |
+| <a id="rnff01"></a>RNFF01 | Mudar o banco sem apagar dados, com migrações | Atende: migrações do Alembic, aplicadas pela API ao subir; o banco do MVP é adotado na versão 0001 (D25) | — | P | 2a | RNFF01 |
 | <a id="rnff02"></a>RNFF02 | Respeitar os termos e as licenças das fontes: créditos ao TMDB, à JustWatch, ao Last.fm e ao MusicBrainz, fonte e licença registradas em cada dado, e nenhum dado do TMDB redistribuído | Não atende. Os termos do TMDB restringem o uso com aplicações de ML ou IA e limitam a 6 meses o tempo de guardar dados; o risco foi aceito para o uso acadêmico (ver Riscos no [MVP.md](../gestao/MVP.md)). Numa versão comercial, é preciso consultar o TMDB e trocar a fonte de conteúdo do recomendador pelo Wikidata. O Last.fm exige contato antes de qualquer uso | — | P | 2a | RNFF09 |
 | <a id="rnff04"></a>RNFF04 | Contar a aceitação só quando ela vier até 7 dias depois de a sugestão aparecer | Não atende: Quero ver e Já vi pela página do título contam se o título foi exibido em qualquer momento antes | — | P | 2a | RNFF06 |
 | <a id="rnff05"></a>RNFF05 | Limitar as tentativas de login | Não atende | — | P | 2a | RNFF03 |
@@ -81,3 +81,4 @@ a 3 semanas, G várias semanas. Ao mudar a situação de um requisito, atualize 
 | RNF19 | 4.3 | Rodar `docker compose up --build` e testar o fluxo completo |
 | RNF20 | 2.1, 2.3 | Conferir o aviso no cadastro e na Comunidade |
 | RNF21 | 2.3 | `test_community.py` e medição na máquina da demo |
+| RNFF01 | — | `test_migrations.py`, no SQLite e no PostgreSQL do CI |
