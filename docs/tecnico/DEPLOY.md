@@ -116,6 +116,14 @@ make prod-logs   # procure "Banco atualizado: versão 0001 -> 0002"
 "Banco criado antes das migrações: adotado na versão 0001". Se o banco não conferir com o do MVP, a API não sobe, e o log
 lista o que está diferente. Nesse caso, nada no banco foi alterado: chame a Sophia antes de mexer.
 
+**Álbuns (RFF01).** O banco publicado já tem dados, então o seed não roda de novo. Depois de publicar a versão com os
+álbuns, carregue o catálogo de demonstração uma vez, a partir do retrato que está no repositório (não consulta a
+internet; rodar de novo só atualiza):
+
+```bash
+make prod-albuns
+```
+
 Para ver em que versão o banco está:
 
 ```bash

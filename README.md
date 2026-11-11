@@ -9,7 +9,8 @@ O Tastory une as duas coisas: **um diário** + **um recomendador** que combina o
 (gênero, tags, diretor, década) com o gosto de usuários parecidos com você.
 
 Este repositório tem a **API (backend)**, com integração real com o **TMDB**, e a **interface** em
-[`frontend/`](frontend). O contrato entre as duas partes está em [`docs/tecnico/API.md`](docs/tecnico/API.md).
+[`frontend/`](frontend). O contrato entre as duas partes é o Swagger (`/docs` e [`openapi.json`](docs/tecnico/openapi.json)), com o guia de
+uso em [`docs/tecnico/API.md`](docs/tecnico/API.md).
 
 ```bash
 ./demo.sh --reset    # recria o banco (mock + TMDB) e sobe API + interface → http://localhost:5173

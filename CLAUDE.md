@@ -1,11 +1,11 @@
 # Tastory: contexto para o Claude Code
 
 Protótipo acadêmico (UFAL, Gerência de Projeto 2026.2): API de diário de filmes/séries + recomendador
-híbrido, com integração real ao TMDB. Guia da API em `docs/tecnico/API.md`; pitch em `docs/gestao/pitch-tastory.pdf`;
+híbrido, com integração real ao TMDB. Contrato da API: o Swagger (`/docs` e `docs/tecnico/openapi.json`), com o guia de uso em `docs/tecnico/API.md`; pitch em `docs/gestao/pitch-tastory.pdf`;
 `docs/gestao/PLANO.md` é histórico. Para tarefas maiores, use o agente `.claude/agents/tastory-expert.md`.
 
 A interface fica em `frontend/`, sob responsabilidade da Lara. Mudanças nela precisam respeitar o contrato
-de `docs/tecnico/API.md`. O MVP foi entregue em 10/11/2026 (`docs/gestao/MVP.md`). O que vem depois está em
+da API, que é o Swagger. O MVP foi entregue em 10/11/2026 (`docs/gestao/MVP.md`). O que vem depois está em
 `docs/requisitos/incrementos.md`, e os requisitos, em `docs/requisitos/`. O índice da documentação é `docs/README.md`.
 
 ## Comandos

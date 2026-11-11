@@ -16,8 +16,8 @@ de forma didática e prefira soluções simples e legíveis a soluções "espert
 - **Proposta:** diário de filmes e séries + **motor de recomendação híbrido** (conteúdo + colaborativo).
 - **Métrica de sucesso:** taxa de aceitação = (Quero ver + Já vi) ÷ sugestões exibidas, comparada num
   **teste A/B** (grupo A = híbrido, grupo B = só conteúdo).
-- **Este repositório = API e interface.** A interface fica em `frontend/`, e o contrato, em `docs/tecnico/API.md` e
-  `docs/tecnico/openapi.json`.
+- **Este repositório = API e interface.** A interface fica em `frontend/`, e o contrato é o Swagger (`/docs`,
+  `docs/tecnico/openapi.json`); o guia de uso está em `docs/tecnico/API.md`.
 - **MVP entregue em 10/11/2026.** O plano depois dele está em `docs/requisitos/incrementos.md`: 2a (base, medição e
   grafo de conteúdo), 2b (álbuns via MusicBrainz), 3 (beta, social e controle), 4 e 5.
 - Documentos (índice em `docs/README.md`): `docs/gestao/` (MVP, EAP e RACI em ENTREGAS, roteiro de homologação, pitch
@@ -110,8 +110,8 @@ Antes de commitar, confira `git status` e garanta que `.env` não está listado.
 1. Antes de mudar algo, leia os arquivos envolvidos e confirme como o fluxo atual funciona.
 2. Mantenha o escopo de protótipo: a menor mudança que entrega a funcionalidade de forma clara.
 3. Toda rota nova ou mudança de regra ganha teste. Mantenha a suíte verde.
-4. Mudou rotas/schemas? Atualize `docs/tecnico/API.md` e regenere `docs/tecnico/openapi.json` (comando no `CLAUDE.md`),
-   porque o frontend depende desse contrato.
+4. Mudou rotas/schemas? Regenere `docs/tecnico/openapi.json` com `make openapi`: o Swagger é o contrato (D26).
+   Regras de uso vão no `description=` da rota; o `docs/tecnico/API.md` só muda para autenticação, fluxo e regras gerais.
 5. Para conferir manualmente: `./dev.sh` e abra http://localhost:8000/docs.
 6. Commits e PRs em português, pequenos (`feat:`, `fix:`, `docs:`, `test:`), vinculados à issue
    (`Closes #N`). Nunca faça push direto na `main` sem o usuário pedir.

@@ -37,5 +37,5 @@
 | [ARQUITETURA.md](tecnico/ARQUITETURA.md) | Decisões técnicas, o modelo de recomendação depois do MVP e as pontes entre mídias |
 | [AVALIACAO.md](tecnico/AVALIACAO.md) | Experimentos (EXP01 a EXP04), evidências de carga e de qualidade e fontes de dados avaliadas |
 | [DEPLOY.md](tecnico/DEPLOY.md) | Como publicar, carregar o MovieLens, fazer backup e o plano B |
-| [API.md](tecnico/API.md) | Guia da API para quem consome |
-| [openapi.json](tecnico/openapi.json) | Contrato OpenAPI, gerado pelo `make openapi` |
+| [API.md](tecnico/API.md) | Guia de uso da API: autenticação, fluxo das telas e regras. O contrato é o Swagger (D26) |
+| [openapi.json](tecnico/openapi.json) | O contrato da API (o mesmo do Swagger), gerado pelo `make openapi` |
