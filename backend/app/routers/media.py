@@ -11,7 +11,8 @@ from .. import crud
 from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList
-from ..schemas import MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MyStatus, ReviewOut
+from ..schemas import ConnectionOut, MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MyStatus, ReviewOut
+from ..services.bridges import connections
 from ..services.catalog import search_text
 from ..services.recommender import similar_titles, trending as trending_service
 
@@ -120,6 +121,25 @@ def similar(
 ):
     crud.get_media_or_404(db, media_id)
     return similar_titles(db, user, media_id, limit)
+
+
+@router.get("/{media_id}/connections", response_model=list[ConnectionOut])
+def media_connections(
+    media_id: int,
+    limit: int = Query(default=12, ge=1, le=30),
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
+    """"Para ouvir depois" (no detalhe de um filme ou série) e "Para ver depois" (no detalhe de um álbum).
+
+    Primeiro as pontes fortes (trilha, compositor, mesma pessoa), depois as fracas (gênero, década e país, pelo menos
+    duas juntas). `reason` já vem escrito para o detalhe deste título.
+    """
+    media = crud.get_media_or_404(db, media_id)
+    return [
+        ConnectionOut(media=MediaOut.model_validate(other), kind=link.kind, weight=link.weight, reason=reason)
+        for other, link, reason in connections(db, media, limit)
+    ]
 
 
 @router.get("/{media_id}", response_model=MediaDetailOut)

@@ -605,6 +605,70 @@
         }
       }
     },
+    "/media/{media_id}/connections": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Media Connections",
+        "description": "\"Para ouvir depois\" (no detalhe de um filme ou série) e \"Para ver depois\" (no detalhe de um álbum).\n\nPrimeiro as pontes fortes (trilha, compositor, mesma pessoa), depois as fracas (gênero, década e país, pelo menos\nduas juntas). `reason` já vem escrito para o detalhe deste título.",
+        "operationId": "media_connections_media__media_id__connections_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 30,
+              "minimum": 1,
+              "default": 12,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConnectionOut"
+                  },
+                  "title": "Response Media Connections Media  Media Id  Connections Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/media/{media_id}": {
       "get": {
         "tags": [
@@ -1147,6 +1211,7 @@
           "recomendações"
         ],
         "summary": "Feed",
+        "description": "Sem `type`, o feed misto: filmes e séries do recomendador e, em lugares fixos (3º, 7º, 11º...), álbuns ligados\npor ponte ao que a pessoa curtiu. Com `type=album`, só álbuns, pelas pontes e depois os mais ouvidos.",
         "operationId": "feed_recommendations_get",
         "security": [
           {
@@ -2525,6 +2590,34 @@
         ],
         "title": "CommunityPage"
       },
+      "ConnectionOut": {
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "soundtrack | composer | same_person | artist | weak"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media",
+          "kind",
+          "weight",
+          "reason"
+        ],
+        "title": "ConnectionOut"
+      },
       "DiaryIn": {
         "properties": {
           "media_id": {
@@ -2863,7 +2956,8 @@
             "enum": [
               "hybrid",
               "content",
-              "trending"
+              "trending",
+              "bridge"
             ],
             "title": "Strategy"
           },

@@ -341,7 +341,10 @@ def similar_titles(db: Session, user: User, media_id: int, limit: int = 12) -> l
     index = {m.id: i for i, m in enumerate(catalog)}
     media = catalog[index[media_id]]
     exclude = excluded_ids(db, user.id) | {media_id}
-    usable = [m for m in catalog if m.type == media.type and m.id not in exclude and can_be_suggested(m)]
+    usable = [
+        m for m in catalog
+        if m.type == media.type and m.id not in exclude and (can_be_suggested(m) or m.type == "album")
+    ]
     by_id = {m.id: m for m in usable}
 
     picked: list[Media] = []

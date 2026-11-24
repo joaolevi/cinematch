@@ -168,6 +168,9 @@ def simulate_ab_test(db: Session, rounds: int = 2, feed_size: int = 10, seed: in
 
 def seed_all(db: Session, synthetic: bool = True, simulate: bool = True) -> dict:
     summary = {"catalog": load_catalog(db), "albums": load_albums(db)}
+    from .services.bridges import build_bridges
+
+    summary["bridges"] = build_bridges(db)["bridges"]
     create_demo_accounts(db)
     if synthetic:
         summary["synthetic_users"] = create_synthetic_users(db)

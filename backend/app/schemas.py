@@ -225,7 +225,14 @@ class RecommendationOut(BaseModel):
     media: MediaOut
     score: float
     reason: str
-    strategy: str  # hybrid | content | trending
+    strategy: str  # hybrid | content | trending | bridge (álbum ligado por uma ponte)
+
+
+class ConnectionOut(BaseModel):
+    media: MediaOut
+    kind: str = Field(description="soundtrack | composer | same_person | artist | weak")
+    weight: float
+    reason: str
 
 
 class FeedOut(BaseModel):
@@ -256,7 +263,7 @@ class ReviewerOut(BaseModel):
 
 class ImpressionIn(BaseModel):
     media_id: int
-    strategy: Literal["hybrid", "content", "trending"]
+    strategy: Literal["hybrid", "content", "trending", "bridge"]
     score: float
 
 

@@ -35,7 +35,7 @@ A música como terceira mídia, já pelo grafo, e o Meu gosto nas três mídias.
 | [RNFF06](nao-funcionais.md#rnff06) | Dados reais na parte colaborativa | Não funcional | Parcial | M | 4 | 4 | 1 | RFF01; a parte de música |
 | [RNFF07](nao-funcionais.md#rnff07) | Feed rápido com catálogo grande | Não funcional | Não iniciado | M | 4 | 3 | 1 | RNFF03 |
 | [RFF01](funcionais.md#rff01) | Álbuns como terceira mídia | Funcional | Parcial | G | 5 | 5 | 4 | RNFF01, RNFF03 |
-| [RFF02](funcionais.md#rff02) | Recomendar música | Funcional | Não iniciado | M | 5 | 5 | 3 | RFF01, RNFF12 |
+| [RFF02](funcionais.md#rff02) | Recomendar música | Funcional | Parcial | M | 5 | 5 | 3 | RFF01, RNFF12 |
 | [RFF05](funcionais.md#rff05) | Retrospectiva do gosto | Funcional | Não iniciado | P a M | 4 | 3 | 3 | usa o Meu gosto (RF23) |
 | [RFF06](funcionais.md#rff06) | Excluir e exportar os próprios dados | Funcional | Parcial | P | 4 | 3 | 2 | — |
 
@@ -82,8 +82,8 @@ As sugestões que cruzam filmes, séries e música, e assistir ou ouvir junto.
 | ID | Requisito | Tipo | Situação | Esforço | Prio. | Nec. | Inov. | Depende de |
 |---|---|---|---|---|---|---|---|---|
 | [RNFF10](nao-funcionais.md#rnff10) | Vizinhos sem domínio dos populares | Não funcional | Não iniciado | P a M | 2 | 2 | 1 | RNFF06 |
-| [RFF26](funcionais.md#rff26) | Ligações entre mídias no detalhe | Funcional | Não iniciado | G | 2 | 1 | 5 | RFF01, RNFF03; começa por compositor e trilha (M) |
-| [RFF27](funcionais.md#rff27) | Sugestões cruzadas no feed | Funcional | Não iniciado | G | 2 | 1 | 5 | RFF26, RNFF09 |
+| [RFF26](funcionais.md#rff26) | Ligações entre mídias no detalhe | Funcional | Parcial | G | 2 | 1 | 5 | RFF01, RNFF03; começa por compositor e trilha (M) |
+| [RFF27](funcionais.md#rff27) | Sugestões cruzadas no feed | Funcional | Parcial | G | 2 | 1 | 5 | RFF26, RNFF09 |
 | [RFF28](funcionais.md#rff28) | Assistir ou ouvir junto | Funcional | Não iniciado | M | 2 | 1 | 3 | RFF15 |
 | [EXP03](../tecnico/AVALIACAO.md#exp03) | Aceitação por tipo de ponte | Experimento | Não iniciado | P | 2 | 2 | 3 | RFF27 |
 
