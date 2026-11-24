@@ -19,7 +19,7 @@ Base técnica, a métrica corrigida e o grafo de conteúdo, que já melhora as s
 | [RNFF02](nao-funcionais.md#rnff02) | Respeitar os termos e as licenças das fontes | Não funcional | Não iniciado | P | 5 | 4 | 1 | — |
 | [RNFF04](nao-funcionais.md#rnff04) | Contar a aceitação só perto da exibição | Não funcional | Não iniciado | P | 5 | 4 | 1 | — |
 | [RNFF05](nao-funcionais.md#rnff05) | Limitar tentativas de login | Não funcional | Não iniciado | P | 4 | 3 | 1 | — |
-| [RFF03](funcionais.md#rff03) | Pedir a nota na hora certa | Funcional | Não iniciado | P | 5 | 4 | 2 | — |
+| [RFF03](funcionais.md#rff03) | Pedir a nota na hora certa | Funcional | Feito | P | 5 | 4 | 2 | — |
 | [RFF04](funcionais.md#rff04) | Taxa de satisfação no painel | Funcional | Não iniciado | P | 5 | 4 | 1 | — |
 | [EXP01](../tecnico/AVALIACAO.md#exp01) | Comparar modelos de recomendação offline | Experimento | Feito | M | 4 | 3 | 3 | — |
 | [EXP04](../tecnico/AVALIACAO.md#exp04) | Confirmar o EXP01 no MovieLens 32M | Experimento | Não iniciado | P a M | 3 | 2 | 2 | EXP01 |
