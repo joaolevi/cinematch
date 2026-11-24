@@ -65,3 +65,18 @@ def test_comunidade_traz_o_id_de_quem_registrou(client, user_headers, db):
     curtir(client, user_headers, db, "Interestelar")
     item = client.get("/community", headers=user_headers).json()["items"][0]
     assert item["user_id"] == me(client, user_headers)
+
+
+def test_junto_prioriza_o_que_agrada_as_duas_e_tira_o_que_alguma_ja_viu(client, user_headers, db):
+    curtir(client, user_headers, db, "Interestelar", "A Origem", "Matrix")
+    outra = register(client, "Levi Teste", "levi@teste.com")
+    curtir(client, outra, db, "Interestelar", "Duna", "Blade Runner 2049")
+    other_id = me(client, outra)
+    sugestoes = client.get(f"/users/{other_id}/together", params={"limit": 10}, headers=user_headers).json()
+    assert len(sugestoes) == 10
+    vistos = {"Interestelar", "A Origem", "Matrix", "Duna", "Blade Runner 2049"}
+    assert not vistos & {s["media"]["title"] for s in sugestoes}
+    primeira = sugestoes[0]["reason"]
+    assert primeira.startswith("Para você: ") and " · Para Levi: " in primeira  # agrada às duas
+    assert client.get(f"/users/{me(client, user_headers)}/together", headers=user_headers).status_code == 404
+    assert client.get("/users/999999/together", headers=user_headers).status_code == 404

@@ -149,6 +149,7 @@ export const api = {
     request<{ items: CommunityEntry[] }>("/community", { query: { limit, before_id } }),
   reviewers: () => request<Reviewer[]>("/community/reviewers"),
   profile: (id: number) => request<Profile>(`/users/${id}`),
+  together: (id: number, limit = 12) => request<Recommendation[]>(`/users/${id}/together`, { query: { limit } }),
   impressions: (items: Recommendation[]) =>
     request<void>("/recommendations/impressions", {
       method: "POST",

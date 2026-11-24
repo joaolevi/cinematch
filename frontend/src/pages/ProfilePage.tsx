@@ -7,7 +7,7 @@ import MediaCard from "../components/MediaCard";
 import { StarsDisplay } from "../components/Stars";
 import { Avatar } from "../components/WatchedBy";
 import { plural } from "../format";
-import type { Media, Profile } from "../types";
+import type { Media, Profile, Recommendation } from "../types";
 import { usePageTitle } from "../usePageTitle";
 
 function Row({ label, items }: { label: string; items: { media: Media; rating?: number | null }[] }) {
@@ -39,9 +39,12 @@ export default function ProfilePage() {
   const { id } = useParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [together, setTogether] = useState<Recommendation[] | null>(null);
+  const [loadingTogether, setLoadingTogether] = useState(false);
 
   useEffect(() => {
     setProfile(null);
+    setTogether(null);
     api.profile(Number(id)).then(setProfile).catch((e) => setError((e as Error).message));
     window.scrollTo(0, 0);
   }, [id]);
@@ -96,6 +99,47 @@ export default function ProfilePage() {
           <div className="mt-4">
             <Row label="em comum" items={c.shared.map((media) => ({ media }))} />
           </div>
+        </section>
+      )}
+
+      {!profile.is_me && (
+        <section className="mt-10">
+          <h2 className="font-display text-xl font-bold">Para ver ou ouvir junto</h2>
+          <p className="mt-1 text-sm text-muted">
+            Filmes, séries e álbuns que agradam a você e a {profile.name.split(" ")[0]}, sem nada que alguém já tenha visto.
+          </p>
+          {together === null ? (
+            <button
+              className="btn-primary mt-4"
+              disabled={loadingTogether}
+              onClick={async () => {
+                setLoadingTogether(true);
+                try {
+                  setTogether(await api.together(profile.id));
+                } finally {
+                  setLoadingTogether(false);
+                }
+              }}
+            >
+              {loadingTogether ? "Procurando..." : "Ver sugestões para vocês"}
+            </button>
+          ) : together.length === 0 ? (
+            <HandNote className="mt-4">Ainda não dá para sugerir: registrem mais coisas no diário.</HandNote>
+          ) : (
+            <div className="mt-4">
+              <Carousel label="para ver ou ouvir junto">
+                {together.map((r) => (
+                  <div key={r.media.id} className="w-40 shrink-0 snap-start sm:w-44">
+                    <MediaCard media={r.media}>
+                      <p className="mt-1 line-clamp-4 text-xs text-muted" title={r.reason}>
+                        {r.reason}
+                      </p>
+                    </MediaCard>
+                  </div>
+                ))}
+              </Carousel>
+            </div>
+          )}
         </section>
       )}
 

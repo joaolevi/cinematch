@@ -1,14 +1,15 @@
 """Perfil de uma pessoa e a compatibilidade de gosto com quem está vendo (RFF15)."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, User
-from ..schemas import CompatibilityOut, MediaOut, ProfileItemOut, ProfileOut
+from ..schemas import CompatibilityOut, MediaOut, ProfileItemOut, ProfileOut, RecommendationOut
 from ..services.compatibility import compatibility
+from ..services.together import together
 
 router = APIRouter(prefix="/users", tags=["pessoas"])
 
@@ -53,3 +54,22 @@ def profile(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_
         recent=[item(e) for e in entries[:MAX_ITEMS]],
         compatibility=compat,
     )
+
+
+@router.get("/{user_id}/together", response_model=list[RecommendationOut])
+def watch_together(
+    user_id: int,
+    limit: int = Query(default=20, ge=1, le=40),
+    db: Session = Depends(get_db),
+    me: User = Depends(get_current_user),
+):
+    """Assistir ou ouvir junto (RFF28): sugestões para quem vê e esta pessoa. Primeiro o que aparece para as duas,
+    depois o que agrada a uma e a outra ainda não viu. O motivo mostra os dois lados ("Para você: ... · Para Levi: ...").
+    Itens que alguma das duas já registrou, descartou ou guardou ficam de fora."""
+    other = db.get(User, user_id)
+    if other is None or other.id == me.id or (other.visibility == "private"):
+        raise HTTPException(status_code=404, detail="Pessoa não encontrada")
+    return [
+        RecommendationOut(media=MediaOut.model_validate(r.media), score=r.score, reason=r.reason, strategy=r.strategy)
+        for r in together(db, me, other, limit)
+    ]
