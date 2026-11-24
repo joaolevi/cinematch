@@ -93,6 +93,8 @@ export interface UserList {
   id: number;
   name: string;
   is_watchlist: boolean;
+  featured?: boolean;
+  description?: string | null;
   created_at: string;
   items: { media: Media; added_at: string }[];
 }

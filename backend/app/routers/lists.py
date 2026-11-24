@@ -23,6 +23,12 @@ def _own_list(db: Session, user: User, list_id: int) -> UserList:
     return lst
 
 
+@router.get("/featured", response_model=list[ListOut])
+def featured_lists(db: Session = Depends(get_db), _user: User = Depends(get_current_user)):
+    """As listas em destaque no Início, como o Tema do mês (RFF32). Curadas pela administração."""
+    return list(db.scalars(select(UserList).where(UserList.featured.is_(True)).order_by(UserList.id)))
+
+
 @router.get("", response_model=list[ListOut])
 def my_lists(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     crud.get_or_create_watchlist(db, user)

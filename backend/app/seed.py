@@ -171,6 +171,9 @@ def seed_all(db: Session, synthetic: bool = True, simulate: bool = True) -> dict
     from .services.bridges import build_bridges
 
     summary["bridges"] = build_bridges(db)["bridges"]
+    from .services.theme import load_theme
+
+    summary["theme"] = load_theme(db)
     create_demo_accounts(db)
     if synthetic:
         summary["synthetic_users"] = create_synthetic_users(db)

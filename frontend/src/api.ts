@@ -130,6 +130,7 @@ export const api = {
 
   // Listas
   lists: () => request<UserList[]>("/lists"),
+  featured: () => request<UserList[]>("/lists/featured"),
   createList: (name: string) => request<UserList>("/lists", { method: "POST", body: { name } }),
   renameList: (id: number, name: string) =>
     request<UserList>(`/lists/${id}`, { method: "PATCH", body: { name } }),

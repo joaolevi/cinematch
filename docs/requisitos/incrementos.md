@@ -97,7 +97,7 @@ O fim das cadeias de dependência e o que precisa de muitas aceitações reais.
 | [RFF29](funcionais.md#rff29) | Aviso do Quero ver | Funcional | Não iniciado | M | 1 | 1 | 2 | RFF21 |
 | [RFF30](funcionais.md#rff30) | Curtir e comentar resenhas | Funcional | Não iniciado | M | 1 | 1 | 1 | RNFF01 |
 | [RFF31](funcionais.md#rff31) | Histórico de atividades | Funcional | Não iniciado | M | 1 | 1 | 1 | RFF09, RFF30, RFF10 |
-| [RFF32](funcionais.md#rff32) | Tema do mês | Funcional | Não iniciado | P a M | 1 | 1 | 3 | usa as listas que já existem |
+| [RFF32](funcionais.md#rff32) | Tema do mês | Funcional | Parcial | P a M | 1 | 1 | 3 | usa as listas que já existem |
 
 ## Numeração anterior
 

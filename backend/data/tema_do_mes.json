@@ -1,0 +1,21 @@
+{
+  "titulo": "Feito no Nordeste",
+  "descricao": "Filmes e discos nordestinos, com Alagoas na frente: Djavan e Hermeto Pascoal abrem a prateleira.",
+  "itens": [
+    {"tipo": "album", "titulo": "Luz"},
+    {"tipo": "album", "titulo": "Slaves Mass"},
+    {"tipo": "album", "titulo": "Djavan"},
+    {"tipo": "album", "titulo": "A música livre de Hermeto Paschoal"},
+    {"tipo": "album", "titulo": "Samba 808"},
+    {"tipo": "movie", "titulo": "Bacurau"},
+    {"tipo": "movie", "titulo": "O Auto da Compadecida"},
+    {"tipo": "album", "titulo": "São João na Roça"},
+    {"tipo": "album", "titulo": "Da lama ao caos"},
+    {"tipo": "movie", "titulo": "Central do Brasil"},
+    {"tipo": "album", "titulo": "Vivo !"},
+    {"tipo": "album", "titulo": "A peleja do Diabo com o Dono do céu"},
+    {"tipo": "album", "titulo": "Alucinação"},
+    {"tipo": "album", "titulo": "Domingo Menino Dominguinhos"},
+    {"tipo": "album", "titulo": "Na Pressão"}
+  ]
+}

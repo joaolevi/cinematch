@@ -21,6 +21,7 @@ from app.config import DATA_DIR, settings
 from app.db import SessionLocal, engine
 from app.migrations import atualizar_banco
 from app.services.bridges import build_bridges
+from app.services.theme import load_theme
 from app.services.catalog import sync_catalog
 from app.services.musicbrainz import MusicBrainzClient, MusicBrainzError
 from app.services.tmdb import StaticProvider
@@ -75,6 +76,7 @@ def main() -> None:
         with SessionLocal() as db:
             print(sync_catalog(db, StaticProvider(albums, "Álbuns"), source="musicbrainz"))
             print("Pontes:", build_bridges(db))
+            print("Tema do mês:", load_theme(db))
         return
 
     rows = read_list(args.lista)[: args.limite]
@@ -93,6 +95,7 @@ def main() -> None:
         with SessionLocal() as db:
             print(sync_catalog(db, StaticProvider(albums, "MusicBrainz"), source="musicbrainz"))
             print("Pontes:", build_bridges(db))
+            print("Tema do mês:", load_theme(db))
 
 
 if __name__ == "__main__":

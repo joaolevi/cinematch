@@ -6,6 +6,7 @@
 | `mock_external_catalog.json` | Catálogo externo falso, para sincronizar sem internet | Equipe |
 | `albuns_demo.csv` | Lista curada dos álbuns de demonstração, com o ID do MusicBrainz e o motivo de cada um | Levi (curadoria) |
 | `albums_catalog.json` | Retrato dos álbuns, gerado por `python -m scripts.import_albums` a partir da lista; o seed lê daqui, sem internet | Gerado |
+| `tema_do_mes.json` | O Tema do mês do Início (RFF32): título, descrição e os títulos, na ordem | Levi e Antonio (curadoria) |
 | `generos_musicais.csv` | Gênero oficial do MusicBrainz → gênero amplo do Tastory, usado na carga dos álbuns (RFF01) | Levi (curadoria) |
 | `generos_correspondencia.csv` | Gênero de filme ou série → gênero musical que combina, usado na ponte de gênero (RFF26) | Levi (curadoria) |
 

@@ -95,6 +95,7 @@ export default function HomePage() {
   const [upcoming, setUpcoming] = useState<Media[]>([]);
   const [community, setCommunity] = useState<CommunityEntry[]>([]);
   const [watchlist, setWatchlist] = useState<UserList["items"]>([]);
+  const [theme, setTheme] = useState<UserList | null>(null);
   const [diary, setDiary] = useState<DiaryEntry[] | null>(null);
   const [seenTarget, setSeenTarget] = useState<Media | null>(null);
   const [stamp, setStamp] = useState(0);
@@ -111,6 +112,10 @@ export default function HomePage() {
     api
       .trending(undefined, SHELF)
       .then(setTrending)
+      .catch(() => {});
+    api
+      .featured()
+      .then((shelves) => setTheme(shelves.find((s) => s.items.length > 0) ?? null))
       .catch(() => {});
     api
       .community(5)
@@ -334,6 +339,7 @@ export default function HomePage() {
                     <div className="mt-0.5">
                       <WatchedBy
                         name={entry.user_name}
+                        userId={entry.user_id}
                         rating={entry.rating}
                         consumedAt={entry.consumed_at}
                         createdAt={entry.created_at}
@@ -347,6 +353,16 @@ export default function HomePage() {
           )}
         </section>
       </div>
+
+      {theme && (
+        <Shelf title={`Tema do mês: ${theme.name}`} label="tema do mês" note={theme.description ?? undefined}>
+          {theme.items.map(({ media }) => (
+            <div key={media.id} className={shelfItem}>
+              <MediaCard media={media} compact />
+            </div>
+          ))}
+        </Shelf>
+      )}
 
       {upcoming.length >= 3 && (
         <Shelf title="Em breve" note="pra anotar na agenda">
