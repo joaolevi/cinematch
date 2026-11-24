@@ -1,0 +1,944 @@
+genero_musicbrainz,genero_tastory
+bossa nova,Bossa nova
+jovem guarda,MPB
+lundu,MPB
+marchinha,MPB
+modinha,MPB
+mpb,MPB
+tropicália,MPB
+valsa brasileira,MPB
+choro,Samba e choro
+jongo,Samba e choro
+maxixe,Samba e choro
+pagode,Samba e choro
+pagode romântico,Samba e choro
+partido alto,Samba e choro
+samba,Samba e choro
+samba de breque,Samba e choro
+samba de gafieira,Samba e choro
+samba de roda,Samba e choro
+samba de terreiro,Samba e choro
+samba rap,Samba e choro
+samba soul,Samba e choro
+samba-canção,Samba e choro
+samba-choro,Samba e choro
+samba-enredo,Samba e choro
+samba-exaltação,Samba e choro
+samba-jazz,Samba e choro
+samba-joia,Samba e choro
+samba-reggae,Samba e choro
+samba-rock,Samba e choro
+sambalanço,Samba e choro
+sambass,Samba e choro
+aboio,Forró e ritmos do Nordeste
+baião,Forró e ritmos do Nordeste
+cantoria,Forró e ritmos do Nordeste
+carimbó,Forró e ritmos do Nordeste
+ciranda,Forró e ritmos do Nordeste
+coco,Forró e ritmos do Nordeste
+embolada,Forró e ritmos do Nordeste
+forró,Forró e ritmos do Nordeste
+forró de favela,Forró e ritmos do Nordeste
+forró eletrônico,Forró e ritmos do Nordeste
+forró universitário,Forró e ritmos do Nordeste
+frevo,Forró e ritmos do Nordeste
+frevo de bloco,Forró e ritmos do Nordeste
+frevo de rua,Forró e ritmos do Nordeste
+frevo elétrico,Forró e ritmos do Nordeste
+frevo-canção,Forró e ritmos do Nordeste
+guitarrada,Forró e ritmos do Nordeste
+lambada,Forró e ritmos do Nordeste
+mangue beat,Forró e ritmos do Nordeste
+maracatu,Forró e ritmos do Nordeste
+piseiro,Forró e ritmos do Nordeste
+repente,Forró e ritmos do Nordeste
+toada de boi,Forró e ritmos do Nordeste
+xaxado,Forró e ritmos do Nordeste
+xote,Forró e ritmos do Nordeste
+agronejo,Sertanejo
+arrocha sertanejo,Sertanejo
+chamamé,Sertanejo
+chamamé tropical,Sertanejo
+fandango,Sertanejo
+fandango caiçara,Sertanejo
+moda de viola,Sertanejo
+sertanejo,Sertanejo
+sertanejo raiz,Sertanejo
+sertanejo romântico,Sertanejo
+sertanejo universitário,Sertanejo
+vanera,Sertanejo
+arrocha funk,Funk brasileiro
+batidão romântico,Funk brasileiro
+brazilian bass,Funk brasileiro
+brazilian phonk,Funk brasileiro
+brega funk,Funk brasileiro
+eletrofunk,Funk brasileiro
+funk automotivo,Funk brasileiro
+funk brasileiro,Funk brasileiro
+funk carioca,Funk brasileiro
+funk consciente,Funk brasileiro
+funk de bh,Funk brasileiro
+funk mandelão,Funk brasileiro
+funk melody,Funk brasileiro
+funk ostentação,Funk brasileiro
+funk proibidão,Funk brasileiro
+rasteirinha,Funk brasileiro
+tamborzão,Funk brasileiro
+afoxê,Axé e brega
+arrocha,Axé e brega
+arrochadeira,Axé e brega
+axé,Axé e brega
+brega,Axé e brega
+brega calypso,Axé e brega
+calypso,Axé e brega
+pagodão,Axé e brega
+tecnobrega,Axé e brega
+bluegrass gospel,Gospel
+christian hardcore,Gospel
+christian hip hop,Gospel
+christian metal,Gospel
+christian rock,Gospel
+contemporary christian,Gospel
+contemporary gospel,Gospel
+country gospel,Gospel
+gospel,Gospel
+gospel house,Gospel
+gospel hymn,Gospel
+gospel reggae,Gospel
+praise & worship,Gospel
+southern gospel,Gospel
+traditional black gospel,Gospel
+urban contemporary gospel,Gospel
+children's music,Infantil
+lullaby,Infantil
+andalusian classical,Clássica
+art song,Clássica
+baroque,Clássica
+baroque pop,Clássica
+baroque suite,Clássica
+burmese classical,Clássica
+cantata,Clássica
+carnatic classical,Clássica
+chamber folk,Clássica
+chamber pop,Clássica
+chinese classical,Clássica
+choral symphony,Clássica
+cinematic classical,Clássica
+classical,Clássica
+classical crossover,Clássica
+classical period,Clássica
+concerto,Clássica
+concerto for orchestra,Clássica
+concerto grosso,Clássica
+contemporary classical,Clássica
+hard renaissance,Clássica
+hindustani classical,Clássica
+holy minimalism,Clássica
+impressionism,Clássica
+indian classical,Clássica
+japanese classical,Clássica
+korean classical,Clássica
+lied,Clássica
+medieval,Clássica
+medieval lyric poetry,Clássica
+medieval metal,Clássica
+medieval rock,Clássica
+microtonal classical,Clássica
+minimalism,Clássica
+modern classical,Clássica
+neo-medieval folk,Clássica
+neoclassical dark wave,Clássica
+neoclassical metal,Clássica
+neoclassical new age,Clássica
+neoromanticism,Clássica
+odissi classical,Clássica
+opera,Clássica
+oratorio,Clássica
+persian classical,Clássica
+post-classical,Clássica
+post-minimalism,Clássica
+renaissance,Clássica
+requiem,Clássica
+romantic classical,Clássica
+sonata,Clássica
+southeast asian classical,Clássica
+symphonic black metal,Clássica
+symphonic metal,Clássica
+symphonic mugham,Clássica
+symphonic poem,Clássica
+symphonic prog,Clássica
+symphonic rock,Clássica
+symphony,Clássica
+thai classical,Clássica
+turkish classical,Clássica
+vietnamese classical,Clássica
+western classical,Clássica
+acid jazz,Jazz
+afro-cuban jazz,Jazz
+afro-jazz,Jazz
+avant-garde jazz,Jazz
+bebop,Jazz
+big band,Jazz
+cape jazz,Jazz
+chicago bop,Jazz
+classic jazz,Jazz
+contemporary jazz,Jazz
+cool jazz,Jazz
+crime jazz,Jazz
+crossover jazz,Jazz
+dark jazz,Jazz
+dixieland,Jazz
+ethio-jazz,Jazz
+flamenco jazz,Jazz
+free jazz,Jazz
+gypsy jazz,Jazz
+hard bop,Jazz
+indo jazz,Jazz
+instrumental jazz,Jazz
+jazz,Jazz
+jazz blues,Jazz
+jazz fusion,Jazz
+jazz guachaca,Jazz
+jazz house,Jazz
+jazz mugham,Jazz
+jazz poetry,Jazz
+jazz pop,Jazz
+jazz rap,Jazz
+jazz rock,Jazz
+jazz-funk,Jazz
+jazzstep,Jazz
+latin jazz,Jazz
+modal jazz,Jazz
+neo-bop,Jazz
+new jazz,Jazz
+nu jazz,Jazz
+orchestral jazz,Jazz
+paramaribop,Jazz
+post-bop,Jazz
+ragtime,Jazz
+smooth jazz,Jazz
+soul jazz,Jazz
+spiritual jazz,Jazz
+sweet jazz,Jazz
+swing,Jazz
+vocal jazz,Jazz
+acoustic blues,Blues
+acoustic chicago blues,Blues
+acoustic texas blues,Blues
+african blues,Blues
+blues,Blues
+blues rock,Blues
+british blues,Blues
+british rhythm & blues,Blues
+chicago blues,Blues
+classic blues,Blues
+country blues,Blues
+delta blues,Blues
+desert blues,Blues
+electric blues,Blues
+electric texas blues,Blues
+fife and drum blues,Blues
+hill country blues,Blues
+jump blues,Blues
+louisiana blues,Blues
+modern blues,Blues
+new orleans blues,Blues
+piano blues,Blues
+piedmont blues,Blues
+punk blues,Blues
+soul blues,Blues
+swamp blues,Blues
+talking blues,Blues
+texas blues,Blues
+vaudeville blues,Blues
+ambient dub,Reggae
+dancehall,Reggae
+dub,Reggae
+dub poetry,Reggae
+dub techno,Reggae
+jamaican ska,Reggae
+novo dub,Reggae
+pacific reggae,Reggae
+ragga,Reggae
+reggae,Reggae
+reggae panameño,Reggae
+reggae rock,Reggae
+reggae-pop,Reggae
+reggaeton,Reggae
+rocksteady,Reggae
+roots reggae,Reggae
+ska,Reggae
+ska punk,Reggae
+skinhead reggae,Reggae
+third wave ska,Reggae
+bachata,Latina
+bolero,Latina
+bolero español,Latina
+bolero son,Latina
+bolero-beat,Latina
+corrido,Latina
+corrido tumbado,Latina
+cumbia,Latina
+cumbia amazónica,Latina
+cumbia argentina,Latina
+cumbia chilena,Latina
+cumbia colombiana,Latina
+cumbia mexicana,Latina
+cumbia norteña mexicana,Latina
+cumbia norteña peruana,Latina
+cumbia peruana,Latina
+cumbia pop,Latina
+cumbia rebajada,Latina
+cumbia salvadoreña,Latina
+cumbia sanjuanera,Latina
+cumbia santafesina,Latina
+cumbia sonidera,Latina
+cumbia sureña peruana,Latina
+cumbia tejana,Latina
+cumbia turra,Latina
+cumbia villera,Latina
+cumbiatón,Latina
+dembow,Latina
+digital cumbia,Latina
+electro latino,Latina
+electrotango,Latina
+finnish tango,Latina
+latin,Latina
+latin ballad,Latina
+latin disco,Latina
+latin funk,Latina
+latin house,Latina
+latin pop,Latina
+latin rock,Latina
+latin soul,Latina
+mambo,Latina
+mambo chileno,Latina
+mambo urbano,Latina
+mariachi,Latina
+merengue,Latina
+narcocorrido,Latina
+nueva cumbia chilena,Latina
+nuevo tango,Latina
+ranchera,Latina
+salsa,Latina
+salsa choke,Latina
+salsa dura,Latina
+salsa romántica,Latina
+son cubano,Latina
+tango,Latina
+tecnocumbia,Latina
+trap latino,Latina
+vallenato,Latina
+vietnamese bolero,Latina
+abstract hip hop,Rap e hip-hop
+afro trap,Rap e hip-hop
+alternative hip hop,Rap e hip-hop
+arabesk rap,Rap e hip-hop
+battle rap,Rap e hip-hop
+boom bap,Rap e hip-hop
+chicago drill,Rap e hip-hop
+chicano rap,Rap e hip-hop
+cloud rap,Rap e hip-hop
+coke rap,Rap e hip-hop
+comedy hip hop,Rap e hip-hop
+conscious hip hop,Rap e hip-hop
+country rap,Rap e hip-hop
+detroit trap,Rap e hip-hop
+drill,Rap e hip-hop
+drill and bass,Rap e hip-hop
+drumless hip hop,Rap e hip-hop
+dungeon rap,Rap e hip-hop
+east coast hip hop,Rap e hip-hop
+emo rap,Rap e hip-hop
+experimental hip hop,Rap e hip-hop
+festival trap,Rap e hip-hop
+frat rap,Rap e hip-hop
+gangsta rap,Rap e hip-hop
+grime,Rap e hip-hop
+hard trap,Rap e hip-hop
+hardcore hip hop,Rap e hip-hop
+heaven trap,Rap e hip-hop
+hip hop,Rap e hip-hop
+hip hop soul,Rap e hip-hop
+hybrid trap,Rap e hip-hop
+industrial hip hop,Rap e hip-hop
+instrumental hip hop,Rap e hip-hop
+jerk rap,Rap e hip-hop
+jersey club rap,Rap e hip-hop
+jersey drill,Rap e hip-hop
+lo-fi hip hop,Rap e hip-hop
+mafioso rap,Rap e hip-hop
+memphis rap,Rap e hip-hop
+new york drill,Rap e hip-hop
+no melody trap,Rap e hip-hop
+old school hip hop,Rap e hip-hop
+philly club rap,Rap e hip-hop
+philly drill,Rap e hip-hop
+phonk,Rap e hip-hop
+political hip hop,Rap e hip-hop
+pop rap,Rap e hip-hop
+punk rap,Rap e hip-hop
+rap metal,Rap e hip-hop
+rap rock,Rap e hip-hop
+sample drill,Rap e hip-hop
+scam rap,Rap e hip-hop
+sexy drill,Rap e hip-hop
+southern hip hop,Rap e hip-hop
+stoner rap,Rap e hip-hop
+trap,Rap e hip-hop
+trap dancehall,Rap e hip-hop
+trap edm,Rap e hip-hop
+trap metal,Rap e hip-hop
+trap shaabi,Rap e hip-hop
+trap soul,Rap e hip-hop
+uk drill,Rap e hip-hop
+underground hip hop,Rap e hip-hop
+vaportrap,Rap e hip-hop
+west coast hip hop,Rap e hip-hop
+alternative metal,Metal
+atmospheric black metal,Metal
+atmospheric sludge metal,Metal
+avant-garde metal,Metal
+black metal,Metal
+blackened death metal,Metal
+brutal death metal,Metal
+celtic metal,Metal
+cyber metal,Metal
+death metal,Metal
+death-doom metal,Metal
+deathcore,Metal
+depressive black metal,Metal
+dissonant black metal,Metal
+dissonant death metal,Metal
+djent,Metal
+doom metal,Metal
+doomcore,Metal
+doomgaze,Metal
+downtempo deathcore,Metal
+drone metal,Metal
+epic doom metal,Metal
+folk metal,Metal
+funeral doom metal,Metal
+funk metal,Metal
+future core,Metal
+glam metal,Metal
+gothic metal,Metal
+grindcore,Metal
+groove metal,Metal
+heavy metal,Metal
+industrial metal,Metal
+j-core,Metal
+kawaii metal,Metal
+melodic black metal,Metal
+melodic death metal,Metal
+melodic metalcore,Metal
+metal,Metal
+metalcore,Metal
+nu metal,Metal
+old school death metal,Metal
+pagan black metal,Metal
+pop metal,Metal
+post-metal,Metal
+power metal,Metal
+progressive metal,Metal
+progressive metalcore,Metal
+slam death metal,Metal
+sludge metal,Metal
+southern metal,Metal
+speed metal,Metal
+stoner metal,Metal
+technical death metal,Metal
+technical thrash metal,Metal
+thrash metal,Metal
+traditional doom metal,Metal
+trance metal,Metal
+us power metal,Metal
+viking metal,Metal
+war metal,Metal
+acid house,Eletrônica
+acid techno,Eletrônica
+acid trance,Eletrônica
+afro house,Eletrônica
+ambient,Eletrônica
+ambient americana,Eletrônica
+ambient house,Eletrônica
+ambient noise wall,Eletrônica
+ambient plugg,Eletrônica
+ambient pop,Eletrônica
+ambient techno,Eletrônica
+ambient trance,Eletrônica
+atmospheric drum and bass,Eletrônica
+balearic trance,Eletrônica
+ballroom house,Eletrônica
+bass house,Eletrônica
+belgian techno,Eletrônica
+big room house,Eletrônica
+big room trance,Eletrônica
+black ambient,Eletrônica
+bleep techno,Eletrônica
+bouncy techno,Eletrônica
+breakbeat,Eletrônica
+breakbeat hardcore,Eletrônica
+breakbeat kota,Eletrônica
+bubblegum bass,Eletrônica
+bubbling house,Eletrônica
+buchiage trance,Eletrônica
+celtic electronica,Eletrônica
+chicago house,Eletrônica
+chillsynth,Eletrônica
+chillwave,Eletrônica
+chiptune,Eletrônica
+coldwave,Eletrônica
+colour bass,Eletrônica
+comfy synth,Eletrônica
+dancefloor drum and bass,Eletrônica
+dark ambient,Eletrônica
+dark electro,Eletrônica
+dark psytrance,Eletrônica
+dark wave,Eletrônica
+darkcore edm,Eletrônica
+darksynth,Eletrônica
+deep drum and bass,Eletrônica
+deep house,Eletrônica
+deep techno,Eletrônica
+detroit techno,Eletrônica
+diva house,Eletrônica
+downtempo,Eletrônica
+dream trance,Eletrônica
+dreamwave,Eletrônica
+drum and bass,Eletrônica
+dubstep,Eletrônica
+dungeon synth,Eletrônica
+dutch house,Eletrônica
+dutch trancecore,Eletrônica
+early hardstyle,Eletrônica
+edm,Eletrônica
+electro,Eletrônica
+electro hop,Eletrônica
+electro house,Eletrônica
+electro swing,Eletrônica
+electro trance,Eletrônica
+electro-disco,Eletrônica
+electro-funk,Eletrônica
+electro-industrial,Eletrônica
+electroacoustic,Eletrônica
+electroclash,Eletrônica
+electronic,Eletrônica
+electronic rock,Eletrônica
+electronica,Eletrônica
+electronicore,Eletrônica
+electropop,Eletrônica
+electropunk,Eletrônica
+epic house,Eletrônica
+ethereal wave,Eletrônica
+euphoric hardstyle,Eletrônica
+euro house,Eletrônica
+euro-trance,Eletrônica
+eurodance,Eletrônica
+experimental electronic,Eletrônica
+festival progressive house,Eletrônica
+fidget house,Eletrônica
+fm synthesis,Eletrônica
+footwork,Eletrônica
+footwork jungle,Eletrônica
+forest psytrance,Eletrônica
+french electro,Eletrônica
+french house,Eletrônica
+funky house,Eletrônica
+future bass,Eletrônica
+future house,Eletrônica
+g-house,Eletrônica
+gabber,Eletrônica
+garage house,Eletrônica
+ghetto house,Eletrônica
+glitch,Eletrônica
+glitch hop edm,Eletrônica
+goa trance,Eletrônica
+guaracha edm,Eletrônica
+hard house,Eletrônica
+hard techno,Eletrônica
+hard trance,Eletrônica
+hardcore techno,Eletrônica
+hardgroove techno,Eletrônica
+hardstyle,Eletrônica
+hardwave,Eletrônica
+hip house,Eletrônica
+horror synth,Eletrônica
+house,Eletrônica
+hyper techno,Eletrônica
+hypertechno,Eletrônica
+idm,Eletrônica
+industrial techno,Eletrônica
+italo house,Eletrônica
+jackin house,Eletrônica
+jungle,Eletrônica
+jungle techno,Eletrônica
+kawaii future bass,Eletrônica
+keller synth,Eletrônica
+lo-fi house,Eletrônica
+melodic bass,Eletrônica
+melodic dubstep,Eletrônica
+melodic house,Eletrônica
+melodic techno,Eletrônica
+melodic trance,Eletrônica
+merenhouse,Eletrônica
+miami bass,Eletrônica
+microhouse,Eletrônica
+midtempo bass,Eletrônica
+minimal drum and bass,Eletrônica
+minimal synth,Eletrônica
+minimal techno,Eletrônica
+minimal wave,Eletrônica
+neo-trance,Eletrônica
+nerdcore techno,Eletrônica
+new wave,Eletrônica
+no wave,Eletrônica
+nu style gabber,Eletrônica
+organic house,Eletrônica
+outsider house,Eletrônica
+peak time techno,Eletrônica
+phonk house,Eletrônica
+post-dubstep,Eletrônica
+power electronics,Eletrônica
+progressive electronic,Eletrônica
+progressive house,Eletrônica
+progressive psytrance,Eletrônica
+progressive trance,Eletrônica
+psytrance,Eletrônica
+riddim dubstep,Eletrônica
+ritual ambient,Eletrônica
+shangaan electro,Eletrônica
+slap house,Eletrônica
+slushwave,Eletrônica
+sovietwave,Eletrônica
+space ambient,Eletrônica
+spacesynth,Eletrônica
+spamwave,Eletrônica
+speed house,Eletrônica
+stutter house,Eletrônica
+synth funk,Eletrônica
+synth-pop,Eletrônica
+synthwave,Eletrônica
+tech house,Eletrônica
+tech trance,Eletrônica
+techno,Eletrônica
+techno bass,Eletrônica
+techno kayō,Eletrônica
+technobanda,Eletrônica
+technoid,Eletrônica
+toytown techno,Eletrônica
+trance,Eletrônica
+trance 2.0,Eletrônica
+trancestep,Eletrônica
+tribal ambient,Eletrônica
+tribal house,Eletrônica
+trip hop,Eletrônica
+tropical house,Eletrônica
+uk garage,Eletrônica
+vaporwave,Eletrônica
+vinahouse,Eletrônica
+vocal house,Eletrônica
+vocal trance,Eletrônica
+wave,Eletrônica
+winter synth,Eletrônica
+witch house,Eletrônica
+wonky techno,Eletrônica
+afro-funk,"Soul, R&B e funk"
+alternative r&b,"Soul, R&B e funk"
+blue-eyed soul,"Soul, R&B e funk"
+boogie,"Soul, R&B e funk"
+brit funk,"Soul, R&B e funk"
+chicago soul,"Soul, R&B e funk"
+chipmunk soul,"Soul, R&B e funk"
+contemporary r&b,"Soul, R&B e funk"
+country soul,"Soul, R&B e funk"
+dark disco,"Soul, R&B e funk"
+deep funk,"Soul, R&B e funk"
+deep soul,"Soul, R&B e funk"
+disco,"Soul, R&B e funk"
+disco polo,"Soul, R&B e funk"
+drumfunk,"Soul, R&B e funk"
+euro-disco,"Soul, R&B e funk"
+free funk,"Soul, R&B e funk"
+funk,"Soul, R&B e funk"
+future funk,"Soul, R&B e funk"
+g-funk,"Soul, R&B e funk"
+ghetto funk,"Soul, R&B e funk"
+italo-disco,"Soul, R&B e funk"
+liquid funk,"Soul, R&B e funk"
+mega funk,"Soul, R&B e funk"
+microfunk,"Soul, R&B e funk"
+motown,"Soul, R&B e funk"
+neo soul,"Soul, R&B e funk"
+neurofunk,"Soul, R&B e funk"
+new jack swing,"Soul, R&B e funk"
+new orleans r&b,"Soul, R&B e funk"
+northern soul,"Soul, R&B e funk"
+nu disco,"Soul, R&B e funk"
+p-funk,"Soul, R&B e funk"
+philly soul,"Soul, R&B e funk"
+pon-chak disco,"Soul, R&B e funk"
+pop soul,"Soul, R&B e funk"
+progressive soul,"Soul, R&B e funk"
+psychedelic soul,"Soul, R&B e funk"
+quiet storm,"Soul, R&B e funk"
+r&b,"Soul, R&B e funk"
+red disco,"Soul, R&B e funk"
+smooth soul,"Soul, R&B e funk"
+soul,"Soul, R&B e funk"
+southern soul,"Soul, R&B e funk"
+space disco,"Soul, R&B e funk"
+tecnofunk,"Soul, R&B e funk"
+trapfunk,"Soul, R&B e funk"
+tsonga disco,"Soul, R&B e funk"
+uk street soul,"Soul, R&B e funk"
+acid rock,Rock
+acoustic rock,Rock
+afro rock,Rock
+alpenrock,Rock
+alternative punk,Rock
+alternative rock,Rock
+anarcho-punk,Rock
+anatolian rock,Rock
+arena rock,Rock
+art punk,Rock
+art rock,Rock
+asian rock,Rock
+bard rock,Rock
+beat rock,Rock
+beatdown hardcore,Rock
+boogie rock,Rock
+british folk rock,Rock
+britpop,Rock
+budget rock,Rock
+celtic punk,Rock
+celtic rock,Rock
+classic rock,Rock
+comedy rock,Rock
+country rock,Rock
+cowpunk,Rock
+crack rock steady,Rock
+crust punk,Rock
+cyberpunk,Rock
+dance-punk,Rock
+dance-punk revival,Rock
+dance-rock,Rock
+deathchant hardcore,Rock
+deathrock,Rock
+desert rock,Rock
+digital hardcore,Rock
+dreampunk,Rock
+emo,Rock
+emo pop,Rock
+experimental rock,Rock
+folk punk,Rock
+folk rock,Rock
+frat rock,Rock
+freeform hardcore,Rock
+funk rock,Rock
+garage punk,Rock
+garage rock,Rock
+garage rock revival,Rock
+geek rock,Rock
+glam punk,Rock
+glam rock,Rock
+gothic rock,Rock
+grunge,Rock
+gypsy punk,Rock
+happy hardcore,Rock
+hard rock,Rock
+hardcore breaks,Rock
+hardcore punk,Rock
+heartland rock,Rock
+hopepunk,Rock
+horror punk,Rock
+indie rock,Rock
+indorock,Rock
+industrial hardcore,Rock
+industrial rock,Rock
+instrumental rock,Rock
+j-rock,Rock
+krautrock,Rock
+könsrock,Rock
+lovers rock,Rock
+machine rock,Rock
+mainstream rock,Rock
+math rock,Rock
+melodic hardcore,Rock
+midwest emo,Rock
+neo-progressive rock,Rock
+neo-rockabilly,Rock
+neon pop punk,Rock
+noise rock,Rock
+occult rock,Rock
+piano rock,Rock
+pop punk,Rock
+pop rock,Rock
+post-grunge,Rock
+post-hardcore,Rock
+post-punk,Rock
+post-punk revival,Rock
+post-rock,Rock
+progressive post-hardcore,Rock
+progressive rock,Rock
+proto-punk,Rock
+psychedelic rock,Rock
+pub rock,Rock
+punk,Rock
+punk poetry,Rock
+punk rock,Rock
+raga rock,Rock
+raw punk,Rock
+rock,Rock
+rock and roll,Rock
+rock andaluz,Rock
+rock andino,Rock
+rock jiwang,Rock
+rock kapak,Rock
+rock musical,Rock
+rock opera,Rock
+rock rural,Rock
+rock urbano,Rock
+rock urbano mexicano,Rock
+rockaballad,Rock
+rockabilly,Rock
+roots rock,Rock
+seapunk,Rock
+seishun punk,Rock
+shoegaze,Rock
+skate punk,Rock
+slacker rock,Rock
+sleaze rock,Rock
+slimepunk,Rock
+soft rock,Rock
+southern rock,Rock
+space rock,Rock
+space rock revival,Rock
+steampunk,Rock
+stoner rock,Rock
+street punk,Rock
+sufi rock,Rock
+surf punk,Rock
+surf rock,Rock
+swamp rock,Rock
+tough guy hardcore,Rock
+tropical rock,Rock
+uk hardcore,Rock
+uptempo hardcore,Rock
+viking rock,Rock
+yacht rock,Rock
+zamrock,Rock
+alternative country,Country e folk
+alternative folk,Country e folk
+americana,Country e folk
+anti-folk,Country e folk
+appalachian folk,Country e folk
+avant-folk,Country e folk
+bluegrass,Country e folk
+boyfriend country,Country e folk
+bro-country,Country e folk
+campus folk,Country e folk
+classic country,Country e folk
+contemporary country,Country e folk
+contemporary folk,Country e folk
+cosmic country,Country e folk
+country,Country e folk
+country and irish,Country e folk
+country boogie,Country e folk
+country folk,Country e folk
+country pop,Country e folk
+country yodeling,Country e folk
+countrypolitan,Country e folk
+dark folk,Country e folk
+folk,Country e folk
+folk pop,Country e folk
+folkhop,Country e folk
+folktronica,Country e folk
+freak folk,Country e folk
+free folk,Country e folk
+gothic country,Country e folk
+honky tonk,Country e folk
+hungarian folk,Country e folk
+indie folk,Country e folk
+industrial folk song,Country e folk
+irish folk,Country e folk
+loner folk,Country e folk
+miejski folk,Country e folk
+neo-traditional country,Country e folk
+outlaw country,Country e folk
+pagan folk,Country e folk
+progressive bluegrass,Country e folk
+progressive country,Country e folk
+progressive folk,Country e folk
+psychedelic folk,Country e folk
+scottish country dance music,Country e folk
+singer-songwriter,Country e folk
+texas country,Country e folk
+traditional bluegrass,Country e folk
+traditional country,Country e folk
+truck driving country,Country e folk
+turbo-folk,Country e folk
+turkish folk,Country e folk
+western swing,Country e folk
+wyrd folk,Country e folk
+alternative pop,Pop
+art pop,Pop
+avant-garde pop,Pop
+bedroom pop,Pop
+bhojpuri pop,Pop
+bitpop,Pop
+bubblegum pop,Pop
+c-pop,Pop
+cantopop,Pop
+city pop,Pop
+dance-pop,Pop
+doskpop,Pop
+dream pop,Pop
+europop,Pop
+flamenco pop,Pop
+futurepop,Pop
+glitch pop,Pop
+hyperpop,Pop
+hypnagogic pop,Pop
+indian pop,Pop
+indie pop,Pop
+j-pop,Pop
+jangle pop,Pop
+k-pop,Pop
+mandopop,Pop
+math pop,Pop
+nederpop,Pop
+neo-city pop,Pop
+noise pop,Pop
+operatic pop,Pop
+orthodox pop,Pop
+persian pop,Pop
+picopop,Pop
+pop,Pop
+pop ghazal,Pop
+pop kreatif,Pop
+pop minang,Pop
+pop raï,Pop
+pop screamo,Pop
+pop yeh-yeh,Pop
+post-britpop,Pop
+power pop,Pop
+progressive pop,Pop
+psychedelic pop,Pop
+q-pop,Pop
+schlager,Pop
+sophisti-pop,Pop
+space age pop,Pop
+sundanese pop,Pop
+sunshine pop,Pop
+swamp pop,Pop
+t-pop,Pop
+teen pop,Pop
+tontipop,Pop
+toypop,Pop
+toytown pop,Pop
+traditional pop,Pop
+tropipop,Pop
+turkish pop,Pop
+twee pop,Pop
+v-pop,Pop
