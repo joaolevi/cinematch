@@ -9,6 +9,7 @@ from ..auth import get_current_user
 from ..db import get_db
 from ..models import Media, RecEvent, User
 from ..schemas import FeedbackIn, FeedOut, ImpressionsIn, MediaOut, MediaType, RecommendationOut
+from ..services.bridges import album_suggestions, mix_albums
 from ..services.recommender import recommend
 
 router = APIRouter(prefix="/recommendations", tags=["recomendações"])
@@ -22,7 +23,14 @@ def feed(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    strategy, recs = recommend(db, user, type, limit, skip=exclude)
+    """Sem `type`, o feed misto: filmes e séries do recomendador e, em lugares fixos (3º, 7º, 11º...), álbuns ligados
+    por ponte ao que a pessoa curtiu. Com `type=album`, só álbuns, pelas pontes e depois os mais ouvidos."""
+    if type == "album":
+        strategy, recs = "bridge", album_suggestions(db, user.id, exclude, limit)
+    else:
+        strategy, recs = recommend(db, user, type, limit, skip=exclude)
+        if type is None:
+            recs = mix_albums(recs, album_suggestions(db, user.id, exclude, limit), limit)
 
     return FeedOut(
         variant=user.ab_group,
