@@ -134,6 +134,14 @@ export interface Profile {
   favorites: { media: Media; rating: number | null }[];
   recent: { media: Media; rating: number | null }[];
   compatibility: { percent: number | null; label: string; shared: Media[]; genres: string[] } | null;
+  following: boolean;
+  followers: number;
+  follows: number;
+}
+
+export interface Person {
+  id: number;
+  name: string;
 }
 
 export interface Reviewer {

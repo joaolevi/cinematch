@@ -283,6 +283,14 @@ class ProfileOut(BaseModel):
     favorites: list[ProfileItemOut]
     recent: list[ProfileItemOut]
     compatibility: CompatibilityOut | None = Field(description="None no próprio perfil")
+    following: bool = Field(default=False, description="Se quem vê segue esta pessoa")
+    followers: int = Field(default=0, description="Quantas pessoas seguem esta pessoa")
+    follows: int = Field(default=0, description="Quantas pessoas esta pessoa segue")
+
+
+class PersonOut(BaseModel):
+    id: int
+    name: str
 
 
 class CommunityPage(BaseModel):

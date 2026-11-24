@@ -21,6 +21,7 @@ import type {
   SyncResult,
   User,
   UserList,
+  Person,
 } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
@@ -146,8 +147,11 @@ export const api = {
   feed: (type?: MediaType, limit = 20, exclude: number[] = [], discovery: Discovery = "taste") =>
     request<Feed>("/recommendations", { query: { type, limit, exclude: exclude.map(String), discovery } }),
   undoDismiss: (media_id: number) => request<void>(`/recommendations/${media_id}/feedback`, { method: "DELETE" }),
-  community: (limit: number, before_id?: number) =>
-    request<{ items: CommunityEntry[] }>("/community", { query: { limit, before_id } }),
+  community: (limit: number, before_id?: number, following = false) =>
+    request<{ items: CommunityEntry[] }>("/community", { query: { limit, before_id, following: following || undefined } }),
+  following: () => request<Person[]>("/users/following"),
+  follow: (id: number) => request<void>(`/users/${id}/follow`, { method: "PUT" }),
+  unfollow: (id: number) => request<void>(`/users/${id}/follow`, { method: "DELETE" }),
   reviewers: () => request<Reviewer[]>("/community/reviewers"),
   profile: (id: number) => request<Profile>(`/users/${id}`),
   together: (id: number, limit = 12) => request<Recommendation[]>(`/users/${id}/together`, { query: { limit } }),

@@ -80,3 +80,45 @@ def test_junto_prioriza_o_que_agrada_as_duas_e_tira_o_que_alguma_ja_viu(client, 
     assert primeira.startswith("Para você: ") and " · Para Levi: " in primeira  # agrada às duas
     assert client.get(f"/users/{me(client, user_headers)}/together", headers=user_headers).status_code == 404
     assert client.get("/users/999999/together", headers=user_headers).status_code == 404
+
+
+def test_seguir_e_deixar_de_seguir(client, user_headers, db):
+    outra = register(client, "Levi Teste", "levi@teste.com")
+    other_id = me(client, outra)
+    assert client.put(f"/users/{other_id}/follow", headers=user_headers).status_code == 204
+    assert client.put(f"/users/{other_id}/follow", headers=user_headers).status_code == 204  # repetir não duplica
+    p = client.get(f"/users/{other_id}", headers=user_headers).json()
+    assert p["following"] is True and p["followers"] == 1 and p["follows"] == 0
+    assert client.get("/users/following", headers=user_headers).json() == [{"id": other_id, "name": "Levi Teste"}]
+    eu = client.get(f"/users/{me(client, user_headers)}", headers=user_headers).json()
+    assert eu["follows"] == 1 and eu["following"] is False
+
+    assert client.delete(f"/users/{other_id}/follow", headers=user_headers).status_code == 204
+    assert client.delete(f"/users/{other_id}/follow", headers=user_headers).status_code == 204  # quem não segue, segue sem seguir
+    p = client.get(f"/users/{other_id}", headers=user_headers).json()
+    assert p["following"] is False and p["followers"] == 0
+    assert client.get("/users/following", headers=user_headers).json() == []
+
+
+def test_nao_segue_a_si_mesmo_nem_perfil_privado(client, user_headers, db):
+    assert client.put(f"/users/{me(client, user_headers)}/follow", headers=user_headers).status_code == 400
+    assert client.put("/users/999999/follow", headers=user_headers).status_code == 404
+    reservada = register(client, "Reservada", "reservada@teste.com")
+    rid = me(client, reservada)
+    assert client.put(f"/users/{rid}/follow", headers=user_headers).status_code == 204
+    db.get(User, rid).visibility = "private"
+    db.commit()
+    assert client.put(f"/users/{rid}/follow", headers=user_headers).status_code == 404
+    assert client.get("/users/following", headers=user_headers).json() == []  # perfil que ficou privado sai da lista
+
+
+def test_comunidade_filtra_por_quem_eu_sigo(client, user_headers, db):
+    seguida = register(client, "Seguida", "seguida@teste.com")
+    outra = register(client, "Outra", "outra@teste.com")
+    curtir(client, seguida, db, "Interestelar")
+    curtir(client, outra, db, "Matrix")
+    client.put(f"/users/{me(client, seguida)}/follow", headers=user_headers)
+    todos = client.get("/community", headers=user_headers).json()["items"]
+    sigo = client.get("/community", params={"following": True}, headers=user_headers).json()["items"]
+    assert {i["user_name"] for i in todos} >= {"Seguida", "Outra"}
+    assert [i["media"]["title"] for i in sigo] == ["Interestelar"]

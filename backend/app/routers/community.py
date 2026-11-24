@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..auth import get_current_user
 from ..db import get_db
-from ..models import DiaryEntry, User
+from ..models import DiaryEntry, Follow, User
 from ..schemas import CommunityEntryOut, CommunityPage, MediaOut, ReviewerOut
 from ..seed import DEMO_EMAIL
 
@@ -25,10 +25,13 @@ VISIBLE = (
 def community(
     limit: int = Query(default=20, ge=1, le=50),
     before_id: int | None = Query(default=None, ge=1, description="Traz os registros anteriores a este"),
+    following: bool = Query(default=False, description="Só os registros de quem eu sigo (RFF09)"),
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    user: User = Depends(get_current_user),
 ):
     visible = select(DiaryEntry).join(User, User.id == DiaryEntry.user_id).where(*VISIBLE)
+    if following:
+        visible = visible.where(DiaryEntry.user_id.in_(select(Follow.followed_id).where(Follow.follower_id == user.id)))
     page = visible.where(DiaryEntry.id < before_id) if before_id is not None else visible
     entries = db.scalars(
         page.options(selectinload(DiaryEntry.media), selectinload(DiaryEntry.user))
