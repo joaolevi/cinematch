@@ -58,7 +58,7 @@ def test_genre_above_limit_is_rejected(client):
 def test_get_preferences_returns_what_was_saved(client):
     headers = register(client, email="gostos@teste.com")
     empty = client.get("/me/preferences", headers=headers).json()
-    assert empty == {"genres": [], "decades": [], "creators": [], "onboarded": False}
+    assert empty == {"genres": [], "decades": [], "creators": [], "artists": [], "onboarded": False}
 
     client.put(
         "/me/preferences",
@@ -66,7 +66,7 @@ def test_get_preferences_returns_what_was_saved(client):
         headers=headers,
     )
     saved = client.get("/me/preferences", headers=headers).json()
-    assert saved == {"genres": ["Terror"], "decades": [1990], "creators": ["David Fincher"], "onboarded": True}
+    assert saved == {"genres": ["Terror"], "decades": [1990], "creators": ["David Fincher"], "artists": [], "onboarded": True}
 
 
 def test_health_needs_no_login(client):

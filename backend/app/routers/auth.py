@@ -56,6 +56,7 @@ def get_preferences(user: User = Depends(get_current_user), db: Session = Depend
         genres=genres,
         decades=sorted(int(value) for kind, value in interests if kind == "decade"),
         creators=[value for kind, value in interests if kind == "creator"],
+        artists=[value for kind, value in interests if kind == "artist"],
         onboarded=user.onboarded,
     )
 
@@ -64,7 +65,8 @@ def get_preferences(user: User = Depends(get_current_user), db: Session = Depend
 def set_preferences(
     data: PreferencesIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
-    """Onboarding: gêneros, décadas, criadores e títulos que o usuário já gosta (viram registros no diário)."""
+    """Onboarding: gêneros (de filme e de música), décadas, criadores, artistas e títulos que a pessoa já curte (viram
+    registros no diário)."""
     for pref in list(user.preferences):
         db.delete(pref)
     for interest in db.scalars(select(UserInterest).where(UserInterest.user_id == user.id)):
@@ -76,6 +78,8 @@ def set_preferences(
         db.add(UserInterest(user_id=user.id, kind="decade", value=str(decade)))
     for creator in dict.fromkeys(c.strip() for c in data.creators if c.strip()):
         db.add(UserInterest(user_id=user.id, kind="creator", value=creator))
+    for artist in dict.fromkeys(a.strip() for a in data.artists if a.strip()):
+        db.add(UserInterest(user_id=user.id, kind="artist", value=artist))
     for media_id in data.liked_media_ids:
         crud.get_media_or_404(db, media_id)
         crud.add_onboarding_like(db, user, media_id)

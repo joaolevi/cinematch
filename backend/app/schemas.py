@@ -61,6 +61,7 @@ class PreferencesIn(BaseModel):
     genres: list[Annotated[str, Field(max_length=60)]] = []
     decades: list[Annotated[int, Field(ge=1880, le=2100)]] = []
     creators: list[Annotated[str, Field(max_length=120)]] = []
+    artists: list[Annotated[str, Field(max_length=120)]] = Field(default=[], description="Artistas de música que a pessoa curte")
     liked_media_ids: list[int] = []
 
 
@@ -68,6 +69,7 @@ class PreferencesOut(BaseModel):
     genres: list[str]
     decades: list[int]
     creators: list[str]
+    artists: list[str] = []
     onboarded: bool
 
 

@@ -82,7 +82,7 @@ export default function Layout() {
             : "border-b border-line bg-surface/95 shadow-[0_6px_20px_rgb(0_0_0/0.35)] backdrop-blur max-sm:border-b-0"
         }`}
       >
-        <div className="mx-auto flex max-w-[1680px] flex-wrap items-end gap-x-6 gap-y-2 px-4 pt-3 sm:px-6 lg:px-10">
+        <div className="mx-auto flex flex-wrap items-end gap-x-6 gap-y-2 px-4 pt-3 sm:px-6 lg:px-10">
           <NavLink to="/" className="pb-[3px]">
             <Logo />
           </NavLink>
@@ -143,7 +143,7 @@ export default function Layout() {
       <div
         className={`flex flex-1 flex-col ${PAPER_FRAME ? "desk-page mx-1.5 mb-1.5 sm:mx-2.5 sm:mb-2.5 lg:mx-3 lg:mb-3" : ""}`}
       >
-        <main className="mx-auto w-full max-w-[1680px] flex-1 px-4 py-8 sm:px-6 lg:px-10">
+        <main className="mx-auto w-full flex-1 px-4 py-8 sm:px-6 lg:px-10">
           <Outlet />
         </main>
         {logging && (
@@ -155,7 +155,7 @@ export default function Layout() {
             }}
           />
         )}
-        <SeenStamp id={saved?.at ?? 0} />
+        <SeenStamp id={saved?.at ?? 0} album={saved?.media.type === "album"} />
         {saved && (
           <Toast>
             <span>Boa! "{saved.media.title}" está no seu diário.</span>
@@ -164,7 +164,7 @@ export default function Layout() {
             </Link>
           </Toast>
         )}
-        <footer className="mx-auto w-full max-w-[1680px] px-4 py-6 text-xs text-muted sm:px-6 lg:px-10">
+        <footer className="mx-auto w-full px-4 py-6 text-xs text-muted sm:px-6 lg:px-10">
           <Link to="/sobre" className="hover:text-accent">
             Sobre o Tastory
           </Link>

@@ -21,7 +21,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from ..config import DATA_DIR
-from ..models import Media, MediaBridge
+from ..models import Media, MediaBridge, UserInterest, UserPreference
 from .catalog import search_text
 from .recommender import Recommendation, decade_label, excluded_ids, user_signals
 
@@ -32,6 +32,8 @@ LIST_SOURCE = "lista"  # pontes que vêm da lista curada de álbuns
 STRONG = {"soundtrack": 1.0, "composer": 0.9, "same_person": 0.9}
 WEAK = {"genre": 0.3, "decade": 0.2, "country": 0.2}
 SAME_ARTIST = 0.8
+PREF_ARTIST = 0.7  # artista escolhido no onboarding
+PREF_GENRE = 0.25  # gênero musical escolhido no onboarding
 MIN_WEAK_SIGNALS = 2
 ALBUM_POPULARITY_BONUS = 0.05  # desempate entre álbuns com a mesma ponte
 ALBUM_EVERY = 4  # no feed misto, um álbum a cada 4 lugares
@@ -242,7 +244,8 @@ def connections(db: Session, media: Media, limit: int = 12) -> list[tuple[Media,
 
 # ---------------------------------------------------------------- feed
 def album_suggestions(db: Session, user_id: int, skip: Iterable[int] = (), limit: int = 20) -> list[Recommendation]:
-    """Álbuns para a pessoa, pelas pontes com o que ela curtiu. Sem nada curtido que ligue, os álbuns em alta."""
+    """Álbuns para a pessoa: pelas pontes com o que ela curtiu, depois pelos artistas e gêneros musicais que ela disse
+    curtir no onboarding e, por fim, os álbuns em alta."""
     exclude = excluded_ids(db, user_id) | set(skip)
     signals = user_signals(db, user_id)
     liked_ids = [mid for mid, w in signals.items() if w > 0]
@@ -259,8 +262,25 @@ def album_suggestions(db: Session, user_id: int, skip: Iterable[int] = (), limit
                 best, reason = link.weight * signals[mid], feed_reason(liked, link)
         if best > 0:
             scored.append((best + ALBUM_POPULARITY_BONUS * album.popularity / 100, album, reason))
+    # O que a pessoa disse que curte no onboarding: artistas e gêneros musicais
+    bridged = {album.id for _, album, _ in scored}
+    artists = set(db.scalars(select(UserInterest.value).where(UserInterest.user_id == user_id, UserInterest.kind == "artist")))
+    genres = set(db.scalars(select(UserPreference.genre).where(UserPreference.user_id == user_id)))
+    preferred: list[tuple[float, Media, str]] = []
+    for album in albums:
+        if album.id in bridged:
+            continue
+        artist = next((a for a in album.creators or [] if a in artists), None)
+        genre = next((g for g in album.genres or [] if g in genres), None)
+        if artist:
+            preferred.append((PREF_ARTIST, album, f"Porque você curte {artist}"))
+        elif genre:
+            preferred.append((PREF_GENRE, album, f"Porque você curte {genre}"))
     scored.sort(key=lambda x: -x[0])
-    recs = [Recommendation(album, score, reason, "bridge") for score, album, reason in scored[:limit]]
+    preferred.sort(key=lambda x: (-x[0], -x[1].popularity))
+    recs = [Recommendation(album, score, reason, "bridge") for score, album, reason in scored]
+    recs += [Recommendation(album, score, reason, "content") for score, album, reason in preferred]
+    recs = sorted(recs, key=lambda r: -r.score)[:limit]
 
     if len(recs) < limit:  # completa com os álbuns mais ouvidos
         have = {r.media.id for r in recs}
@@ -270,9 +290,9 @@ def album_suggestions(db: Session, user_id: int, skip: Iterable[int] = (), limit
 
 
 def mix_albums(feed: list[Recommendation], albums: list[Recommendation], limit: int) -> list[Recommendation]:
-    """Põe os álbuns ligados por ponte em lugares fixos do feed: o 3º, o 7º, o 11º... Os álbuns só "em alta" ficam de
-    fora do feed misto, para o lugar de um filme não ir para um álbum sem motivo."""
-    bridged = [a for a in albums if a.strategy == "bridge"]
+    """Põe os álbuns com motivo (ponte ou gosto declarado) em lugares fixos do feed: o 3º, o 7º, o 11º... Os álbuns só
+    "em alta" ficam de fora do feed misto, para o lugar de um filme não ir para um álbum sem motivo."""
+    bridged = [a for a in albums if a.strategy in ("bridge", "content")]
     out = list(feed)
     for n, album in enumerate(bridged):
         slot = FIRST_ALBUM_SLOT + n * ALBUM_EVERY

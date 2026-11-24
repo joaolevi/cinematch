@@ -99,6 +99,7 @@ export default function HomePage() {
   const [diary, setDiary] = useState<DiaryEntry[] | null>(null);
   const [seenTarget, setSeenTarget] = useState<Media | null>(null);
   const [stamp, setStamp] = useState(0);
+  const [stampAlbum, setStampAlbum] = useState(false);
   const [toast, setToast] = useState<ReactNode | null>(null);
 
   useEffect(() => {
@@ -163,6 +164,7 @@ export default function HomePage() {
     await api.feedback(media.id, action, rating, review, date);
     setRecs((list) => list?.filter((r) => r.media.id !== media.id) ?? null);
     if (action === "seen") {
+      setStampAlbum(media.type === "album");
       setStamp(Date.now());
       diaryChanged();
     }
@@ -203,7 +205,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-14">
-      <SeenStamp id={stamp} />
+      <SeenStamp id={stamp} album={stampAlbum} />
       {/* Saudação e aposta do dia ficam juntas: a aposta é a resposta ao "o que vamos ver hoje?" */}
       <div>
         <header>

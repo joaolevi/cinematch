@@ -51,7 +51,7 @@ export class ApiError extends Error {
   }
 }
 
-type Preferences = { genres: string[]; decades: number[]; creators: string[] };
+type Preferences = { genres: string[]; decades: number[]; creators: string[]; artists?: string[] };
 
 type Query = Record<string, string | string[] | number | boolean | undefined | null>;
 
@@ -107,8 +107,9 @@ export const api = {
     request<Preferences & { onboarded: boolean }>("/me/preferences", { method: "PUT", body: preferences }),
 
   // Mídias
-  genres: () => request<string[]>("/media/genres"),
-  facets: (genre: string[]) => request<{ decades: number[]; creators: string[] }>("/media/facets", { query: { genre } }),
+  genres: (type?: MediaType) => request<string[]>("/media/genres", { query: { type } }),
+  facets: (genre: string[], type?: MediaType, limit?: number) =>
+    request<{ decades: number[]; creators: string[] }>("/media/facets", { query: { genre, type, limit } }),
   search: (query: { q?: string; type?: MediaType | ""; genre?: string; person?: string; sort?: MediaSort; limit?: number; offset?: number }) =>
     request<{ items: Media[]; total: number }>("/media", { query }),
   similar: (id: number) => request<Media[]>(`/media/${id}/similar`),
