@@ -228,6 +228,13 @@ class RecommendationOut(BaseModel):
     strategy: str  # hybrid | content | trending | bridge (álbum ligado por uma ponte)
 
 
+class ProviderOut(BaseModel):
+    service: str
+    kind: Literal["flatrate", "rent", "buy"] = Field(description="Assinatura, aluguel ou compra")
+    logo: str | None
+    link: str | None = Field(description="Página do título na JustWatch, com os links de cada serviço")
+
+
 class ConnectionOut(BaseModel):
     media: MediaOut
     kind: str = Field(description="soundtrack | composer | same_person | artist | weak")

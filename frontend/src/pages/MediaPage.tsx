@@ -11,7 +11,7 @@ import { diaryChanged, useDiaryVersion } from "../seen";
 import { StarsDisplay } from "../components/Stars";
 import WatchedBy from "../components/WatchedBy";
 import { colorFor, formatDate, formatRating, MEDIA_STYLE, plural, SERVICE_LABEL, verbs } from "../format";
-import type { Connection, Media, MediaDetail, UserList } from "../types";
+import type { Connection, Media, MediaDetail, Provider, UserList } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
@@ -73,6 +73,44 @@ function ListenLinks({ media }: { media: Media }) {
   );
 }
 
+const PROVIDER_KIND: Record<Provider["kind"], string> = { flatrate: "Na assinatura", rent: "Para alugar", buy: "Para comprar" };
+
+/** Onde assistir no Brasil (RFF19): os serviços por tipo, com o crédito exigido da JustWatch. */
+function WatchProviders({ providers }: { providers: Provider[] }) {
+  const link = providers.find((p) => p.link)?.link;
+  return (
+    <div className="mt-5">
+      <p className="text-sm font-semibold">Onde assistir no Brasil</p>
+      <div className="mt-2 space-y-2">
+        {(Object.keys(PROVIDER_KIND) as Provider["kind"][]).map((kind) => {
+          const items = providers.filter((p) => p.kind === kind);
+          if (items.length === 0) return null;
+          return (
+            <div key={kind} className="flex flex-wrap items-center gap-2">
+              <span className="w-28 shrink-0 text-xs text-muted">{PROVIDER_KIND[kind]}</span>
+              {items.map((p) => (
+                <span key={p.service} className="chip flex items-center gap-1.5 py-0.5 pl-0.5">
+                  {p.logo && <img src={p.logo} alt="" className="h-6 w-6 rounded-md" loading="lazy" />}
+                  {p.service}
+                </span>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-xs text-muted">
+        {link && (
+          <>
+            <a href={link} target="_blank" rel="noreferrer" className="underline hover:text-accent">Ver os links de cada serviço</a> ·{" "}
+          </>
+        )}
+        Dados de onde assistir:{" "}
+        <a href="https://www.justwatch.com/br" target="_blank" rel="noreferrer" className="underline hover:text-accent">JustWatch</a>
+      </p>
+    </div>
+  );
+}
+
 /** Cada título monta a página do zero, para nada do título anterior sobrar na tela. */
 export default function MediaPage() {
   const { id } = useParams();
@@ -84,6 +122,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
   const [lists, setLists] = useState<UserList[]>([]);
   const [similar, setSimilar] = useState<Media[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [showSeen, setShowSeen] = useState(false);
   const [stamp, setStamp] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -112,6 +151,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
   useEffect(() => {
     api.similar(mediaId).then(setSimilar).catch(() => {});
     api.connections(mediaId).then(setConnections).catch(() => {});
+    api.providers(mediaId).then(setProviders).catch(() => {});
     window.scrollTo(0, 0);
   }, [mediaId]);
 
@@ -252,6 +292,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
             )}
 
             {album && <ListenLinks media={media} />}
+            {!album && providers.length > 0 && <WatchProviders providers={providers} />}
 
             {customLists.length > 0 && (
               <div className="mt-6">
