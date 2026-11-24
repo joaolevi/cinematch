@@ -73,7 +73,8 @@ export default function HowPage() {
         </ul>
         <p>
           Depois das pontes vêm os artistas e os gêneros musicais que você escolheu no começo ("Porque você curte Elis
-          Regina") e, por fim, os discos mais ouvidos. No detalhe de cada título, as mesmas pontes aparecem em "Para ouvir
+          Regina") e, por fim, os discos mais ouvidos. Para a lista não ficar só com um artista, entram no máximo dois discos
+          de cada um no começo. No detalhe de cada título, as mesmas pontes aparecem em "Para ouvir
           depois" e "Para ver depois".
         </p>
       </Part>
@@ -81,8 +82,9 @@ export default function HowPage() {
       <Part title="4. Você escolhe o quanto sair do óbvio">
         <p>
           No <Link to="/para-voce" className="underline hover:text-[#b9452f]">Para você</Link>, "Um pouco além" e "Fora da
-          sua bolha" tiram peso do que é muito conhecido e dos gêneros que você mais consome. O motivo avisa quando a
-          sugestão veio desse jeito.
+          sua bolha" tiram peso do que é muito conhecido e dos gêneros que você mais consome. Na música, eles trazem discos
+          de gêneros que você ainda não ouve: 3 de cada 10 em "Um pouco além" e 7 de cada 10 em "Fora da sua bolha". O
+          motivo avisa quando a sugestão veio desse jeito.
         </p>
       </Part>
 

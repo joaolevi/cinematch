@@ -21,7 +21,57 @@ const GENRE_TEAM: Record<string, string> = {
   Romance: "do romance",
   Suspense: "do suspense",
   Terror: "do terror",
+  // Gêneros musicais
+  "Axé e brega": "do axé e do brega",
+  Blues: "do blues",
+  "Bossa nova": "da bossa nova",
+  Clássica: "da música clássica",
+  "Country e folk": "do country e do folk",
+  Eletrônica: "da música eletrônica",
+  "Forró e ritmos do Nordeste": "do forró",
+  Gospel: "do gospel",
+  Jazz: "do jazz",
+  Latina: "da música latina",
+  MPB: "da MPB",
+  Metal: "do metal",
+  Pop: "do pop",
+  "Rap e hip-hop": "do rap",
+  Reggae: "do reggae",
+  Rock: "do rock",
+  "Samba e choro": "do samba",
+  Sertanejo: "do sertanejo",
+  "Soul, R&B e funk": "do soul e do R&B",
+  "Trilha sonora": "das trilhas sonoras",
 };
+
+/** "do drama", "da MPB": o gênero com o artigo certo, para entrar numa frase. */
+export function genreTeam(genre: string): string {
+  return GENRE_TEAM[genre] ?? `de ${genre === genre.toUpperCase() ? genre : genre.toLowerCase()}`;
+}
+
+type MediaKind = "movie" | "series" | "album";
+
+/** Quantos registros de cada mídia, na ordem filme, série, álbum. */
+function countTypes(entries: DiaryEntry[]): Record<MediaKind, number> {
+  const counts = { movie: 0, series: 0, album: 0 };
+  for (const e of entries) counts[e.media.type as MediaKind] += 1;
+  return counts;
+}
+
+const TYPE_FACT: Record<MediaKind, (percent: number) => string> = {
+  movie: (p) => `Filmes em primeiro lugar: ${p}% do meu diário.`,
+  series: (p) => `Séries são a minha praia: ${p}% do meu diário.`,
+  album: (p) => `Música em primeiro lugar: ${p}% do meu diário são discos.`,
+};
+
+/** A frase sobre como o diário se divide entre filmes, séries e álbuns. */
+function typeFact(entries: DiaryEntry[]): string {
+  const counts = countTypes(entries);
+  const [top, n] = (Object.entries(counts) as [MediaKind, number][]).sort((a, b) => b[1] - a[1])[0];
+  if (n / entries.length >= 0.6) return TYPE_FACT[top](Math.round((n / entries.length) * 100));
+  if (counts.album > 0 && counts.movie + counts.series > 0) return "Vejo e ouço de tudo: filmes, séries e discos no mesmo diário.";
+  return "Filmes e séries, na mesma medida.";
+}
 
 export const MIN_ENTRIES_FOR_TASTE = 3;
 
@@ -64,9 +114,10 @@ export function tasteOf(entries: DiaryEntry[]): Taste | null {
 
   const [topGenre] = countBy(base, (e) => e.media.genres.slice(0, 2));
   if (!topGenre) return null;
-  const highlight = GENRE_TEAM[topGenre[0]] ?? `de ${topGenre[0].toLowerCase()}`;
+  const highlight = genreTeam(topGenre[0]);
 
-  const dated = base.filter((e) => e.media.year);
+  // A década sai dos títulos do gênero principal, para a frase não juntar a MPB dos discos com a década dos filmes
+  const dated = base.filter((e) => e.media.year && e.media.genres.slice(0, 2).includes(topGenre[0]));
   const [topDecade] = countBy(dated, (e) => [String(decadeOf(e.media.year ?? 0))]);
   const decade = topDecade && topDecade[1] / dated.length >= 0.4 ? decadeName(Number(topDecade[0])) : null;
 
@@ -78,10 +129,7 @@ export function tasteOf(entries: DiaryEntry[]): Taste | null {
     else if (avg <= 2.75) facts.push(`Difícil de agradar: minha nota média é ${note}.`);
     else facts.push(`Nota alta só quando merece: minha média é ${note}.`);
   }
-  const series = entries.filter((e) => e.media.type === "series").length / entries.length;
-  if (series >= 0.6) facts.push(`Séries são a minha praia: ${Math.round(series * 100)}% do meu diário.`);
-  else if (series <= 0.4) facts.push(`Filmes em primeiro lugar: ${Math.round((1 - series) * 100)}% do meu diário.`);
-  else facts.push("Filmes e séries, na mesma medida.");
+  facts.push(typeFact(entries));
   const [topCreator] = countBy(base, (e) => e.media.creators);
   if (topCreator && topCreator[1] >= 2) facts.push(`Quem mais aparece no meu diário: ${topCreator[0]}.`);
 
@@ -106,7 +154,10 @@ export function notesOf(entries: DiaryEntry[], today = new Date()): Note[] {
   const genres = new Set(entries.flatMap((e) => e.media.genres)).size;
   const notes = [
     { value: String(entries.length), label: entries.length === 1 ? "título no meu diário" : "títulos no meu diário" },
-    { value: String(entries.filter((e) => e.consumed_at?.startsWith(month)).length), label: `vi em ${monthName}` },
+    {
+      value: String(entries.filter((e) => e.consumed_at?.startsWith(month)).length),
+      label: entries.some((e) => e.media.type === "album") ? `vi ou ouvi em ${monthName}` : `vi em ${monthName}`,
+    },
     { value: avg != null ? formatRating(avg) : "–", label: avg != null ? "minha nota média" : "ainda sem notas" },
     { value: String(entries.filter((e) => e.rating === 5).length), label: "ganharam 5 estrelas" },
     { value: String(entries.filter((e) => e.review).length), label: "resenhas que escrevi" },
@@ -167,7 +218,8 @@ export interface Bar {
 
 export interface TasteCharts {
   total: number;
-  genres: Bar[];
+  genres: Bar[]; // de filmes e séries
+  musicGenres: Bar[]; // dos álbuns
   decades: Bar[];
   ratings: Bar[]; // de 0,5 a 5, nesta ordem
   creators: Bar[];
@@ -178,9 +230,12 @@ const MAX_DECADES = 8;
 
 /** Números da aba Meu gosto. Tudo sai do diário, sem chamar a API. */
 export function tasteCharts(entries: DiaryEntry[]): TasteCharts {
-  const genres = countBy(entries, (e) => e.media.genres)
-    .slice(0, 6)
-    .map(([label, value]): Bar => ({ label, value, filter: { kind: "genre", value: label, label } }));
+  const genreBars = (items: DiaryEntry[]) =>
+    countBy(items, (e) => e.media.genres)
+      .slice(0, 6)
+      .map(([label, value]): Bar => ({ label, value, filter: { kind: "genre", value: label, label } }));
+  const genres = genreBars(entries.filter((e) => e.media.type !== "album"));
+  const musicGenres = genreBars(entries.filter((e) => e.media.type === "album"));
 
   const byDecade = new Map<number, number>();
   for (const e of entries) {
@@ -218,10 +273,11 @@ export function tasteCharts(entries: DiaryEntry[]): TasteCharts {
     .slice(0, 5)
     .map(([label, value]): Bar => ({ label, value, filter: { kind: "creator", value: label, label } }));
 
-  const series = entries.filter((e) => e.media.type === "series").length;
+  const counts = countTypes(entries);
   const types: Bar[] = [
-    { label: "Filmes", value: entries.length - series, filter: { kind: "type", value: "movie", label: "Filmes" } },
-    { label: "Séries", value: series, filter: { kind: "type", value: "series", label: "Séries" } },
+    { label: "Filmes", value: counts.movie, filter: { kind: "type", value: "movie", label: "Filmes" } },
+    { label: "Séries", value: counts.series, filter: { kind: "type", value: "series", label: "Séries" } },
+    { label: "Álbuns", value: counts.album, filter: { kind: "type", value: "album", label: "Álbuns" } },
   ];
-  return { total: entries.length, genres, decades, ratings, creators, types };
+  return { total: entries.length, genres, musicGenres, decades, ratings, creators, types };
 }

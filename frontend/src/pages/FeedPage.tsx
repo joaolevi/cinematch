@@ -22,6 +22,7 @@ const STRATEGY_LABEL: Record<Feed["strategy"], string> = {
   content: "Escolhidos a dedo, com base no que você curte",
   trending: "O que está em alta agora. Conte o que você curte e isso aqui fica com a sua cara",
   bridge: "Álbuns ligados ao que você curte: trilhas, compositores e quem canta e atua",
+  discovery: "Discos de gêneros que você ainda não ouve",
 };
 
 export default function FeedPage() {

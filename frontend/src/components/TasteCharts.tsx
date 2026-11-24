@@ -5,7 +5,7 @@ import HandNote from "./HandNote";
 
 // Cor de quem fica em segundo plano: contraste de 3:1 com o fundo dos cards
 const QUIET = "#76655b";
-const TYPE_COLORS = ["#e8735a", "#f2b33d"]; // filme coral, série âmbar, como em MEDIA_STYLE
+const TYPE_COLORS = ["#e8735a", "#f2b33d", "#7fa58b"]; // filme coral, série âmbar, álbum verde, como em MEDIA_STYLE
 
 type Pick = (filter: DiaryFilter) => void;
 
@@ -122,7 +122,7 @@ function RatingColumns({ bars, onPick }: { bars: Bar[]; onPick: Pick }) {
   );
 }
 
-/** Uma barra só, dividida entre filmes e séries, com a parte de cada um escrita dentro. */
+/** Uma barra só, dividida entre filmes, séries e álbuns, com a parte de cada um escrita dentro. */
 function Split({ bars, onPick }: { bars: Bar[]; onPick: Pick }) {
   const grown = useGrown();
   const total = bars.reduce((sum, b) => sum + b.value, 0) || 1;
@@ -161,9 +161,16 @@ export default function TasteChartsView({ data, onPick }: { data: TasteCharts; o
   const rated = data.ratings.reduce((sum, b) => sum + b.value, 0);
   return (
     <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-      <ChartCard title="Os gêneros que eu mais vejo" subtitle="Quantos títulos do meu diário têm cada gênero">
-        <BarList bars={data.genres} color="#f2b33d" total={data.total} onPick={onPick} />
-      </ChartCard>
+      {data.genres.length > 0 && (
+        <ChartCard title="Os gêneros que eu mais vejo" subtitle="Quantos filmes e séries do meu diário têm cada gênero">
+          <BarList bars={data.genres} color="#f2b33d" total={data.total} onPick={onPick} />
+        </ChartCard>
+      )}
+      {data.musicGenres.length > 0 && (
+        <ChartCard title="Os gêneros que eu mais ouço" subtitle="Quantos discos do meu diário têm cada gênero">
+          <BarList bars={data.musicGenres} color="#7fa58b" total={data.total} onPick={onPick} />
+        </ChartCard>
+      )}
       {data.decades.length > 0 && (
         <ChartCard title="Minhas décadas" subtitle="Quando saíram os títulos que eu registrei">
           <BarList bars={data.decades} color="#e8735a" total={data.total} onPick={onPick} />
@@ -183,11 +190,11 @@ export default function TasteChartsView({ data, onPick }: { data: TasteCharts; o
           <HandNote>Nenhuma nota ainda.</HandNote>
         )}
       </ChartCard>
-      <ChartCard title="Filmes e séries" subtitle="Como o meu diário se divide">
+      <ChartCard title={data.types[2].value > 0 ? "Filmes, séries e álbuns" : "Filmes e séries"} subtitle="Como o meu diário se divide">
         <Split bars={data.types} onPick={onPick} />
       </ChartCard>
       {data.creators.length > 0 && (
-        <ChartCard title="Quem mais aparece" subtitle="Direção e criação com mais títulos no meu diário">
+        <ChartCard title="Quem mais aparece" subtitle="Direção, criação e artistas com mais títulos no meu diário">
           <BarList bars={data.creators} color="#7fa58b" total={data.total} onPick={onPick} />
         </ChartCard>
       )}

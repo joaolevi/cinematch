@@ -103,7 +103,7 @@ export interface Recommendation {
   media: Media;
   score: number;
   reason: string;
-  strategy: "hybrid" | "content" | "trending" | "bridge";
+  strategy: "hybrid" | "content" | "trending" | "bridge" | "discovery";
 }
 
 /** Modo descoberta (RFF16): no meu gosto, um pouco além ou fora da sua bolha. */
