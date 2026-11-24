@@ -84,7 +84,7 @@ As sugestões que cruzam filmes, séries e música, e assistir ou ouvir junto.
 | [RNFF10](nao-funcionais.md#rnff10) | Vizinhos sem domínio dos populares | Não funcional | Não iniciado | P a M | 2 | 2 | 1 | RNFF06 |
 | [RFF26](funcionais.md#rff26) | Ligações entre mídias no detalhe | Funcional | Parcial | G | 2 | 1 | 5 | RFF01, RNFF03; começa por compositor e trilha (M) |
 | [RFF27](funcionais.md#rff27) | Sugestões cruzadas no feed | Funcional | Parcial | G | 2 | 1 | 5 | RFF26, RNFF09 |
-| [RFF28](funcionais.md#rff28) | Assistir ou ouvir junto | Funcional | Não iniciado | M | 2 | 1 | 3 | RFF15 |
+| [RFF28](funcionais.md#rff28) | Assistir ou ouvir junto | Funcional | Parcial | M | 2 | 1 | 3 | RFF15 |
 | [EXP03](../tecnico/AVALIACAO.md#exp03) | Aceitação por tipo de ponte | Experimento | Não iniciado | P | 2 | 2 | 3 | RFF27 |
 
 ## Depois: com dados reais ou folga

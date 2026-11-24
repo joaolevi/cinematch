@@ -1698,6 +1698,70 @@
         }
       }
     },
+    "/users/{user_id}/together": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Watch Together",
+        "description": "Assistir ou ouvir junto (RFF28): sugestões para quem vê e esta pessoa. Primeiro o que aparece para as duas,\ndepois o que agrada a uma e a outra ainda não viu. O motivo mostra os dois lados (\"Para você: ... · Para Levi: ...\").\nItens que alguma das duas já registrou, descartou ou guardou ficam de fora.",
+        "operationId": "watch_together_users__user_id__together_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 40,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecommendationOut"
+                  },
+                  "title": "Response Watch Together Users  User Id  Together Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/media": {
       "post": {
         "tags": [
