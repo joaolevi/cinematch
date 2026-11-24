@@ -77,6 +77,19 @@ Swagger, com as regras na descrição de cada rota.
 placeholder (ex.: gradiente com o título). Exibir dados do TMDB exige o crédito:
 *"Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB."*
 
+**Álbuns** (`type: "album"`, `source: "musicbrainz"`) usam o mesmo objeto (D27):
+
+- `creators` traz os artistas; `genres`, o gênero amplo em português ("MPB", "Trilha sonora"); `tags`, os gêneros finos
+  do MusicBrainz ("tropicália").
+- A capa (`poster_url`) é quadrada e vem do Cover Art Archive.
+- `language` é o idioma das letras; um álbum instrumental vem com `null` e a tag `instrumental`.
+- `links` traz onde ouvir. Com `level: "artist"`, o link leva à página do artista, porque o disco não tem link próprio
+  naquele serviço: mostre como "Ouvir o artista no Spotify".
+- `/media/genres` e `/media/facets` trazem só filmes e séries; para os gêneros e artistas de música, use `type=album`.
+- Os álbuns ainda não aparecem no feed nem no "Em alta": entram com o feed misto (RFF27).
+- Os dados vêm do MusicBrainz (CC0) e do ListenBrainz. O crédito "Dados de álbuns: MusicBrainz" é recomendado, e não
+  exigido.
+
 ## Fluxo principal (Diagrama de Atividades)
 
 1. Login → se `onboarded == false`, onboarding: gêneros (`GET /media/genres`), épocas e criadores (`GET /media/facets`), títulos (`GET /media` ou, sem escolhas, `GET /media/trending`) → `PUT /me/preferences`.

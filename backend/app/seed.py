@@ -66,6 +66,13 @@ def load_catalog(db: Session) -> dict:
     return sync_catalog(db, MockCatalogProvider(settings.seed_catalog_path, "Seed"), source="mock")
 
 
+def load_albums(db: Session) -> dict | None:
+    """Álbuns de demonstração (RFF01), do retrato gerado por scripts/import_albums.py. Funciona sem internet."""
+    if not settings.albums_catalog_path.exists():
+        return None
+    return sync_catalog(db, MockCatalogProvider(settings.albums_catalog_path, "Álbuns"), source="musicbrainz")
+
+
 def _get_or_create_user(db: Session, name: str, email: str, password: str, **kw) -> User:
     user = db.scalar(select(User).where(User.email == email))
     if user is None:
@@ -84,7 +91,8 @@ def create_demo_accounts(db: Session) -> None:
 
 def create_synthetic_users(db: Session, per_persona: int = 5, seed: int = 42) -> int:
     rng = random.Random(seed)
-    catalog = list(db.scalars(select(Media)))
+    # As personas são de filmes e séries; os álbuns entram no gosto delas só quando houver dados reais
+    catalog = list(db.scalars(select(Media).where(Media.type.in_(("movie", "series")))))
     pw_hash = hash_password(SYNTHETIC_PASSWORD)  # um hash só, para o seed ser rápido
     names = iter(FIRST_NAMES * 2)
     created = 0
@@ -159,7 +167,7 @@ def simulate_ab_test(db: Session, rounds: int = 2, feed_size: int = 10, seed: in
 
 
 def seed_all(db: Session, synthetic: bool = True, simulate: bool = True) -> dict:
-    summary = {"catalog": load_catalog(db)}
+    summary = {"catalog": load_catalog(db), "albums": load_albums(db)}
     create_demo_accounts(db)
     if synthetic:
         summary["synthetic_users"] = create_synthetic_users(db)

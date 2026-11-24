@@ -63,10 +63,19 @@ def search_media(
     return MediaPage(items=items[offset : offset + limit], total=len(items))
 
 
+VIDEO_TYPES = ("movie", "series")
+
+
 @router.get("/genres", response_model=list[str])
-def list_genres(db: Session = Depends(get_db)):
+def list_genres(
+    type: MediaType | None = Query(
+        default=None, description="Sem tipo, só os gêneros de filmes e séries; `album` traz os gêneros musicais"
+    ),
+    db: Session = Depends(get_db),
+):
+    types = (type,) if type else VIDEO_TYPES
     genres: set[str] = set()
-    for g in db.scalars(select(Media.genres)):
+    for g in db.scalars(select(Media.genres).where(Media.type.in_(types))):
         genres.update(g or [])
     return sorted(genres)
 
@@ -74,11 +83,12 @@ def list_genres(db: Session = Depends(get_db)):
 @router.get("/facets", response_model=MediaFacetsOut)
 def media_facets(
     genre: list[str] = Query(default=[]),
+    type: MediaType | None = Query(default=None, description="Sem tipo, filmes e séries; `album` traz décadas e artistas"),
     limit: int = Query(default=12, ge=1, le=50),
     db: Session = Depends(get_db),
 ):
     """Décadas e criadores do catálogo, para o onboarding. Criadores vêm ordenados pela popularidade."""
-    items = list(db.scalars(select(Media)))
+    items = list(db.scalars(select(Media).where(Media.type.in_((type,) if type else VIDEO_TYPES))))
     if genre:
         items = [m for m in items if set(genre) & set(m.genres or [])]
     decades = Counter((m.year // 10) * 10 for m in items if m.year)

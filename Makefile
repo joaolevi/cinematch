@@ -1,6 +1,6 @@
 # Atalhos do projeto. Rode `make` para ver a lista.
 .DEFAULT_GOAL := help
-.PHONY: help api demo up down logs deps test test-offline seed migrate migration openapi prod-up prod-logs prod-seed prod-movielens backup
+.PHONY: help api demo up down logs deps test test-offline seed migrate migration albuns openapi prod-up prod-logs prod-seed prod-movielens prod-albuns backup
 
 PROD := docker compose -f docker-compose.prod.yml --env-file .env.production
 PYTHON := ../.venv/bin/python
@@ -47,6 +47,9 @@ migration: deps ## Cria uma migração a partir dos modelos (exige MSG="o que mu
 	@test -n "$(MSG)" || { echo 'Descreva a mudança: make migration MSG="álbuns como terceira mídia"'; exit 1; }
 	cd backend && $(PYTHON) -m alembic upgrade head && $(PYTHON) -m alembic revision --autogenerate -m "$(MSG)"
 
+albuns: deps ## Refaz o retrato dos álbuns a partir do MusicBrainz e carrega no banco local (uns 12 min)
+	cd backend && $(PYTHON) -m scripts.import_albums
+
 openapi: deps ## Regenera docs/tecnico/openapi.json
 	cd backend && TASTORY_AUTO_SEED=false $(PYTHON) -c "import json; from app.main import app; json.dump(app.openapi(), open('../docs/tecnico/openapi.json','w'), ensure_ascii=False, indent=2)"
 
@@ -64,6 +67,9 @@ prod-seed: ## Apaga e recarrega o banco publicado (exige CONFIRMAR=sim)
 prod-movielens: ## Carrega o MovieLens (exige DATA=/caminho/ml-32m)
 	@test -n "$(DATA)" || { echo "Informe a pasta: make prod-movielens DATA=/caminho/ml-32m"; exit 1; }
 	$(PROD) run --rm -v "$(DATA):/data:ro" api python -m scripts.import_movielens /data
+
+prod-albuns: ## Carrega no banco publicado os álbuns do retrato (backend/data/albums_catalog.json)
+	$(PROD) exec api python -m scripts.import_albums --do-retrato
 
 # Se a exportação falhar, o make para aqui, e a cópia do dia continua intacta
 backup: ## Copia o banco publicado para backup-AAAA-MM-DD.sql

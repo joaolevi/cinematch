@@ -27,10 +27,11 @@ export function timeAgo(isoDate: string): string {
 
 const COLORS = ["#f2b33d", "#e8735a", "#7fa58b", "#e59bb0", "#8fb3c9", "#b39ddb", "#c9b27c"];
 
-/** Cada tipo de mídia tem sua cor. Os álbuns entram em sálvia, quando chegarem. */
+/** Cada tipo de mídia tem sua cor; os álbuns, em sálvia. */
 export const MEDIA_STYLE = {
   movie: { label: "Filme", color: "#e8735a" },
   series: { label: "Série", color: "#f2b33d" },
+  album: { label: "Álbum", color: "#7fa58b" },
 } as const;
 
 /** Cada gênero ou pessoa tem sempre a mesma cor. */

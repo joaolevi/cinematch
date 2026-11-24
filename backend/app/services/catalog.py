@@ -1,7 +1,7 @@
 """Catálogo externo (ator secundário "API de Catálogo Externo" do DCU).
 
-Os títulos vêm de um `CatalogProvider`: o mock em JSON ou o TMDB (`services/tmdb.py`). Para outra fonte,
-como o MusicBrainz, basta criar outro provider com `fetch_titles()`: o resto do sistema não precisa mudar.
+Os títulos vêm de um `CatalogProvider`: o mock em JSON, o TMDB (`services/tmdb.py`) ou, para os álbuns, o retrato
+gerado do MusicBrainz (`services/musicbrainz.py` e `scripts/import_albums.py`).
 """
 
 import json
@@ -27,6 +27,10 @@ class ExternalTitle(TypedDict, total=False):
     creators: list[str]
     actors: list[str]
     popularity: float
+    duration_min: int | None
+    countries: list[str]
+    language: str | None
+    links: list[dict]
 
 
 class CatalogProvider(Protocol):
@@ -48,9 +52,12 @@ class MockCatalogProvider:
 
 
 # Origem com dados mais confiáveis "promove" um título igual de origem inferior
-SOURCE_PRIORITY = {"manual": 0, "mock": 1, "tmdb": 2}
+SOURCE_PRIORITY = {"manual": 0, "mock": 1, "tmdb": 2, "musicbrainz": 2}
 
-_FIELDS = ("type", "title", "year", "overview", "poster_url", "genres", "tags", "creators", "actors", "popularity")
+_FIELDS = (
+    "type", "title", "year", "overview", "poster_url", "genres", "tags", "creators", "actors", "popularity",
+    "duration_min", "countries", "language", "links",
+)
 
 
 def search_text(text: str) -> str:

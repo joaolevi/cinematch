@@ -72,7 +72,12 @@ def has_readable_name(title: str) -> bool:
 
 
 def can_be_suggested(m: Media) -> bool:
-    """O feed só sugere títulos do TMDB com sinopse, pôster e nome legível. A busca mostra todos."""
+    """O feed só sugere títulos do TMDB com sinopse, pôster e nome legível. A busca mostra todos.
+
+    Os álbuns ficam fora do feed e do "Em alta" até o feed misto das três mídias (RFF27).
+    """
+    if m.type == "album":
+        return False
     if m.source != "tmdb":
         return True  # o catálogo mock não tem pôster
     return bool(m.overview and m.poster_url and has_readable_name(m.title))

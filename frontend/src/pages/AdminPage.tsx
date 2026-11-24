@@ -4,7 +4,7 @@ import { api } from "../api";
 import Poster from "../components/Poster";
 import { StarsDisplay } from "../components/Stars";
 import { Avatar } from "../components/WatchedBy";
-import { formatDate, plural, timeAgo } from "../format";
+import { MEDIA_STYLE, formatDate, plural, timeAgo } from "../format";
 import type { AdminReview, AdminUser, ExternalTitle, Media, MediaInput, Metrics, VariantMetrics } from "../types";
 import { TAPE_COLORS, tabColor } from "../ui";
 import { usePageTitle } from "../usePageTitle";
@@ -512,7 +512,7 @@ function CatalogTab() {
                     {m.title}
                   </Link>
                 </td>
-                <td className="py-2 pr-4">{m.type === "movie" ? "Filme" : "Série"}</td>
+                <td className="py-2 pr-4">{MEDIA_STYLE[m.type].label}</td>
                 <td className="py-2 pr-4">{m.year}</td>
                 <td className="py-2 pr-4 text-muted">{m.genres.join(", ")}</td>
                 <td className="py-2 pr-4 text-muted">{SOURCE_LABEL[m.source] ?? m.source}</td>

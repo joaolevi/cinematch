@@ -4,6 +4,8 @@
 |---|---|---|
 | `seed_catalog.json` | Catálogo de demonstração carregado no primeiro uso | Equipe |
 | `mock_external_catalog.json` | Catálogo externo falso, para sincronizar sem internet | Equipe |
+| `albuns_demo.csv` | Lista curada dos álbuns de demonstração, com o ID do MusicBrainz e o motivo de cada um | Levi (curadoria) |
+| `albums_catalog.json` | Retrato dos álbuns, gerado por `python -m scripts.import_albums` a partir da lista; o seed lê daqui, sem internet | Gerado |
 | `generos_musicais.csv` | Gênero oficial do MusicBrainz → gênero amplo do Tastory, usado na carga dos álbuns (RFF01) | Levi (curadoria) |
 | `generos_correspondencia.csv` | Gênero de filme ou série → gênero musical que combina, usado na ponte de gênero (RFF26) | Levi (curadoria) |
 
@@ -28,3 +30,18 @@ Os gêneros de filme e de música usam palavras diferentes, então o grafo não 
 [ARQUITETURA.md](../../docs/tecnico/ARQUITETURA.md#recomendação-entre-mídias), ela sozinha não gera uma sugestão. A
 coluna `por_que` explica cada par. Os nomes da primeira coluna são os gêneros do catálogo (vindos do TMDB, em
 `app/services/tmdb.py`), e os da segunda, os gêneros amplos de `generos_musicais.csv` ou "Trilha sonora".
+
+## Álbuns de demonstração
+
+`albuns_demo.csv` tem 207 álbuns: as trilhas e os compositores dos filmes e séries do catálogo (para as pontes
+entre mídias), discos brasileiros, com atenção a Alagoas, e internacionais conhecidos. A coluna `pedido` guarda o que foi
+procurado, `confianca`, a nota da busca no MusicBrainz (100 = nome exato), e `revisado` marca os 25 que foram corrigidos à
+mão (a busca automática tinha pegado a trilha de uma continuação, uma coletânea ou outro disco com o mesmo nome). Para trocar um álbum, troque o `mbid` (o ID
+fica no endereço da página do álbum no MusicBrainz, em `/release-group/...`) e rode de novo:
+
+```bash
+cd backend && ../.venv/bin/python -m scripts.import_albums   # uns 10 minutos: o MusicBrainz aceita uma consulta por segundo
+```
+
+Os dados do MusicBrainz e do ListenBrainz são CC0. As capas não ficam no repositório: o catálogo guarda só o endereço
+delas no Cover Art Archive.

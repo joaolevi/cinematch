@@ -14,22 +14,25 @@ from ..db import get_db
 from ..models import DiaryEntry, Media, RecEvent, User
 from ..schemas import (
     AdminReviewOut,
+    AlbumImportIn,
+    AlbumImportOut,
     AdminUserOut,
     AdminUsersOut,
     ExternalTitleOut,
     MediaIn,
     MediaOut,
-    MediaType,
     MediaUpdate,
     MetricsOut,
     ReviewModerationIn,
     SyncOut,
     TmdbImportIn,
     TmdbImportOut,
+    VideoType,
 )
 from ..services.catalog import MockCatalogProvider, sync_catalog, title_key
 from ..services.tmdb import StaticProvider, TmdbCatalogProvider, TmdbError, enrich_catalog
 from ..services.metrics import acceptance_metrics
+from ..services.musicbrainz import MusicBrainzClient, MusicBrainzError
 
 router = APIRouter(prefix="/admin", tags=["administração"], dependencies=[Depends(require_admin)])
 
@@ -117,7 +120,7 @@ def tmdb_enrich(db: Session = Depends(get_db)):
 @router.get("/tmdb/search", response_model=list[ExternalTitleOut])
 def tmdb_search(
     q: str = Query(min_length=1),
-    type: MediaType | None = None,
+    type: VideoType | None = None,
     db: Session = Depends(get_db),
 ):
     """Busca títulos no TMDB para o admin escolher o que importar."""
@@ -159,6 +162,48 @@ def tmdb_import(data: TmdbImportIn, db: Session = Depends(get_db)):
         select(Media).where(Media.source == "tmdb", Media.external_id == title["external_id"])
     )
     return TmdbImportOut(media=MediaOut.model_validate(media), result=SyncOut(**result))
+
+
+def musicbrainz_client() -> MusicBrainzClient:
+    return MusicBrainzClient()
+
+
+@router.get("/musicbrainz/search", response_model=list[ExternalTitleOut])
+def musicbrainz_search(q: str = Query(min_length=1), db: Session = Depends(get_db)):
+    """Busca álbuns no MusicBrainz para o admin escolher o que importar.
+
+    Aceita a sintaxe de busca do MusicBrainz, como `releasegroup:"Construção" AND artist:"Chico Buarque"`.
+    `media_id` vem preenchido se o álbum já está no catálogo.
+    """
+    mb = musicbrainz_client()
+    try:
+        results = mb.search(q)
+    except MusicBrainzError as e:
+        raise HTTPException(status_code=e.status_code, detail=str(e))
+    finally:
+        mb.close()
+    known = {m.external_id: m.id for m in db.scalars(select(Media).where(Media.source == "musicbrainz"))}
+    return [ExternalTitleOut(**r, media_id=known.get(r["external_id"])) for r in results]
+
+
+@router.post("/musicbrainz/import", response_model=AlbumImportOut, status_code=201)
+def musicbrainz_import(data: AlbumImportIn, db: Session = Depends(get_db)):
+    """Importa (ou atualiza) um álbum do MusicBrainz pelo ID, com capa, gêneros, duração, idioma e links.
+
+    Faz de três a cinco consultas ao MusicBrainz, que aceita uma por segundo: leva alguns segundos.
+    """
+    mb = musicbrainz_client()
+    try:
+        album = mb.get_album(data.mbid)
+    except MusicBrainzError as e:
+        raise HTTPException(status_code=e.status_code, detail=str(e))
+    finally:
+        mb.close()
+    result = sync_catalog(db, StaticProvider([album], "MusicBrainz"), source="musicbrainz")
+    media = db.scalar(
+        select(Media).where(Media.source == "musicbrainz", Media.external_id == album["external_id"])
+    )
+    return AlbumImportOut(media=MediaOut.model_validate(media), result=SyncOut(**result))
 
 
 # ---------- Moderação ----------

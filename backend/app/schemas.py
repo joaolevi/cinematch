@@ -5,7 +5,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-MediaType = Literal["movie", "series"]
+MediaType = Literal["movie", "series", "album"]
+VideoType = Literal["movie", "series"]  # o que o TMDB importa
 MAX_PASSWORD_BYTES = 72  # limite do bcrypt
 FeedbackAction = Literal["want", "seen", "dismiss"]
 
@@ -84,6 +85,14 @@ class MediaOut(ORM):
     tags: list[str]
     creators: list[str]
     popularity: float
+    duration_min: int | None = Field(default=None, description="Filme: duração; série: episódio; álbum: soma das faixas")
+    countries: list[str] = Field(default=[], description="Países de origem, em códigos ISO, como BR")
+    language: str | None = Field(default=None, description="Idioma original ou, no álbum, das letras, como pt")
+    links: list[dict] = Field(
+        default=[],
+        description='Álbum: onde ouvir, [{"service", "url", "level"}]. level "artist" leva à página do artista, '
+        "quando o disco não tem link próprio",
+    )
 
 
 class MediaIn(BaseModel):
@@ -329,13 +338,22 @@ class ExternalTitleOut(BaseModel):
 
 
 class TmdbImportIn(BaseModel):
-    type: MediaType
+    type: VideoType
     tmdb_id: int = Field(gt=0)
 
 
 class TmdbImportOut(BaseModel):
     media: MediaOut
     result: SyncOut
+
+
+class AlbumImportIn(BaseModel):
+    mbid: str = Field(pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      description="ID do álbum (release group) no MusicBrainz")
+
+
+class AlbumImportOut(TmdbImportOut):
+    pass
 
 
 class VariantMetrics(BaseModel):
