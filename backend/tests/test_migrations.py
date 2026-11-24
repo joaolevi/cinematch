@@ -4,6 +4,7 @@ Rodam sempre num SQLite próprio. Com TASTORY_TEST_POSTGRES_URL definida (o CI d
 que é o banco do servidor. Cada teste recebe um banco vazio, separado do banco dos outros testes.
 """
 
+import json
 import os
 from datetime import datetime, timezone
 
@@ -105,6 +106,13 @@ def test_adota_o_banco_do_mvp_sem_perder_dados(engine):
     assert resultado["situacao"] == "adotado"
     assert resultado["depois"] == HEAD
     assert contagens(engine) == antes == (1, 1, 1)
+    # As colunas novas valem também para as linhas que já existiam (valor padrão no banco)
+    with engine.connect() as conn:
+        visibilidade, servicos = conn.execute(text("SELECT visibility, services FROM users")).one()
+        status, excluido = conn.execute(text("SELECT status, excluded FROM diary_entries")).one()
+        paises = conn.execute(text("SELECT countries FROM media")).scalar()
+    lista = lambda v: json.loads(v) if isinstance(v, str) else v  # noqa: E731  (o SQLite devolve o JSON como texto)
+    assert (visibilidade, lista(servicos), status, bool(excluido), lista(paises)) == ("all", [], "seen", False, [])
 
 
 def test_recusa_banco_que_nao_confere_e_nao_mexe_nele(engine):

@@ -77,8 +77,9 @@ no arquivo do tipo (`funcionais.md` ou `nao-funcionais.md`) e no [plano de incre
 - Backend: Python 3.12+, FastAPI, SQLAlchemy 2. Regras de domínio em `app/crud.py` e `app/services/`;
   os routers só validam a entrada e chamam essas funções.
 - Novas rotas precisam de teste em `backend/tests/`.
-- Mudou rotas ou schemas? Atualize `docs/tecnico/API.md` e regenere `docs/tecnico/openapi.json` (comando no `CLAUDE.md`):
-  é o contrato que o frontend usa.
+- Mudou rotas ou schemas? Regenere `docs/tecnico/openapi.json` com `make openapi`: o Swagger é o contrato que a
+  interface usa (D26). Regras de uso vão na descrição da rota (`description=` no router), para aparecer no Swagger. O
+  `docs/tecnico/API.md` só muda se mudar a autenticação, o fluxo das telas ou uma regra geral.
 - **Nunca** commite a chave do TMDB nem o `.env`. O repositório é público.
 - Textos da interface em português.
 - Mudou o modelo de dados? Crie uma migração, como na seção abaixo.

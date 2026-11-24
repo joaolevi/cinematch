@@ -1,5 +1,8 @@
 # API do Tastory — guia para quem vai fazer o frontend
 
+- **O contrato é o Swagger:** `http://localhost:8000/docs`, gerado pelo próprio código, sempre igual ao que a API faz.
+  O mesmo contrato fica em [`openapi.json`](openapi.json), regenerado com `make openapi` em todo PR que muda uma rota.
+  Este guia só traz o que o Swagger não mostra bem: autenticação, o fluxo das telas e as regras de uso.
 - **Base URL (local):** `http://localhost:8000`
 - **Documentação interativa:** `http://localhost:8000/docs` (Swagger, dá para testar todas as rotas)
 - **Contrato OpenAPI:** [`openapi.json`](openapi.json). Serve para gerar clientes/tipos, ex.:
@@ -17,7 +20,10 @@
 
 Contas de demonstração: `admin@tastory.dev / admin123`, `demo@tastory.dev / demo123`.
 
-## Rotas
+## Rotas do MVP (resumo)
+
+Resumo das rotas entregues no MVP, com as regras de cada uma. As rotas novas da entrega final ficam só no
+Swagger, com as regras na descrição de cada rota.
 
 | Método e rota | Para quê | Corpo / parâmetros |
 |---|---|---|
