@@ -258,6 +258,9 @@ export default function DiaryPage() {
               </button>
             ))}
             <span className="ml-1 text-xs text-muted">Toque numa barra para ver esses títulos na linha do tempo.</span>
+            <Link to="/retrospectiva" className="btn-ghost ml-auto px-4 py-1.5 text-sm">
+              Ver minha retrospectiva
+            </Link>
           </div>
 
           {periodEntries.length === 0 ? (
