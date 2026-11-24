@@ -186,7 +186,14 @@ export default function FeedPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Para você, {user?.name.split(" ")[0]}</h1>
-          {feed && <p className="mt-1 text-sm text-muted">{STRATEGY_LABEL[feed.strategy]}</p>}
+          {feed && (
+            <p className="mt-1 text-sm text-muted">
+              {STRATEGY_LABEL[feed.strategy]} ·{" "}
+              <Link to="/como-recomendamos" className="underline hover:text-accent">
+                Como escolhemos
+              </Link>
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {(["", "movie", "series", "album"] as const).map((t) => (
