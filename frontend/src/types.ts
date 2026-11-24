@@ -38,6 +38,14 @@ export interface Media {
   links?: ListenLink[];
 }
 
+/** Onde assistir no Brasil, com dados da JustWatch pelo TMDB. */
+export interface Provider {
+  service: string;
+  kind: "flatrate" | "rent" | "buy";
+  logo: string | null;
+  link: string | null;
+}
+
 /** Um título da outra mídia ligado a este por uma ponte: "Para ouvir depois" ou "Para ver depois". */
 export interface Connection {
   media: Media;

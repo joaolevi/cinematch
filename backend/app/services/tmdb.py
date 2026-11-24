@@ -194,6 +194,23 @@ class TmdbCatalogProvider:
         out = [t for r, tt in results if (t := self._from_item(r, tt))]
         return out[:limit]
 
+    def watch_providers(self, media_type: str, tmdb_id: int) -> list[dict]:
+        """Onde assistir no país configurado (RFF19): assinatura, aluguel e compra. Os dados são da JustWatch, e
+        exibi-los exige o crédito. Cada item: {"service", "kind" (flatrate | rent | buy), "logo", "link"}."""
+        data = self._get(f"/{TYPE_TO_TMDB[media_type]}/{tmdb_id}/watch/providers").get("results", {}).get(self.region, {})
+        link = data.get("link")
+        items = []
+        for kind in ("flatrate", "rent", "buy"):
+            for p in sorted(data.get(kind, []), key=lambda p: p.get("display_priority", 99)):
+                logo = p.get("logo_path")
+                items.append({
+                    "service": p.get("provider_name", "?"),
+                    "kind": kind,
+                    "logo": f"https://image.tmdb.org/t/p/w92{logo}" if logo else None,
+                    "link": link,
+                })
+        return items
+
     def get_title(self, media_type: str, tmdb_id: int) -> ExternalTitle:
         """Um título completo (com detalhes) pelo ID do TMDB."""
         tmdb_type = TYPE_TO_TMDB[media_type]

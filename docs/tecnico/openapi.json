@@ -669,6 +669,58 @@
         }
       }
     },
+    "/media/{media_id}/providers": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Media Providers",
+        "description": "Onde assistir no Brasil: assinatura, aluguel e compra, pelo TMDB, com dados da JustWatch (mostre o crédito).\nGuardado por 7 dias. Vazio para álbuns (eles têm `links`) e para títulos fora do TMDB.",
+        "operationId": "media_providers_media__media_id__providers_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderOut"
+                  },
+                  "title": "Response Media Providers Media  Media Id  Providers Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/media/{media_id}": {
       "get": {
         "tags": [
@@ -4055,6 +4107,55 @@
           "compatibility"
         ],
         "title": "ProfileOut"
+      },
+      "ProviderOut": {
+        "properties": {
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "flatrate",
+              "rent",
+              "buy"
+            ],
+            "title": "Kind",
+            "description": "Assinatura, aluguel ou compra"
+          },
+          "logo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo"
+          },
+          "link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link",
+            "description": "Página do título na JustWatch, com os links de cada serviço"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service",
+          "kind",
+          "logo",
+          "link"
+        ],
+        "title": "ProviderOut"
       },
       "RecommendationOut": {
         "properties": {

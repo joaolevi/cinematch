@@ -11,9 +11,10 @@ from .. import crud
 from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList
-from ..schemas import ConnectionOut, MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MyStatus, ReviewOut
+from ..schemas import ConnectionOut, MediaDetailOut, ProviderOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MyStatus, ReviewOut
 from ..services.bridges import connections
 from ..services.catalog import search_text
+from ..services.providers import where_to_watch
 from ..services.recommender import similar_titles, trending as trending_service
 
 router = APIRouter(prefix="/media", tags=["mídias"])
@@ -140,6 +141,13 @@ def media_connections(
         ConnectionOut(media=MediaOut.model_validate(other), kind=link.kind, weight=link.weight, reason=reason)
         for other, link, reason in connections(db, media, limit)
     ]
+
+
+@router.get("/{media_id}/providers", response_model=list[ProviderOut])
+def media_providers(media_id: int, db: Session = Depends(get_db), _user: User = Depends(get_current_user)):
+    """Onde assistir no Brasil: assinatura, aluguel e compra, pelo TMDB, com dados da JustWatch (mostre o crédito).
+    Guardado por 7 dias. Vazio para álbuns (eles têm `links`) e para títulos fora do TMDB."""
+    return where_to_watch(db, crud.get_media_or_404(db, media_id))
 
 
 @router.get("/{media_id}", response_model=MediaDetailOut)

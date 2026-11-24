@@ -67,7 +67,7 @@ O vocabulário de clima e tudo que depende dele, mais os serviços de streaming.
 | ID | Requisito | Tipo | Situação | Esforço | Prio. | Nec. | Inov. | Depende de |
 |---|---|---|---|---|---|---|---|---|
 | [RNFF09](nao-funcionais.md#rnff09) | Vocabulário de clima comum | Não funcional | Não iniciado | M a G | 2 | 2 | 4 | RNFF02 |
-| [RFF19](funcionais.md#rff19) | Onde assistir ou ouvir | Funcional | Não iniciado | M a G | 2 | 2 | 3 | RNFF03; a música depende do RFF01 |
+| [RFF19](funcionais.md#rff19) | Onde assistir ou ouvir | Funcional | Parcial | M a G | 2 | 2 | 3 | RNFF03; a música depende do RFF01 |
 | [RFF20](funcionais.md#rff20) | Sugestões pelo momento | Funcional | Não iniciado | M | 2 | 2 | 4 | RNFF09; "Hoje à noite" com outra pessoa vem com o RFF28 |
 | [RFF21](funcionais.md#rff21) | Meus serviços | Funcional | Não iniciado | P a M | 2 | 2 | 2 | RFF19 |
 | [RFF22](funcionais.md#rff22) | Quero ver ordenado pelo que combina agora | Funcional | Não iniciado | P a M | 2 | 2 | 3 | RFF19, RFF20 |
