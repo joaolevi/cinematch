@@ -3,7 +3,7 @@
 Tabelas do MVP: users, user_preferences, user_interests, media, item_neighbors, diary_entries, lists, list_items,
 rec_events, dismissed.
 Entrega final (migração 0002): media_bridges, follows, review_likes, review_comments, taste_adjustments, e colunas
-novas em users, media, diary_entries e lists. Toda mudança aqui precisa de migração ("Mudanças no banco" no
+novas em users, media, diary_entries e lists. Migração 0003: users.in_experiments (RFF17). Toda mudança aqui precisa de migração ("Mudanças no banco" no
 CONTRIBUTING.md); colunas novas obrigatórias levam server_default, para valer também nas linhas que já existem.
 """
 
@@ -22,6 +22,7 @@ from sqlalchemy import (
     UniqueConstraint,
     false,
     text,
+    true,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -48,6 +49,13 @@ class User(Base):
     visibility: Mapped[str] = mapped_column(String(10), default="all", server_default="all")
     # Serviços de streaming que a pessoa assina, como "netflix" (RFF21)
     services: Mapped[list[str]] = mapped_column(JSON, default=list, server_default=text("'[]'"))
+    # False = saiu dos experimentos (RFF17): recebe o recomendador completo e fica fora da comparação A/B
+    in_experiments: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
+
+    @property
+    def variant(self) -> str:
+        """O grupo que vale nas sugestões e nos eventos: "A", "B" ou "-" para quem saiu dos experimentos."""
+        return self.ab_group if self.in_experiments else "-"
 
     preferences: Mapped[list["UserPreference"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

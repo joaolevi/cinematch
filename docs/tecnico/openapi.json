@@ -53,6 +53,7 @@
           "acesso"
         ],
         "summary": "Login",
+        "description": "Entrar. Depois de 5 senhas erradas para o mesmo e-mail em 15 minutos, responde 429 até liberar (RNFF05).",
         "operationId": "login_auth_login_post",
         "requestBody": {
           "content": {
@@ -74,6 +75,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Tentativas demais; veja Retry-After"
           },
           "422": {
             "description": "Validation Error",
@@ -102,6 +106,44 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Delete My Account",
+        "description": "Exclui a conta e tudo o que é dela: diário, listas, preferências, eventos e quem a pessoa segue (RFF06).\nPede a senha atual. Contas de administração não saem por aqui.",
+        "operationId": "delete_my_account_me_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -163,6 +205,78 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PreferencesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/me/export": {
+      "get": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Export My Data",
+        "description": "Tudo o que o Tastory guarda sobre a pessoa, em JSON, para baixar (RFF06). A senha não sai, nem cifrada.",
+        "operationId": "export_my_data_me_export_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/me/experiments": {
+      "put": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Set Experiments",
+        "description": "Sair ou voltar para os experimentos (RFF17). Fora deles, a pessoa recebe o recomendador completo e as reações\ndela ficam fora da comparação entre os grupos A e B.",
+        "operationId": "set_experiments_me_experiments_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExperimentsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
                 }
               }
             }
@@ -3001,6 +3115,20 @@
         ],
         "title": "ConnectionOut"
       },
+      "DeleteAccountIn": {
+        "properties": {
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "description": "A senha atual, para confirmar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "title": "DeleteAccountIn"
+      },
       "DiaryIn": {
         "properties": {
           "media_id": {
@@ -3159,6 +3287,19 @@
         },
         "type": "object",
         "title": "DiaryUpdate"
+      },
+      "ExperimentsIn": {
+        "properties": {
+          "in_experiments": {
+            "type": "boolean",
+            "title": "In Experiments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "in_experiments"
+        ],
+        "title": "ExperimentsIn"
       },
       "ExternalTitleOut": {
         "properties": {
@@ -4113,6 +4254,11 @@
             "type": "integer",
             "title": "Series"
           },
+          "albums": {
+            "type": "integer",
+            "title": "Albums",
+            "default": 0
+          },
           "external_neighbors_enabled": {
             "type": "boolean",
             "title": "External Neighbors Enabled"
@@ -4120,6 +4266,18 @@
           "titles_with_neighbors": {
             "type": "integer",
             "title": "Titles With Neighbors"
+          },
+          "acceptance_window_days": {
+            "type": "integer",
+            "title": "Acceptance Window Days",
+            "description": "Aceitação só conta até tantos dias depois da exibição",
+            "default": 7
+          },
+          "opted_out": {
+            "type": "integer",
+            "title": "Opted Out",
+            "description": "Pessoas que saíram dos experimentos (RFF17)",
+            "default": 0
           }
         },
         "type": "object",
@@ -4731,6 +4889,11 @@
           "onboarded": {
             "type": "boolean",
             "title": "Onboarded"
+          },
+          "in_experiments": {
+            "type": "boolean",
+            "title": "In Experiments",
+            "default": true
           }
         },
         "type": "object",
@@ -4813,6 +4976,30 @@
           "acceptance_rate": {
             "type": "number",
             "title": "Acceptance Rate"
+          },
+          "rated": {
+            "type": "integer",
+            "title": "Rated",
+            "description": "Aceitas que depois ganharam nota no diário",
+            "default": 0
+          },
+          "satisfied": {
+            "type": "integer",
+            "title": "Satisfied",
+            "description": "Dessas, quantas ficaram com 3,5 ou mais",
+            "default": 0
+          },
+          "satisfaction_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Satisfaction Rate",
+            "description": "satisfied ÷ rated; None sem nenhuma nota (RFF04)"
           }
         },
         "type": "object",

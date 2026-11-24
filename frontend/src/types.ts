@@ -8,6 +8,7 @@ export interface User {
   role: "user" | "admin";
   ab_group: "A" | "B";
   onboarded: boolean;
+  in_experiments: boolean;
 }
 
 export type MediaSort = "popularity" | "title" | "year";
@@ -170,6 +171,9 @@ export interface VariantMetrics {
   seen: number;
   dismiss: number;
   acceptance_rate: number;
+  rated: number;
+  satisfied: number;
+  satisfaction_rate: number | null;
 }
 
 export interface AdminUser {
@@ -199,8 +203,11 @@ export interface Metrics {
   trending_shown: number;
   movies: number;
   series: number;
+  albums: number;
   external_neighbors_enabled: boolean;
   titles_with_neighbors: number;
+  acceptance_window_days: number;
+  opted_out: number;
 }
 
 export type MediaInput = Pick<

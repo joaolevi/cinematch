@@ -53,9 +53,11 @@ só as sugestões personalizadas, sem as "Em alta".
 
 ## Análise (Bárbara)
 
-O painel da administração já mostra a taxa de todo mundo e a comparação entre os grupos, só com as sugestões
-personalizadas. A consulta abaixo traz os mesmos números e mais uma medida, a **satisfação**: das sugestões aceitas
-que depois ganharam nota, quantas ficaram com 3,5 ou mais. A aceitação mede interesse; a satisfação, se a pessoa gostou.
+O painel da administração já mostra a taxa de todo mundo, a comparação entre os grupos (só com as sugestões
+personalizadas) e a **satisfação**: das sugestões aceitas que depois ganharam nota, quantas ficaram com 3,5 ou mais. A
+aceitação mede interesse; a satisfação, se a pessoa gostou. No painel, uma reação só conta se vier até 7 dias depois de
+a sugestão aparecer. A consulta abaixo é para análises por fora do painel e não aplica essa janela, por isso os números
+podem sair um pouco maiores.
 
 ```sql
 -- Aceitação e satisfação por grupo, só com sugestões personalizadas e pessoas reais

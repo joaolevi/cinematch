@@ -76,6 +76,9 @@ export default function UserMenu() {
             <Link role="menuitem" to="/onboarding" className={item}>
               Refazer minhas preferências
             </Link>
+            <Link role="menuitem" to="/conta" className={item}>
+              Minha conta
+            </Link>
             <Link role="menuitem" to="/sobre" className={item}>
               Sobre o Tastory
             </Link>

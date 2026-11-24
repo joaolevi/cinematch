@@ -150,6 +150,9 @@ export const api = {
   community: (limit: number, before_id?: number, following = false) =>
     request<{ items: CommunityEntry[] }>("/community", { query: { limit, before_id, following: following || undefined } }),
   following: () => request<Person[]>("/users/following"),
+  exportMyData: () => request<unknown>("/me/export"),
+  deleteMyAccount: (password: string) => request<void>("/me", { method: "DELETE", body: { password } }),
+  setExperiments: (in_experiments: boolean) => request<User>("/me/experiments", { method: "PUT", body: { in_experiments } }),
   follow: (id: number) => request<void>(`/users/${id}/follow`, { method: "PUT" }),
   unfollow: (id: number) => request<void>(`/users/${id}/follow`, { method: "DELETE" }),
   reviewers: () => request<Reviewer[]>("/community/reviewers"),

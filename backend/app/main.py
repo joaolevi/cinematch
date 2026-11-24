@@ -15,7 +15,7 @@ from .config import settings
 from .db import SessionLocal, engine
 from .migrations import atualizar_banco
 from .models import Media
-from .routers import admin, auth, community, diary, lists, media, recommendations, users
+from .routers import account, admin, auth, community, diary, lists, media, recommendations, users
 
 log = logging.getLogger("tastory")
 
@@ -50,8 +50,8 @@ app.add_middleware(
 )
 
 for r in (
-    auth.router, media.router, diary.router, lists.router, recommendations.router, community.router, users.router,
-    admin.router,
+    auth.router, account.router, media.router, diary.router, lists.router, recommendations.router, community.router,
+    users.router, admin.router,
 ):
     app.include_router(r)
 

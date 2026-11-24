@@ -1,6 +1,6 @@
 """Pacote Acesso do DCU: Cadastrar Conta, Fazer Login, Definir Preferências Iniciais."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -8,6 +8,7 @@ from .. import crud
 from ..auth import create_token, get_current_user, hash_password, verify_password
 from ..db import get_db
 from ..models import User, UserInterest, UserPreference
+from ..services import login_guard
 from ..schemas import LoginIn, PreferencesIn, PreferencesOut, RegisterIn, TokenOut, UserOut
 
 router = APIRouter(tags=["acesso"])
@@ -33,11 +34,24 @@ def register(data: RegisterIn, db: Session = Depends(get_db)):
     return TokenOut(access_token=create_token(user), user=UserOut.model_validate(user))
 
 
-@router.post("/auth/login", response_model=TokenOut)
-def login(data: LoginIn, db: Session = Depends(get_db)):
-    user = db.scalar(select(User).where(User.email == data.email.lower()))
+@router.post("/auth/login", response_model=TokenOut, responses={429: {"description": "Tentativas demais; veja Retry-After"}})
+def login(data: LoginIn, request: Request, db: Session = Depends(get_db)):
+    """Entrar. Depois de 5 senhas erradas para o mesmo e-mail em 15 minutos, responde 429 até liberar (RNFF05)."""
+    email = data.email.lower()
+    address = request.client.host if request.client else "desconhecido"
+    wait = login_guard.wait_seconds(email, address)
+    if wait:
+        minutes = max(1, round(wait / 60))
+        raise HTTPException(
+            status_code=429,
+            detail=f"Muitas tentativas. Tente de novo em {minutes} {'minuto' if minutes == 1 else 'minutos'}.",
+            headers={"Retry-After": str(wait)},
+        )
+    user = db.scalar(select(User).where(User.email == email))
     if user is None or not verify_password(data.password, user.password_hash):
+        login_guard.failed(email, address)
         raise HTTPException(status_code=401, detail="E-mail ou senha inválidos")
+    login_guard.succeeded(email)
     return TokenOut(access_token=create_token(user), user=UserOut.model_validate(user))
 
 

@@ -15,6 +15,7 @@ import LoginPage from "./pages/LoginPage";
 import MediaPage from "./pages/MediaPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import RetroPage from "./pages/RetroPage";
+import AccountPage from "./pages/AccountPage";
 import ProfilePage from "./pages/ProfilePage";
 import SearchPage from "./pages/SearchPage";
 
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="media/:id" element={<MediaPage />} />
             <Route path="diario" element={<DiaryPage />} />
             <Route path="retrospectiva" element={<RetroPage />} />
+            <Route path="conta" element={<AccountPage />} />
             <Route path="listas" element={<ListsPage />} />
             <Route path="comunidade" element={<CommunityPage />} />
             <Route path="pessoas/:id" element={<ProfilePage />} />

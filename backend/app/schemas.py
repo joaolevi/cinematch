@@ -48,6 +48,7 @@ class UserOut(ORM):
     role: str
     ab_group: str
     onboarded: bool
+    in_experiments: bool = True
 
 
 class TokenOut(BaseModel):
@@ -413,6 +414,17 @@ class VariantMetrics(BaseModel):
     seen: int
     dismiss: int
     acceptance_rate: float
+    rated: int = Field(default=0, description="Aceitas que depois ganharam nota no diário")
+    satisfied: int = Field(default=0, description="Dessas, quantas ficaram com 3,5 ou mais")
+    satisfaction_rate: float | None = Field(default=None, description="satisfied ÷ rated; None sem nenhuma nota (RFF04)")
+
+
+class ExperimentsIn(BaseModel):
+    in_experiments: bool
+
+
+class DeleteAccountIn(BaseModel):
+    password: str = Field(description="A senha atual, para confirmar")
 
 
 class MetricsOut(BaseModel):
@@ -426,5 +438,8 @@ class MetricsOut(BaseModel):
     trending_shown: int  # exibições "Em alta", fora da comparação A/B
     movies: int
     series: int
+    albums: int = 0
     external_neighbors_enabled: bool
     titles_with_neighbors: int
+    acceptance_window_days: int = Field(default=7, description="Aceitação só conta até tantos dias depois da exibição")
+    opted_out: int = Field(default=0, description="Pessoas que saíram dos experimentos (RFF17)")

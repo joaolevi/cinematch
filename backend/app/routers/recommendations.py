@@ -41,7 +41,7 @@ def feed(
             recs = mix_albums(recs, album_suggestions(db, user.id, exclude, limit, discovery), limit)
 
     return FeedOut(
-        variant=user.ab_group,
+        variant=user.variant,
         strategy=strategy,
         items=[
             RecommendationOut(
@@ -76,7 +76,7 @@ def impressions(
                 user_id=user.id,
                 media_id=item.media_id,
                 action="shown",
-                variant=user.ab_group,
+                variant=user.variant,
                 strategy=item.strategy,
                 score=item.score,
             )
@@ -101,7 +101,7 @@ def feedback(
         )
     else:
         crud.dismiss(db, user, media_id)
-    db.add(RecEvent(user_id=user.id, media_id=media_id, action=data.action, variant=user.ab_group))
+    db.add(RecEvent(user_id=user.id, media_id=media_id, action=data.action, variant=user.variant))
     db.commit()
     return {"ok": True, "action": data.action}
 
