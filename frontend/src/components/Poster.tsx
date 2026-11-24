@@ -34,9 +34,17 @@ export default function Poster({
       <div className={`relative aspect-[2/3] w-full ${className}`}>
         <div
           aria-hidden
-          className="absolute top-[37%] left-[6%] aspect-square w-[88%] rounded-full shadow-[0_6px_18px_rgba(0,0,0,.55)]"
-          style={{ background: "repeating-radial-gradient(circle at center, #141414 0 1.5px, #242424 1.5px 3px)" }}
+          className="absolute top-[37%] left-[6%] aspect-square w-[88%] rounded-full shadow-[0_6px_18px_rgba(0,0,0,.45),0_0_0_1.5px_rgba(255,255,255,.28)]"
+          style={{ background: "repeating-radial-gradient(circle at center, #2c2c2e 0 1.5px, #3d3d40 1.5px 3px)" }}
         >
+          {/* Brilho do vinil: duas faixas de luz em cruz, como um disco sob a lâmpada */}
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                "conic-gradient(from 30deg, transparent 0 8%, rgba(255,255,255,.28) 12%, transparent 18% 50%, rgba(255,255,255,.22) 62%, transparent 68%)",
+            }}
+          />
           <div
             className="absolute inset-[31%] rounded-full bg-cover bg-center ring-2 ring-black/50"
             style={cover ? { backgroundImage: `url(${cover})` } : { background: `hsl(${h % 360} 45% 45%)` }}

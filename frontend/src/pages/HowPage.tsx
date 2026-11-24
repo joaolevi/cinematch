@@ -71,7 +71,11 @@ export default function HowPage() {
             <strong>Gênero, década e país juntos:</strong> sozinhos não bastam; só valem pelo menos dois ao mesmo tempo.
           </li>
         </ul>
-        <p>No detalhe de cada título, as mesmas pontes aparecem em "Para ouvir depois" e "Para ver depois".</p>
+        <p>
+          Depois das pontes vêm os artistas e os gêneros musicais que você escolheu no começo ("Porque você curte Elis
+          Regina") e, por fim, os discos mais ouvidos. No detalhe de cada título, as mesmas pontes aparecem em "Para ouvir
+          depois" e "Para ver depois".
+        </p>
       </Part>
 
       <Part title="4. Você escolhe o quanto sair do óbvio">

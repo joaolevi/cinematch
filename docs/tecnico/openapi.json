@@ -144,7 +144,7 @@
           "acesso"
         ],
         "summary": "Set Preferences",
-        "description": "Onboarding: gêneros, décadas, criadores e títulos que o usuário já gosta (viram registros no diário).",
+        "description": "Onboarding: gêneros (de filme e de música), décadas, criadores, artistas e títulos que a pessoa já curte (viram\nregistros no diário).",
         "operationId": "set_preferences_me_preferences_put",
         "requestBody": {
           "content": {
@@ -4103,6 +4103,16 @@
             "title": "Creators",
             "default": []
           },
+          "artists": {
+            "items": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "type": "array",
+            "title": "Artists",
+            "description": "Artistas de música que a pessoa curte",
+            "default": []
+          },
           "liked_media_ids": {
             "items": {
               "type": "integer"
@@ -4137,6 +4147,14 @@
             },
             "type": "array",
             "title": "Creators"
+          },
+          "artists": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Artists",
+            "default": []
           },
           "onboarded": {
             "type": "boolean",

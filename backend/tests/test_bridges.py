@@ -176,3 +176,16 @@ def test_mix_albums_respeita_o_limite_e_ignora_os_sem_ponte():
     albums.append(Recommendation(Media(id=200), 1.0, "Em alta na música", "trending"))
     out = mix_albums(feed, albums, 6)
     assert [r.media.id for r in out] == [0, 1, 100, 2, 3, 4]
+
+
+def test_artistas_e_generos_do_onboarding_viram_sugestoes(client, user_headers, albums):
+    r = client.put("/me/preferences", json={"genres": ["MPB"], "artists": ["Daft Punk"]}, headers=user_headers)
+    assert r.status_code == 200 and r.json()["artists"] == ["Daft Punk"]
+    feed = client.get("/recommendations", params={"type": "album", "limit": 6}, headers=user_headers).json()["items"]
+    reasons = {f["media"]["title"]: f["reason"] for f in feed}
+    assert reasons["Random Access Memories"] == "Porque você curte Daft Punk"
+    assert reasons["Cru"] == "Porque você curte MPB"
+    assert feed[0]["media"]["title"] == "Random Access Memories"  # artista vale mais que gênero
+    # no feed misto, os álbuns com motivo também entram nos lugares fixos
+    misto = client.get("/recommendations", params={"limit": 12}, headers=user_headers).json()["items"]
+    assert any(m["media"]["type"] == "album" for m in misto)

@@ -28,8 +28,8 @@ Swagger, com as regras na descrição de cada rota.
 | Método e rota | Para quê | Corpo / parâmetros |
 |---|---|---|
 | `GET /me` | Usuário logado | — |
-| `GET /me/preferences` | Preferências salvas | — → `{genres, decades, creators, onboarded}` |
-| `PUT /me/preferences` | Onboarding | `{genres: string[], decades: number[], creators: string[], liked_media_ids: number[]}` |
+| `GET /me/preferences` | Preferências salvas | — → `{genres, decades, creators, artists, onboarded}` |
+| `PUT /me/preferences` | Onboarding | `{genres: string[], decades: number[], creators: string[], artists: string[], liked_media_ids: number[]}`. `genres` junta os gêneros de filme e de música; `artists` são os artistas de música |
 | `GET /media` | Busca/listagem | `q`, `type` (`movie`\|`series`), `genre`, `person` (nome exato de diretor, criador ou ator), `sort` (`popularity`\|`title`\|`year`; em `popularity`, com `q`, os títulos que começam com o termo vêm primeiro; em `year`, títulos de anos futuros ficam no fim), `limit`, `offset` → `{items, total}` |
 | `GET /media/genres` | Lista de gêneros (para filtros/onboarding) | — |
 | `GET /media/facets` | Décadas e criadores do catálogo, para o onboarding | `genre` (pode repetir), `limit` |
