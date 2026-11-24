@@ -38,6 +38,7 @@ export default function FeedPage() {
     undo?: () => void;
   } | null>(null);
   const [stamp, setStamp] = useState(0);
+  const [stampAlbum, setStampAlbum] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreFailed, setMoreFailed] = useState(false);
@@ -146,6 +147,7 @@ export default function FeedPage() {
     const generation = latestLoad.current;
     setFeed((f) => (f ? { ...f, items: f.items.filter((i) => i.media.id !== media.id) } : f));
     if (action === "seen") {
+      setStampAlbum(media.type === "album");
       setStamp(Date.now());
       diaryChanged();
       setToast({ text: `Boa! "${media.title}" entrou no seu diário` });
@@ -182,7 +184,7 @@ export default function FeedPage() {
 
   return (
     <div>
-      <SeenStamp id={stamp} />
+      <SeenStamp id={stamp} album={stampAlbum} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Para você, {user?.name.split(" ")[0]}</h1>

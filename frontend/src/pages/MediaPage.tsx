@@ -186,7 +186,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
 
   return (
     <div>
-      <SeenStamp id={stamp} />
+      <SeenStamp id={stamp} album={media.type === "album"} />
       <div className="relative overflow-hidden rounded-2xl border border-line/60 bg-surface/40 p-6 md:p-8">
         {media.poster_url && (
           <div

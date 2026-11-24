@@ -107,7 +107,7 @@ export const api = {
     request<Preferences & { onboarded: boolean }>("/me/preferences", { method: "PUT", body: preferences }),
 
   // Mídias
-  genres: () => request<string[]>("/media/genres"),
+  genres: (type?: MediaType) => request<string[]>("/media/genres", { query: { type } }),
   facets: (genre: string[]) => request<{ decades: number[]; creators: string[] }>("/media/facets", { query: { genre } }),
   search: (query: { q?: string; type?: MediaType | ""; genre?: string; person?: string; sort?: MediaSort; limit?: number; offset?: number }) =>
     request<{ items: Media[]; total: number }>("/media", { query }),

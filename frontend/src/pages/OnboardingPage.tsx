@@ -10,11 +10,12 @@ import { diaryChanged } from "../seen";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
 
-const LAST_STEP = 3;
+const LAST_STEP = 4;
+const ALBUM_COUNT = 18;
 const TITLE_COUNT = 24;
 const POPULAR_POOL = 60;
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 
 const decadeLabel = (decade: number) => (decade < 2000 ? `Anos ${decade % 100}` : `Anos ${decade}`);
 
@@ -69,6 +70,9 @@ export default function OnboardingPage() {
   const [selectedDecades, setSelectedDecades] = useState<Set<number>>(new Set());
   const [selectedCreators, setSelectedCreators] = useState<Set<string>>(new Set());
   const [liked, setLiked] = useState<Set<number>>(new Set());
+  const [musicGenres, setMusicGenres] = useState<string[]>([]);
+  const [selectedMusic, setSelectedMusic] = useState<Set<string>>(new Set());
+  const [albums, setAlbums] = useState<Media[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,10 +82,12 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     api.genres().then(setGenres).catch((e) => setError(e.message));
+    api.genres("album").then(setMusicGenres).catch(() => {});
     api
       .getPreferences()
       .then((p) => {
         setSelectedGenres(new Set(p.genres));
+        setSelectedMusic(new Set(p.genres)); // cada passo só mostra e salva os gêneros da sua mídia
         setSelectedDecades(new Set(p.decades));
         setSelectedCreators(new Set(p.creators));
       })
@@ -136,6 +142,18 @@ export default function OnboardingPage() {
     }
   }
 
+  // Passo da música: os álbuns mais ouvidos dos gêneros escolhidos, ou os mais ouvidos de todos
+  useEffect(() => {
+    if (step !== 4) return;
+    const chosen = [...selectedMusic].filter((g) => musicGenres.includes(g));
+    const searches = chosen.length
+      ? chosen.map((genre) => api.search({ type: "album", genre, limit: ALBUM_COUNT }))
+      : [api.search({ type: "album", limit: ALBUM_COUNT })];
+    Promise.all(searches)
+      .then((pages) => setAlbums(interleave(pages.map((p) => p.items)).slice(0, ALBUM_COUNT)))
+      .catch(() => {});
+  }, [step, selectedMusic, musicGenres]);
+
   async function finish(skip = false) {
     // Quem já tinha feito o onboarding e pula mantém o que escolheu antes
     if (skip && user?.onboarded) {
@@ -148,7 +166,10 @@ export default function OnboardingPage() {
         skip
           ? { genres: [], decades: [], creators: [], liked_media_ids: [] }
           : {
-              genres: [...selectedGenres],
+              genres: [
+                ...[...selectedGenres].filter((g) => genres.includes(g)),
+                ...[...selectedMusic].filter((g) => musicGenres.includes(g)),
+              ],
               decades: [...selectedDecades],
               creators: [...selectedCreators],
               liked_media_ids: [...liked],
@@ -314,10 +335,66 @@ export default function OnboardingPage() {
           </div>
           {error && <p className="text-red-300">{error}</p>}
           <div className="flex flex-wrap gap-3">
+            <button className="btn-primary px-6" onClick={() => goTo(4)}>
+              Continuar: música
+            </button>
+            <button className="btn-ghost" disabled={saving} onClick={() => goTo(2)}>
+              Voltar
+            </button>
+          </div>
+        </>
+      )}
+
+      {step === 4 && (
+        <>
+          <div>
+            <h1 className="text-3xl font-bold">E o que você curte ouvir?</h1>
+            <p className="mt-1 text-muted">
+              Marque os gêneros e os discos que você curte. A gente liga a música aos seus filmes e séries: a trilha, quem
+              compôs, quem canta e atua.
+            </p>
+          </div>
+          {page(
+            "Querido diário, eu ouço:",
+            <div className="flex flex-wrap gap-x-3 gap-y-3">
+              {musicGenres.map((g, position) => (
+                <button
+                  key={g}
+                  aria-pressed={selectedMusic.has(g)}
+                  onClick={() => toggle(selectedMusic, g, setSelectedMusic)}
+                  className="tape-chip"
+                  style={tape(position)}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>,
+          )}
+          <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
+            {albums.map((m, position) => (
+              <button
+                key={m.id}
+                onClick={() => toggle(liked, m.id, setLiked)}
+                aria-pressed={liked.has(m.id)}
+                aria-label={m.title}
+                className="relative cursor-pointer rounded-lg text-left transition hover:-translate-y-0.5"
+              >
+                {liked.has(m.id) ? (
+                  <Polaroid position={position} caption="gostei ♥" straightenOnHover={false}>
+                    <Poster media={m} rounded="rounded-[2px]" />
+                  </Polaroid>
+                ) : (
+                  <Poster media={m} />
+                )}
+              </button>
+            ))}
+          </div>
+          {error && <p className="text-red-300">{error}</p>}
+          <div className="flex flex-wrap gap-3">
             <button className="btn-primary px-6" disabled={saving} onClick={() => finish(false)}>
               {liked.size > 0 ? "Ver minhas recomendações" : "Ver sugestões assim mesmo"}
             </button>
-            <button className="btn-ghost" disabled={saving} onClick={() => goTo(2)}>
+            <button className="btn-ghost" disabled={saving} onClick={() => goTo(3)}>
               Voltar
             </button>
           </div>

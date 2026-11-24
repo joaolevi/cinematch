@@ -26,17 +26,41 @@ export default function Poster({
       Em breve
     </span>
   );
-  if (media.type === "album" && media.poster_url && !broken) {
+  if (media.type === "album") {
+    // A capa é quadrada e o espaço é vertical: o disco de vinil sai por baixo da capa e ocupa a sobra
+    const cover = media.poster_url && !broken ? media.poster_url : null;
+    const h = hash(media.title);
     return (
-      <div className={`relative aspect-[2/3] w-full overflow-hidden bg-black ${rounded} ${className}`}>
-        <img aria-hidden src={media.poster_url} alt="" className="absolute inset-0 h-full w-full scale-125 object-cover opacity-50 blur-xl" />
-        <img
-          src={media.poster_url}
-          alt={media.title}
-          loading="lazy"
-          onError={() => setBroken(true)}
-          className="absolute inset-x-0 top-1/2 aspect-square w-full -translate-y-1/2 object-cover shadow-[0_8px_24px_rgba(0,0,0,.5)]"
-        />
+      <div className={`relative aspect-[2/3] w-full ${className}`}>
+        <div
+          aria-hidden
+          className="absolute top-[37%] left-[6%] aspect-square w-[88%] rounded-full shadow-[0_6px_18px_rgba(0,0,0,.55)]"
+          style={{ background: "repeating-radial-gradient(circle at center, #141414 0 1.5px, #242424 1.5px 3px)" }}
+        >
+          <div
+            className="absolute inset-[31%] rounded-full bg-cover bg-center ring-2 ring-black/50"
+            style={cover ? { backgroundImage: `url(${cover})` } : { background: `hsl(${h % 360} 45% 45%)` }}
+          />
+          <div className="absolute inset-[48.5%] rounded-full bg-[#0b0d10]" />
+        </div>
+        {cover ? (
+          <img
+            src={cover}
+            alt={media.title}
+            loading="lazy"
+            onError={() => setBroken(true)}
+            className={`absolute inset-x-0 top-0 aspect-square w-full object-cover shadow-[0_8px_20px_rgba(0,0,0,.55)] ${rounded}`}
+            style={{ background: `linear-gradient(160deg, hsl(${h % 360} 40% 28%), #1a1512)` }}
+          />
+        ) : (
+          <div
+            className={`absolute inset-x-0 top-0 flex aspect-square w-full flex-col justify-end p-3 shadow-[0_8px_20px_rgba(0,0,0,.55)] ${rounded}`}
+            style={{ background: `linear-gradient(160deg, hsl(${h % 360} 55% 32%), #0b0d10)` }}
+            aria-label={`Capa de ${media.title}`}
+          >
+            {!compact && <p className="line-clamp-3 text-sm leading-tight font-bold text-white drop-shadow">{media.title}</p>}
+          </div>
+        )}
         {upcoming}
       </div>
     );
