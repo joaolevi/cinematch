@@ -67,6 +67,9 @@ export default function UserMenu() {
             <Link role="menuitem" to="/diario?aba=gosto" className={item}>
               Meu gosto
             </Link>
+            <Link role="menuitem" to="/meu-gosto" className={item}>
+              Corrigir meu gosto
+            </Link>
             <Link role="menuitem" to={`/pessoas/${user.id}`} className={item}>
               Meu perfil
             </Link>

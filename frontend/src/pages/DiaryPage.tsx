@@ -259,7 +259,10 @@ export default function DiaryPage() {
               </button>
             ))}
             <span className="ml-1 text-xs text-muted">Toque numa barra para ver esses títulos na linha do tempo.</span>
-            <Link to="/retrospectiva" className="btn-ghost ml-auto px-4 py-1.5 text-sm">
+            <Link to="/meu-gosto" className="btn-ghost ml-auto px-4 py-1.5 text-sm">
+              Corrigir meu gosto
+            </Link>
+            <Link to="/retrospectiva" className="btn-ghost px-4 py-1.5 text-sm">
               Ver minha retrospectiva
             </Link>
           </div>

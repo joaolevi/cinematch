@@ -31,6 +31,9 @@ Swagger, com as regras na descrição de cada rota.
 | `GET /me/export` | Baixar os próprios dados (RFF06) | → JSON com `account`, `preferences`, `diary`, `lists`, `dismissed`, `following`, `review_comments`, `taste_adjustments` e `recommendation_events`; a senha não vai |
 | `DELETE /me` | Excluir a própria conta e tudo o que é dela (RFF06) | `{password}` → 204; 403 com senha errada; 400 para contas de administração |
 | `PUT /me/experiments` | Sair ou voltar para os experimentos (RFF17) | `{in_experiments: bool}` → o usuário. Fora deles, `variant` no feed vem `"-"` e as reações ficam fora da comparação A/B |
+| `GET /me/taste` | O que o Tastory acha do gosto (RFF07) | → `{genres, decades, people, moods: [{kind, value, label, share, weight}], titles, excluded, adjusted}` |
+| `PUT /me/taste/adjustments` | Pedir mais ou menos de algo (RFF07, RFF08) | `{kind: "genre"\|"decade"\|"person"\|"mood"\|"title", value, weight}`: 1,5 mais, 0,5 menos, 0 tira do cálculo, 1 volta ao normal → 204 |
+| `DELETE /me/taste/adjustments` | Desfazer todos os ajustes | 204 |
 | `GET /me/preferences` | Preferências salvas | — → `{genres, decades, creators, artists, onboarded}` |
 | `PUT /me/preferences` | Onboarding | `{genres: string[], decades: number[], creators: string[], artists: string[], liked_media_ids: number[]}`. `genres` junta os gêneros de filme e de música; `artists` são os artistas de música |
 | `GET /media` | Busca/listagem | `q`, `type` (`movie`\|`series`), `genre`, `person` (nome exato de diretor, criador ou ator), `sort` (`popularity`\|`title`\|`year`; em `popularity`, com `q`, os títulos que começam com o termo vêm primeiro; em `year`, títulos de anos futuros ficam no fim), `limit`, `offset` → `{items, total}` |
@@ -99,6 +102,14 @@ placeholder (ex.: gradiente com o título). Exibir dados do TMDB exige o crédit
   máximo 2 do mesmo artista no começo da lista. Com `discovery`, parte dos álbuns é de gêneros que a pessoa ainda não
   ouve (`strategy: "discovery"`): 3 de cada 10 em `beyond` e 7 de cada 10 em `outside`. Avise as impressões dos álbuns
   como as dos filmes.
+- **Climas (RNFF09, RFF23):** `GET /media/moods` traz os 20 climas `[{key, label, count}]`; cada mídia traz `moods`
+  (as chaves). `GET /media?mood=leve` busca filmes, séries e álbuns juntos por clima.
+- **Momento (RFF20):** `GET /recommendations` aceita `mood` e `max_minutes` (na série, a duração do episódio; títulos
+  sem duração ficam de fora quando há limite).
+- **Não por esse motivo (RFF08):** cada sugestão traz `because: {kind, value, label}`, o que está por trás do motivo.
+  Para "Não por causa de Matrix", mande `PUT /me/taste/adjustments` com esse `kind` e `value` e `weight: 0.5`.
+- **Registro que não conta (RFF07):** `PATCH /diary/{id}` com `{excluded: true}` tira o registro do cálculo do gosto,
+  sem tirar do diário.
 - **Pontes no detalhe (RFF26):** `GET /media/{id}/connections` traz os títulos da outra mídia ligados a este, com
   `reason` já escrito para o detalhe. Num filme ou série, mostre como "Para ouvir depois"; num álbum, "Para ver depois".
 - Os dados vêm do MusicBrainz (CC0) e do ListenBrainz. O crédito "Dados de álbuns: MusicBrainz" é recomendado, e não

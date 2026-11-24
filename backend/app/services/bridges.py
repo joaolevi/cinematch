@@ -283,50 +283,66 @@ def outside_the_bubble(albums: list[Media], familiar: set[str], have: set[int], 
             if items and len(picked) < count:
                 album = items.pop(0)
                 reason = f"{prefix}{genre}, um gênero que você ainda não ouve"
-                picked.append(Recommendation(album, album.popularity / 100, reason, "discovery"))
+                picked.append(Recommendation(album, album.popularity / 100, reason, "discovery", ("genre", genre)))
     return picked
 
 
 def album_suggestions(
-    db: Session, user_id: int, skip: Iterable[int] = (), limit: int = 20, discovery: str = "taste"
+    db: Session,
+    user_id: int,
+    skip: Iterable[int] = (),
+    limit: int = 20,
+    discovery: str = "taste",
+    allow: set[int] | None = None,
 ) -> list[Recommendation]:
     """Álbuns para a pessoa: pelas pontes com o que ela curtiu, depois pelos artistas e gêneros musicais que ela disse
     curtir no onboarding e, por fim, os álbuns em alta. No modo descoberta, parte dos lugares vai para discos de gêneros
-    que ela ainda não ouve: 3 de cada 10 em "Um pouco além" e 7 de cada 10 em "Fora da sua bolha"."""
+    que ela ainda não ouve: 3 de cada 10 em "Um pouco além" e 7 de cada 10 em "Fora da sua bolha". Com `allow`, só
+    esses discos (os filtros do momento, RFF20); os ajustes de gosto (RFF07, RFF08) multiplicam as notas."""
+    from . import adjustments as adj
+
     exclude = excluded_ids(db, user_id) | set(skip)
+    adjust = adj.load(db, user_id)
     signals = user_signals(db, user_id)
     liked_ids = [mid for mid, w in signals.items() if w > 0]
     by_id = {m.id: m for m in db.scalars(select(Media).where(Media.id.in_(liked_ids)))} if liked_ids else {}
-    albums = [m for m in db.scalars(select(Media).where(Media.type == "album")) if m.id not in exclude]
+    albums = [
+        m
+        for m in db.scalars(select(Media).where(Media.type == "album"))
+        if m.id not in exclude and (allow is None or m.id in allow) and adj.factor(m, adjust) > 0
+    ]
     strong = strong_links(db, by_id)
 
-    scored: list[tuple[float, Media, str]] = []
+    scored: list[tuple[float, Media, str, tuple[str, str]]] = []
     for album in albums:
-        best, reason = 0.0, ""
+        best, reason, because = 0.0, "", None
         for mid, liked in by_id.items():
             link = link_between(liked, album, strong)
             if link and link.weight * signals[mid] > best:
-                best, reason = link.weight * signals[mid], feed_reason(liked, link)
+                best, reason, because = link.weight * signals[mid], feed_reason(liked, link), ("title", str(mid))
         if best > 0:
-            scored.append((best + ALBUM_POPULARITY_BONUS * album.popularity / 100, album, reason))
+            score = (best + ALBUM_POPULARITY_BONUS * album.popularity / 100) * adj.factor(album, adjust)
+            scored.append((score, album, reason, because))
     # O que a pessoa disse que curte no onboarding: artistas e gêneros musicais
-    bridged = {album.id for _, album, _ in scored}
+    bridged = {album.id for _, album, _, _ in scored}
     artists = set(db.scalars(select(UserInterest.value).where(UserInterest.user_id == user_id, UserInterest.kind == "artist")))
     genres = set(db.scalars(select(UserPreference.genre).where(UserPreference.user_id == user_id)))
-    preferred: list[tuple[float, Media, str]] = []
+    preferred: list[tuple[float, Media, str, tuple[str, str]]] = []
     for album in albums:
         if album.id in bridged:
             continue
         artist = next((a for a in album.creators or [] if a in artists), None)
         genre = next((g for g in album.genres or [] if g in genres), None)
         if artist:
-            preferred.append((PREF_ARTIST, album, f"Porque você curte {artist}"))
+            score = PREF_ARTIST * adj.factor(album, adjust)
+            preferred.append((score, album, f"Porque você curte {artist}", ("person", artist)))
         elif genre:
-            preferred.append((PREF_GENRE, album, f"Porque você curte {genre}"))
+            score = PREF_GENRE * adj.factor(album, adjust)
+            preferred.append((score, album, f"Porque você curte {genre}", ("genre", genre)))
     scored.sort(key=lambda x: -x[0])
     preferred.sort(key=lambda x: (-x[0], -x[1].popularity))
-    recs = [Recommendation(album, score, reason, "bridge") for score, album, reason in scored]
-    recs += [Recommendation(album, score, reason, "content") for score, album, reason in preferred]
+    recs = [Recommendation(album, score, reason, "bridge", because) for score, album, reason, because in scored]
+    recs += [Recommendation(album, score, reason, "content", because) for score, album, reason, because in preferred]
     recs = sorted(recs, key=lambda r: -r.score)
     # Completa com os álbuns mais ouvidos; o limite por artista e por motivo vale para a lista toda
     have = {r.media.id for r in recs}

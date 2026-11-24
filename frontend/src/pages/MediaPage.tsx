@@ -14,6 +14,7 @@ import { colorFor, formatDate, formatRating, MEDIA_STYLE, plural, SERVICE_LABEL,
 import type { Connection, Media, MediaDetail, Provider, UserList } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
+import { moodLabel, useMoods } from "../moods";
 import HandNote from "../components/HandNote";
 
 function PeopleLinks({ names }: { names: string[] }) {
@@ -119,6 +120,7 @@ export default function MediaPage() {
 
 function MediaView({ mediaId }: { mediaId: number }) {
   const [media, setMedia] = useState<MediaDetail | null>(null);
+  const moods = useMoods();
   const [lists, setLists] = useState<UserList[]>([]);
   const [similar, setSimilar] = useState<Media[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
@@ -249,6 +251,21 @@ function MediaView({ mediaId }: { mediaId: number }) {
                   <dd>{media.duration_min >= 60 ? `${Math.floor(media.duration_min / 60)} h ${media.duration_min % 60} min` : `${media.duration_min} min`}</dd>
                 </div>
               ) : null}
+              {media.moods && media.moods.length > 0 && (
+                <div className="flex gap-3">
+                  <dt className="w-16 shrink-0 text-muted">Clima</dt>
+                  <dd className="flex flex-wrap gap-x-2">
+                    {media.moods.map((key, i) => (
+                      <span key={key}>
+                        <Link to={`/buscar?clima=${key}`} className="underline decoration-dotted underline-offset-2 hover:text-accent">
+                          {moodLabel(moods, key)}
+                        </Link>
+                        {i < media.moods!.length - 1 && ","}
+                      </span>
+                    ))}
+                  </dd>
+                </div>
+              )}
               {media.actors.length > 0 && (
                 <div className="flex gap-3">
                   <dt className="w-16 shrink-0 text-muted">Elenco</dt>

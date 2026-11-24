@@ -62,3 +62,11 @@ export function colorFor(text: string): string {
   const sum = [...text].reduce((total, char) => total + char.charCodeAt(0), 0);
   return COLORS[sum % COLORS.length];
 }
+
+/** "1h30", "2h", "45 min". */
+export function formatMinutes(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
+}

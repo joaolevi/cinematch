@@ -58,6 +58,8 @@ def update_entry(
         entry.review = (fields["review"] or "").strip() or None
     if "consumed_at" in fields:
         entry.consumed_at = fields["consumed_at"]
+    if fields.get("excluded") is not None:
+        entry.excluded = fields["excluded"]
     db.commit()
     db.refresh(entry)
     return entry

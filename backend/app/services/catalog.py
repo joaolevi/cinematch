@@ -129,6 +129,9 @@ def sync_catalog(db: Session, provider: CatalogProvider, source: str = "mock") -
         by_external[t["external_id"]] = media
         by_key[title_key(media.type, media.title, media.year)] = media
     db.commit()
+    from .moods import fill_moods
+
+    fill_moods(db, only_missing=False)  # as tags podem ter mudado
     return {
         "provider": provider.name,
         "fetched": len(titles),

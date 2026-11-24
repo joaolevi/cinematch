@@ -124,6 +124,14 @@ internet; rodar de novo só atualiza):
 make prod-albuns
 ```
 
+**Duração e climas (RFF20, RNFF09).** Os climas são calculados sozinhos quando a API sobe. A duração dos filmes e das
+séries vem do TMDB e precisa ser buscada uma vez (uma consulta por título, uns 2 minutos), para o filtro "Até 2h"
+funcionar:
+
+```bash
+make prod-duracoes
+```
+
 Para ver em que versão o banco está:
 
 ```bash

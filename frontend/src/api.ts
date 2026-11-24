@@ -22,6 +22,10 @@ import type {
   User,
   UserList,
   Person,
+  AdjustKind,
+  Mood,
+  Moment,
+  TasteProfile,
 } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
@@ -111,7 +115,7 @@ export const api = {
   genres: (type?: MediaType) => request<string[]>("/media/genres", { query: { type } }),
   facets: (genre: string[], type?: MediaType, limit?: number) =>
     request<{ decades: number[]; creators: string[] }>("/media/facets", { query: { genre, type, limit } }),
-  search: (query: { q?: string; type?: MediaType | ""; genre?: string; person?: string; sort?: MediaSort; limit?: number; offset?: number }) =>
+  search: (query: { q?: string; type?: MediaType | ""; genre?: string; person?: string; mood?: string; sort?: MediaSort; limit?: number; offset?: number }) =>
     request<{ items: Media[]; total: number }>("/media", { query }),
   similar: (id: number) => request<Media[]>(`/media/${id}/similar`),
   connections: (id: number) => request<Connection[]>(`/media/${id}/connections`),
@@ -127,7 +131,7 @@ export const api = {
       method: "POST",
       body: { media_id, rating: rating ?? null, review: review || null, consumed_at: consumed_at || null },
     }),
-  updateDiary: (id: number, data: { rating?: number | null; review?: string | null; consumed_at?: string | null }) =>
+  updateDiary: (id: number, data: { rating?: number | null; review?: string | null; consumed_at?: string | null; excluded?: boolean }) =>
     request<DiaryEntry>(`/diary/${id}`, { method: "PATCH", body: data }),
   deleteDiary: (id: number) => request<void>(`/diary/${id}`, { method: "DELETE" }),
 
@@ -144,8 +148,13 @@ export const api = {
     request<void>(`/lists/${id}/items/${media_id}`, { method: "DELETE" }),
 
   // Recomendações
-  feed: (type?: MediaType, limit = 20, exclude: number[] = [], discovery: Discovery = "taste") =>
-    request<Feed>("/recommendations", { query: { type, limit, exclude: exclude.map(String), discovery } }),
+  feed: (type?: MediaType, limit = 20, exclude: number[] = [], discovery: Discovery = "taste", moment: Moment = {}) =>
+    request<Feed>("/recommendations", { query: { type, limit, exclude: exclude.map(String), discovery, ...moment } }),
+  moods: () => request<Mood[]>("/media/moods"),
+  taste: () => request<TasteProfile>("/me/taste"),
+  adjust: (kind: AdjustKind, value: string, weight: number) =>
+    request<void>("/me/taste/adjustments", { method: "PUT", body: { kind, value, weight } }),
+  resetTaste: () => request<void>("/me/taste/adjustments", { method: "DELETE" }),
   undoDismiss: (media_id: number) => request<void>(`/recommendations/${media_id}/feedback`, { method: "DELETE" }),
   community: (limit: number, before_id?: number, following = false) =>
     request<{ items: CommunityEntry[] }>("/community", { query: { limit, before_id, following: following || undefined } }),

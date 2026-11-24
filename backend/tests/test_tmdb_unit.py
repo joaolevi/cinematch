@@ -230,3 +230,13 @@ def test_enriquecer_ignora_albuns(db):
     enrich_catalog(db, make_provider())  # antes, KeyError: 'album'
     album = db.query(Media).filter_by(external_id="album-x").one()
     assert album.source == "musicbrainz" and album.poster_url is None
+
+
+def test_duracao_do_filme_e_do_episodio():
+    from app.services.tmdb import runtime_of
+
+    assert runtime_of({"runtime": 169}, "movie") == 169
+    assert runtime_of({"runtime": 0}, "movie") is None
+    assert runtime_of({"episode_run_time": [47]}, "tv") == 47
+    assert runtime_of({"episode_run_time": [], "last_episode_to_air": {"runtime": 52}}, "tv") == 52
+    assert runtime_of({}, "tv") is None

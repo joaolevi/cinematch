@@ -156,6 +156,7 @@ class TmdbCatalogProvider:
         full["creators"] = list(dict.fromkeys(creators))[:3]
         full["actors"] = [c["name"] for c in cast][:MAX_ACTORS]
         full["tags"] = [k["name"].lower() for k in keywords][:8]
+        full["duration_min"] = runtime_of(d, tmdb_type)
         return full
 
     def _enrich_all(self, titles: list[ExternalTitle]) -> list[ExternalTitle]:
@@ -221,6 +222,47 @@ class TmdbCatalogProvider:
         self._client.close()
 
 
+def runtime_of(details: dict, tmdb_type: str) -> int | None:
+    """Duração em minutos: a do filme ou a de um episódio da série (RFF20)."""
+    if tmdb_type == "movie":
+        return details.get("runtime") or None
+    episode = (details.get("episode_run_time") or [None])[0]
+    last = (details.get("last_episode_to_air") or {}).get("runtime")
+    return episode or last or None
+
+
+def fill_durations(db, provider: TmdbCatalogProvider) -> dict:
+    """Completa a duração dos filmes e séries do TMDB que ainda não têm, com uma consulta de detalhes por título."""
+    from sqlalchemy import select
+
+    from ..models import Media
+
+    rows = list(
+        db.scalars(
+            select(Media).where(
+                Media.source == "tmdb", Media.type.in_(("movie", "series")), Media.duration_min.is_(None)
+            )
+        )
+    )
+
+    def runtime(m: Media) -> int | None:
+        tmdb_type, tmdb_id = m.external_id.split("-", 1)
+        try:
+            return runtime_of(provider._get(f"/{tmdb_type}/{tmdb_id}"), tmdb_type)
+        except TmdbError:
+            return None
+
+    with ThreadPoolExecutor(max_workers=provider.max_workers) as pool:
+        found = list(pool.map(runtime, rows))
+    filled = 0
+    for m, minutes in zip(rows, found):
+        if minutes:
+            m.duration_min = minutes
+            filled += 1
+    db.commit()
+    return {"checked": len(rows), "filled": filled}
+
+
 def enrich_catalog(db, provider: TmdbCatalogProvider, only_missing_posters: bool = True) -> dict:
     """Procura no TMDB cada título do catálogo (mock/manual) por tipo + título + ano.
 
@@ -279,6 +321,7 @@ def enrich_catalog(db, provider: TmdbCatalogProvider, only_missing_posters: bool
         m.overview = t["overview"] or m.overview
         m.genres = t["genres"] or m.genres
         m.actors = t["actors"]
+        m.duration_min = t.get("duration_min") or m.duration_min
         enriched += 1
     db.commit()
     return {"checked": len(rows), "enriched": enriched, "not_found": not_found, "merged": merged}
