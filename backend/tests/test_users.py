@@ -1,0 +1,67 @@
+"""Perfil e compatibilidade de gosto (RFF15)."""
+
+from sqlalchemy import select
+
+from app.models import Media, User
+
+from .conftest import register
+
+
+def ids(db, *titles):
+    return [db.scalar(select(Media.id).where(Media.title == t)) for t in titles]
+
+
+def curtir(client, headers, db, *titles, rating=5):
+    for mid in ids(db, *titles):
+        assert client.post("/diary", json={"media_id": mid, "rating": rating}, headers=headers).status_code == 201
+
+
+def me(client, headers):
+    return client.get("/me", headers=headers).json()["id"]
+
+
+def test_perfil_mostra_contagens_favoritos_e_recentes(client, user_headers, db):
+    curtir(client, user_headers, db, "Interestelar", "Breaking Bad")
+    client.post("/diary", json={"media_id": ids(db, "Matrix")[0]}, headers=user_headers)  # sem nota
+    p = client.get(f"/users/{me(client, user_headers)}", headers=user_headers).json()
+    assert p["is_me"] and p["compatibility"] is None
+    assert p["counts"] == {"movie": 2, "series": 1, "album": 0}
+    assert len(p["recent"]) == 3 and p["recent"][0]["media"]["title"] == "Matrix"
+    assert [f["media"]["title"] for f in p["favorites"]] == ["Breaking Bad", "Interestelar"]  # só com nota
+
+
+def test_quem_curtiu_as_mesmas_coisas_combina_mais(client, user_headers, db):
+    curtir(client, user_headers, db, "Interestelar", "A Origem", "Matrix")
+    parecida = register(client, "Parecida", "parecida@teste.com")
+    curtir(client, parecida, db, "Interestelar", "A Origem", "Blade Runner 2049")
+    diferente = register(client, "Diferente", "diferente@teste.com")
+    curtir(client, diferente, db, "Diário de uma Paixão", "Orgulho e Preconceito")
+
+    com_parecida = client.get(f"/users/{me(client, parecida)}", headers=user_headers).json()["compatibility"]
+    com_diferente = client.get(f"/users/{me(client, diferente)}", headers=user_headers).json()["compatibility"]
+    assert com_parecida["percent"] > com_diferente["percent"]
+    assert {m["title"] for m in com_parecida["shared"]} == {"Interestelar", "A Origem"}
+    assert "Ficção Científica" in com_parecida["genres"]
+    assert com_diferente["shared"] == [] and com_diferente["label"] == "Gostos bem diferentes"
+
+
+def test_sem_registros_nao_da_para_comparar(client, user_headers, db):
+    outra = register(client, "Outra", "outra@teste.com")
+    c = client.get(f"/users/{me(client, outra)}", headers=user_headers).json()["compatibility"]
+    assert c["percent"] is None and c["label"] == "Você ainda não registrou o que curte"
+
+
+def test_perfil_privado_ou_inexistente_da_404(client, user_headers, db):
+    outra = register(client, "Reservada", "reservada@teste.com")
+    other_id = me(client, outra)
+    db.get(User, other_id).visibility = "private"
+    db.commit()
+    assert client.get(f"/users/{other_id}", headers=user_headers).status_code == 404
+    assert client.get(f"/users/{other_id}", headers=outra).status_code == 200  # a própria pessoa vê
+    assert client.get("/users/999999", headers=user_headers).status_code == 404
+
+
+def test_comunidade_traz_o_id_de_quem_registrou(client, user_headers, db):
+    curtir(client, user_headers, db, "Interestelar")
+    item = client.get("/community", headers=user_headers).json()["items"][0]
+    assert item["user_id"] == me(client, user_headers)

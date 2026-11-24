@@ -31,6 +31,7 @@ function Post({ entry, position }: { entry: CommunityEntry; position: number }) 
         <div className="mt-1.5">
           <WatchedBy
             name={entry.user_name}
+            userId={entry.user_id}
             rating={entry.rating}
             consumedAt={entry.consumed_at}
             createdAt={entry.created_at}

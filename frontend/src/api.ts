@@ -1,4 +1,5 @@
 import type {
+  Profile,
   Connection,
   AdminReview,
   AdminUser,
@@ -143,6 +144,7 @@ export const api = {
   community: (limit: number, before_id?: number) =>
     request<{ items: CommunityEntry[] }>("/community", { query: { limit, before_id } }),
   reviewers: () => request<Reviewer[]>("/community/reviewers"),
+  profile: (id: number) => request<Profile>(`/users/${id}`),
   impressions: (items: Recommendation[]) =>
     request<void>("/recommendations/impressions", {
       method: "POST",

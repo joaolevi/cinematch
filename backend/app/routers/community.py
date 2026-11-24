@@ -39,6 +39,7 @@ def community(
         items=[
             CommunityEntryOut(
                 id=e.id,
+                user_id=e.user_id,
                 user_name=e.user.name,
                 media=MediaOut.model_validate(e.media),
                 rating=e.rating,

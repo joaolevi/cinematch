@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { colorFor, formatDate, localDate, timeAgo } from "../format";
 import { StarsDisplay } from "./Stars";
 
@@ -25,8 +26,11 @@ export default function WatchedBy({
   rating,
   consumedAt,
   createdAt,
+  userId,
 }: {
   name: string;
+  /** Com o id, o nome leva ao perfil da pessoa */
+  userId?: number;
   rating: number | null;
   consumedAt: string | null;
   createdAt: string;
@@ -36,7 +40,14 @@ export default function WatchedBy({
       <Avatar name={name} size="h-6 w-6 text-xs" />
       {rating != null && <StarsDisplay value={rating} size={14} />}
       <span>
-        {consumedAt ? "Visto" : "Registrado"} por <strong className="text-stone-200">{name}</strong>{" "}
+        {consumedAt ? "Visto" : "Registrado"} por{" "}
+        {userId ? (
+          <Link to={`/pessoas/${userId}`} className="font-bold text-stone-200 hover:text-accent hover:underline">
+            {name}
+          </Link>
+        ) : (
+          <strong className="text-stone-200">{name}</strong>
+        )}{" "}
         {consumedAt ? watchedWhen(consumedAt) : timeAgo(createdAt)}
       </span>
     </div>

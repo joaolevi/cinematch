@@ -1550,6 +1550,54 @@
         }
       }
     },
+    "/users/{user_id}": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Profile",
+        "description": "O perfil de uma pessoa: quanto ela registrou, o que mais curtiu, o que registrou por último e, quando não é a\nprópria pessoa, \"Vocês combinam X%\" com o que as duas têm em comum. Perfil privado (visibility = private) dá 404.",
+        "operationId": "profile_users__user_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/media": {
       "post": {
         "tags": [
@@ -2515,6 +2563,10 @@
             "type": "integer",
             "title": "Id"
           },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
           "user_name": {
             "type": "string",
             "title": "User Name"
@@ -2565,6 +2617,7 @@
         "type": "object",
         "required": [
           "id",
+          "user_id",
           "user_name",
           "media",
           "rating",
@@ -2589,6 +2642,49 @@
           "items"
         ],
         "title": "CommunityPage"
+      },
+      "CompatibilityOut": {
+        "properties": {
+          "percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent",
+            "description": "0 a 100; None se uma das duas ainda não registrou o que curte"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "shared": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "type": "array",
+            "title": "Shared",
+            "description": "Títulos que as duas curtiram, nas três mídias"
+          },
+          "genres": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Genres"
+          }
+        },
+        "type": "object",
+        "required": [
+          "percent",
+          "label",
+          "shared",
+          "genres"
+        ],
+        "title": "CompatibilityOut"
       },
       "ConnectionOut": {
         "properties": {
@@ -3875,6 +3971,90 @@
           "onboarded"
         ],
         "title": "PreferencesOut"
+      },
+      "ProfileItemOut": {
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media",
+          "rating"
+        ],
+        "title": "ProfileItemOut"
+      },
+      "ProfileOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "is_me": {
+            "type": "boolean",
+            "title": "Is Me"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counts",
+            "description": "Registros por mídia: movie, series e album"
+          },
+          "favorites": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileItemOut"
+            },
+            "type": "array",
+            "title": "Favorites"
+          },
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileItemOut"
+            },
+            "type": "array",
+            "title": "Recent"
+          },
+          "compatibility": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompatibilityOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None no próprio perfil"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "is_me",
+          "counts",
+          "favorites",
+          "recent",
+          "compatibility"
+        ],
+        "title": "ProfileOut"
       },
       "RecommendationOut": {
         "properties": {
