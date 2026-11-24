@@ -1,5 +1,7 @@
 """Ver Recomendações, Descartar Recomendação e feedback do feed (Quero ver / Já vi / Não me interesso)."""
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -20,6 +22,11 @@ def feed(
     type: MediaType | None = None,
     limit: int = Query(default=20, ge=1, le=50),
     exclude: list[int] = Query(default=[], description="Títulos que já foram mostrados, para trazer outros"),
+    discovery: Literal["taste", "beyond", "outside"] = Query(
+        default="taste",
+        description='Modo descoberta: "taste" (no meu gosto, o padrão), "beyond" (um pouco além) ou "outside" '
+        "(fora da sua bolha). Os dois últimos puxam para títulos menos famosos e gêneros que a pessoa consome menos",
+    ),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -28,7 +35,7 @@ def feed(
     if type == "album":
         strategy, recs = "bridge", album_suggestions(db, user.id, exclude, limit)
     else:
-        strategy, recs = recommend(db, user, type, limit, skip=exclude)
+        strategy, recs = recommend(db, user, type, limit, skip=exclude, discovery=discovery)
         if type is None:
             recs = mix_albums(recs, album_suggestions(db, user.id, exclude, limit), limit)
 

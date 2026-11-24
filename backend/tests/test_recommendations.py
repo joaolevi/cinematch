@@ -407,3 +407,20 @@ def test_reasons_do_not_repeat_the_same_title(client, db, monkeypatch):
     reasons = {i["reason"] for i in feed["items"]}
     assert "Quem curtiu Toy Story também curtiu" in reasons
     assert "Quem curtiu Matrix também curtiu" in reasons
+
+
+def test_modo_descoberta_puxa_para_menos_famosos_e_marca_o_motivo(client):
+    headers = register(client, "Descobre", "descobre@teste.com")
+    for title in ("Interestelar", "A Origem", "Matrix", "Duna", "Blade Runner 2049"):
+        client.post("/diary", json={"media_id": media_id_by_title(client, headers, title), "rating": 5}, headers=headers)
+    def feed(mode):
+        return client.get("/recommendations", params={"type": "movie", "limit": 10, "discovery": mode}, headers=headers).json()["items"]
+    gosto, alem, bolha = feed("taste"), feed("beyond"), feed("outside")
+    media = lambda items: sum(r["media"]["popularity"] for r in items) / len(items)  # noqa: E731
+    assert media(bolha) < media(gosto)
+    assert all(r["reason"].startswith("Fora da sua bolha: ") for r in bolha if r["strategy"] != "trending")
+    assert all(r["reason"].startswith("Um pouco além: ") for r in alem if r["strategy"] != "trending")
+    assert not any(r["reason"].startswith(("Fora", "Um pouco")) for r in gosto)
+    ficcao = lambda items: sum("Ficção Científica" in r["media"]["genres"] for r in items)  # noqa: E731
+    assert ficcao(bolha) < ficcao(gosto)  # o gênero que a pessoa mais curte perde espaço
+    assert client.get("/recommendations", params={"discovery": "x"}, headers=headers).status_code == 422

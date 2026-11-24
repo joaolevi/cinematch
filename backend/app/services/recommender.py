@@ -49,6 +49,14 @@ SERIES_POPULARITY_BONUS = 1.0  # sem avaliações reais de séries, a popularida
 EXTERNAL_CONTENT_WEIGHT = 0.2  # com vizinhos de pessoas reais, o colaborativo pesa mais
 DIVERSITY_PENALTY = 0.85  # multiplicador a cada repetição do gênero principal no topo
 
+# Modo descoberta (RFF16): (bônus de popularidade, penalidade para os gêneros mais consumidos, prefixo do motivo).
+# "taste" é o feed de sempre; os outros puxam para títulos menos famosos e gêneros que a pessoa consome menos.
+DISCOVERY = {
+    "taste": (None, 0.0, ""),
+    "beyond": (-0.15, 0.3, "Um pouco além: "),
+    "outside": (-0.4, 0.7, "Fora da sua bolha: "),
+}
+
 
 @dataclass
 class Recommendation:
@@ -205,8 +213,12 @@ def recommend(
     media_type: str | None = None,
     limit: int = 20,
     skip: Iterable[int] = (),
+    discovery: str = "taste",
 ) -> tuple[str, list[Recommendation]]:
-    """Gera o feed do usuário, sem os títulos de `skip`. Retorna (estratégia, recomendações)."""
+    """Gera o feed do usuário, sem os títulos de `skip`. Retorna (estratégia, recomendações).
+
+    `discovery` é o modo descoberta (RFF16): "taste" (padrão), "beyond" ou "outside".
+    """
     signals = user_signals(db, user.id)
     pref_genres = list(
         db.scalars(select(UserPreference.genre).where(UserPreference.user_id == user.id))
@@ -290,7 +302,14 @@ def recommend(
         alpha, cf_norm, strategy = np.ones(len(cand)), np.zeros(len(cand)), "content"
     pop = np.array([catalog[i].popularity for i in cand]) / 100.0
     blend = alpha * c_norm + (1 - alpha) * cf_norm
-    final = blend + POPULARITY_BONUS * pop
+    bonus, familiar_penalty, prefix = DISCOVERY.get(discovery, DISCOVERY["taste"])
+    if familiar_penalty:
+        # Quanto do que a pessoa curtiu é do gênero de cada candidato: os mais consumidos perdem peso
+        liked_genres = Counter(g for mid, w in signals.items() if w > 0 and mid in index for g in catalog[index[mid]].genres or [])
+        total = sum(liked_genres.values()) or 1
+        familiar = np.array([max((liked_genres[g] / total for g in catalog[i].genres or []), default=0.0) for i in cand])
+        blend = blend * (1 - familiar_penalty * familiar / max(familiar.max(), 1e-9))
+    final = blend + (POPULARITY_BONUS if bonus is None else bonus) * pop
 
     def main_genre(pos: int) -> str:
         return (catalog[cand[pos]].genres or ["?"])[0]
@@ -326,7 +345,7 @@ def recommend(
             collab_share=(1 - alpha[pos]) * cf_norm[pos],
             reason_uses=reason_uses,
         )
-        recs.append(Recommendation(catalog[ci], score, reason, strategy))
+        recs.append(Recommendation(catalog[ci], score, prefix + reason[:1].lower() + reason[1:] if prefix else reason, strategy))
 
     # Completa com mídias em alta se faltarem itens
     if len(recs) < limit:
