@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
 import WatchedBy, { Avatar } from "../components/WatchedBy";
 import { plural } from "../format";
-import type { CommunityEntry, Reviewer } from "../types";
+import type { CommunityEntry, Person, Reviewer } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
@@ -43,6 +43,32 @@ function Post({ entry, position }: { entry: CommunityEntry; position: number }) 
   );
 }
 
+/** Quem eu sigo, com o link para o perfil de cada pessoa (RFF09). */
+function Following({ people }: { people: Person[] }) {
+  return (
+    <aside className="paper relative self-start rounded-sm py-5 pr-5 pl-12 lg:-rotate-1">
+      <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 rotate-2" style={{ background: TAPE_COLORS[2] }} />
+      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Quem eu sigo</h2>
+      {people.length === 0 ? (
+        <p className="mt-1 text-sm text-stone-700">
+          Ninguém ainda. Abra o perfil de alguém pelo nome num registro e toque em Seguir.
+        </p>
+      ) : (
+        <ul className="flex flex-wrap gap-x-6 lg:block">
+          {people.map((person) => (
+            <li key={person.id} className="py-2">
+              <Link to={`/pessoas/${person.id}`} className="flex items-center gap-3 font-semibold text-stone-800 hover:text-[#b9452f]">
+                <Avatar name={person.name} size="h-9 w-9" />
+                <span className="truncate">{person.name}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </aside>
+  );
+}
+
 function Reviewers({ people }: { people: Reviewer[] }) {
   if (people.length === 0) return null;
   return (
@@ -67,9 +93,13 @@ function Reviewers({ people }: { people: Reviewer[] }) {
   );
 }
 
-/** Comunidade: o que as pessoas andam vendo. No MVP, todo mundo vê todo mundo. */
+/** Comunidade: o que as pessoas andam vendo, de todo mundo ou só de quem eu sigo (RFF09). */
 export default function CommunityPage() {
   usePageTitle("Comunidade");
+  const [params, setParams] = useSearchParams();
+  const onlyFollowing = params.get("quem") === "sigo";
+  const [people, setPeople] = useState<Person[]>([]);
+  const mode = useRef(onlyFollowing); // descarta a página que chegar depois de trocar o filtro
   const [entries, setEntries] = useState<CommunityEntry[] | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -80,7 +110,17 @@ export default function CommunityPage() {
 
   useEffect(() => {
     api.reviewers().then(setReviewers).catch(() => {});
+    api.following().then(setPeople).catch(() => {});
   }, []);
+
+  function showFollowing(only: boolean) {
+    if (only === onlyFollowing) return;
+    mode.current = only;
+    setParams(only ? { quem: "sigo" } : {}, { replace: true });
+    setEntries(null);
+    setHasMore(true);
+    setFailed(false);
+  }
 
   const loadMore = useCallback(async () => {
     if (fetching.current) return;
@@ -89,7 +129,8 @@ export default function CommunityPage() {
     setFailed(false);
     try {
       const loaded = entries ?? [];
-      const page = await api.community(PAGE, loaded.at(-1)?.id);
+      const page = await api.community(PAGE, loaded.at(-1)?.id, onlyFollowing);
+      if (mode.current !== onlyFollowing) return;
       setEntries([...loaded, ...page.items]);
       setHasMore(page.items.length === PAGE);
     } catch {
@@ -98,7 +139,7 @@ export default function CommunityPage() {
       fetching.current = false;
       setLoading(false);
     }
-  }, [entries]);
+  }, [entries, onlyFollowing]);
 
   useEffect(() => {
     const target = bottom.current;
@@ -115,7 +156,32 @@ export default function CommunityPage() {
         O que a galera anda vendo. O que você marca como Já vi também aparece aqui, para quem tem conta.
       </p>
 
-      {entries?.length === 0 && !hasMore && (
+      <div className="mt-5 flex flex-wrap gap-2" aria-label="De quem ver os registros">
+        {(
+          [
+            [false, "Todo mundo"],
+            [true, "Quem eu sigo"],
+          ] as const
+        ).map(([only, label]) => (
+          <button
+            key={label}
+            onClick={() => showFollowing(only)}
+            aria-pressed={onlyFollowing === only}
+            className={`chip cursor-pointer px-4 py-1.5 text-sm ${onlyFollowing === only ? "border-accent text-accent" : ""}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {onlyFollowing && entries?.length === 0 && !hasMore && (
+        <p className="mt-8 text-muted">
+          {people.length === 0
+            ? "Você ainda não segue ninguém. Abra o perfil de alguém pelo nome num registro e toque em Seguir."
+            : "Quem você segue ainda não registrou nada."}
+        </p>
+      )}
+      {!onlyFollowing && entries?.length === 0 && !hasMore && (
         <p className="mt-8 text-muted">
           Ainda não tem nada por aqui. Marque "Já vi" no{" "}
           <Link to="/para-voce" className="text-accent underline">feed</Link> e seja a primeira pessoa!
@@ -137,7 +203,10 @@ export default function CommunityPage() {
           </div>
           <div ref={bottom} />
         </div>
-        <Reviewers people={reviewers} />
+        <div className="order-first flex flex-col gap-8 lg:order-none">
+          <Following people={people} />
+          <Reviewers people={reviewers} />
+        </div>
       </div>
 
       {loading && <HandNote className="mt-8 text-center">Procurando o que a galera anda vendo...</HandNote>}

@@ -48,7 +48,7 @@ Preparar a abertura para pessoas de fora, o social mínimo e o controle sobre o 
 | [RNFF08](nao-funcionais.md#rnff08) | Cumprir a LGPD | Não funcional | Não iniciado | P a M | 4 | 3 | 1 | — |
 | [RFF07](funcionais.md#rff07) | Ver e corrigir o meu perfil de gosto | Funcional | Não iniciado | M | 4 | 2 | 5 | RNFF01 |
 | [RFF08](funcionais.md#rff08) | Dar retorno sobre uma sugestão | Funcional | Não iniciado | M | 3 | 2 | 4 | RFF07; o "mais leve" depende do RNFF09 |
-| [RFF09](funcionais.md#rff09) | Seguir pessoas | Funcional | Não iniciado | M | 3 | 2 | 1 | RNFF01 |
+| [RFF09](funcionais.md#rff09) | Seguir pessoas | Funcional | Feito | M | 3 | 2 | 1 | RNFF01 |
 | [RFF10](funcionais.md#rff10) | Escolher quem vê meus registros | Funcional | Não iniciado | P a M | 3 | 3 | 1 | RFF09 |
 | [RFF11](funcionais.md#rff11) | Perfil público com a história do gosto | Funcional | Parcial | M | 3 | 3 | 2 | RFF10 |
 | [RFF12](funcionais.md#rff12) | Registrar o mesmo título mais de uma vez | Funcional | Não iniciado | M | 3 | 3 | 1 | RNFF01 |

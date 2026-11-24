@@ -42,6 +42,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [together, setTogether] = useState<Recommendation[] | null>(null);
   const [loadingTogether, setLoadingTogether] = useState(false);
+  const [following, setFollowing] = useState(false); // enquanto o Seguir é salvo
 
   useEffect(() => {
     setProfile(null);
@@ -72,7 +73,31 @@ export default function ProfilePage() {
           <p className="mt-1 text-sm text-muted">
             {total > 0 ? `No diário: ${parts.join(", ")}` : "Ainda não registrou nada no diário"}
           </p>
+          <p className="mt-0.5 text-sm text-muted">
+            {plural(profile.followers, "pessoa segue", "pessoas seguem")} ·{" "}
+            {profile.follows ? `segue ${plural(profile.follows, "pessoa", "pessoas")}` : "não segue ninguém"}
+          </p>
         </div>
+        {!profile.is_me && (
+          <button
+            className={profile.following ? "btn-ghost" : "btn-primary"}
+            disabled={following}
+            onClick={async () => {
+              setFollowing(true);
+              const now = !profile.following;
+              try {
+                await (now ? api.follow(profile.id) : api.unfollow(profile.id));
+                setProfile({ ...profile, following: now, followers: profile.followers + (now ? 1 : -1) });
+              } catch (e) {
+                setError((e as Error).message);
+              } finally {
+                setFollowing(false);
+              }
+            }}
+          >
+            {profile.following ? "Deixar de seguir" : "Seguir"}
+          </button>
+        )}
       </div>
 
       {profile.is_me && <p className="mt-4 text-sm text-muted">Este é o seu perfil, do jeito que as outras pessoas veem.</p>}

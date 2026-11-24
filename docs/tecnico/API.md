@@ -47,8 +47,12 @@ Swagger, com as regras na descrição de cada rota.
 | `POST /recommendations/{media_id}/feedback` | Botões do feed | `{action: "want"\|"seen"\|"dismiss", rating?, review?, consumed_at?}` |
 | `POST /recommendations/impressions` | Avisa quais títulos do feed apareceram na tela. É isso que conta como exibido | `{items: [{media_id, strategy, score}]}` (até 100) |
 | `DELETE /recommendations/{media_id}/feedback` | Desfazer o "Não me interesso" | — |
-| `GET /community` | Página Comunidade: registros de "Já vi" de todas as pessoas, do mais recente ao mais antigo | `limit`, `before_id` (id do último item carregado) → `{items: [{id, user_name, media, rating, review, consumed_at, created_at}]}` |
+| `GET /community` | Página Comunidade: registros de "Já vi" de todas as pessoas, do mais recente ao mais antigo | `limit`, `before_id` (id do último item carregado), `following=true` (só de quem eu sigo) → `{items: [{id, user_id, user_name, media, rating, review, consumed_at, created_at}]}` |
 | `GET /community/reviewers` | Quem mais escreve resenhas | `limit` → `[{name, titles, reviews}]` |
+| `GET /users/{id}` | Perfil de uma pessoa, com a compatibilidade de gosto | → `{id, name, is_me, counts, favorites, recent, compatibility, following, followers, follows}`; 404 para perfil privado |
+| `PUT /users/{id}/follow` | Seguir a pessoa (RFF09), sem pedido de aceite | 204; repetir não muda nada; 400 para o próprio perfil; 404 para perfil privado |
+| `DELETE /users/{id}/follow` | Deixar de seguir | 204, mesmo se não seguia |
+| `GET /users/following` | Quem eu sigo, por nome | → `[{id, name}]` |
 | `GET /health` | Confere se a API está no ar (sem login) | — |
 | `POST /admin/media` · `PATCH`/`DELETE /admin/media/{id}` | Gerenciar catálogo | campos de mídia |
 | `POST /admin/sync` | Sincronizar catálogo externo | `provider` (`auto`\|`tmdb`\|`mock`), `pages` |

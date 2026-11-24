@@ -1569,6 +1569,18 @@
               "title": "Before Id"
             },
             "description": "Traz os registros anteriores a este"
+          },
+          {
+            "name": "following",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Só os registros de quem eu sigo (RFF09)",
+              "default": false,
+              "title": "Following"
+            },
+            "description": "Só os registros de quem eu sigo (RFF09)"
           }
         ],
         "responses": {
@@ -1650,13 +1662,124 @@
         }
       }
     },
+    "/users/following": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Following",
+        "description": "Quem eu sigo, por nome. Perfis que ficaram privados saem da lista.",
+        "operationId": "following_users_following_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PersonOut"
+                  },
+                  "type": "array",
+                  "title": "Response Following Users Following Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/users/{user_id}/follow": {
+      "put": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Follow",
+        "description": "Seguir uma pessoa (RFF09). Não pede aceite e repetir não muda nada.",
+        "operationId": "follow_users__user_id__follow_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Unfollow",
+        "description": "Deixar de seguir. Quem não seguia continua sem seguir.",
+        "operationId": "unfollow_users__user_id__follow_delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/{user_id}": {
       "get": {
         "tags": [
           "pessoas"
         ],
         "summary": "Profile",
-        "description": "O perfil de uma pessoa: quanto ela registrou, o que mais curtiu, o que registrou por último e, quando não é a\nprópria pessoa, \"Vocês combinam X%\" com o que as duas têm em comum. Perfil privado (visibility = private) dá 404.",
+        "description": "O perfil de uma pessoa: quanto ela registrou, o que mais curtiu, o que registrou por último e, quando não é a\nprópria pessoa, \"Vocês combinam X%\" com o que as duas têm em comum. Traz também se quem vê segue a pessoa e quantas\npessoas ela segue e a seguem. Perfil privado (visibility = private) dá 404.",
         "operationId": "profile_users__user_id__get",
         "security": [
           {
@@ -4074,6 +4197,24 @@
         "type": "object",
         "title": "MyStatus"
       },
+      "PersonOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PersonOut"
+      },
       "PreferencesIn": {
         "properties": {
           "genres": {
@@ -4241,6 +4382,24 @@
               }
             ],
             "description": "None no próprio perfil"
+          },
+          "following": {
+            "type": "boolean",
+            "title": "Following",
+            "description": "Se quem vê segue esta pessoa",
+            "default": false
+          },
+          "followers": {
+            "type": "integer",
+            "title": "Followers",
+            "description": "Quantas pessoas seguem esta pessoa",
+            "default": 0
+          },
+          "follows": {
+            "type": "integer",
+            "title": "Follows",
+            "description": "Quantas pessoas esta pessoa segue",
+            "default": 0
           }
         },
         "type": "object",
