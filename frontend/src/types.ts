@@ -9,7 +9,13 @@ export interface User {
   ab_group: "A" | "B";
   onboarded: boolean;
   in_experiments: boolean;
+  /** Quem vê os registros (RFF10): todos, quem segue ou só a pessoa */
+  visibility: Visibility;
+  /** Serviços que a pessoa assina (RFF21), como "netflix" */
+  services: string[];
 }
+
+export type Visibility = "all" | "followers" | "private";
 
 export type MediaSort = "popularity" | "title" | "year";
 
@@ -67,6 +73,7 @@ export interface Review {
 
 export interface MediaDetail extends Media {
   actors: string[];
+  credit: Credit | null;
   avg_rating: number | null;
   ratings_count: number;
   reviews: Review[];
@@ -106,9 +113,35 @@ export interface Recommendation {
   media: Media;
   score: number;
   reason: string;
-  strategy: "hybrid" | "content" | "trending" | "bridge" | "discovery";
+  strategy: "hybrid" | "content" | "trending" | "bridge" | "discovery" | "watchlist";
   /** O que está por trás do motivo, para o "Não por esse motivo" (RFF08) */
   because?: Because | null;
+  /** Os serviços da pessoa onde o título está (RFF21), como ["Netflix"] */
+  services?: string[];
+}
+
+/** O Quero ver ordenado pelo que combina agora (RFF22) */
+export interface WatchlistNow {
+  items: Recommendation[];
+  later: Recommendation[];
+}
+
+export interface StreamingService {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface Occasion {
+  key: string;
+  label: string;
+}
+
+/** De onde vêm os dados do título (RNFF02) */
+export interface Credit {
+  name: string;
+  url: string | null;
+  license: string;
 }
 
 export type AdjustKind = "genre" | "decade" | "person" | "mood" | "title";
@@ -130,6 +163,9 @@ export interface Mood {
 export interface Moment {
   mood?: string;
   max_minutes?: number;
+  occasion?: string;
+  /** Só o que está nos serviços da pessoa (RFF21) */
+  only_mine?: boolean;
 }
 
 export interface TasteFacet {
@@ -154,8 +190,8 @@ export interface TasteProfile {
 export type Discovery = "taste" | "beyond" | "outside";
 
 export interface Feed {
-  variant: "A" | "B";
-  strategy: Recommendation["strategy"];
+  variant: "A" | "B" | "-";
+  strategy: Exclude<Recommendation["strategy"], "watchlist">;
   items: Recommendation[];
 }
 
@@ -181,6 +217,8 @@ export interface Profile {
   following: boolean;
   followers: number;
   follows: number;
+  /** Os registros são só para quem segue a pessoa, e quem vê ainda não segue (RFF10) */
+  restricted: boolean;
 }
 
 export interface Person {

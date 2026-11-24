@@ -10,24 +10,40 @@ from .. import crud
 from ..auth import get_current_user
 from ..db import get_db
 from ..models import Media, RecEvent, User
-from ..schemas import BecauseOut, FeedbackIn, FeedOut, ImpressionsIn, MediaOut, MediaType, RecommendationOut
+from ..schemas import (
+    BecauseOut, FeedbackIn, FeedOut, ImpressionsIn, MediaOut, MediaType, RecommendationOut, WatchlistNowOut,
+)
 from ..services.bridges import album_suggestions, mix_albums
-from ..services.moods import BY_KEY as MOODS
+from ..services.moods import BY_KEY as MOODS, OCCASIONS_BY_KEY, fits_occasion
 from ..services.recommender import Recommendation, decade_label, recommend
+from ..services.streaming import available_ids, labels_on
 
 router = APIRouter(prefix="/recommendations", tags=["recomendações"])
 
 
-def moment_filter(db: Session, mood: str | None, max_minutes: int | None) -> set[int] | None:
-    """Os títulos que cabem no momento (RFF20): com o clima pedido e, com `max_minutes`, até essa duração (na série,
-    a do episódio). Títulos sem duração conhecida ficam de fora quando há limite. Sem filtro, None (vale tudo)."""
-    if not mood and not max_minutes:
+def moment_filter(
+    db: Session,
+    mood: str | None,
+    max_minutes: int | None,
+    occasion: str | None = None,
+    services: list[str] | None = None,
+) -> set[int] | None:
+    """Os títulos que cabem no momento (RFF20): com o clima pedido, até `max_minutes` (na série, a duração do
+    episódio), que combinam com a ocasião e, com `services`, que estão nesses serviços (RFF21). Títulos sem duração
+    conhecida ficam de fora quando há limite. Sem filtro, None (vale tudo)."""
+    if not mood and not max_minutes and not occasion and services is None:
         return None
+    wanted = OCCASIONS_BY_KEY.get(occasion) if occasion else None
+    on_services = available_ids(db, services) if services is not None else None
     allowed = set()
     for m in db.scalars(select(Media)):
         if mood and mood not in (m.moods or []):
             continue
         if max_minutes and (m.duration_min is None or m.duration_min > max_minutes):
+            continue
+        if occasion and (wanted is None or not fits_occasion(m, wanted)):
+            continue
+        if on_services is not None and m.id not in on_services:
             continue
         allowed.add(m.id)
     return allowed
@@ -48,14 +64,27 @@ def because_out(db: Session, r: Recommendation) -> BecauseOut | None:
     return BecauseOut(kind=kind, value=value, label=label)
 
 
-def rec_out(db: Session, r: Recommendation) -> RecommendationOut:
+def rec_out(db: Session, r: Recommendation, services: list[str] | None = None) -> RecommendationOut:
     return RecommendationOut(
         media=MediaOut.model_validate(r.media),
         score=round(r.score, 4),
         reason=r.reason,
         strategy=r.strategy,
         because=because_out(db, r),
+        services=labels_on(r.media, services or []),
     )
+
+
+MOOD_QUERY = Query(default=None, description='Momento (RFF20): só títulos com este clima, como "leve"')
+MINUTES_QUERY = Query(default=None, ge=10, le=600, description="Momento (RFF20): duração máxima; na série, a do episódio")
+OCCASION_QUERY = Query(
+    default=None, description='Momento (RFF20): a ocasião, "a-dois", "amigos" ou "familia"; veja GET /media/occasions'
+)
+ONLY_MINE_QUERY = Query(
+    default=False,
+    description="Só filmes e séries que estão, por assinatura, nos serviços da pessoa (RFF21). Sem serviços marcados, "
+    "não sobra nada",
+)
 
 
 @router.get("", response_model=FeedOut)
@@ -68,19 +97,20 @@ def feed(
         description='Modo descoberta: "taste" (no meu gosto, o padrão), "beyond" (um pouco além) ou "outside" '
         "(fora da sua bolha). Os dois últimos puxam para títulos menos famosos e gêneros que a pessoa consome menos",
     ),
-    mood: str | None = Query(default=None, description='Momento (RFF20): só títulos com este clima, como "leve"'),
-    max_minutes: int | None = Query(
-        default=None, ge=10, le=600, description="Momento (RFF20): duração máxima; na série, a do episódio"
-    ),
+    mood: str | None = MOOD_QUERY,
+    max_minutes: int | None = MINUTES_QUERY,
+    occasion: str | None = OCCASION_QUERY,
+    only_mine: bool = ONLY_MINE_QUERY,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     """Sem `type`, o feed misto: filmes e séries do recomendador e, em lugares fixos (3º, 7º, 11º...), álbuns ligados
     por ponte ao que a pessoa curtiu. Com `type=album`, só álbuns, pelas pontes e depois os mais ouvidos. O modo
     descoberta também vale para a música: parte dos discos passa a ser de gêneros que a pessoa ainda não ouve.
-    `mood` e `max_minutes` restringem as sugestões ao momento (RFF20). Cada sugestão traz `because`, o que está por
-    trás do motivo, para o "Não por esse motivo" (RFF08)."""
-    allow = moment_filter(db, mood, max_minutes)
+    `mood`, `max_minutes` e `occasion` restringem as sugestões ao momento (RFF20), e `only_mine`, aos serviços da
+    pessoa (RFF21); o atalho "Hoje à noite" junta os dois. Cada sugestão traz `because`, o que está por trás do motivo,
+    para o "Não por esse motivo" (RFF08), e `services`, os serviços da pessoa onde o título está."""
+    allow = moment_filter(db, mood, max_minutes, occasion, user.services or [] if only_mine else None)
     if type == "album":
         strategy, recs = "bridge", album_suggestions(db, user.id, exclude, limit, discovery, allow)
     else:
@@ -88,7 +118,42 @@ def feed(
         if type is None:
             recs = mix_albums(recs, album_suggestions(db, user.id, exclude, limit, discovery, allow), limit)
 
-    return FeedOut(variant=user.variant, strategy=strategy, items=[rec_out(db, r) for r in recs])
+    return FeedOut(variant=user.variant, strategy=strategy, items=[rec_out(db, r, user.services) for r in recs])
+
+
+SERVICE_BONUS = 1.2  # no Quero ver, o que está nos serviços da pessoa sobe um pouco
+
+
+@router.get("/watchlist", response_model=WatchlistNowOut)
+def watchlist_now(
+    mood: str | None = MOOD_QUERY,
+    max_minutes: int | None = MINUTES_QUERY,
+    occasion: str | None = OCCASION_QUERY,
+    only_mine: bool = ONLY_MINE_QUERY,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """O Quero ver ordenado pelo que combina agora (RFF22). `items` traz o que cabe no momento, do que mais combina
+    com o gosto ao que menos; o que está nos serviços da pessoa ganha um pouco de peso. `later` traz o resto da lista,
+    na ordem em que foi guardado. Álbuns e títulos que o recomendador não pontua vão para o fim de `items`."""
+    watchlist = crud.get_or_create_watchlist(db, user)
+    saved = [item.media for item in watchlist.items]  # do mais recente ao mais antigo
+    fit = moment_filter(db, mood, max_minutes, occasion, user.services or [] if only_mine else None)
+    now = [m for m in saved if fit is None or m.id in fit]
+    later = [m for m in saved if fit is not None and m.id not in fit]
+
+    now_ids = {m.id for m in now}
+    recs: list[Recommendation] = []
+    if now_ids:
+        _, recs = recommend(db, user, None, limit=len(now_ids), allow=now_ids, keep_watchlist=True)
+    scored = {r.media.id for r in recs}
+    mine = user.services or []
+    recs.sort(key=lambda r: -r.score * (SERVICE_BONUS if labels_on(r.media, mine) else 1))
+    recs += [Recommendation(m, 0.0, "Você guardou para ver ou ouvir depois", "watchlist") for m in now if m.id not in scored]
+    return WatchlistNowOut(
+        items=[rec_out(db, r, mine) for r in recs],
+        later=[rec_out(db, Recommendation(m, 0.0, "Fica para outro momento", "watchlist"), mine) for m in later],
+    )
 
 
 @router.post("/impressions", status_code=204)

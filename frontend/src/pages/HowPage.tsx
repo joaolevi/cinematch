@@ -102,7 +102,14 @@ export default function HowPage() {
         <p>
           Os climas (leve, tenso, melancólico, épico e outros 16) valem para filmes, séries e discos e saem de regras
           sobre os gêneros e as palavras-chave de cada título, sem IA. Dá para buscar por clima e filtrar o Para você
-          pelo momento: o clima e o tempo que você tem.
+          pelo momento: o clima, o tempo que você tem e com quem vai ver ("em família" também tira terror, crime,
+          suspense e guerra).
+        </p>
+        <p>
+          Se você marcar os serviços que assina, em Minha conta, cada sugestão avisa se está num deles, e "Só nos meus
+          serviços" mostra só o que dá para ver agora. "Hoje à noite" junta isso com até 2h30. O Quero ver também se
+          ordena pelo que combina agora: o gosto primeiro, e o que está nos seus serviços sobe um pouco. Onde assistir
+          vem da JustWatch, pelo TMDB.
         </p>
       </Part>
 

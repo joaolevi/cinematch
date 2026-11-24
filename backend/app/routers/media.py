@@ -12,12 +12,16 @@ from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList
 from ..schemas import (
-    ConnectionOut, MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MoodOut, MyStatus, ProviderOut, ReviewOut,
+    ConnectionOut, MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MoodOut, MyStatus, OccasionOut, ProviderOut,
+    ReviewOut, ServiceOut,
 )
 from ..services.bridges import connections
 from ..services.catalog import search_text
-from ..services.moods import MOODS
+from ..services.moods import MOODS, OCCASIONS
+from ..services.streaming import SERVICES, catalog_counts
 from ..services.providers import where_to_watch
+from ..services.sources import credit_for
+from ..services.visibility import visible_owner
 from ..services.recommender import similar_titles, trending as trending_service
 
 router = APIRouter(prefix="/media", tags=["mídias"])
@@ -94,6 +98,21 @@ def moods(db: Session = Depends(get_db), _user: User = Depends(get_current_user)
     filmes, séries e álbuns: a busca por clima (RFF23) traz as três mídias juntas."""
     counts = Counter(mood for m in db.scalars(select(Media)) for mood in m.moods or [])
     return [MoodOut(key=m.key, label=m.label, count=counts[m.key]) for m in MOODS]
+
+
+@router.get("/occasions", response_model=list[OccasionOut])
+def occasions(_user: User = Depends(get_current_user)):
+    """As ocasiões do momento (RFF20): a dois, com amigos e em família. Cada uma aceita alguns climas; "em família"
+    também tira terror, crime, suspense e guerra. Use a chave em `occasion` de `GET /recommendations`."""
+    return [OccasionOut(key=o.key, label=o.label) for o in OCCASIONS]
+
+
+@router.get("/services", response_model=list[ServiceOut])
+def services(db: Session = Depends(get_db), _user: User = Depends(get_current_user)):
+    """Os serviços de streaming que a pessoa pode marcar como seus (RFF21), com quantos títulos do catálogo estão em
+    cada um, por assinatura. Os dados de onde assistir são da JustWatch, pelo TMDB (`make servicos` busca todos)."""
+    counts = catalog_counts(db)
+    return [ServiceOut(key=s.key, label=s.label, count=counts[s.key]) for s in SERVICES]
 
 
 @router.get("/facets", response_model=MediaFacetsOut)
@@ -176,10 +195,12 @@ def media_detail(
     ).one()
     entries = db.scalars(
         select(DiaryEntry)
+        .join(User, User.id == DiaryEntry.user_id)
         .where(
             DiaryEntry.media_id == media_id,
             DiaryEntry.review.is_not(None),
             DiaryEntry.review_hidden.is_(False),
+            visible_owner(user.id),  # só as resenhas de quem deixa ver (RFF10)
         )
         .order_by(DiaryEntry.created_at.desc())
         .limit(20)
@@ -218,6 +239,7 @@ def media_detail(
     return MediaDetailOut(
         **MediaOut.model_validate(media).model_dump(),
         actors=media.actors or [],
+        credit=credit_for(media),
         avg_rating=round(float(avg), 2) if avg is not None else None,
         ratings_count=int(count or 0),
         reviews=reviews,

@@ -110,7 +110,7 @@ export default function LandingPage() {
           <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[2] }} />
           <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Bom saber:</p>
           <ul className="font-hand text-xl leading-8 font-semibold">
-            <li>→ O que você marca como Já vi aparece na Comunidade, para quem tem conta.</li>
+            <li>→ O que você marca como Já vi aparece na Comunidade, e você escolhe quem vê.</li>
             <li>→ Por enquanto são filmes e séries. As músicas vêm depois.</li>
             <li>→ É de graça: é um projeto acadêmico.</li>
           </ul>

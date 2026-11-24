@@ -1,4 +1,5 @@
-"""A própria conta: exportar os dados, excluir a conta (RFF06) e sair dos experimentos (RFF17)."""
+"""A própria conta: exportar os dados, excluir a conta (RFF06), sair dos experimentos (RFF17), escolher quem vê os
+registros (RFF10) e marcar os serviços que assina (RFF21)."""
 
 from datetime import datetime, timezone
 
@@ -22,7 +23,8 @@ from ..models import (
     UserList,
     UserPreference,
 )
-from ..schemas import DeleteAccountIn, ExperimentsIn, UserOut
+from ..schemas import DeleteAccountIn, ExperimentsIn, ServicesIn, UserOut, VisibilityIn
+from ..services.streaming import BY_KEY as SERVICES
 
 router = APIRouter(prefix="/me", tags=["conta"])
 
@@ -126,6 +128,30 @@ def set_experiments(data: ExperimentsIn, db: Session = Depends(get_db), user: Us
     """Sair ou voltar para os experimentos (RFF17). Fora deles, a pessoa recebe o recomendador completo e as reações
     dela ficam fora da comparação entre os grupos A e B."""
     user.in_experiments = data.in_experiments
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.put("/visibility", response_model=UserOut)
+def set_visibility(data: VisibilityIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Quem vê os registros (RFF10): "all" (todos), "followers" (quem me segue) ou "private" (só eu). Vale na
+    Comunidade, nas resenhas de cada título, no perfil e no "Para ver ou ouvir junto". Seguir não pede aceite, então
+    "followers" não é um cadeado: para esconder de todo mundo, use "private"."""
+    user.visibility = data.visibility
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.put("/services", response_model=UserOut)
+def set_services(data: ServicesIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Os serviços de streaming que a pessoa assina (RFF21), pelas chaves de `GET /media/services`. Lista vazia
+    desmarca todos. Chave desconhecida dá 422."""
+    unknown = [key for key in data.services if key not in SERVICES]
+    if unknown:
+        raise HTTPException(status_code=422, detail=f"Serviço desconhecido: {', '.join(unknown)}")
+    user.services = [key for key in SERVICES if key in set(data.services)]  # sem repetir, na ordem da lista
     db.commit()
     db.refresh(user)
     return user

@@ -1,6 +1,6 @@
 # Atalhos do projeto. Rode `make` para ver a lista.
 .DEFAULT_GOAL := help
-.PHONY: help api demo up down logs deps test test-offline seed migrate migration albuns openapi prod-up prod-logs prod-seed prod-movielens prod-albuns backup
+.PHONY: help api demo up down logs deps test test-offline seed migrate migration albuns openapi prod-up prod-logs prod-seed prod-movielens prod-albuns backup duracoes servicos prod-duracoes prod-servicos
 
 PROD := docker compose -f docker-compose.prod.yml --env-file .env.production
 PYTHON := ../.venv/bin/python
@@ -53,6 +53,9 @@ albuns: deps ## Refaz o retrato dos álbuns a partir do MusicBrainz e carrega no
 duracoes: deps ## Busca no TMDB a duração dos filmes e séries que ainda não têm (precisa da chave)
 	cd backend && $(PYTHON) -m scripts.fill_durations
 
+servicos: deps ## Busca no TMDB onde assistir cada filme e série, para o "só nos meus serviços" (precisa da chave)
+	cd backend && $(PYTHON) -m scripts.fill_providers
+
 openapi: deps ## Regenera docs/tecnico/openapi.json
 	cd backend && TASTORY_AUTO_SEED=false $(PYTHON) -c "import json; from app.main import app; json.dump(app.openapi(), open('../docs/tecnico/openapi.json','w'), ensure_ascii=False, indent=2)"
 
@@ -76,6 +79,9 @@ prod-albuns: ## Carrega no banco publicado os álbuns do retrato (backend/data/a
 
 prod-duracoes: ## Busca no TMDB a duração dos filmes e séries do banco publicado
 	$(PROD) exec api python -m scripts.fill_durations
+
+prod-servicos: ## Busca no TMDB onde assistir os filmes e séries do banco publicado
+	$(PROD) exec api python -m scripts.fill_providers
 
 # Se a exportação falhar, o make para aqui, e a cópia do dia continua intacta
 backup: ## Copia o banco publicado para backup-AAAA-MM-DD.sql

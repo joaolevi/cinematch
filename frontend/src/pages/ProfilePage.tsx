@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
+import { useAuth } from "../auth";
 import Carousel from "../components/Carousel";
 import HandNote from "../components/HandNote";
 import MediaCard from "../components/MediaCard";
@@ -38,6 +39,7 @@ function listaDeGeneros(genres: string[]): string {
 /** Perfil de uma pessoa, aberto pela Comunidade, com a compatibilidade de gosto (RFF15). */
 export default function ProfilePage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [together, setTogether] = useState<Recommendation[] | null>(null);
@@ -71,7 +73,11 @@ export default function ProfilePage() {
         <div>
           <h1 className="text-3xl font-bold">{profile.name}</h1>
           <p className="mt-1 text-sm text-muted">
-            {total > 0 ? `No diário: ${parts.join(", ")}` : "Ainda não registrou nada no diário"}
+            {profile.restricted
+              ? "O diário é só para quem segue"
+              : total > 0
+                ? `No diário: ${parts.join(", ")}`
+                : "Ainda não registrou nada no diário"}
           </p>
           <p className="mt-0.5 text-sm text-muted">
             {plural(profile.followers, "pessoa segue", "pessoas seguem")} ·{" "}
@@ -87,7 +93,9 @@ export default function ProfilePage() {
               const now = !profile.following;
               try {
                 await (now ? api.follow(profile.id) : api.unfollow(profile.id));
-                setProfile({ ...profile, following: now, followers: profile.followers + (now ? 1 : -1) });
+                // Recarrega: seguir pode liberar o diário de quem só mostra para quem segue (RFF10)
+                setProfile(await api.profile(profile.id));
+                setTogether(null);
               } catch (e) {
                 setError((e as Error).message);
               } finally {
@@ -100,7 +108,27 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {profile.is_me && <p className="mt-4 text-sm text-muted">Este é o seu perfil, do jeito que as outras pessoas veem.</p>}
+      {profile.is_me && (
+        <p className="mt-4 text-sm text-muted">
+          {
+            {
+              all: "Este é o seu perfil, do jeito que as outras pessoas veem.",
+              followers: "Este é o seu perfil. Só quem segue você vê o seu diário.",
+              private: "Este é o seu perfil. Só você vê o seu diário.",
+            }[user?.visibility ?? "all"]
+          }{" "}
+          <Link to="/conta#quem-ve" className="underline hover:text-accent">
+            Escolher quem vê
+          </Link>
+        </p>
+      )}
+
+      {profile.restricted && (
+        <HandNote className="mt-8">
+          {profile.name.split(" ")[0]} só mostra o que registra para quem segue. Siga para ver o diário e o que vocês têm em
+          comum.
+        </HandNote>
+      )}
 
       {c && (
         <section className="paper relative mt-8 max-w-3xl -rotate-[0.4deg] rounded-sm py-6 pr-6 pl-14">
@@ -128,7 +156,7 @@ export default function ProfilePage() {
         </section>
       )}
 
-      {!profile.is_me && (
+      {!profile.is_me && !profile.restricted && (
         <section className="mt-10">
           <h2 className="font-display text-xl font-bold">Para ver ou ouvir junto</h2>
           <p className="mt-1 text-sm text-muted">

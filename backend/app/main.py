@@ -15,7 +15,7 @@ from .config import settings
 from .db import SessionLocal, engine
 from .migrations import atualizar_banco
 from .models import Media
-from .routers import account, admin, auth, community, diary, lists, media, recommendations, taste, users
+from .routers import account, admin, auth, community, diary, external, lists, media, recommendations, taste, users
 
 log = logging.getLogger("tastory")
 
@@ -34,7 +34,7 @@ async def lifespan(_app: FastAPI):
     with SessionLocal() as db:
         from .services.moods import fill_moods
 
-        fill_moods(db)  # climas (RNFF09) de bancos que vieram antes deles
+        fill_moods(db, only_missing=False)  # climas (RNFF09): recalcula todos, para valer a regra mais nova
     yield
 
 
@@ -55,7 +55,7 @@ app.add_middleware(
 
 for r in (
     auth.router, account.router, media.router, diary.router, lists.router, recommendations.router, community.router,
-    users.router, taste.router, admin.router,
+    users.router, taste.router, external.router, admin.router,
 ):
     app.include_router(r)
 

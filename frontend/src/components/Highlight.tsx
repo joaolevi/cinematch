@@ -62,6 +62,12 @@ export function DismissButton({ onClick }: { onClick: () => void }) {
 }
 
 /** A primeira sugestão aparece grande, com o pôster desfocado ao fundo. */
+/** Os serviços da pessoa onde o título está (RFF21). */
+export function OnMyServices({ rec, className = "" }: { rec: Recommendation; className?: string }) {
+  if (!rec.services?.length) return null;
+  return <p className={`font-semibold text-accent ${className}`}>Nos seus serviços: {rec.services.join(", ")}</p>;
+}
+
 export default function Highlight({
   rec,
   label,
@@ -112,6 +118,7 @@ export default function Highlight({
             ))}
           </div>
           <p className="mt-3 max-w-2xl font-semibold text-stone-100">{rec.reason}</p>
+          <OnMyServices rec={rec} className="mt-1 text-sm" />
           {media.overview && <p className="mt-2 line-clamp-3 max-w-2xl text-sm text-stone-300">{media.overview}</p>}
           <Buttons rec={rec} act={act} onSeen={onSeen} big />
         </div>

@@ -1,4 +1,5 @@
-"""Perfil de uma pessoa, a compatibilidade de gosto com quem está vendo (RFF15) e seguir pessoas (RFF09)."""
+"""Perfil de uma pessoa, a compatibilidade de gosto com quem está vendo (RFF15), seguir pessoas (RFF09) e quem vê os
+registros de cada uma (RFF10)."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import delete, func, select
@@ -10,6 +11,7 @@ from ..models import DiaryEntry, Follow, User
 from ..schemas import CompatibilityOut, MediaOut, PersonOut, ProfileItemOut, ProfileOut, RecommendationOut
 from ..services.compatibility import compatibility
 from ..services.together import together
+from ..services.visibility import can_see_entries
 
 router = APIRouter(prefix="/users", tags=["pessoas"])
 
@@ -61,8 +63,18 @@ def unfollow(user_id: int, db: Session = Depends(get_db), me: User = Depends(get
 def profile(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_current_user)):
     """O perfil de uma pessoa: quanto ela registrou, o que mais curtiu, o que registrou por último e, quando não é a
     própria pessoa, "Vocês combinam X%" com o que as duas têm em comum. Traz também se quem vê segue a pessoa e quantas
-    pessoas ela segue e a seguem. Perfil privado (visibility = private) dá 404."""
+    pessoas ela segue e a seguem. Perfil privado (visibility = private) dá 404. Se a pessoa só deixa quem a segue ver
+    os registros e quem vê não segue, volta o nome e os números de quem segue, com `restricted` e sem os registros."""
     user = visible_person(db, user_id, me)
+    followers = db.scalar(select(func.count()).where(Follow.followed_id == user.id)) or 0
+    follows = db.scalar(select(func.count()).where(Follow.follower_id == user.id)) or 0
+    following_now = db.scalar(select(Follow.id).where(Follow.follower_id == me.id, Follow.followed_id == user.id)) is not None
+    if not can_see_entries(db, me, user):
+        return ProfileOut(
+            id=user.id, name=user.name, is_me=False, counts={"movie": 0, "series": 0, "album": 0}, favorites=[],
+            recent=[], compatibility=None, following=following_now, followers=followers, follows=follows,
+            restricted=True,
+        )
     entries = list(
         db.scalars(
             select(DiaryEntry)
@@ -93,9 +105,9 @@ def profile(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_
         favorites=[item(e) for e in rated[:MAX_ITEMS]],
         recent=[item(e) for e in entries[:MAX_ITEMS]],
         compatibility=compat,
-        following=db.scalar(select(Follow.id).where(Follow.follower_id == me.id, Follow.followed_id == user.id)) is not None,
-        followers=db.scalar(select(func.count()).where(Follow.followed_id == user.id)) or 0,
-        follows=db.scalar(select(func.count()).where(Follow.follower_id == user.id)) or 0,
+        following=following_now,
+        followers=followers,
+        follows=follows,
     )
 
 
@@ -108,10 +120,13 @@ def watch_together(
 ):
     """Assistir ou ouvir junto (RFF28): sugestões para quem vê e esta pessoa. Primeiro o que aparece para as duas,
     depois o que agrada a uma e a outra ainda não viu. O motivo mostra os dois lados ("Para você: ... · Para Levi: ...").
-    Itens que alguma das duas já registrou, descartou ou guardou ficam de fora."""
+    Itens que alguma das duas já registrou, descartou ou guardou ficam de fora. Só vale com quem deixa ver os
+    registros (RFF10): com perfil privado dá 404; só para quem segue, sem seguir, dá 403."""
     other = db.get(User, user_id)
     if other is None or other.id == me.id or (other.visibility == "private"):
         raise HTTPException(status_code=404, detail="Pessoa não encontrada")
+    if not can_see_entries(db, me, other):
+        raise HTTPException(status_code=403, detail="Só quem segue esta pessoa vê o que ela registrou")
     return [
         RecommendationOut(media=MediaOut.model_validate(r.media), score=r.score, reason=r.reason, strategy=r.strategy)
         for r in together(db, me, other, limit)

@@ -26,6 +26,7 @@ def register(data: RegisterIn, db: Session = Depends(get_db)):
         email=email,
         password_hash=hash_password(data.password),
         ab_group="A" if n_users % 2 == 0 else "B",
+        in_experiments=data.in_experiments,  # consentimento dado no cadastro (RNFF08)
     )
     db.add(user)
     db.flush()

@@ -299,6 +299,100 @@
         ]
       }
     },
+    "/me/visibility": {
+      "put": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Set Visibility",
+        "description": "Quem vê os registros (RFF10): \"all\" (todos), \"followers\" (quem me segue) ou \"private\" (só eu). Vale na\nComunidade, nas resenhas de cada título, no perfil e no \"Para ver ou ouvir junto\". Seguir não pede aceite, então\n\"followers\" não é um cadeado: para esconder de todo mundo, use \"private\".",
+        "operationId": "set_visibility_me_visibility_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisibilityIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/me/services": {
+      "put": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Set Services",
+        "description": "Os serviços de streaming que a pessoa assina (RFF21), pelas chaves de `GET /media/services`. Lista vazia\ndesmarca todos. Chave desconhecida dá 422.",
+        "operationId": "set_services_me_services_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServicesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/media": {
       "get": {
         "tags": [
@@ -541,6 +635,68 @@
                   },
                   "type": "array",
                   "title": "Response Moods Media Moods Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/media/occasions": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Occasions",
+        "description": "As ocasiões do momento (RFF20): a dois, com amigos e em família. Cada uma aceita alguns climas; \"em família\"\ntambém tira terror, crime, suspense e guerra. Use a chave em `occasion` de `GET /recommendations`.",
+        "operationId": "occasions_media_occasions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OccasionOut"
+                  },
+                  "type": "array",
+                  "title": "Response Occasions Media Occasions Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/media/services": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Services",
+        "description": "Os serviços de streaming que a pessoa pode marcar como seus (RFF21), com quantos títulos do catálogo estão em\ncada um, por assinatura. Os dados de onde assistir são da JustWatch, pelo TMDB (`make servicos` busca todos).",
+        "operationId": "services_media_services_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceOut"
+                  },
+                  "type": "array",
+                  "title": "Response Services Media Services Get"
                 }
               }
             }
@@ -1457,7 +1613,7 @@
           "recomendações"
         ],
         "summary": "Feed",
-        "description": "Sem `type`, o feed misto: filmes e séries do recomendador e, em lugares fixos (3º, 7º, 11º...), álbuns ligados\npor ponte ao que a pessoa curtiu. Com `type=album`, só álbuns, pelas pontes e depois os mais ouvidos. O modo\ndescoberta também vale para a música: parte dos discos passa a ser de gêneros que a pessoa ainda não ouve.\n`mood` e `max_minutes` restringem as sugestões ao momento (RFF20). Cada sugestão traz `because`, o que está por\ntrás do motivo, para o \"Não por esse motivo\" (RFF08).",
+        "description": "Sem `type`, o feed misto: filmes e séries do recomendador e, em lugares fixos (3º, 7º, 11º...), álbuns ligados\npor ponte ao que a pessoa curtiu. Com `type=album`, só álbuns, pelas pontes e depois os mais ouvidos. O modo\ndescoberta também vale para a música: parte dos discos passa a ser de gêneros que a pessoa ainda não ouve.\n`mood`, `max_minutes` e `occasion` restringem as sugestões ao momento (RFF20), e `only_mine`, aos serviços da\npessoa (RFF21); o atalho \"Hoje à noite\" junta os dois. Cada sugestão traz `because`, o que está por trás do motivo,\npara o \"Não por esse motivo\" (RFF08), e `services`, os serviços da pessoa onde o título está.",
         "operationId": "feed_recommendations_get",
         "security": [
           {
@@ -1567,6 +1723,36 @@
               "title": "Max Minutes"
             },
             "description": "Momento (RFF20): duração máxima; na série, a do episódio"
+          },
+          {
+            "name": "occasion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Momento (RFF20): a ocasião, \"a-dois\", \"amigos\" ou \"familia\"; veja GET /media/occasions",
+              "title": "Occasion"
+            },
+            "description": "Momento (RFF20): a ocasião, \"a-dois\", \"amigos\" ou \"familia\"; veja GET /media/occasions"
+          },
+          {
+            "name": "only_mine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Só filmes e séries que estão, por assinatura, nos serviços da pessoa (RFF21). Sem serviços marcados, não sobra nada",
+              "default": false,
+              "title": "Only Mine"
+            },
+            "description": "Só filmes e séries que estão, por assinatura, nos serviços da pessoa (RFF21). Sem serviços marcados, não sobra nada"
           }
         ],
         "responses": {
@@ -1576,6 +1762,113 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FeedOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recommendations/watchlist": {
+      "get": {
+        "tags": [
+          "recomendações"
+        ],
+        "summary": "Watchlist Now",
+        "description": "O Quero ver ordenado pelo que combina agora (RFF22). `items` traz o que cabe no momento, do que mais combina\ncom o gosto ao que menos; o que está nos serviços da pessoa ganha um pouco de peso. `later` traz o resto da lista,\nna ordem em que foi guardado. Álbuns e títulos que o recomendador não pontua vão para o fim de `items`.",
+        "operationId": "watchlist_now_recommendations_watchlist_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "mood",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Momento (RFF20): só títulos com este clima, como \"leve\"",
+              "title": "Mood"
+            },
+            "description": "Momento (RFF20): só títulos com este clima, como \"leve\""
+          },
+          {
+            "name": "max_minutes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 600,
+                  "minimum": 10
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Momento (RFF20): duração máxima; na série, a do episódio",
+              "title": "Max Minutes"
+            },
+            "description": "Momento (RFF20): duração máxima; na série, a do episódio"
+          },
+          {
+            "name": "occasion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Momento (RFF20): a ocasião, \"a-dois\", \"amigos\" ou \"familia\"; veja GET /media/occasions",
+              "title": "Occasion"
+            },
+            "description": "Momento (RFF20): a ocasião, \"a-dois\", \"amigos\" ou \"familia\"; veja GET /media/occasions"
+          },
+          {
+            "name": "only_mine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Só filmes e séries que estão, por assinatura, nos serviços da pessoa (RFF21). Sem serviços marcados, não sobra nada",
+              "default": false,
+              "title": "Only Mine"
+            },
+            "description": "Só filmes e séries que estão, por assinatura, nos serviços da pessoa (RFF21). Sem serviços marcados, não sobra nada"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistNowOut"
                 }
               }
             }
@@ -1814,7 +2107,7 @@
           "comunidade"
         ],
         "summary": "Reviewers",
-        "description": "Quem mais escreveu resenhas. Resenhas ocultas pela moderação não contam.",
+        "description": "Quem mais escreveu resenhas, entre quem deixa ver os registros (RFF10). Resenhas ocultas pela moderação não\ncontam.",
         "operationId": "reviewers_community_reviewers_get",
         "security": [
           {
@@ -1980,7 +2273,7 @@
           "pessoas"
         ],
         "summary": "Profile",
-        "description": "O perfil de uma pessoa: quanto ela registrou, o que mais curtiu, o que registrou por último e, quando não é a\nprópria pessoa, \"Vocês combinam X%\" com o que as duas têm em comum. Traz também se quem vê segue a pessoa e quantas\npessoas ela segue e a seguem. Perfil privado (visibility = private) dá 404.",
+        "description": "O perfil de uma pessoa: quanto ela registrou, o que mais curtiu, o que registrou por último e, quando não é a\nprópria pessoa, \"Vocês combinam X%\" com o que as duas têm em comum. Traz também se quem vê segue a pessoa e quantas\npessoas ela segue e a seguem. Perfil privado (visibility = private) dá 404. Se a pessoa só deixa quem a segue ver\nos registros e quem vê não segue, volta o nome e os números de quem segue, com `restricted` e sem os registros.",
         "operationId": "profile_users__user_id__get",
         "security": [
           {
@@ -2028,7 +2321,7 @@
           "pessoas"
         ],
         "summary": "Watch Together",
-        "description": "Assistir ou ouvir junto (RFF28): sugestões para quem vê e esta pessoa. Primeiro o que aparece para as duas,\ndepois o que agrada a uma e a outra ainda não viu. O motivo mostra os dois lados (\"Para você: ... · Para Levi: ...\").\nItens que alguma das duas já registrou, descartou ou guardou ficam de fora.",
+        "description": "Assistir ou ouvir junto (RFF28): sugestões para quem vê e esta pessoa. Primeiro o que aparece para as duas,\ndepois o que agrada a uma e a outra ainda não viu. O motivo mostra os dois lados (\"Para você: ... · Para Levi: ...\").\nItens que alguma das duas já registrou, descartou ou guardou ficam de fora. Só vale com quem deixa ver os\nregistros (RFF10): com perfil privado dá 404; só para quem segue, sem seguir, dá 403.",
         "operationId": "watch_together_users__user_id__together_get",
         "security": [
           {
@@ -2162,6 +2455,129 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/external/search": {
+      "get": {
+        "tags": [
+          "adicionar títulos"
+        ],
+        "summary": "Search",
+        "description": "Busca fora do catálogo. `media_id` vem preenchido quando o título já está no Tastory: aí é só abrir.",
+        "operationId": "search_external_search_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 120,
+              "title": "Q"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "video",
+                "album"
+              ],
+              "type": "string",
+              "description": "video = filmes e séries, no TMDB; album = álbuns, no MusicBrainz",
+              "default": "video",
+              "title": "Type"
+            },
+            "description": "video = filmes e séries, no TMDB; album = álbuns, no MusicBrainz"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExternalTitleOut"
+                  },
+                  "title": "Response Search External Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/external/import": {
+      "post": {
+        "tags": [
+          "adicionar títulos"
+        ],
+        "summary": "Add",
+        "description": "Traz um título para o catálogo pelo `external_id` da busca. Se ele já estiver lá, devolve com 200 e não gasta\no limite. Cada pessoa importa até 10 títulos em 24 horas; depois, 429 com `Retry-After`. Um álbum leva alguns\nsegundos: o MusicBrainz aceita uma consulta por segundo.",
+        "operationId": "add_external_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalAddIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaOut"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "O título já estava no catálogo"
+          },
+          "429": {
+            "description": "Limite do dia; veja Retry-After"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3354,6 +3770,40 @@
         ],
         "title": "ConnectionOut"
       },
+      "CreditOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "A fonte, como \"TMDB\" ou \"MusicBrainz\""
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "description": "A página do título na fonte"
+          },
+          "license": {
+            "type": "string",
+            "title": "License",
+            "description": "A licença ou os termos de uso dos dados"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "url",
+          "license"
+        ],
+        "title": "CreditOut",
+        "description": "De onde vêm os dados do título e com que licença (RNFF02)."
+      },
       "DeleteAccountIn": {
         "properties": {
           "password": {
@@ -3557,6 +4007,21 @@
           "in_experiments"
         ],
         "title": "ExperimentsIn"
+      },
+      "ExternalAddIn": {
+        "properties": {
+          "external_id": {
+            "type": "string",
+            "pattern": "^(movie-\\d+|tv-\\d+|album-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$",
+            "title": "External Id",
+            "description": "O external_id de GET /external/search: movie-155, tv-1399 ou album-<ID do MusicBrainz>"
+          }
+        },
+        "type": "object",
+        "required": [
+          "external_id"
+        ],
+        "title": "ExternalAddIn"
       },
       "ExternalTitleOut": {
         "properties": {
@@ -4029,6 +4494,16 @@
             },
             "type": "array",
             "title": "Actors"
+          },
+          "credit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CreditOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "avg_rating": {
             "anyOf": [
@@ -4654,6 +5129,24 @@
         "type": "object",
         "title": "MyStatus"
       },
+      "OccasionOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "OccasionOut"
+      },
       "PersonOut": {
         "properties": {
           "id": {
@@ -4857,6 +5350,12 @@
             "title": "Follows",
             "description": "Quantas pessoas esta pessoa segue",
             "default": 0
+          },
+          "restricted": {
+            "type": "boolean",
+            "title": "Restricted",
+            "description": "Os registros são só para quem segue a pessoa, e quem vê ainda não segue (RFF10)",
+            "default": false
           }
         },
         "type": "object",
@@ -4947,6 +5446,15 @@
               }
             ],
             "description": "O que está por trás do motivo, para o \"Não por esse motivo\" (RFF08)"
+          },
+          "services": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Services",
+            "description": "Os serviços da pessoa onde o título está (RFF21), como [\"Netflix\"]",
+            "default": []
           }
         },
         "type": "object",
@@ -4975,6 +5483,12 @@
             "type": "string",
             "minLength": 6,
             "title": "Password"
+          },
+          "in_experiments": {
+            "type": "boolean",
+            "title": "In Experiments",
+            "description": "Consentimento para os experimentos (RNFF08). A interface pergunta no cadastro, sem marcar por padrão, e manda a escolha; sem o campo, vale True, como antes",
+            "default": true
           }
         },
         "type": "object",
@@ -5074,6 +5588,48 @@
           "reviews"
         ],
         "title": "ReviewerOut"
+      },
+      "ServiceOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Quantos títulos do catálogo estão no serviço"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "count"
+        ],
+        "title": "ServiceOut"
+      },
+      "ServicesIn": {
+        "properties": {
+          "services": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Services",
+            "description": "Chaves de GET /media/services, como netflix"
+          }
+        },
+        "type": "object",
+        "required": [
+          "services"
+        ],
+        "title": "ServicesIn"
       },
       "SyncOut": {
         "properties": {
@@ -5374,6 +5930,26 @@
             "type": "boolean",
             "title": "In Experiments",
             "default": true
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "all",
+              "followers",
+              "private"
+            ],
+            "title": "Visibility",
+            "description": "Quem vê os registros (RFF10): todos, quem segue a pessoa ou só ela",
+            "default": "all"
+          },
+          "services": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Services",
+            "description": "Serviços que a pessoa assina (RFF21), como \"netflix\"",
+            "default": []
           }
         },
         "type": "object",
@@ -5493,6 +6069,52 @@
           "acceptance_rate"
         ],
         "title": "VariantMetrics"
+      },
+      "VisibilityIn": {
+        "properties": {
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "all",
+              "followers",
+              "private"
+            ],
+            "title": "Visibility",
+            "description": "all = todos; followers = quem me segue; private = só eu (RFF10)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "visibility"
+        ],
+        "title": "VisibilityIn"
+      },
+      "WatchlistNowOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendationOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "O que cabe no momento, do que mais combina ao que menos"
+          },
+          "later": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendationOut"
+            },
+            "type": "array",
+            "title": "Later",
+            "description": "O resto do Quero ver, que não cabe no momento pedido"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "later"
+        ],
+        "title": "WatchlistNowOut",
+        "description": "O Quero ver ordenado pelo que combina agora (RFF22)."
       }
     },
     "securitySchemes": {

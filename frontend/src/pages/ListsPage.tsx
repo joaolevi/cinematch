@@ -1,13 +1,107 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api";
+import { OnMyServices } from "../components/Highlight";
+import { useMoods } from "../moods";
 import { useAuth } from "../auth";
 import MediaCard from "../components/MediaCard";
 import { MEDIA_GRID, tabColor } from "../ui";
-import type { UserList } from "../types";
+import type { Media, UserList, WatchlistNow } from "../types";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
 import ListName from "../components/ListName";
 import { useDiaryVersion, useSeen } from "../seen";
+
+/** O Quero ver ordenado pelo que combina agora (RFF22): gosto, momento e os serviços da pessoa. */
+function WatchlistNowView({ version, renderCard }: { version: number; renderCard: (media: Media, position: number) => ReactNode }) {
+  const { user } = useAuth();
+  const moods = useMoods();
+  const [mood, setMood] = useState("");
+  const [maxMinutes, setMaxMinutes] = useState(0);
+  const [onlyMine, setOnlyMine] = useState(false);
+  const [data, setData] = useState<WatchlistNow | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const hasServices = (user?.services.length ?? 0) > 0;
+
+  useEffect(() => {
+    setError(null);
+    api
+      .watchlistNow({ mood: mood || undefined, max_minutes: maxMinutes || undefined, only_mine: onlyMine || undefined })
+      .then(setData)
+      .catch((e) => setError((e as Error).message));
+  }, [mood, maxMinutes, onlyMine, version]);
+
+  const chip = (on: boolean) => `chip cursor-pointer px-3 py-1 text-sm ${on ? "border-accent text-accent" : ""}`;
+  return (
+    <div className="mt-4">
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="O que combina agora">
+        <span className="text-sm text-muted">Agora:</span>
+        <label className="sr-only" htmlFor="clima-lista">
+          Clima
+        </label>
+        <select id="clima-lista" value={mood} onChange={(e) => setMood(e.target.value)} className={`${chip(!!mood)} bg-surface`}>
+          <option value="">Qualquer clima</option>
+          {moods.map((m) => (
+            <option key={m.key} value={m.key}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+        {(
+          [
+            [0, "Qualquer duração"],
+            [90, "Até 1h30"],
+            [150, "Até 2h30"],
+          ] as const
+        ).map(([minutes, label]) => (
+          <button key={minutes} aria-pressed={maxMinutes === minutes} onClick={() => setMaxMinutes(minutes)} className={chip(maxMinutes === minutes)}>
+            {label}
+          </button>
+        ))}
+        {hasServices ? (
+          <button aria-pressed={onlyMine} onClick={() => setOnlyMine(!onlyMine)} className={chip(onlyMine)}>
+            Só nos meus serviços
+          </button>
+        ) : (
+          <Link to="/conta#servicos" className="text-xs text-muted underline hover:text-accent">
+            Marcar os serviços que eu assino
+          </Link>
+        )}
+      </div>
+      <p className="mt-2 text-xs text-muted">
+        Do que mais combina com o seu gosto ao que menos. O que está nos seus serviços sobe um pouco.
+      </p>
+      {error && <p className="mt-4 text-red-300">{error}</p>}
+      {data && data.items.length === 0 && (
+        <HandNote className="mt-6">Nada do seu Quero ver cabe nesse momento. Tente outro clima ou outra duração.</HandNote>
+      )}
+      {data && data.items.length > 0 && (
+        <div className={`mt-6 ${MEDIA_GRID}`}>
+          {data.items.map((rec, position) => (
+            <div key={rec.media.id}>
+              {renderCard(rec.media, position)}
+              <p className="mt-1.5 line-clamp-2 text-xs text-muted" title={rec.reason}>
+                {rec.reason}
+              </p>
+              <OnMyServices rec={rec} className="mt-1 text-xs" />
+            </div>
+          ))}
+        </div>
+      )}
+      {data && data.later.length > 0 && (
+        <section className="mt-10">
+          <h3 className="font-display text-lg font-bold">Para outro momento</h3>
+          <p className="text-sm text-muted">Não cabem no que você escolheu agora.</p>
+          <div className={`mt-4 opacity-70 ${MEDIA_GRID}`}>
+            {data.later.map((rec, position) => (
+              <div key={rec.media.id}>{renderCard(rec.media, data.items.length + position)}</div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
 
 /** Gerenciar Listas (watchlist "Quero ver" + listas personalizadas). */
 export default function ListsPage() {
@@ -17,6 +111,7 @@ export default function ListsPage() {
   const [lists, setLists] = useState<UserList[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [newName, setNewName] = useState("");
+  const [order, setOrder] = useState<"saved" | "now">("saved"); // no Quero ver: guardados por último ou o que combina agora
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
@@ -36,6 +131,30 @@ export default function ListsPage() {
   }, [version]);
 
   const active = lists.find((l) => l.id === activeId) ?? null;
+
+  const card = (listId: number, media: Media, position: number) => (
+    <MediaCard
+      key={media.id}
+      media={media}
+      pinned={{ position }}
+      sticker={seen?.has(media.id) ? <span className="text-sm">Visto</span> : undefined}
+      overlay={
+        <button
+          aria-label={`Tirar ${media.title} da lista`}
+          title="Tirar da lista"
+          className="absolute top-3 right-2 z-10 grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-bg/80 text-cream shadow-md backdrop-blur-sm transition hover:bg-coral hover:text-bg"
+          onClick={async () => {
+            await api.removeFromList(listId, media.id);
+            load();
+          }}
+        >
+          <svg viewBox="0 0 16 16" aria-hidden className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
+          </svg>
+        </button>
+      }
+    />
+  );
 
   async function create(e: FormEvent) {
     e.preventDefault();
@@ -115,37 +234,42 @@ export default function ListsPage() {
                   </>
                 )}
               </div>
+              {active.is_watchlist && active.items.length > 1 && (
+                <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Ordem">
+                  <span className="text-sm text-muted">Ordem:</span>
+                  {(
+                    [
+                      ["saved", "Guardados por último"],
+                      ["now", "O que combina agora"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <button
+                      key={key}
+                      aria-pressed={order === key}
+                      onClick={() => setOrder(key)}
+                      className={`chip cursor-pointer px-3 py-1 text-sm ${order === key ? "border-accent text-accent" : ""}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {active.items.length === 0 && (
                 <HandNote className="mt-6">
                   Esta lista está esperando o primeiro título. Dá para adicionar pela página de cada um
                   {active.is_watchlist ? <> ou pelo botão <ListName />, no feed</> : ""}.
                 </HandNote>
               )}
-              <div className={`mt-6 ${MEDIA_GRID}`}>
-                {active.items.map(({ media }, position) => (
-                  <MediaCard
-                    key={media.id}
-                    media={media}
-                    pinned={{ position }}
-                    sticker={seen?.has(media.id) ? <span className="text-sm">Visto</span> : undefined}
-                    overlay={
-                      <button
-                        aria-label={`Tirar ${media.title} da lista`}
-                        title="Tirar da lista"
-                        className="absolute top-3 right-2 z-10 grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-bg/80 text-cream shadow-md backdrop-blur-sm transition hover:bg-coral hover:text-bg"
-                        onClick={async () => {
-                          await api.removeFromList(active.id, media.id);
-                          load();
-                        }}
-                      >
-                        <svg viewBox="0 0 16 16" aria-hidden className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                          <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
-                        </svg>
-                      </button>
-                    }
-                  />
-                ))}
-              </div>
+              {active.is_watchlist && order === "now" && active.items.length > 1 ? (
+                <WatchlistNowView
+                  version={version + active.items.length}
+                  renderCard={(media, position) => card(active.id, media, position)}
+                />
+              ) : (
+                <div className={`mt-6 ${MEDIA_GRID}`}>
+                  {active.items.map(({ media }, position) => card(active.id, media, position))}
+                </div>
+              )}
             </>
           )}
         </section>
@@ -153,3 +277,4 @@ export default function ListsPage() {
     </div>
   );
 }
+

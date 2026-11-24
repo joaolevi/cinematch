@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
-import Highlight, { Buttons, DismissButton } from "../components/Highlight";
+import Highlight, { Buttons, DismissButton, OnMyServices } from "../components/Highlight";
 import MediaCard from "../components/MediaCard";
 import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
@@ -12,13 +12,14 @@ import { diaryChanged, useSeen } from "../seen";
 import TuneMenu, { type Tune } from "../components/TuneMenu";
 import { formatMinutes } from "../format";
 import { useMoods } from "../moods";
-import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Recommendation } from "../types";
+import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Occasion, Recommendation } from "../types";
 import { MEDIA_GRID } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
 import ListName from "../components/ListName";
 
 const PAGE = 18;
+const TONIGHT_MINUTES = 150; // "Hoje à noite": cabe numa noite, até 2h30
 
 const STRATEGY_LABEL: Record<Feed["strategy"], string> = {
   hybrid: "Escolhidos a dedo, com base no seu gosto e em quem curte coisas parecidas",
@@ -36,8 +37,24 @@ export default function FeedPage() {
   // Momento (RFF20): clima e duração máxima; vazio e 0 = qualquer um
   const [mood, setMood] = useState("");
   const [maxMinutes, setMaxMinutes] = useState(0);
+  const [occasion, setOccasion] = useState("");
+  const [onlyMine, setOnlyMine] = useState(false); // só nos meus serviços (RFF21)
   const moods = useMoods();
-  const moment = useMemo(() => ({ mood: mood || undefined, max_minutes: maxMinutes || undefined }), [mood, maxMinutes]);
+  const [occasions, setOccasions] = useState<Occasion[]>([]);
+  useEffect(() => {
+    api.occasions().then(setOccasions).catch(() => {});
+  }, []);
+  const moment = useMemo(
+    () => ({
+      mood: mood || undefined,
+      max_minutes: maxMinutes || undefined,
+      occasion: occasion || undefined,
+      only_mine: onlyMine || undefined,
+    }),
+    [mood, maxMinutes, occasion, onlyMine],
+  );
+  const hasServices = (user?.services.length ?? 0) > 0;
+  const tonight = maxMinutes === TONIGHT_MINUTES && onlyMine === hasServices;
   const [feed, setFeed] = useState<Feed | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -279,6 +296,24 @@ export default function FeedPage() {
 
       <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="Para agora">
         <span className="text-sm text-muted">Para agora:</span>
+        {type !== "album" && (
+          <button
+            aria-pressed={tonight}
+            title={hasServices ? "Até 2h30 e só nos seus serviços" : "Até 2h30. Marque seus serviços para ver só o que você tem"}
+            onClick={() => {
+              if (tonight) {
+                setMaxMinutes(0);
+                setOnlyMine(false);
+              } else {
+                setMaxMinutes(TONIGHT_MINUTES);
+                setOnlyMine(hasServices);
+              }
+            }}
+            className={`chip cursor-pointer px-3 py-1 text-sm ${tonight ? "border-accent text-accent" : ""}`}
+          >
+            🌙 Hoje à noite
+          </button>
+        )}
         <label className="sr-only" htmlFor="clima">
           Clima
         </label>
@@ -316,6 +351,36 @@ export default function FeedPage() {
             Até {formatMinutes(maxMinutes)} ✕
           </button>
         )}
+        <label className="sr-only" htmlFor="ocasiao">
+          Com quem
+        </label>
+        <select
+          id="ocasiao"
+          value={occasion}
+          onChange={(e) => setOccasion(e.target.value)}
+          className={`chip cursor-pointer bg-surface px-3 py-1 text-sm ${occasion ? "border-accent text-accent" : ""}`}
+        >
+          <option value="">Com qualquer pessoa</option>
+          {occasions.map((o) => (
+            <option key={o.key} value={o.key}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        {type !== "album" &&
+          (hasServices ? (
+            <button
+              aria-pressed={onlyMine}
+              onClick={() => setOnlyMine(!onlyMine)}
+              className={`chip cursor-pointer px-3 py-1 text-sm ${onlyMine ? "border-accent text-accent" : ""}`}
+            >
+              Só nos meus serviços
+            </button>
+          ) : (
+            <Link to="/conta#servicos" className="text-xs text-muted underline hover:text-accent">
+              Marcar os serviços que eu assino
+            </Link>
+          ))}
         {maxMinutes > 0 && type !== "album" && (
           <span className="text-xs text-muted">Nas séries, vale a duração do episódio.</span>
         )}
@@ -351,12 +416,21 @@ export default function FeedPage() {
               <p className="mt-1.5 line-clamp-2 text-xs text-muted" title={rec.reason}>
                 {rec.reason}
               </p>
+              <OnMyServices rec={rec} className="mt-1 text-xs" />
               <TuneMenu rec={rec} state={{ mood, maxMinutes, discovery }} onTune={(choice, label) => tune(rec, choice, label)} />
               <Buttons rec={rec} act={act} onSeen={() => setSeenTarget(rec.media)} />
             </MediaCard>
           </OnScreen>
         ))}
       </div>
+
+      {feed && feed.items.length === 0 && !loading && (
+        <HandNote className="mt-6">
+          {onlyMine
+            ? "Nada nos seus serviços com esses filtros. Tente outro clima, outra duração ou tire o filtro dos serviços."
+            : "Nada com esses filtros por enquanto. Tente outro clima, outra duração ou outra companhia."}
+        </HandNote>
+      )}
 
       {/* Mais sugestões só quando a pessoa pede, como na Busca: nada aparece na tela sem ela querer */}
       {feed && hasMore && !moreFailed && !loading && rest.length > 0 && (

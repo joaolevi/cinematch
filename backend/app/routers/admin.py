@@ -30,7 +30,8 @@ from ..schemas import (
     VideoType,
 )
 from ..services.catalog import MockCatalogProvider, sync_catalog, title_key
-from ..services.tmdb import StaticProvider, TmdbCatalogProvider, TmdbError, enrich_catalog
+from ..services.tmdb import TmdbCatalogProvider, TmdbError, enrich_catalog
+from ..services.importing import import_album, import_tmdb
 from ..services.metrics import acceptance_metrics
 from ..services.musicbrainz import MusicBrainzClient, MusicBrainzError
 
@@ -152,15 +153,11 @@ def tmdb_import(data: TmdbImportIn, db: Session = Depends(get_db)):
     """Importa (ou atualiza) um título específico do TMDB pelo ID."""
     tmdb = tmdb_provider()
     try:
-        title = tmdb.get_title(data.type, data.tmdb_id)
+        media, result = import_tmdb(db, tmdb, data.type, data.tmdb_id)
     except TmdbError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e))
     finally:
         tmdb.close()
-    result = sync_catalog(db, StaticProvider([title]), source="tmdb")
-    media = db.scalar(
-        select(Media).where(Media.source == "tmdb", Media.external_id == title["external_id"])
-    )
     return TmdbImportOut(media=MediaOut.model_validate(media), result=SyncOut(**result))
 
 
@@ -194,15 +191,11 @@ def musicbrainz_import(data: AlbumImportIn, db: Session = Depends(get_db)):
     """
     mb = musicbrainz_client()
     try:
-        album = mb.get_album(data.mbid)
+        media, result = import_album(db, mb, data.mbid)
     except MusicBrainzError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e))
     finally:
         mb.close()
-    result = sync_catalog(db, StaticProvider([album], "MusicBrainz"), source="musicbrainz")
-    media = db.scalar(
-        select(Media).where(Media.source == "musicbrainz", Media.external_id == album["external_id"])
-    )
     return AlbumImportOut(media=MediaOut.model_validate(media), result=SyncOut(**result))
 
 
