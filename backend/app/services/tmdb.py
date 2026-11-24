@@ -234,7 +234,8 @@ def enrich_catalog(db, provider: TmdbCatalogProvider, only_missing_posters: bool
     from .catalog import merge_media, title_key
 
     rows = [
-        m for m in db.scalars(select(Media).where(Media.source != "tmdb"))
+        # Só filmes e séries: os álbuns vêm do MusicBrainz e não existem no TMDB
+        m for m in db.scalars(select(Media).where(Media.source != "tmdb", Media.type.in_(("movie", "series"))))
         if not (only_missing_posters and m.poster_url)
     ]
     taken = {

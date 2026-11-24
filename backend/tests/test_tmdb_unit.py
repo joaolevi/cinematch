@@ -220,3 +220,13 @@ def test_enrich_merges_mock_title_already_in_tmdb_with_another_name(db):
 def test_admin_enrich_route(client, admin_headers, fake_admin_provider):
     r = client.post("/admin/tmdb/enrich", headers=admin_headers)
     assert r.status_code == 200 and r.json()["enriched"] == 1
+
+
+def test_enriquecer_ignora_albuns(db):
+    """Os álbuns vêm do MusicBrainz e não têm tipo no TMDB: completar pôsteres não pode tropeçar neles."""
+    db.add(Media(type="album", source="musicbrainz", external_id="album-x", title="Construção", year=1971,
+                 overview="", genres=["MPB"], tags=[], creators=["Chico Buarque"], popularity=50, poster_url=None))
+    db.commit()
+    enrich_catalog(db, make_provider())  # antes, KeyError: 'album'
+    album = db.query(Media).filter_by(external_id="album-x").one()
+    assert album.source == "musicbrainz" and album.poster_url is None
