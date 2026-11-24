@@ -937,6 +937,37 @@
         }
       }
     },
+    "/lists/featured": {
+      "get": {
+        "tags": [
+          "listas"
+        ],
+        "summary": "Featured Lists",
+        "description": "As listas em destaque no Início, como o Tema do mês (RFF32). Curadas pela administração.",
+        "operationId": "featured_lists_lists_featured_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ListOut"
+                  },
+                  "type": "array",
+                  "title": "Response Featured Lists Lists Featured Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/lists": {
       "get": {
         "tags": [
@@ -3198,6 +3229,22 @@
           "is_watchlist": {
             "type": "boolean",
             "title": "Is Watchlist"
+          },
+          "featured": {
+            "type": "boolean",
+            "title": "Featured",
+            "default": false
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
           },
           "created_at": {
             "type": "string",

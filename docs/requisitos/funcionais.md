@@ -95,7 +95,7 @@ a 3 semanas, G várias semanas. Ao mudar a situação de um requisito, atualize 
 | <a id="rff29"></a>RFF29 | Receber um aviso no Início quando um título do Quero ver entrar em um dos seus serviços | Não implementado. O aviso de que vai sair fica como extensão: não há fonte gratuita que cubra a Globoplay | RFF21 | M | Depois | RFF28 |
 | <a id="rff30"></a>RFF30 | Curtir e comentar resenhas na Comunidade, com moderação dos comentários e o rank de quem escreve, pelas curtidas recebidas | Não implementado: precisa de tabelas novas. Hoje a Comunidade só conta as resenhas | RNFF01 | M | Depois | RFF12, RFF13 |
 | <a id="rff31"></a>RFF31 | Ver o próprio histórico de atividades, em ordem de data e com filtro por tipo: registros, notas, resenhas, itens adicionados a listas, curtidas e pessoas seguidas | Não implementado. Quem vê o histórico de outra pessoa segue o RFF10 | RFF09, RFF30, RFF10 | M | Depois | RFF16 |
-| <a id="rff32"></a>RFF32 | Ver o tema do mês: uma prateleira curada e um desafio com selo, como "Feito em Alagoas" | Não implementado. Usa as listas que já existem | — | P a M | Depois | RFF40, RFF42 |
+| <a id="rff32"></a>RFF32 | Ver o tema do mês: uma prateleira curada e um desafio com selo, como "Feito em Alagoas" | Parcial: a prateleira "Tema do mês" no Início, com filmes e discos, vem de `data/tema_do_mes.json` (o primeiro tema é "Feito no Nordeste", com Alagoas na frente) e vira uma lista em destaque da administração (`GET /lists/featured`). Faltam o desafio com selo e a troca mensal | — | P a M | Depois | RFF40, RFF42 |
 
 ## Rastreabilidade
 

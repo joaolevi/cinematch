@@ -216,6 +216,8 @@ class ListOut(ORM):
     id: int
     name: str
     is_watchlist: bool
+    featured: bool = False
+    description: str | None = None
     created_at: datetime
     items: list[ListItemOut]
 
