@@ -9,7 +9,7 @@ import SeenStamp from "../components/SeenStamp";
 import Toast from "../components/Toast";
 import { OnScreen, useImpressions } from "../impressions";
 import { diaryChanged, useSeen } from "../seen";
-import type { Feed, FeedbackAction, Media, MediaType } from "../types";
+import type { Discovery, Feed, FeedbackAction, Media, MediaType } from "../types";
 import { MEDIA_GRID } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
@@ -28,6 +28,7 @@ export default function FeedPage() {
   usePageTitle("Para você");
   const { user } = useAuth();
   const [type, setType] = useState<MediaType | "">("");
+  const [discovery, setDiscovery] = useState<Discovery>("taste");
   const [feed, setFeed] = useState<Feed | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +56,7 @@ export default function FeedPage() {
     setHasMore(true);
     setMoreFailed(false);
     try {
-      const first = await api.feed(type || undefined, PAGE);
+      const first = await api.feed(type || undefined, PAGE, [], discovery);
       if (thisLoad === latestLoad.current) {
         alreadyShown.current = new Set(first.items.map((i) => i.media.id));
         setFeed(first);
@@ -68,7 +69,7 @@ export default function FeedPage() {
         setLoading(false);
       }
     }
-  }, [type]);
+  }, [type, discovery]);
 
   useEffect(() => {
     load();
@@ -81,7 +82,7 @@ export default function FeedPage() {
     setLoadingMore(true);
     setMoreFailed(false);
     try {
-      const next = await api.feed(type || undefined, PAGE, [...alreadyShown.current]);
+      const next = await api.feed(type || undefined, PAGE, [...alreadyShown.current], discovery);
       if (thisLoad !== latestLoad.current) return;
       const fresh = next.items.filter((i) => !alreadyShown.current.has(i.media.id));
       fresh.forEach((i) => alreadyShown.current.add(i.media.id));
@@ -93,7 +94,7 @@ export default function FeedPage() {
       fetching.current = false;
       setLoadingMore(false);
     }
-  }, [feed, type]);
+  }, [feed, type, discovery]);
 
   async function swap() {
     const thisLoad = ++latestLoad.current;
@@ -102,7 +103,7 @@ export default function FeedPage() {
     setError(null);
     setMoreFailed(false);
     try {
-      const next = await api.feed(type || undefined, PAGE, [...alreadyShown.current]);
+      const next = await api.feed(type || undefined, PAGE, [...alreadyShown.current], discovery);
       if (thisLoad !== latestLoad.current) return;
       if (next.items.length === 0) {
         await load(); // acabaram os títulos novos: recomeça do início
@@ -202,6 +203,28 @@ export default function FeedPage() {
           </button>
         </div>
       </div>
+
+      {type !== "album" && (
+        <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Modo descoberta">
+          <span className="text-sm text-muted">Quanto sair do óbvio:</span>
+          {(
+            [
+              ["taste", "No meu gosto"],
+              ["beyond", "Um pouco além"],
+              ["outside", "Fora da sua bolha"],
+            ] as const
+          ).map(([mode, label]) => (
+            <button
+              key={mode}
+              aria-pressed={discovery === mode}
+              onClick={() => setDiscovery(mode)}
+              className={`chip cursor-pointer px-3 py-1 text-sm ${discovery === mode ? "border-accent text-accent" : ""}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {user && feed?.strategy === "trending" && (
         <div className="card mt-6 flex flex-wrap items-center justify-between gap-3 p-4">

@@ -106,6 +106,9 @@ export interface Recommendation {
   strategy: "hybrid" | "content" | "trending" | "bridge";
 }
 
+/** Modo descoberta (RFF16): no meu gosto, um pouco além ou fora da sua bolha. */
+export type Discovery = "taste" | "beyond" | "outside";
+
 export interface Feed {
   variant: "A" | "B";
   strategy: Recommendation["strategy"];

@@ -1349,6 +1349,23 @@
               "title": "Exclude"
             },
             "description": "Títulos que já foram mostrados, para trazer outros"
+          },
+          {
+            "name": "discovery",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "taste",
+                "beyond",
+                "outside"
+              ],
+              "type": "string",
+              "description": "Modo descoberta: \"taste\" (no meu gosto, o padrão), \"beyond\" (um pouco além) ou \"outside\" (fora da sua bolha). Os dois últimos puxam para títulos menos famosos e gêneros que a pessoa consome menos",
+              "default": "taste",
+              "title": "Discovery"
+            },
+            "description": "Modo descoberta: \"taste\" (no meu gosto, o padrão), \"beyond\" (um pouco além) ou \"outside\" (fora da sua bolha). Os dois últimos puxam para títulos menos famosos e gêneros que a pessoa consome menos"
           }
         ],
         "responses": {

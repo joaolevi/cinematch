@@ -1,4 +1,5 @@
 import type {
+  Discovery,
   Provider,
   Profile,
   Connection,
@@ -141,8 +142,8 @@ export const api = {
     request<void>(`/lists/${id}/items/${media_id}`, { method: "DELETE" }),
 
   // Recomendações
-  feed: (type?: MediaType, limit = 20, exclude: number[] = []) =>
-    request<Feed>("/recommendations", { query: { type, limit, exclude: exclude.map(String) } }),
+  feed: (type?: MediaType, limit = 20, exclude: number[] = [], discovery: Discovery = "taste") =>
+    request<Feed>("/recommendations", { query: { type, limit, exclude: exclude.map(String), discovery } }),
   undoDismiss: (media_id: number) => request<void>(`/recommendations/${media_id}/feedback`, { method: "DELETE" }),
   community: (limit: number, before_id?: number) =>
     request<{ items: CommunityEntry[] }>("/community", { query: { limit, before_id } }),
