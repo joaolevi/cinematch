@@ -86,9 +86,10 @@ export default function SearchPage() {
           autoFocus
         />
         <select className="input select sm:w-44" aria-label="Tipo" value={type} onChange={(e) => setType(e.target.value as MediaType | "")}>
-          <option value="">Filmes e séries</option>
+          <option value="">Tudo</option>
           <option value="movie">Filmes</option>
           <option value="series">Séries</option>
+          <option value="album">Álbuns</option>
         </select>
         <select className="input select sm:w-52" aria-label="Gênero" value={genre} onChange={(e) => setFilter("genero", e.target.value)}>
           <option value="">Todos os gêneros</option>

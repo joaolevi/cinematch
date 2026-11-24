@@ -58,7 +58,9 @@ export default function SeenModal({
       >
         <span aria-hidden className="tape -top-2 left-1/2 -translate-x-1/2 rotate-2" style={{ background: TAPE_COLORS[0] }} />
         <CloseButton onClick={onClose} />
-        <p className="font-hand text-2xl leading-none font-bold text-[#b9452f]">Querido diário, eu vi:</p>
+        <p className="font-hand text-2xl leading-none font-bold text-[#b9452f]">
+          Querido diário, eu {media.type === "album" ? "ouvi" : "vi"}:
+        </p>
         <h2 className="mt-1 font-display text-2xl font-bold">{media.title}</h2>
 
         <label className="mt-5 block text-sm font-medium">Minha nota (opcional)</label>
@@ -67,7 +69,7 @@ export default function SeenModal({
         </div>
 
         <label className="mt-5 block text-sm font-medium" htmlFor="seen-date">
-          Quando eu vi? (opcional)
+          Quando eu {media.type === "album" ? "ouvi" : "vi"}? (opcional)
         </label>
         <div className="mt-2 flex items-center gap-3">
           {QUICK_DATES.map(({ label, daysAgo }) => {

@@ -21,6 +21,7 @@ const STRATEGY_LABEL: Record<Feed["strategy"], string> = {
   hybrid: "Escolhidos a dedo, com base no seu gosto e em quem curte coisas parecidas",
   content: "Escolhidos a dedo, com base no que você curte",
   trending: "O que está em alta agora. Conte o que você curte e isso aqui fica com a sua cara",
+  bridge: "Álbuns ligados ao que você curte: trilhas, compositores e quem canta e atua",
 };
 
 export default function FeedPage() {
@@ -187,13 +188,13 @@ export default function FeedPage() {
           {feed && <p className="mt-1 text-sm text-muted">{STRATEGY_LABEL[feed.strategy]}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {(["", "movie", "series"] as const).map((t) => (
+          {(["", "movie", "series", "album"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setType(t)}
               className={`chip cursor-pointer px-4 py-1.5 text-sm ${type === t ? "border-accent text-accent" : ""}`}
             >
-              {t === "" ? "Tudo" : t === "movie" ? "Filmes" : "Séries"}
+              {{ "": "Tudo", movie: "Filmes", series: "Séries", album: "Música" }[t]}
             </button>
           ))}
           <button className="btn-ghost px-3 py-1.5" disabled={loading} onClick={swap}>

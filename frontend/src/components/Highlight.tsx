@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MEDIA_STYLE } from "../format";
+import { MEDIA_STYLE, verbs } from "../format";
 import type { FeedbackAction, Media, Recommendation } from "../types";
 import { TAPE_COLORS } from "../ui";
 import GenreChip from "./GenreChip";
@@ -19,13 +19,14 @@ export function Buttons({
   big?: boolean;
 }) {
   const size = big ? "px-5" : "flex-1 px-3";
+  const words = verbs(rec.media.type);
   return (
     <div className={`flex flex-wrap gap-1.5 ${big ? "mt-5 gap-2" : "mt-auto pt-2.5"}`}>
       <button className={`btn-want whitespace-nowrap ${size}`} onClick={() => act(rec.media, "want")}>
-        Quero ver
+        {words.want}
       </button>
       <button className={`btn-seen whitespace-nowrap ${size}`} onClick={onSeen}>
-        Já vi
+        {words.seen}
       </button>
       {big && (
         <button className="btn-skip px-3" onClick={() => act(rec.media, "dismiss")}>
