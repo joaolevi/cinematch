@@ -12,6 +12,13 @@ export interface User {
 
 export type MediaSort = "popularity" | "title" | "year";
 
+/** Onde ouvir um álbum. Com level "artist", o link leva à página do artista, porque o disco não tem link próprio. */
+export interface ListenLink {
+  service: string;
+  url: string;
+  level: "album" | "artist";
+}
+
 export interface Media {
   id: number;
   type: MediaType;
@@ -25,6 +32,18 @@ export interface Media {
   tags: string[];
   creators: string[];
   popularity: number;
+  duration_min?: number | null;
+  countries?: string[];
+  language?: string | null;
+  links?: ListenLink[];
+}
+
+/** Um título da outra mídia ligado a este por uma ponte: "Para ouvir depois" ou "Para ver depois". */
+export interface Connection {
+  media: Media;
+  kind: "soundtrack" | "composer" | "same_person" | "artist" | "weak";
+  weight: number;
+  reason: string;
 }
 
 export interface Review {
@@ -74,7 +93,7 @@ export interface Recommendation {
   media: Media;
   score: number;
   reason: string;
-  strategy: "hybrid" | "content" | "trending";
+  strategy: "hybrid" | "content" | "trending" | "bridge";
 }
 
 export interface Feed {

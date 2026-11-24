@@ -26,6 +26,21 @@ export default function Poster({
       Em breve
     </span>
   );
+  if (media.type === "album" && media.poster_url && !broken) {
+    return (
+      <div className={`relative aspect-[2/3] w-full overflow-hidden bg-black ${rounded} ${className}`}>
+        <img aria-hidden src={media.poster_url} alt="" className="absolute inset-0 h-full w-full scale-125 object-cover opacity-50 blur-xl" />
+        <img
+          src={media.poster_url}
+          alt={media.title}
+          loading="lazy"
+          onError={() => setBroken(true)}
+          className="absolute inset-x-0 top-1/2 aspect-square w-full -translate-y-1/2 object-cover shadow-[0_8px_24px_rgba(0,0,0,.5)]"
+        />
+        {upcoming}
+      </div>
+    );
+  }
   if (media.poster_url && !broken) {
     return (
       <div className="relative">

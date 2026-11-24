@@ -34,6 +34,29 @@ export const MEDIA_STYLE = {
   album: { label: "Álbum", color: "#7fa58b" },
 } as const;
 
+/** Os verbos de cada mídia: um álbum se ouve; filmes e séries se veem. */
+export function verbs(type: keyof typeof MEDIA_STYLE) {
+  const album = type === "album";
+  return {
+    seen: album ? "Já ouvi" : "Já vi",
+    want: album ? "Quero ouvir" : "Quero ver",
+    seenOn: album ? "Você ouviu em" : "Você viu em",
+    seenAlready: album ? "Você já ouviu este álbum" : "Você já viu este título",
+  };
+}
+
+/** Nome de cada serviço de música, na ordem em que a API manda. */
+export const SERVICE_LABEL: Record<string, string> = {
+  spotify: "Spotify",
+  deezer: "Deezer",
+  apple_music: "Apple Music",
+  youtube_music: "YouTube Music",
+  youtube: "YouTube",
+  tidal: "Tidal",
+  bandcamp: "Bandcamp",
+  soundcloud: "SoundCloud",
+};
+
 /** Cada gênero ou pessoa tem sempre a mesma cor. */
 export function colorFor(text: string): string {
   const sum = [...text].reduce((total, char) => total + char.charCodeAt(0), 0);

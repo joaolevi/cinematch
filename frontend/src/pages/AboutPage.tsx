@@ -27,6 +27,14 @@ export default function AboutPage() {
         <p className="mt-3 text-sm text-muted">
           As recomendações de filmes usam avaliações do MovieLens, da GroupLens Research, que não endossa este projeto.
         </p>
+        <p className="mt-3 text-sm text-muted">
+          Os dados dos álbuns vêm do{" "}
+          <a href="https://musicbrainz.org" target="_blank" rel="noreferrer" className="underline hover:text-accent">MusicBrainz</a>, as capas, do{" "}
+          <a href="https://coverartarchive.org" target="_blank" rel="noreferrer" className="underline hover:text-accent">Cover Art Archive</a>, e a
+          popularidade, do{" "}
+          <a href="https://listenbrainz.org" target="_blank" rel="noreferrer" className="underline hover:text-accent">ListenBrainz</a>, todos abertos e
+          mantidos pela comunidade.
+        </p>
       </section>
 
       <section>

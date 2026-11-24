@@ -1,4 +1,5 @@
 import type {
+  Connection,
   AdminReview,
   AdminUser,
   CommunityEntry,
@@ -108,6 +109,7 @@ export const api = {
   search: (query: { q?: string; type?: MediaType | ""; genre?: string; person?: string; sort?: MediaSort; limit?: number; offset?: number }) =>
     request<{ items: Media[]; total: number }>("/media", { query }),
   similar: (id: number) => request<Media[]>(`/media/${id}/similar`),
+  connections: (id: number) => request<Connection[]>(`/media/${id}/connections`),
   trending: (type?: MediaType, limit = 20) =>
     request<Media[]>("/media/trending", { query: { type, limit } }),
   media: (id: number) => request<MediaDetail>(`/media/${id}`),
