@@ -26,6 +26,10 @@ import type {
   Mood,
   Moment,
   TasteProfile,
+  Occasion,
+  StreamingService,
+  Visibility,
+  WatchlistNow,
 } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
@@ -102,8 +106,8 @@ interface TokenOut {
 
 export const api = {
   // Acesso
-  register: (name: string, email: string, password: string) =>
-    request<TokenOut>("/auth/register", { method: "POST", body: { name, email, password } }),
+  register: (name: string, email: string, password: string, in_experiments: boolean) =>
+    request<TokenOut>("/auth/register", { method: "POST", body: { name, email, password, in_experiments } }),
   login: (email: string, password: string) =>
     request<TokenOut>("/auth/login", { method: "POST", body: { email, password } }),
   me: () => request<User>("/me"),
@@ -151,6 +155,13 @@ export const api = {
   feed: (type?: MediaType, limit = 20, exclude: number[] = [], discovery: Discovery = "taste", moment: Moment = {}) =>
     request<Feed>("/recommendations", { query: { type, limit, exclude: exclude.map(String), discovery, ...moment } }),
   moods: () => request<Mood[]>("/media/moods"),
+  occasions: () => request<Occasion[]>("/media/occasions"),
+  services: () => request<StreamingService[]>("/media/services"),
+  setServices: (services: string[]) => request<User>("/me/services", { method: "PUT", body: { services } }),
+  setVisibility: (visibility: Visibility) => request<User>("/me/visibility", { method: "PUT", body: { visibility } }),
+  watchlistNow: (moment: Moment = {}) => request<WatchlistNow>("/recommendations/watchlist", { query: { ...moment } }),
+  externalSearch: (q: string, type: "video" | "album") => request<ExternalTitle[]>("/external/search", { query: { q, type } }),
+  externalImport: (external_id: string) => request<Media>("/external/import", { method: "POST", body: { external_id } }),
   taste: () => request<TasteProfile>("/me/taste"),
   adjust: (kind: AdjustKind, value: string, weight: number) =>
     request<void>("/me/taste/adjustments", { method: "PUT", body: { kind, value, weight } }),

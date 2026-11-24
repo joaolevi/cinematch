@@ -132,6 +132,14 @@ funcionar:
 make prod-duracoes
 ```
 
+**Onde assistir (RFF21).** O "Só nos meus serviços" e o "Hoje à noite" usam onde cada filme e série está, que também
+vem do TMDB, com dados da JustWatch. Busque uma vez depois de publicar (uma consulta por título, uns 2 minutos); rodar
+de novo atualiza o que tiver mais de 7 dias:
+
+```bash
+make prod-servicos
+```
+
 Para ver em que versão o banco está:
 
 ```bash

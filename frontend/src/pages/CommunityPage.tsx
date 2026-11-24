@@ -153,7 +153,11 @@ export default function CommunityPage() {
     <div>
       <h1 className="text-3xl font-bold">Comunidade</h1>
       <p className="mt-1 text-muted">
-        O que a galera anda vendo. O que você marca como Já vi também aparece aqui, para quem tem conta.
+        O que a galera anda vendo. O que você marca como Já vi também aparece aqui, e você escolhe quem vê, em{" "}
+        <Link to="/conta#quem-ve" className="underline hover:text-accent">
+          Minha conta
+        </Link>
+        .
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2" aria-label="De quem ver os registros">

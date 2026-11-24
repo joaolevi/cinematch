@@ -45,3 +45,28 @@ def where_to_watch(db: Session, media: Media) -> list[dict]:
     finally:
         client.close()
     return media.providers or []
+
+
+def fill_providers(db: Session, client: TmdbCatalogProvider, only_stale: bool = True) -> dict:
+    """Busca onde assistir todos os filmes e séries do TMDB, para o "só nos meus serviços" (RFF21) funcionar no feed,
+    que não pode esperar uma consulta por título. Com `only_stale`, pula o que foi buscado há menos de 7 dias."""
+    from sqlalchemy import select
+
+    now = datetime.now(timezone.utc)
+    done = skipped = failed = 0
+    for media in db.scalars(select(Media).where(Media.type.in_(("movie", "series")))).all():
+        tid = tmdb_id(media)
+        updated = media.providers_updated_at
+        if updated is not None and updated.tzinfo is None:
+            updated = updated.replace(tzinfo=timezone.utc)
+        if tid is None or (only_stale and updated is not None and now - updated < FRESH_FOR):
+            skipped += 1
+            continue
+        try:
+            media.providers = client.watch_providers(media.type, tid)
+            media.providers_updated_at = now
+            done += 1
+        except TmdbError:
+            failed += 1
+    db.commit()
+    return {"atualizados": done, "pulados": skipped, "falhas": failed}

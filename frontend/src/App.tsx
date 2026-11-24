@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth";
-import Layout from "./components/Layout";
+import Layout, { Logo } from "./components/Layout";
 import AboutPage from "./pages/AboutPage";
 import AdminPage from "./pages/AdminPage";
 import CommunityPage from "./pages/CommunityPage";
@@ -19,6 +19,7 @@ import AccountPage from "./pages/AccountPage";
 import TastePage from "./pages/TastePage";
 import ProfilePage from "./pages/ProfilePage";
 import SearchPage from "./pages/SearchPage";
+import PrivacyPage from "./pages/PrivacyPage";
 
 function RequireAuth({ children, admin = false }: { children: ReactNode; admin?: boolean }) {
   const { user, loading } = useAuth();
@@ -37,6 +38,21 @@ function PublicOnly({ children }: { children: ReactNode }) {
   return <Navigate to={home} replace />;
 }
 
+/** Páginas abertas a todos, como a política de privacidade: com o menu para quem entrou, sem ele para quem não. */
+function Anyone() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user) return <Layout />;
+  return (
+    <div className="mx-auto max-w-[1680px] px-4 py-8 sm:px-6 lg:px-10">
+      <Link to="/bem-vindo" aria-label="Conhecer o Tastory" className="mb-8 inline-block">
+        <Logo />
+      </Link>
+      <Outlet />
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -44,6 +60,9 @@ export default function App() {
         <Routes>
           <Route path="/bem-vindo" element={<PublicOnly><LandingPage /></PublicOnly>} />
           <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
+          <Route element={<Anyone />}>
+            <Route path="/privacidade" element={<PrivacyPage />} />
+          </Route>
           <Route element={<RequireAuth><Layout /></RequireAuth>}>
             <Route index element={<HomePage />} />
             <Route path="para-voce" element={<FeedPage />} />

@@ -15,7 +15,7 @@ from app.db import Base, SessionLocal, engine  # noqa: E402
 from app.main import app  # noqa: E402
 from app.migrations import alembic_config, apagar_banco  # noqa: E402
 from app.seed import ADMIN_EMAIL, ADMIN_PASSWORD, create_demo_accounts, load_catalog  # noqa: E402
-from app.services import login_guard  # noqa: E402
+from app.services import add_quota, login_guard  # noqa: E402
 
 
 def criar_banco_de_teste() -> None:
@@ -40,6 +40,7 @@ def db():
 @pytest.fixture()
 def client(db):
     login_guard.reset()  # as senhas erradas de um teste não bloqueiam o login do próximo
+    add_quota.reset()
     with TestClient(app) as c:
         yield c
 

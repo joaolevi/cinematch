@@ -10,6 +10,7 @@ import { moodLabel, useMoods } from "../moods";
 import { MEDIA_GRID, TAB_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
+import BringFromOutside from "../components/BringFromOutside";
 
 const PAGE = 24;
 
@@ -152,6 +153,8 @@ export default function SearchPage() {
           </button>
         </div>
       )}
+      {/* Adicionar qualquer título sem o admin (RFF13): aparece no fim da busca por texto */}
+      {total != null && items.length >= total && q.trim().length >= 2 && <BringFromOutside q={q} />}
     </div>
   );
 }

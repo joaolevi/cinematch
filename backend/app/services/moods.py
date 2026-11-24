@@ -23,19 +23,47 @@ class Mood:
     matching: frozenset[str] = field(default_factory=frozenset)  # gêneros que combinam: 1 ponto
     tags: frozenset[str] = field(default_factory=frozenset)  # palavras-chave e tags, sem acento e em minúsculas: 2
     blocked: frozenset[str] = field(default_factory=frozenset)  # gêneros que impedem o clima (terror não é "leve")
+    blocked_tags: frozenset[str] = field(default_factory=frozenset)  # palavras-chave que impedem, como "gore"
 
 
-def _m(key: str, label: str, defining=(), matching=(), tags=(), blocked=()) -> Mood:
-    plain = frozenset(search_text(t).strip() for t in tags)
-    return Mood(key, label, frozenset(defining), frozenset(matching), plain, frozenset(blocked))
+def _plain(tags) -> frozenset[str]:
+    return frozenset(search_text(t).strip() for t in tags)
+
+
+def _m(key: str, label: str, defining=(), matching=(), tags=(), blocked=(), blocked_tags=()) -> Mood:
+    return Mood(key, label, frozenset(defining), frozenset(matching), _plain(tags), frozenset(blocked),
+                _plain(blocked_tags))
 
 
 DARK = ("Terror", "Crime", "Suspense", "Guerra")
+# Marcas de conteúdo adulto nas palavras-chave. Fazem falta nas séries: os gêneros de série do TMDB não têm "Terror",
+# e uma animação para adultos, como Rick and Morty, tem os mesmos gêneros de um desenho para crianças.
+ADULT = (
+    "adult humor", "adult animation", "humor ácido", "dark comedy", "crude humor", "sex", "sexo", "blow job",
+    "erotic thriller", "nudity", "drogas", "drugs", "drug addiction", "drug dealer", "drug trafficking", "cocaine",
+    "violência", "violence", "gore", "blood", "decapitation", "cannibal", "serial killer", "zumbis", "zombie",
+    "pós-apocalíptico", "post-apocalyptic", "domestic abuse", "domestic violence", "demon", "dark fantasy",
+)
+
+_ADULT = _plain(ADULT)
+_FAMILY_TAGS = _plain(["pixar", "disney", "dreamworks", "studio ghibli", "contos de fada", "fairy tale"])
+
+
+def family_friendly(media: Media) -> bool:
+    """Se dá para ver em família: tem o gênero Família, é filme de animação ou é de um estúdio de família, e não tem
+    gênero pesado nem marca de conteúdo adulto. Série animada sem o gênero Família não conta, porque muitas são para
+    adultos (Rick and Morty, BoJack Horseman) e o TMDB dá a elas os mesmos gêneros de um desenho infantil."""
+    genres = set(media.genres or [])
+    tags = {search_text(t).strip() for t in media.tags or []}
+    if genres & set(DARK) or tags & _ADULT:
+        return False
+    return "Família" in genres or bool(tags & _FAMILY_TAGS) or (media.type == "movie" and "Animação" in genres)
 
 
 MOODS: tuple[Mood, ...] = (
     _m("leve", "Leve", ["Comédia", "Família", "Bossa nova"], ["Animação", "Romance", "Musical", "Pop", "MPB"],
-       ["feel-good", "amizade", "friendship", "sitcom", "bossa nova", "easy listening", "folk pop", "soft rock"], DARK),
+       ["feel-good", "amizade", "friendship", "sitcom", "bossa nova", "easy listening", "folk pop", "soft rock"], DARK,
+       ADULT),
     _m("divertido", "Divertido", ["Comédia"], ["Animação", "Aventura", "Axé e brega"],
        ["parody", "satire", "satira", "comedy", "workplace comedy", "adult humor", "amused", "pixar", "dreamworks"],
        ["Terror", "Guerra"]),
@@ -85,7 +113,7 @@ MOODS: tuple[Mood, ...] = (
        "Latina", "Soul, R&B e funk", "Musical"],
        ["disco", "dance-pop", "dance", "house", "funk", "samba", "reggaeton", "salsa", "synth-pop", "baile"]),
     _m("familia", "Para ver em família", ["Família", "Animação"], ["Aventura", "Comédia", "Fantasia"],
-       ["pixar", "disney", "dreamworks", "studio ghibli", "contos de fada", "fairy tale"], DARK),
+       ["pixar", "disney", "dreamworks", "studio ghibli", "contos de fada", "fairy tale"], DARK, ADULT),
     _m("intenso", "Intenso", [], ["Drama", "Guerra", "Crime", "Metal", "Rap e hip-hop"],
        ["vinganca", "revenge", "anti-heroi", "anti-hero", "drogas", "drugs", "violencia", "violence", "mafia",
         "segunda guerra", "politica", "hardcore", "thrash metal", "conscious hip hop"]),
@@ -103,7 +131,9 @@ def moods_for(media: Media) -> list[str]:
     scored: list[tuple[int, int, str]] = []
     for order, mood in enumerate(MOODS):
         points = 2 * len(genres & mood.defining) + len(genres & mood.matching) + 2 * len(tags & mood.tags)
-        if points >= MIN_POINTS and not genres & mood.blocked:
+        if mood.key == "familia" and not family_friendly(media):
+            continue
+        if points >= MIN_POINTS and not genres & mood.blocked and not tags & mood.blocked_tags:
             scored.append((-points, order, mood.key))
     return [key for _, _, key in sorted(scored)[:MAX_MOODS]]
 
@@ -120,3 +150,32 @@ def fill_moods(db: Session, only_missing: bool = True) -> int:
             changed += 1
     db.commit()
     return changed
+
+
+@dataclass(frozen=True)
+class Occasion:
+    """Com quem a pessoa vai ver ou ouvir (RFF20). O título combina se tiver um dos climas da ocasião; "em família"
+    usa a regra de `family_friendly` e ainda tira o que é sombrio, assustador ou intenso."""
+
+    key: str
+    label: str
+    moods: frozenset[str] = field(default_factory=frozenset)
+    family: bool = False
+
+
+HEAVY_MOODS = frozenset({"sombrio", "assustador", "intenso"})
+
+OCCASIONS: tuple[Occasion, ...] = (
+    Occasion("a-dois", "A dois", frozenset({"romantico", "leve", "divertido", "emocionante", "misterioso", "relaxante"})),
+    Occasion("amigos", "Com amigos", frozenset({"divertido", "tenso", "assustador", "energetico", "aventureiro",
+                                                "dancante", "misterioso"})),
+    Occasion("familia", "Em família", family=True),
+)
+OCCASIONS_BY_KEY = {o.key: o for o in OCCASIONS}
+
+
+def fits_occasion(media: Media, occasion: Occasion) -> bool:
+    moods = set(media.moods or [])
+    if occasion.family:
+        return family_friendly(media) and not moods & HEAVY_MOODS
+    return bool(moods & occasion.moods)

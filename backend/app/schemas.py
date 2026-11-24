@@ -20,6 +20,11 @@ class RegisterIn(BaseModel):
     name: str = Field(min_length=2, max_length=120)
     email: EmailStr
     password: str = Field(min_length=6)
+    in_experiments: bool = Field(
+        default=True,
+        description="Consentimento para os experimentos (RNFF08). A interface pergunta no cadastro, sem marcar por "
+        "padrão, e manda a escolha; sem o campo, vale True, como antes",
+    )
 
     @field_validator("name")
     @classmethod
@@ -49,6 +54,10 @@ class UserOut(ORM):
     ab_group: str
     onboarded: bool
     in_experiments: bool = True
+    visibility: Literal["all", "followers", "private"] = Field(
+        default="all", description="Quem vê os registros (RFF10): todos, quem segue a pessoa ou só ela"
+    )
+    services: list[str] = Field(default=[], description='Serviços que a pessoa assina (RFF21), como "netflix"')
 
 
 class TokenOut(BaseModel):
@@ -147,8 +156,17 @@ class MyStatus(BaseModel):
     list_ids: list[int] = []
 
 
+class CreditOut(BaseModel):
+    """De onde vêm os dados do título e com que licença (RNFF02)."""
+
+    name: str = Field(description='A fonte, como "TMDB" ou "MusicBrainz"')
+    url: str | None = Field(description="A página do título na fonte")
+    license: str = Field(description="A licença ou os termos de uso dos dados")
+
+
 class MediaDetailOut(MediaOut):
     actors: list[str]
+    credit: CreditOut | None = None
     avg_rating: float | None
     ratings_count: int
     reviews: list[ReviewOut]
@@ -249,6 +267,27 @@ class RecommendationOut(BaseModel):
     because: BecauseOut | None = Field(
         default=None, description='O que está por trás do motivo, para o "Não por esse motivo" (RFF08)'
     )
+    services: list[str] = Field(
+        default=[], description='Os serviços da pessoa onde o título está (RFF21), como ["Netflix"]'
+    )
+
+
+class WatchlistNowOut(BaseModel):
+    """O Quero ver ordenado pelo que combina agora (RFF22)."""
+
+    items: list[RecommendationOut] = Field(description="O que cabe no momento, do que mais combina ao que menos")
+    later: list[RecommendationOut] = Field(description="O resto do Quero ver, que não cabe no momento pedido")
+
+
+class ServiceOut(BaseModel):
+    key: str
+    label: str
+    count: int = Field(description="Quantos títulos do catálogo estão no serviço")
+
+
+class OccasionOut(BaseModel):
+    key: str
+    label: str
 
 
 class ProviderOut(BaseModel):
@@ -305,6 +344,9 @@ class ProfileOut(BaseModel):
     following: bool = Field(default=False, description="Se quem vê segue esta pessoa")
     followers: int = Field(default=0, description="Quantas pessoas seguem esta pessoa")
     follows: int = Field(default=0, description="Quantas pessoas esta pessoa segue")
+    restricted: bool = Field(
+        default=False, description="Os registros são só para quem segue a pessoa, e quem vê ainda não segue (RFF10)"
+    )
 
 
 class PersonOut(BaseModel):
@@ -439,6 +481,23 @@ class VariantMetrics(BaseModel):
 
 class ExperimentsIn(BaseModel):
     in_experiments: bool
+
+
+class VisibilityIn(BaseModel):
+    visibility: Literal["all", "followers", "private"] = Field(
+        description="all = todos; followers = quem me segue; private = só eu (RFF10)"
+    )
+
+
+class ServicesIn(BaseModel):
+    services: list[str] = Field(max_length=20, description="Chaves de GET /media/services, como netflix")
+
+
+class ExternalAddIn(BaseModel):
+    external_id: str = Field(
+        pattern=r"^(movie-\d+|tv-\d+|album-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$",
+        description="O external_id de GET /external/search: movie-155, tv-1399 ou album-<ID do MusicBrainz>",
+    )
 
 
 class DeleteAccountIn(BaseModel):

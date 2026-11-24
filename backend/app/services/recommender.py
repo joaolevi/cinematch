@@ -63,7 +63,7 @@ class Recommendation:
     media: Media
     score: float
     reason: str
-    strategy: str  # hybrid | content | trending | bridge | discovery
+    strategy: str  # hybrid | content | trending | bridge | discovery | watchlist (Quero ver, RFF22)
     # O que está por trás do motivo, para o "Não por esse motivo" (RFF08): ("title", "12"), ("genre", "Drama")...
     because: tuple[str, str] | None = None
 
@@ -148,10 +148,12 @@ def user_signals(db: Session, user_id: int) -> dict[int, float]:
     return {mid: w for mid, w in signals.items() if w != 0}
 
 
-def excluded_ids(db: Session, user_id: int) -> set[int]:
-    """Itens que não devem aparecer no feed: já registrados, descartados ou na watchlist."""
+def excluded_ids(db: Session, user_id: int, watchlist: bool = True) -> set[int]:
+    """Itens que não devem aparecer no feed: já registrados, descartados ou na watchlist (sem `watchlist`, ela fica)."""
     ids = set(db.scalars(select(DiaryEntry.media_id).where(DiaryEntry.user_id == user_id)))
     ids |= set(db.scalars(select(Dismissed.media_id).where(Dismissed.user_id == user_id)))
+    if not watchlist:
+        return ids
     ids |= set(
         db.scalars(
             select(ListItem.media_id)
@@ -230,15 +232,20 @@ def recommend(
     skip: Iterable[int] = (),
     discovery: str = "taste",
     allow: set[int] | None = None,
+    keep_watchlist: bool = False,
 ) -> tuple[str, list[Recommendation]]:
     """Gera o feed do usuário, sem os títulos de `skip`. Retorna (estratégia, recomendações).
 
     `discovery` é o modo descoberta (RFF16): "taste" (padrão), "beyond" ou "outside". Com `allow`, só esses títulos
-    entram (os filtros do momento, RFF20). Os ajustes de gosto da pessoa (RFF07, RFF08) multiplicam as notas.
+    entram (os filtros do momento, RFF20). Os ajustes de gosto da pessoa (RFF07, RFF08) multiplicam as notas. Com
+    `keep_watchlist`, o Quero ver não sai dos candidatos: serve para ordená-lo pelo gosto (RFF22).
     """
     from . import adjustments as adj
 
     signals = user_signals(db, user.id)
+    if keep_watchlist and allow:
+        # Ao ordenar o Quero ver, o que está nele não conta como gosto: senão cada título explicaria a si mesmo
+        signals = {mid: w for mid, w in signals.items() if mid not in allow}
     adjust = adj.load(db, user.id)
     pref_genres = list(
         db.scalars(select(UserPreference.genre).where(UserPreference.user_id == user.id))
@@ -251,7 +258,7 @@ def recommend(
     pref_tokens = [_tok("g", g) for g in pref_genres]
     pref_tokens += [f"d:{d}" for d in pref_decades]
     pref_tokens += [_tok("c", c) for c in pref_creators]
-    exclude = excluded_ids(db, user.id) | set(skip)
+    exclude = excluded_ids(db, user.id, watchlist=not keep_watchlist) | set(skip)
 
     # Nó de decisão do DA: possui histórico ou preferências?
     if not signals and not pref_tokens:

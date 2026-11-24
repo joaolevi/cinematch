@@ -16,7 +16,7 @@ Base técnica, a métrica corrigida e o grafo de conteúdo, que já melhora as s
 | ID | Requisito | Tipo | Situação | Esforço | Prio. | Nec. | Inov. | Depende de |
 |---|---|---|---|---|---|---|---|---|
 | [RNFF01](nao-funcionais.md#rnff01) | Mudar o banco sem apagar dados, com migrações | Não funcional | Feito | P | 5 | 5 | 1 | — |
-| [RNFF02](nao-funcionais.md#rnff02) | Respeitar os termos e as licenças das fontes | Não funcional | Não iniciado | P | 5 | 4 | 1 | — |
+| [RNFF02](nao-funcionais.md#rnff02) | Respeitar os termos e as licenças das fontes | Não funcional | Parcial | P | 5 | 4 | 1 | — |
 | [RNFF04](nao-funcionais.md#rnff04) | Contar a aceitação só perto da exibição | Não funcional | Feito | P | 5 | 4 | 1 | — |
 | [RNFF05](nao-funcionais.md#rnff05) | Limitar tentativas de login | Não funcional | Feito | P | 4 | 3 | 1 | — |
 | [RFF03](funcionais.md#rff03) | Pedir a nota na hora certa | Funcional | Feito | P | 5 | 4 | 2 | — |
@@ -45,14 +45,14 @@ Preparar a abertura para pessoas de fora, o social mínimo e o controle sobre o 
 
 | ID | Requisito | Tipo | Situação | Esforço | Prio. | Nec. | Inov. | Depende de |
 |---|---|---|---|---|---|---|---|---|
-| [RNFF08](nao-funcionais.md#rnff08) | Cumprir a LGPD | Não funcional | Não iniciado | P a M | 4 | 3 | 1 | — |
+| [RNFF08](nao-funcionais.md#rnff08) | Cumprir a LGPD | Não funcional | Feito | P a M | 4 | 3 | 1 | — |
 | [RFF07](funcionais.md#rff07) | Ver e corrigir o meu perfil de gosto | Funcional | Feito | M | 4 | 2 | 5 | RNFF01 |
 | [RFF08](funcionais.md#rff08) | Dar retorno sobre uma sugestão | Funcional | Feito | M | 3 | 2 | 4 | RFF07; o "mais leve" depende do RNFF09 |
 | [RFF09](funcionais.md#rff09) | Seguir pessoas | Funcional | Feito | M | 3 | 2 | 1 | RNFF01 |
-| [RFF10](funcionais.md#rff10) | Escolher quem vê meus registros | Funcional | Não iniciado | P a M | 3 | 3 | 1 | RFF09 |
+| [RFF10](funcionais.md#rff10) | Escolher quem vê meus registros | Funcional | Feito | P a M | 3 | 3 | 1 | RFF09 |
 | [RFF11](funcionais.md#rff11) | Perfil público com a história do gosto | Funcional | Parcial | M | 3 | 3 | 2 | RFF10 |
 | [RFF12](funcionais.md#rff12) | Registrar o mesmo título mais de uma vez | Funcional | Não iniciado | M | 3 | 3 | 1 | RNFF01 |
-| [RFF13](funcionais.md#rff13) | Adicionar qualquer título sem o admin | Funcional | Parcial | P | 3 | 3 | 1 | — |
+| [RFF13](funcionais.md#rff13) | Adicionar qualquer título sem o admin | Funcional | Feito | P | 3 | 3 | 1 | — |
 | [RFF14](funcionais.md#rff14) | Recuperar a senha e verificar o e-mail | Funcional | Não iniciado | M | 3 | 3 | 1 | RNFF01 |
 | [RFF15](funcionais.md#rff15) | Compatibilidade de gosto | Funcional | Parcial | P a M | 3 | 2 | 3 | RFF11 |
 | [RFF16](funcionais.md#rff16) | Modo descoberta | Funcional | Feito | P | 3 | 2 | 4 | — |
@@ -68,9 +68,9 @@ O vocabulário de clima e tudo que depende dele, mais os serviços de streaming.
 |---|---|---|---|---|---|---|---|---|
 | [RNFF09](nao-funcionais.md#rnff09) | Vocabulário de clima comum | Não funcional | Feito | M a G | 2 | 2 | 4 | RNFF02 |
 | [RFF19](funcionais.md#rff19) | Onde assistir ou ouvir | Funcional | Parcial | M a G | 2 | 2 | 3 | RNFF03; a música depende do RFF01 |
-| [RFF20](funcionais.md#rff20) | Sugestões pelo momento | Funcional | Parcial | M | 2 | 2 | 4 | RNFF09; "Hoje à noite" com outra pessoa vem com o RFF28 |
-| [RFF21](funcionais.md#rff21) | Meus serviços | Funcional | Não iniciado | P a M | 2 | 2 | 2 | RFF19 |
-| [RFF22](funcionais.md#rff22) | Quero ver ordenado pelo que combina agora | Funcional | Não iniciado | P a M | 2 | 2 | 3 | RFF19, RFF20 |
+| [RFF20](funcionais.md#rff20) | Sugestões pelo momento | Funcional | Feito | M | 2 | 2 | 4 | RNFF09; "Hoje à noite" com outra pessoa vem com o RFF28 |
+| [RFF21](funcionais.md#rff21) | Meus serviços | Funcional | Feito | P a M | 2 | 2 | 2 | RFF19 |
+| [RFF22](funcionais.md#rff22) | Quero ver ordenado pelo que combina agora | Funcional | Feito | P a M | 2 | 2 | 3 | RFF19, RFF20 |
 | [RFF23](funcionais.md#rff23) | Buscar por clima | Funcional | Feito | M | 2 | 1 | 4 | RNFF09, RFF01 |
 | [RFF24](funcionais.md#rff24) | Séries por temporada | Funcional | Não iniciado | M | 2 | 2 | 2 | RFF12 |
 | [RFF25](funcionais.md#rff25) | Pedido em português | Funcional | Não iniciado | M | 2 | 1 | 5 | RFF20, RNFF09; e orçamento |

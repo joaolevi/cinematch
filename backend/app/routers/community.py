@@ -1,4 +1,4 @@
-"""Comunidade: o que as pessoas marcaram como Já vi. No MVP, todo mundo vê todo mundo."""
+"""Comunidade: o que as pessoas marcaram como Já vi, respeitando quem cada uma deixou ver (RFF10)."""
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import and_, case, func, select
@@ -9,6 +9,7 @@ from ..db import get_db
 from ..models import DiaryEntry, Follow, User
 from ..schemas import CommunityEntryOut, CommunityPage, MediaOut, ReviewerOut
 from ..seed import DEMO_EMAIL
+from ..services.visibility import visible_owner
 
 router = APIRouter(prefix="/community", tags=["comunidade"])
 
@@ -29,7 +30,7 @@ def community(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    visible = select(DiaryEntry).join(User, User.id == DiaryEntry.user_id).where(*VISIBLE)
+    visible = select(DiaryEntry).join(User, User.id == DiaryEntry.user_id).where(*VISIBLE, visible_owner(user.id))
     if following:
         visible = visible.where(DiaryEntry.user_id.in_(select(Follow.followed_id).where(Follow.follower_id == user.id)))
     page = visible.where(DiaryEntry.id < before_id) if before_id is not None else visible
@@ -59,15 +60,16 @@ def community(
 def reviewers(
     limit: int = Query(default=5, ge=1, le=20),
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    user: User = Depends(get_current_user),
 ):
-    """Quem mais escreveu resenhas. Resenhas ocultas pela moderação não contam."""
+    """Quem mais escreveu resenhas, entre quem deixa ver os registros (RFF10). Resenhas ocultas pela moderação não
+    contam."""
     review_count = func.count(case((and_(DiaryEntry.review.is_not(None), DiaryEntry.review_hidden.is_(False)), 1)))
     title_count = func.count(DiaryEntry.id)
     rows = db.execute(
         select(User.name, title_count, review_count)
         .join(DiaryEntry, DiaryEntry.user_id == User.id)
-        .where(*VISIBLE)
+        .where(*VISIBLE, visible_owner(user.id))
         .group_by(User.id, User.name)
         .order_by(review_count.desc(), title_count.desc(), User.name)
         .limit(limit)

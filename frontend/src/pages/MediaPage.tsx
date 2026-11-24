@@ -372,14 +372,6 @@ function MediaView({ mediaId }: { mediaId: number }) {
         </section>
       )}
 
-      {album && (
-        <p className="mt-8 text-xs text-muted">
-          Dados do álbum:{" "}
-          <a href="https://musicbrainz.org" target="_blank" rel="noreferrer" className="underline hover:text-accent">MusicBrainz</a>. Capa:{" "}
-          <a href="https://coverartarchive.org" target="_blank" rel="noreferrer" className="underline hover:text-accent">Cover Art Archive</a>.
-        </p>
-      )}
-
       <section className="mt-12 max-w-4xl">
         <h2 className="font-display text-xl font-bold">Resenhas</h2>
         {media.reviews.length === 0 && <HandNote className="mt-2">Ninguém escreveu sobre este ainda. Que tal ser a primeira pessoa?</HandNote>}
@@ -392,6 +384,21 @@ function MediaView({ mediaId }: { mediaId: number }) {
           ))}
         </div>
       </section>
+
+      {/* De onde vêm os dados e com que licença (RNFF02) */}
+      {media.credit && (
+        <p className="mt-10 max-w-4xl text-xs text-muted">
+          Fonte:{" "}
+          {media.credit.url ? (
+            <a href={media.credit.url} target="_blank" rel="noreferrer" className="underline hover:text-accent">
+              {media.credit.name}
+            </a>
+          ) : (
+            media.credit.name
+          )}
+          . {media.credit.license}
+        </p>
+      )}
 
       {showSeen && (
         <SeenModal

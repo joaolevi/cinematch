@@ -164,10 +164,15 @@ export default function Layout() {
             </Link>
           </Toast>
         )}
-        <footer className="mx-auto w-full px-4 py-6 text-xs text-muted sm:px-6 lg:px-10">
+        <footer className="mx-auto flex w-full flex-wrap items-center gap-x-4 gap-y-1 px-4 py-6 text-xs text-muted sm:px-6 lg:px-10">
           <Link to="/sobre" className="hover:text-accent">
-            Sobre o Tastory
+            Sobre e créditos
           </Link>
+          <Link to="/privacidade" className="hover:text-accent">
+            Política de privacidade
+          </Link>
+          {/* Crédito às fontes (RNFF02): os detalhes e as licenças ficam no Sobre e em cada título */}
+          <span>Dados de filmes e séries: TMDB · Onde assistir: JustWatch · Música: MusicBrainz</span>
         </footer>
       </div>
     </div>

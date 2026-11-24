@@ -31,17 +31,23 @@ Swagger, com as regras na descrição de cada rota.
 | `GET /me/export` | Baixar os próprios dados (RFF06) | → JSON com `account`, `preferences`, `diary`, `lists`, `dismissed`, `following`, `review_comments`, `taste_adjustments` e `recommendation_events`; a senha não vai |
 | `DELETE /me` | Excluir a própria conta e tudo o que é dela (RFF06) | `{password}` → 204; 403 com senha errada; 400 para contas de administração |
 | `PUT /me/experiments` | Sair ou voltar para os experimentos (RFF17) | `{in_experiments: bool}` → o usuário. Fora deles, `variant` no feed vem `"-"` e as reações ficam fora da comparação A/B |
+| `PUT /me/visibility` | Quem vê os meus registros (RFF10) | `{visibility: "all"\|"followers"\|"private"}` → o usuário. Vale na Comunidade, nas resenhas, no perfil e no "Para ver ou ouvir junto" |
+| `PUT /me/services` | Os serviços que eu assino (RFF21) | `{services: ["netflix", ...]}`, com as chaves de `GET /media/services` → o usuário; 422 para chave desconhecida |
 | `GET /me/taste` | O que o Tastory acha do gosto (RFF07) | → `{genres, decades, people, moods: [{kind, value, label, share, weight}], titles, excluded, adjusted}` |
 | `PUT /me/taste/adjustments` | Pedir mais ou menos de algo (RFF07, RFF08) | `{kind: "genre"\|"decade"\|"person"\|"mood"\|"title", value, weight}`: 1,5 mais, 0,5 menos, 0 tira do cálculo, 1 volta ao normal → 204 |
 | `DELETE /me/taste/adjustments` | Desfazer todos os ajustes | 204 |
 | `GET /me/preferences` | Preferências salvas | — → `{genres, decades, creators, artists, onboarded}` |
 | `PUT /me/preferences` | Onboarding | `{genres: string[], decades: number[], creators: string[], artists: string[], liked_media_ids: number[]}`. `genres` junta os gêneros de filme e de música; `artists` são os artistas de música |
 | `GET /media` | Busca/listagem | `q`, `type` (`movie`\|`series`), `genre`, `person` (nome exato de diretor, criador ou ator), `sort` (`popularity`\|`title`\|`year`; em `popularity`, com `q`, os títulos que começam com o termo vêm primeiro; em `year`, títulos de anos futuros ficam no fim), `limit`, `offset` → `{items, total}` |
+| `GET /media/services` | Serviços de streaming que dá para marcar (RFF21), com quantos títulos do catálogo estão em cada um | → `[{key, label, count}]` |
+| `GET /media/occasions` | Ocasiões do momento (RFF20) | → `[{key, label}]`: `a-dois`, `amigos`, `familia` |
+| `GET /external/search` | Buscar fora do catálogo (RFF13) | `q`, `type` (`video` = TMDB \| `album` = MusicBrainz) → lista com `media_id` se já estiver no catálogo |
+| `POST /external/import` | Trazer um título para o catálogo (RFF13) | `{external_id}` da busca → 201 com o título; 200 se já estava (não gasta o limite); 429 depois de 10 em 24 horas |
 | `GET /media/genres` | Lista de gêneros (para filtros/onboarding) | — |
 | `GET /media/facets` | Décadas e criadores do catálogo, para o onboarding | `genre` (pode repetir), `limit` |
 | `GET /media/trending` | Em alta (sem login). Como o feed, só traz títulos do TMDB com sinopse, pôster e nome legível | `type`, `limit` |
 | `GET /media/{id}/similar` | Títulos parecidos, do mesmo tipo, sem o que a pessoa já viu, descartou ou guardou | `limit` |
-| `GET /media/{id}` | Detalhe + elenco (`actors`) + média de notas + resenhas + `my_status` | — |
+| `GET /media/{id}` | Detalhe + elenco (`actors`) + média de notas + resenhas + `my_status` + `credit` (a fonte dos dados, com link e licença, RNFF02). As resenhas respeitam quem cada pessoa deixa ver (RFF10) | — |
 | `GET /diary` | Diário do usuário (mais recente primeiro) | — |
 | `POST /diary` | "Já vi". Sem `consumed_at`, o registro fica sem data | `{media_id, rating?: 0.5–5 (passo 0.5), review?, consumed_at?: "AAAA-MM-DD"}` |
 | `PATCH /diary/{id}` · `DELETE /diary/{id}` | Editar / remover registro | `{rating?, review?, consumed_at?}` |
@@ -49,13 +55,14 @@ Swagger, com as regras na descrição de cada rota.
 | `GET /lists/{id}` | Uma lista, com os títulos | — |
 | `POST /lists` · `PATCH /lists/{id}` · `DELETE /lists/{id}` | Criar / renomear / excluir | `{name}` |
 | `POST /lists/{id}/items` · `DELETE /lists/{id}/items/{media_id}` | Adicionar / remover título | `{media_id}` |
-| `GET /recommendations` | Feed "Para você" | `type`, `limit`, `exclude` (pode repetir: títulos que já foram mostrados, para trazer outros) → `{variant, strategy, items: [{media, score, reason, strategy}]}` |
+| `GET /recommendations` | Feed "Para você" | `type`, `limit`, `exclude` (pode repetir: títulos que já foram mostrados, para trazer outros), `mood`, `max_minutes`, `occasion`, `only_mine` (só nos serviços da pessoa) → `{variant, strategy, items: [{media, score, reason, strategy, because, services}]}`. `services` traz os serviços da pessoa onde o título está |
+| `GET /recommendations/watchlist` | O Quero ver ordenado pelo que combina agora (RFF22) | `mood`, `max_minutes`, `occasion`, `only_mine` → `{items, later}`: o que cabe no momento, do que mais combina ao que menos, e o resto |
 | `POST /recommendations/{media_id}/feedback` | Botões do feed | `{action: "want"\|"seen"\|"dismiss", rating?, review?, consumed_at?}` |
 | `POST /recommendations/impressions` | Avisa quais títulos do feed apareceram na tela. É isso que conta como exibido | `{items: [{media_id, strategy, score}]}` (até 100) |
 | `DELETE /recommendations/{media_id}/feedback` | Desfazer o "Não me interesso" | — |
 | `GET /community` | Página Comunidade: registros de "Já vi" de todas as pessoas, do mais recente ao mais antigo | `limit`, `before_id` (id do último item carregado), `following=true` (só de quem eu sigo) → `{items: [{id, user_id, user_name, media, rating, review, consumed_at, created_at}]}` |
 | `GET /community/reviewers` | Quem mais escreve resenhas | `limit` → `[{name, titles, reviews}]` |
-| `GET /users/{id}` | Perfil de uma pessoa, com a compatibilidade de gosto | → `{id, name, is_me, counts, favorites, recent, compatibility, following, followers, follows}`; 404 para perfil privado |
+| `GET /users/{id}` | Perfil de uma pessoa, com a compatibilidade de gosto | → `{id, name, is_me, counts, favorites, recent, compatibility, following, followers, follows, restricted}`; 404 para perfil privado; `restricted` quando a pessoa só mostra para quem segue e quem vê não segue, e aí os registros vêm vazios |
 | `PUT /users/{id}/follow` | Seguir a pessoa (RFF09), sem pedido de aceite | 204; repetir não muda nada; 400 para o próprio perfil; 404 para perfil privado |
 | `DELETE /users/{id}/follow` | Deixar de seguir | 204, mesmo se não seguia |
 | `GET /users/following` | Quem eu sigo, por nome | → `[{id, name}]` |

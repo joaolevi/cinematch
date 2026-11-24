@@ -26,6 +26,10 @@ export default function AboutPage() {
         <p className="mt-3 text-sm text-muted">Os dados e as imagens dos títulos vêm do TMDB.</p>
         <p className="mt-1 text-sm text-muted">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
         <p className="mt-3 text-sm text-muted">
+          Onde assistir cada filme e série vem da{" "}
+          <a href="https://www.justwatch.com" target="_blank" rel="noreferrer" className="underline hover:text-accent">JustWatch</a>, pelo TMDB.
+        </p>
+        <p className="mt-3 text-sm text-muted">
           As recomendações de filmes usam avaliações do MovieLens, da GroupLens Research, que não endossa este projeto.
         </p>
         <p className="mt-3 text-sm text-muted">
@@ -34,7 +38,18 @@ export default function AboutPage() {
           <a href="https://coverartarchive.org" target="_blank" rel="noreferrer" className="underline hover:text-accent">Cover Art Archive</a>, e a
           popularidade, do{" "}
           <a href="https://listenbrainz.org" target="_blank" rel="noreferrer" className="underline hover:text-accent">ListenBrainz</a>, todos abertos e
-          mantidos pela comunidade.
+          mantidos pela comunidade. Os dados do MusicBrainz estão em domínio público (CC0); as capas são de quem as criou.
+        </p>
+        <p className="mt-3 text-sm text-muted">
+          Cada título mostra, no fim da página dele, de onde vieram os dados e com que licença.
+        </p>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold">Privacidade</h2>
+        <p className="mt-2 text-sm text-muted">
+          O que guardamos sobre você e o que você pode fazer com isso:{" "}
+          <Link to="/privacidade" className="underline hover:text-[#b9452f]">política de privacidade</Link>.
         </p>
       </section>
 
