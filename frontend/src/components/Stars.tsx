@@ -49,10 +49,13 @@ export function StarsInput({
   value,
   onChange,
   size = 32,
+  bare = false,
 }: {
   value: number | null;
   onChange: (v: number | null) => void;
   size?: number;
+  /** Só as estrelas, sem o "sem nota" e o "limpar": para dar nota direto no card */
+  bare?: boolean;
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const [burst, setBurst] = useState(0); // muda a cada nota escolhida, para as estrelas pularem de novo
@@ -91,8 +94,8 @@ export function StarsInput({
           </span>
         ))}
       </div>
-      <span className="w-16 text-sm text-muted">{value != null ? formatRating(value) : "sem nota"}</span>
-      {value != null && (
+      {!bare && <span className="w-16 text-sm text-muted">{value != null ? formatRating(value) : "sem nota"}</span>}
+      {!bare && value != null && (
         <button type="button" className="text-xs text-muted underline hover:text-accent" onClick={() => onChange(null)}>
           limpar
         </button>

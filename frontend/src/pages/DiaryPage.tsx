@@ -4,6 +4,7 @@ import { api } from "../api";
 import MediaCard from "../components/MediaCard";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
+import QuickRate from "../components/QuickRate";
 import SeenModal from "../components/SeenModal";
 import { StarsDisplay } from "../components/Stars";
 import TasteChartsView from "../components/TasteCharts";
@@ -330,7 +331,11 @@ export default function DiaryPage() {
                     }
                   >
                     <div className="mt-1">
-                      <StarsDisplay value={e.rating} size={13} />
+                      {e.rating != null ? (
+                        <StarsDisplay value={e.rating} size={13} />
+                      ) : (
+                        <QuickRate entryId={e.id} title={e.media.title} size={16} />
+                      )}
                     </div>
                     {e.review && (
                       <p className="ruled mt-1 line-clamp-2 font-hand text-lg text-stone-200" title={e.review}>

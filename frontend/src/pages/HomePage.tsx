@@ -7,6 +7,7 @@ import Highlight from "../components/Highlight";
 import MediaCard from "../components/MediaCard";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
+import RateReminder from "../components/RateReminder";
 import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
 import Toast from "../components/Toast";
@@ -233,6 +234,8 @@ export default function HomePage() {
           </section>
         )}
       </div>
+
+      {diary && <RateReminder diary={diary} watchlist={watchlist} onSeen={setSeenTarget} />}
 
       {watchlist.length > 0 && (
         <Shelf
