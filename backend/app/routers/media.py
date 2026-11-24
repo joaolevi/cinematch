@@ -11,9 +11,12 @@ from .. import crud
 from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList
-from ..schemas import ConnectionOut, MediaDetailOut, ProviderOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MyStatus, ReviewOut
+from ..schemas import (
+    ConnectionOut, MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MoodOut, MyStatus, ProviderOut, ReviewOut,
+)
 from ..services.bridges import connections
 from ..services.catalog import search_text
+from ..services.moods import MOODS
 from ..services.providers import where_to_watch
 from ..services.recommender import similar_titles, trending as trending_service
 
@@ -28,6 +31,7 @@ def search_media(
     type: MediaType | None = None,
     genre: str | None = None,
     person: str | None = Query(default=None, description="Nome exato de um diretor, criador ou ator"),
+    mood: str | None = Query(default=None, description='Clima (RFF23), como "melancolico"; veja GET /media/moods'),
     sort: str = Query(default="popularity", pattern="^(popularity|title|year)$"),
     limit: int = Query(default=24, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -39,6 +43,8 @@ def search_media(
         items = [m for m in items if m.type == type]
     if genre:
         items = [m for m in items if genre in (m.genres or [])]
+    if mood:
+        items = [m for m in items if mood in (m.moods or [])]
     if person:
         wanted = search_text(person.strip())
         items = [m for m in items if wanted in {search_text(n) for n in (m.creators or []) + (m.actors or [])}]
@@ -80,6 +86,14 @@ def list_genres(
     for g in db.scalars(select(Media.genres).where(Media.type.in_(types))):
         genres.update(g or [])
     return sorted(genres)
+
+
+@router.get("/moods", response_model=list[MoodOut])
+def moods(db: Session = Depends(get_db), _user: User = Depends(get_current_user)):
+    """O vocabulário de climas (RNFF09), na ordem de sempre, com quantos títulos têm cada um. Os climas valem para
+    filmes, séries e álbuns: a busca por clima (RFF23) traz as três mídias juntas."""
+    counts = Counter(mood for m in db.scalars(select(Media)) for mood in m.moods or [])
+    return [MoodOut(key=m.key, label=m.label, count=counts[m.key]) for m in MOODS]
 
 
 @router.get("/facets", response_model=MediaFacetsOut)

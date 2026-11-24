@@ -6,7 +6,8 @@ import MediaCard from "../components/MediaCard";
 import { plural } from "../format";
 import { useSeen } from "../seen";
 import type { Media, MediaSort, MediaType } from "../types";
-import { MEDIA_GRID } from "../ui";
+import { moodLabel, useMoods } from "../moods";
+import { MEDIA_GRID, TAB_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
 
@@ -28,6 +29,8 @@ export default function SearchPage() {
   const [params, setParams] = useSearchParams();
   const genre = params.get("genero") ?? "";
   const person = params.get("pessoa") ?? "";
+  const mood = params.get("clima") ?? "";
+  const moods = useMoods();
   const [sort, setSort] = useState<MediaSort>("popularity");
   const [genres, setGenres] = useState<string[]>([]);
   const [items, setItems] = useState<Media[]>([]);
@@ -41,12 +44,12 @@ export default function SearchPage() {
 
   useEffect(() => {
     setOffset(0);
-  }, [q, type, genre, person, sort]);
+  }, [q, type, genre, person, mood, sort]);
 
   useEffect(() => {
     const t = setTimeout(() => {
       api
-        .search({ q, type, genre, person, sort, limit: PAGE, offset })
+        .search({ q, type, genre, person, mood, sort, limit: PAGE, offset })
         .then((r) => {
           setItems((prev) => (offset === 0 ? r.items : [...prev, ...r.items]));
           setTotal(r.total);
@@ -55,16 +58,22 @@ export default function SearchPage() {
         .catch((e) => setError(e.message));
     }, 250);
     return () => clearTimeout(t);
-  }, [q, type, genre, person, sort, offset]);
+  }, [q, type, genre, person, mood, sort, offset]);
 
-  function setFilter(name: "genero" | "pessoa", value: string) {
+  function setFilter(name: "genero" | "pessoa" | "clima", value: string) {
     const next = new URLSearchParams(params);
     if (value) next.set(name, value);
     else next.delete(name);
     setParams(next);
   }
 
-  const heading = person ? `Filmes e séries com ${person}` : genre ? `Filmes e séries de ${genre}` : "Buscar";
+  const heading = person
+    ? `Filmes e séries com ${person}`
+    : genre
+      ? `Filmes e séries de ${genre}`
+      : mood
+        ? `Clima: ${moodLabel(moods, mood).toLowerCase()}`
+        : "Buscar";
 
   return (
     <div>
@@ -105,6 +114,25 @@ export default function SearchPage() {
           ))}
         </select>
       </div>
+      {/* Buscar por clima (RFF23): filmes, séries e álbuns juntos */}
+      {moods.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Buscar por clima">
+          <span className="text-sm text-muted">Por clima:</span>
+          {moods
+            .filter((m) => m.count > 0)
+            .map((m, i) => (
+              <button
+                key={m.key}
+                aria-pressed={mood === m.key}
+                onClick={() => setFilter("clima", mood === m.key ? "" : m.key)}
+                className={`chip cursor-pointer px-3 py-1 text-sm ${mood === m.key ? "border-accent text-accent" : ""}`}
+                style={mood === m.key ? undefined : { borderColor: `${TAB_COLORS[i % TAB_COLORS.length]}55` }}
+              >
+                {m.label}
+              </button>
+            ))}
+        </div>
+      )}
       {total == null ? null : total > 0 ? (
         <p className="mt-3 text-sm text-muted">{plural(total, "resultado", "resultados")}</p>
       ) : (

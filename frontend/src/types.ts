@@ -34,6 +34,7 @@ export interface Media {
   creators: string[];
   popularity: number;
   duration_min?: number | null;
+  moods?: string[];
   countries?: string[];
   language?: string | null;
   links?: ListenLink[];
@@ -88,6 +89,7 @@ export interface DiaryEntry {
   consumed_at: string | null;
   from_onboarding: boolean;
   created_at: string;
+  excluded?: boolean;
 }
 
 export interface UserList {
@@ -105,6 +107,47 @@ export interface Recommendation {
   score: number;
   reason: string;
   strategy: "hybrid" | "content" | "trending" | "bridge" | "discovery";
+  /** O que está por trás do motivo, para o "Não por esse motivo" (RFF08) */
+  because?: Because | null;
+}
+
+export type AdjustKind = "genre" | "decade" | "person" | "mood" | "title";
+
+export interface Because {
+  kind: AdjustKind;
+  value: string;
+  label: string;
+}
+
+/** Um clima do vocabulário (RNFF09), como "leve" */
+export interface Mood {
+  key: string;
+  label: string;
+  count: number;
+}
+
+/** Filtros do momento (RFF20) */
+export interface Moment {
+  mood?: string;
+  max_minutes?: number;
+}
+
+export interface TasteFacet {
+  kind: Exclude<AdjustKind, "title">;
+  value: string;
+  label: string;
+  share: number;
+  weight: number;
+}
+
+export interface TasteProfile {
+  genres: TasteFacet[];
+  decades: TasteFacet[];
+  people: TasteFacet[];
+  moods: TasteFacet[];
+  titles: { media: Media; signal: number; entry_id: number | null; rating: number | null; weight: number }[];
+  excluded: { entry_id: number; media: Media }[];
+  adjusted: number;
 }
 
 /** Modo descoberta (RFF16): no meu gosto, um pouco além ou fora da sua bolha. */

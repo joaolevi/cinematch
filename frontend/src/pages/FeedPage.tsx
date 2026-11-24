@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
@@ -9,7 +9,10 @@ import SeenStamp from "../components/SeenStamp";
 import Toast from "../components/Toast";
 import { OnScreen, useImpressions } from "../impressions";
 import { diaryChanged, useSeen } from "../seen";
-import type { Discovery, Feed, FeedbackAction, Media, MediaType } from "../types";
+import TuneMenu, { type Tune } from "../components/TuneMenu";
+import { formatMinutes } from "../format";
+import { useMoods } from "../moods";
+import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Recommendation } from "../types";
 import { MEDIA_GRID } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
@@ -30,6 +33,11 @@ export default function FeedPage() {
   const { user } = useAuth();
   const [type, setType] = useState<MediaType | "">("");
   const [discovery, setDiscovery] = useState<Discovery>("taste");
+  // Momento (RFF20): clima e duração máxima; vazio e 0 = qualquer um
+  const [mood, setMood] = useState("");
+  const [maxMinutes, setMaxMinutes] = useState(0);
+  const moods = useMoods();
+  const moment = useMemo(() => ({ mood: mood || undefined, max_minutes: maxMinutes || undefined }), [mood, maxMinutes]);
   const [feed, setFeed] = useState<Feed | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +66,7 @@ export default function FeedPage() {
     setHasMore(true);
     setMoreFailed(false);
     try {
-      const first = await api.feed(type || undefined, PAGE, [], discovery);
+      const first = await api.feed(type || undefined, PAGE, [], discovery, moment);
       if (thisLoad === latestLoad.current) {
         alreadyShown.current = new Set(first.items.map((i) => i.media.id));
         setFeed(first);
@@ -71,7 +79,7 @@ export default function FeedPage() {
         setLoading(false);
       }
     }
-  }, [type, discovery]);
+  }, [type, discovery, moment]);
 
   useEffect(() => {
     load();
@@ -84,7 +92,7 @@ export default function FeedPage() {
     setLoadingMore(true);
     setMoreFailed(false);
     try {
-      const next = await api.feed(type || undefined, PAGE, [...alreadyShown.current], discovery);
+      const next = await api.feed(type || undefined, PAGE, [...alreadyShown.current], discovery, moment);
       if (thisLoad !== latestLoad.current) return;
       const fresh = next.items.filter((i) => !alreadyShown.current.has(i.media.id));
       fresh.forEach((i) => alreadyShown.current.add(i.media.id));
@@ -96,7 +104,7 @@ export default function FeedPage() {
       fetching.current = false;
       setLoadingMore(false);
     }
-  }, [feed, type, discovery]);
+  }, [feed, type, discovery, moment]);
 
   async function swap() {
     const thisLoad = ++latestLoad.current;
@@ -105,7 +113,7 @@ export default function FeedPage() {
     setError(null);
     setMoreFailed(false);
     try {
-      const next = await api.feed(type || undefined, PAGE, [...alreadyShown.current], discovery);
+      const next = await api.feed(type || undefined, PAGE, [...alreadyShown.current], discovery, moment);
       if (thisLoad !== latestLoad.current) return;
       if (next.items.length === 0) {
         await load(); // acabaram os títulos novos: recomeça do início
@@ -180,6 +188,39 @@ export default function FeedPage() {
     }
   }
 
+  const firstLower = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
+
+  /** Retorno sobre uma sugestão (RFF08): ajusta o gosto ou o momento e traz um novo lote. */
+  async function tune(rec: Recommendation, choice: Tune, label: string) {
+    const undoAdjust = (kind: AdjustKind, value: string) => async () => {
+      setToast(null);
+      await api.adjust(kind, value, 1);
+      load();
+    };
+    try {
+      if (choice.kind === "because" && rec.because) {
+        await api.adjust(rec.because.kind, rec.because.value, 0.5);
+        setToast({ text: `Anotado: ${firstLower(label)}. Aqui vai um novo lote.`, undo: undoAdjust(rec.because.kind, rec.because.value) });
+        load();
+      } else if (choice.kind === "less-genre") {
+        await api.adjust("genre", choice.genre, 0.5);
+        setToast({ text: `Anotado: ${firstLower(label)}. Aqui vai um novo lote.`, undo: undoAdjust("genre", choice.genre) });
+        load();
+      } else if (choice.kind === "shorter") {
+        setMaxMinutes(choice.minutes);
+        setToast({ text: `Agora só até ${formatMinutes(choice.minutes)}.` });
+      } else if (choice.kind === "lighter") {
+        setMood("leve");
+        setToast({ text: "Agora só coisas leves." });
+      } else {
+        setDiscovery("beyond");
+        setToast({ text: "Agora com títulos menos famosos." });
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
   // O que a pessoa registrou em outra tela (como o Registrar) sai das sugestões
   const [highlight, ...rest] = (feed?.items ?? []).filter((i) => !seen?.has(i.media.id));
 
@@ -236,6 +277,50 @@ export default function FeedPage() {
         </div>
       )}
 
+      <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="Para agora">
+        <span className="text-sm text-muted">Para agora:</span>
+        <label className="sr-only" htmlFor="clima">
+          Clima
+        </label>
+        <select
+          id="clima"
+          value={mood}
+          onChange={(e) => setMood(e.target.value)}
+          className={`chip cursor-pointer bg-surface px-3 py-1 text-sm ${mood ? "border-accent text-accent" : ""}`}
+        >
+          <option value="">Qualquer clima</option>
+          {moods.map((m) => (
+            <option key={m.key} value={m.key}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+        {(
+          [
+            [0, "Qualquer duração"],
+            [90, "Até 1h30"],
+            [120, "Até 2h"],
+          ] as const
+        ).map(([minutes, label]) => (
+          <button
+            key={minutes}
+            aria-pressed={maxMinutes === minutes}
+            onClick={() => setMaxMinutes(minutes)}
+            className={`chip cursor-pointer px-3 py-1 text-sm ${maxMinutes === minutes ? "border-accent text-accent" : ""}`}
+          >
+            {label}
+          </button>
+        ))}
+        {maxMinutes !== 0 && maxMinutes !== 90 && maxMinutes !== 120 && (
+          <button aria-pressed className="chip cursor-pointer border-accent px-3 py-1 text-sm text-accent" onClick={() => setMaxMinutes(0)}>
+            Até {formatMinutes(maxMinutes)} ✕
+          </button>
+        )}
+        {maxMinutes > 0 && type !== "album" && (
+          <span className="text-xs text-muted">Nas séries, vale a duração do episódio.</span>
+        )}
+      </div>
+
       {user && feed?.strategy === "trending" && (
         <div className="card mt-6 flex flex-wrap items-center justify-between gap-3 p-4">
           <p className="text-sm">Conte o que você curte e a gente acerta muito mais.</p>
@@ -266,6 +351,7 @@ export default function FeedPage() {
               <p className="mt-1.5 line-clamp-2 text-xs text-muted" title={rec.reason}>
                 {rec.reason}
               </p>
+              <TuneMenu rec={rec} state={{ mood, maxMinutes, discovery }} onTune={(choice, label) => tune(rec, choice, label)} />
               <Buttons rec={rec} act={act} onSeen={() => setSeenTarget(rec.media)} />
             </MediaCard>
           </OnScreen>

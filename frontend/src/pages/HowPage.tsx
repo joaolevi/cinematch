@@ -89,7 +89,24 @@ export default function HowPage() {
         </p>
       </Part>
 
-      <Part title="5. Gosto em comum">
+      <Part title="5. Você corrige o que achamos do seu gosto">
+        <p>
+          Em{" "}
+          <Link to="/meu-gosto" className="underline hover:text-[#b9452f]">
+            O que o Tastory acha do meu gosto
+          </Link>{" "}
+          você vê quanto pesam os gêneros, os climas, as épocas e as pessoas, e pede mais, menos ou para tirar algum. Um
+          título que não representa você pode sair do cálculo sem sair do diário. Em cada sugestão, "Ajustar" faz o mesmo
+          na hora: "Não por causa de Matrix", "Mais curto", "Mais leve", "Menos famoso".
+        </p>
+        <p>
+          Os climas (leve, tenso, melancólico, épico e outros 16) valem para filmes, séries e discos e saem de regras
+          sobre os gêneros e as palavras-chave de cada título, sem IA. Dá para buscar por clima e filtrar o Para você
+          pelo momento: o clima e o tempo que você tem.
+        </p>
+      </Part>
+
+      <Part title="6. Gosto em comum">
         <p>
           No perfil de outra pessoa, "Vocês combinam X%" compara os gostos de vocês: os títulos que as duas curtiram pesam
           mais, e os gêneros, as pessoas e as décadas em comum pesam menos. "Para ver ou ouvir junto" sugere o que agrada
@@ -97,7 +114,7 @@ export default function HowPage() {
         </p>
       </Part>
 
-      <Part title="6. Um experimento em andamento">
+      <Part title="7. Um experimento em andamento">
         <p>
           Para saber se o "quem curte o mesmo que você" ajuda de verdade, metade das contas recebe as sugestões de filmes e
           séries só pela parte do "parecido com o que você curtiu". Medimos quantas sugestões viram "Quero ver" ou "Já vi"
@@ -107,7 +124,7 @@ export default function HowPage() {
         {user && <ExperimentsToggle />}
       </Part>
 
-      <Part title="7. De onde vêm os dados">
+      <Part title="8. De onde vêm os dados">
         <p>
           Filmes e séries: TMDB, com onde assistir pela JustWatch. Álbuns: MusicBrainz, com capas do Cover Art Archive e
           popularidade do ListenBrainz. Avaliações públicas de filmes: MovieLens. O que você registra fica só no Tastory e

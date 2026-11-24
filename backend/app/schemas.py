@@ -75,6 +75,12 @@ class PreferencesOut(BaseModel):
 
 
 # ---------- Mídia ----------
+class MoodOut(BaseModel):
+    key: str
+    label: str
+    count: int = Field(description="Quantos títulos do catálogo têm este clima")
+
+
 class MediaOut(ORM):
     id: int
     type: str
@@ -91,6 +97,7 @@ class MediaOut(ORM):
     duration_min: int | None = Field(default=None, description="Filme: duração; série: episódio; álbum: soma das faixas")
     countries: list[str] = Field(default=[], description="Países de origem, em códigos ISO, como BR")
     language: str | None = Field(default=None, description="Idioma original ou, no álbum, das letras, como pt")
+    moods: list[str] = Field(default=[], description='Climas (RNFF09), como "leve"; os nomes vêm de GET /media/moods')
     links: list[dict] = Field(
         default=[],
         description='Álbum: onde ouvir, [{"service", "url", "level"}]. level "artist" leva à página do artista, '
@@ -183,6 +190,7 @@ class DiaryUpdate(BaseModel):
     rating: float | None = None
     review: str | None = Field(default=None, max_length=2000)
     consumed_at: date | None = None
+    excluded: bool | None = Field(default=None, description="true: o registro deixa de contar no gosto (RFF07)")
 
     @field_validator("rating")
     @classmethod
@@ -199,6 +207,7 @@ class DiaryOut(ORM):
     consumed_at: date | None
     from_onboarding: bool
     created_at: datetime
+    excluded: bool = Field(default=False, description="Não conta no gosto (RFF07)")
 
 
 # ---------- Listas ----------
@@ -226,11 +235,20 @@ class ListOut(ORM):
 
 
 # ---------- Recomendações ----------
+class BecauseOut(BaseModel):
+    kind: Literal["genre", "decade", "person", "mood", "title"]
+    value: str = Field(description='O que vai no ajuste: o nome, a década ("1990") ou o id do título')
+    label: str = Field(description='Para mostrar: "Matrix", "Drama", "anos 90"')
+
+
 class RecommendationOut(BaseModel):
     media: MediaOut
     score: float
     reason: str
     strategy: str  # hybrid | content | trending | bridge (álbum ligado por uma ponte) | discovery (fora da bolha)
+    because: BecauseOut | None = Field(
+        default=None, description='O que está por trás do motivo, para o "Não por esse motivo" (RFF08)'
+    )
 
 
 class ProviderOut(BaseModel):
@@ -425,6 +443,43 @@ class ExperimentsIn(BaseModel):
 
 class DeleteAccountIn(BaseModel):
     password: str = Field(description="A senha atual, para confirmar")
+
+
+class TasteFacetOut(BaseModel):
+    kind: Literal["genre", "decade", "person", "mood"]
+    value: str
+    label: str
+    share: float = Field(description="Quanto pesa no gosto, de 0 a 1, entre os do mesmo tipo")
+    weight: float = Field(description="O ajuste da pessoa: 1 normal, 1,5 mais, 0,5 menos, 0 fora do cálculo")
+
+
+class TasteTitleOut(BaseModel):
+    media: MediaOut
+    signal: float = Field(description="Quanto o título pesa no gosto (nota, Já vi, listas)")
+    entry_id: int | None
+    rating: float | None
+    weight: float = Field(description='1 normal; 0,5 depois de um "Não por esse motivo"')
+
+
+class TasteExcludedOut(BaseModel):
+    entry_id: int
+    media: MediaOut
+
+
+class TasteProfileOut(BaseModel):
+    genres: list[TasteFacetOut]
+    decades: list[TasteFacetOut]
+    people: list[TasteFacetOut]
+    moods: list[TasteFacetOut]
+    titles: list[TasteTitleOut] = Field(description="Os títulos que mais pesam no gosto")
+    excluded: list[TasteExcludedOut] = Field(description="Registros que a pessoa tirou do cálculo")
+    adjusted: int = Field(description="Quantos ajustes a pessoa fez")
+
+
+class AdjustmentIn(BaseModel):
+    kind: Literal["genre", "decade", "person", "mood", "title"]
+    value: str = Field(min_length=1, max_length=120)
+    weight: float = Field(ge=0, le=3, description="1 volta ao normal; 1,5 mais; 0,5 menos; 0 tira do cálculo")
 
 
 class MetricsOut(BaseModel):

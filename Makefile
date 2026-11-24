@@ -50,6 +50,9 @@ migration: deps ## Cria uma migração a partir dos modelos (exige MSG="o que mu
 albuns: deps ## Refaz o retrato dos álbuns a partir do MusicBrainz e carrega no banco local (uns 12 min)
 	cd backend && $(PYTHON) -m scripts.import_albums
 
+duracoes: deps ## Busca no TMDB a duração dos filmes e séries que ainda não têm (precisa da chave)
+	cd backend && $(PYTHON) -m scripts.fill_durations
+
 openapi: deps ## Regenera docs/tecnico/openapi.json
 	cd backend && TASTORY_AUTO_SEED=false $(PYTHON) -c "import json; from app.main import app; json.dump(app.openapi(), open('../docs/tecnico/openapi.json','w'), ensure_ascii=False, indent=2)"
 
@@ -70,6 +73,9 @@ prod-movielens: ## Carrega o MovieLens (exige DATA=/caminho/ml-32m)
 
 prod-albuns: ## Carrega no banco publicado os álbuns do retrato (backend/data/albums_catalog.json)
 	$(PROD) exec api python -m scripts.import_albums --do-retrato
+
+prod-duracoes: ## Busca no TMDB a duração dos filmes e séries do banco publicado
+	$(PROD) exec api python -m scripts.fill_durations
 
 # Se a exportação falhar, o make para aqui, e a cópia do dia continua intacta
 backup: ## Copia o banco publicado para backup-AAAA-MM-DD.sql

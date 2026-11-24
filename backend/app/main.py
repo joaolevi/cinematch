@@ -15,7 +15,7 @@ from .config import settings
 from .db import SessionLocal, engine
 from .migrations import atualizar_banco
 from .models import Media
-from .routers import account, admin, auth, community, diary, lists, media, recommendations, users
+from .routers import account, admin, auth, community, diary, lists, media, recommendations, taste, users
 
 log = logging.getLogger("tastory")
 
@@ -31,6 +31,10 @@ async def lifespan(_app: FastAPI):
                 from .seed import seed_all
 
                 log.warning("Banco vazio: carregando dados iniciais... %s", seed_all(db))
+    with SessionLocal() as db:
+        from .services.moods import fill_moods
+
+        fill_moods(db)  # climas (RNFF09) de bancos que vieram antes deles
     yield
 
 
@@ -51,7 +55,7 @@ app.add_middleware(
 
 for r in (
     auth.router, account.router, media.router, diary.router, lists.router, recommendations.router, community.router,
-    users.router, admin.router,
+    users.router, taste.router, admin.router,
 ):
     app.include_router(r)
 

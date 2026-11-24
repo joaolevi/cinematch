@@ -63,7 +63,9 @@ class Recommendation:
     media: Media
     score: float
     reason: str
-    strategy: str  # hybrid | content | trending
+    strategy: str  # hybrid | content | trending | bridge | discovery
+    # O que está por trás do motivo, para o "Não por esse motivo" (RFF08): ("title", "12"), ("genre", "Drama")...
+    because: tuple[str, str] | None = None
 
 
 # ---------------------------------------------------------------- utilidades
@@ -120,7 +122,10 @@ def entry_weight(rating: float | None, from_onboarding: bool) -> float:
 
 
 def user_signals(db: Session, user_id: int) -> dict[int, float]:
-    """Mapa media_id -> peso, combinando diário, listas e descartes."""
+    """Mapa media_id -> peso, combinando diário, listas e descartes. Registros marcados para não contar (RFF07) ficam
+    de fora, e o ajuste de um título ("não por esse motivo", RFF08) multiplica o peso dele."""
+    from .adjustments import load
+
     signals: dict[int, float] = {}
     for media_id in db.scalars(
         select(ListItem.media_id).join(UserList).where(UserList.user_id == user_id)
@@ -128,13 +133,19 @@ def user_signals(db: Session, user_id: int) -> dict[int, float]:
         signals[media_id] = W_LIST
     for media_id in db.scalars(select(Dismissed.media_id).where(Dismissed.user_id == user_id)):
         signals[media_id] = W_DISMISS
-    for media_id, rating, from_onboarding in db.execute(
-        select(DiaryEntry.media_id, DiaryEntry.rating, DiaryEntry.from_onboarding).where(
+    for media_id, rating, from_onboarding, excluded in db.execute(
+        select(DiaryEntry.media_id, DiaryEntry.rating, DiaryEntry.from_onboarding, DiaryEntry.excluded).where(
             DiaryEntry.user_id == user_id
         )
     ):
+        if excluded:
+            signals.pop(media_id, None)
+            continue
         signals[media_id] = entry_weight(rating, from_onboarding)  # o diário tem prioridade
-    return signals
+    for (kind, value), weight in load(db, user_id).items():
+        if kind == "title" and value.isdigit() and int(value) in signals:
+            signals[int(value)] *= weight
+    return {mid: w for mid, w in signals.items() if w != 0}
 
 
 def excluded_ids(db: Session, user_id: int) -> set[int]:
@@ -185,13 +196,17 @@ def trending(
     media_type: str | None = None,
     limit: int = 20,
     exclude: set[int] | None = None,
+    allow: set[int] | None = None,
 ) -> list[Recommendation]:
-    """Mídias em alta: popularidade do catálogo + quantidade de registros na plataforma."""
+    """Mídias em alta: popularidade do catálogo + quantidade de registros na plataforma. Com `allow`, só esses títulos
+    (os filtros do momento, RFF20)."""
     exclude = exclude or set()
     q = select(Media)
     if media_type:
         q = q.where(Media.type == media_type)
-    items = [m for m in db.scalars(q) if m.id not in exclude and can_be_suggested(m)]
+    items = [
+        m for m in db.scalars(q) if m.id not in exclude and can_be_suggested(m) and (allow is None or m.id in allow)
+    ]
     if not items:
         return []
     counts = dict(
@@ -214,12 +229,17 @@ def recommend(
     limit: int = 20,
     skip: Iterable[int] = (),
     discovery: str = "taste",
+    allow: set[int] | None = None,
 ) -> tuple[str, list[Recommendation]]:
     """Gera o feed do usuário, sem os títulos de `skip`. Retorna (estratégia, recomendações).
 
-    `discovery` é o modo descoberta (RFF16): "taste" (padrão), "beyond" ou "outside".
+    `discovery` é o modo descoberta (RFF16): "taste" (padrão), "beyond" ou "outside". Com `allow`, só esses títulos
+    entram (os filtros do momento, RFF20). Os ajustes de gosto da pessoa (RFF07, RFF08) multiplicam as notas.
     """
+    from . import adjustments as adj
+
     signals = user_signals(db, user.id)
+    adjust = adj.load(db, user.id)
     pref_genres = list(
         db.scalars(select(UserPreference.genre).where(UserPreference.user_id == user.id))
     )
@@ -235,7 +255,7 @@ def recommend(
 
     # Nó de decisão do DA: possui histórico ou preferências?
     if not signals and not pref_tokens:
-        return "trending", trending(db, media_type, limit, exclude)
+        return "trending", trending(db, media_type, limit, exclude, allow)
 
     catalog: list[Media] = list(db.scalars(select(Media).order_by(Media.id)))
     if not catalog:
@@ -257,7 +277,7 @@ def recommend(
 
     norm = sparse_norm(profile)
     if norm < 1e-9:
-        return "trending", trending(db, media_type, limit, exclude)
+        return "trending", trending(db, media_type, limit, exclude, allow)
     content = np.asarray((X @ profile.T).todense()).ravel() / norm  # cosseno em [-1, 1]
 
     # --- Colaborativo item-item: "quem curtiu X também curtiu Y"
@@ -283,7 +303,11 @@ def recommend(
     candidates = [
         i
         for i, m in enumerate(catalog)
-        if m.id not in exclude and (media_type is None or m.type == media_type) and can_be_suggested(m)
+        if m.id not in exclude
+        and (media_type is None or m.type == media_type)
+        and (allow is None or m.id in allow)
+        and can_be_suggested(m)
+        and adj.factor(m, adjust) > 0  # o que a pessoa tirou do cálculo não é sugerido
     ]
     if not candidates:
         return ("hybrid" if use_collab else "content"), []
@@ -302,6 +326,8 @@ def recommend(
         alpha, cf_norm, strategy = np.ones(len(cand)), np.zeros(len(cand)), "content"
     pop = np.array([catalog[i].popularity for i in cand]) / 100.0
     blend = alpha * c_norm + (1 - alpha) * cf_norm
+    if adjust:  # "mais disso" e "menos daquilo" (RFF07, RFF08)
+        blend = blend * np.array([adj.factor(catalog[i], adjust) for i in cand])
     bonus, familiar_penalty, prefix = DISCOVERY.get(discovery, DISCOVERY["taste"])
     if familiar_penalty:
         # Quanto do que a pessoa curtiu é do gênero de cada candidato: os mais consumidos perdem peso
@@ -331,7 +357,7 @@ def recommend(
     reason_uses: Counter[int] = Counter()  # evita repetir o mesmo título em todos os motivos
     for pos, score in picked:
         ci = int(cand[pos])
-        reason = _reason(
+        reason, because = _reason(
             ci,
             catalog,
             X,
@@ -345,12 +371,13 @@ def recommend(
             collab_share=(1 - alpha[pos]) * cf_norm[pos],
             reason_uses=reason_uses,
         )
-        recs.append(Recommendation(catalog[ci], score, prefix + reason[:1].lower() + reason[1:] if prefix else reason, strategy))
+        text = prefix + reason[:1].lower() + reason[1:] if prefix else reason
+        recs.append(Recommendation(catalog[ci], score, text, strategy, because))
 
     # Completa com mídias em alta se faltarem itens
     if len(recs) < limit:
         have = exclude | {r.media.id for r in recs}
-        recs += trending(db, media_type, limit - len(recs), have)
+        recs += trending(db, media_type, limit - len(recs), have, allow)
     return strategy, recs
 
 
@@ -446,15 +473,16 @@ def _reason(
     content_share: float,
     collab_share: float,
     reason_uses: Counter[int],
-) -> str:
-    """Explica a sugestão a partir do item do histórico que mais contribuiu."""
+) -> tuple[str, tuple[str, str] | None]:
+    """Explica a sugestão a partir do item do histórico que mais contribuiu. Devolve o texto e o que está por trás
+    dele (um título, uma pessoa, um gênero ou uma década), para o "Não por esse motivo"."""
     positives = [(r, w) for r, w in sig_rows if w > 0]
 
     if item_sim is not None and collab_share > content_share and positives:
         r, _ = max(positives, key=lambda rw: rw[1] * item_sim[rw[0], ci] / (1 + reason_uses[rw[0]]))
         if item_sim[r, ci] > 0:
             reason_uses[r] += 1
-            return f"Quem curtiu {catalog[r].title} também curtiu"
+            return f"Quem curtiu {catalog[r].title} também curtiu", ("title", str(catalog[r].id))
 
     best_item, best_val, best_rank = None, 0.0, 0.0
     for r, w in positives:
@@ -466,17 +494,17 @@ def _reason(
 
     if best_item is not None and best_val >= pref_val:
         reason_uses[best_item] += 1
-        return f"Porque você curtiu {catalog[best_item].title}"
+        return f"Porque você curtiu {catalog[best_item].title}", ("title", str(catalog[best_item].id))
     media = catalog[ci]
     creators = [c for c in pref_creators if c in (media.creators or [])]
     if creators:
-        return f"Porque você curte {creators[0]}"
+        return f"Porque você curte {creators[0]}", ("person", creators[0])
     matching = [g for g in pref_genres if g in (media.genres or [])]
     if matching:
-        return f"Porque você gosta de {matching[0]}"
+        return f"Porque você gosta de {matching[0]}", ("genre", matching[0])
     decade = (media.year // 10) * 10 if media.year else None
     if decade in pref_decades:
-        return f"Porque você curte os {decade_label(decade)}"
+        return f"Porque você curte os {decade_label(decade)}", ("decade", str(decade))
     if best_item is not None:
-        return f"Porque você curtiu {catalog[best_item].title}"
-    return "Combina com o seu perfil"
+        return f"Porque você curtiu {catalog[best_item].title}", ("title", str(catalog[best_item].id))
+    return "Combina com o seu perfil", None
