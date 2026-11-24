@@ -31,13 +31,14 @@ def feed(
     user: User = Depends(get_current_user),
 ):
     """Sem `type`, o feed misto: filmes e séries do recomendador e, em lugares fixos (3º, 7º, 11º...), álbuns ligados
-    por ponte ao que a pessoa curtiu. Com `type=album`, só álbuns, pelas pontes e depois os mais ouvidos."""
+    por ponte ao que a pessoa curtiu. Com `type=album`, só álbuns, pelas pontes e depois os mais ouvidos. O modo
+    descoberta também vale para a música: parte dos discos passa a ser de gêneros que a pessoa ainda não ouve."""
     if type == "album":
-        strategy, recs = "bridge", album_suggestions(db, user.id, exclude, limit)
+        strategy, recs = "bridge", album_suggestions(db, user.id, exclude, limit, discovery)
     else:
         strategy, recs = recommend(db, user, type, limit, skip=exclude, discovery=discovery)
         if type is None:
-            recs = mix_albums(recs, album_suggestions(db, user.id, exclude, limit), limit)
+            recs = mix_albums(recs, album_suggestions(db, user.id, exclude, limit, discovery), limit)
 
     return FeedOut(
         variant=user.ab_group,

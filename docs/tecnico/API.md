@@ -87,8 +87,11 @@ placeholder (ex.: gradiente com o título). Exibir dados do TMDB exige o crédit
   naquele serviço: mostre como "Ouvir o artista no Spotify".
 - `/media/genres` e `/media/facets` trazem só filmes e séries; para os gêneros e artistas de música, use `type=album`.
 - **Feed misto (RFF27):** sem `type`, `GET /recommendations` traz os filmes e séries de sempre e, no 3º, 7º, 11º…
-  lugar, álbuns ligados por uma ponte ao que a pessoa curtiu (`strategy: "bridge"`, com a ponte no `reason`). Com
-  `type=album`, só álbuns. Avise as impressões dos álbuns como as dos filmes.
+  lugar, álbuns com motivo: ligados por uma ponte ao que a pessoa curtiu (`strategy: "bridge"`, com a ponte no
+  `reason`) ou de artistas e gêneros escolhidos no onboarding (`strategy: "content"`). Com `type=album`, só álbuns, no
+  máximo 2 do mesmo artista no começo da lista. Com `discovery`, parte dos álbuns é de gêneros que a pessoa ainda não
+  ouve (`strategy: "discovery"`): 3 de cada 10 em `beyond` e 7 de cada 10 em `outside`. Avise as impressões dos álbuns
+  como as dos filmes.
 - **Pontes no detalhe (RFF26):** `GET /media/{id}/connections` traz os títulos da outra mídia ligados a este, com
   `reason` já escrito para o detalhe. Num filme ou série, mostre como "Para ouvir depois"; num álbum, "Para ver depois".
 - Os dados vêm do MusicBrainz (CC0) e do ListenBrainz. O crédito "Dados de álbuns: MusicBrainz" é recomendado, e não

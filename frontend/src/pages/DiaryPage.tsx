@@ -40,7 +40,7 @@ function Ranking({ title, entries, color }: { title: string; entries: DiaryEntry
         {entries.map((e, position) => (
           <li key={e.id} className="group w-28 shrink-0 md:w-auto">
             <Link to={`/media/${e.media.id}`} className="block" title={e.media.title}>
-              <Polaroid position={position} caption={`nº ${position + 1}`}>
+              <Polaroid position={position} caption={`nº ${position + 1}`} album={e.media.type === "album"}>
                 <Poster media={e.media} compact rounded="rounded-[2px]" />
               </Polaroid>
             </Link>

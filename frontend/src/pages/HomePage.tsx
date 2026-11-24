@@ -310,7 +310,7 @@ export default function HomePage() {
                 {diary.slice(0, 4).map((e, position) => (
                   <li key={e.id} className="group">
                     <Link to={`/media/${e.media.id}`} title={e.media.title}>
-                      <Polaroid position={position} caption={e.consumed_at ? shortDate(e.consumed_at) : "♥"} small>
+                      <Polaroid position={position} caption={e.consumed_at ? shortDate(e.consumed_at) : "♥"} small album={e.media.type === "album"}>
                         <Poster media={e.media} compact rounded="rounded-[1px]" />
                       </Polaroid>
                     </Link>
@@ -330,7 +330,7 @@ export default function HomePage() {
               {community.map((entry, position) => (
                 <li key={entry.id} className="flex gap-4 py-3">
                   <Link to={`/media/${entry.media.id}`} className="group w-12 shrink-0" aria-label={entry.media.title}>
-                    <Polaroid position={position} small>
+                    <Polaroid position={position} small album={entry.media.type === "album"}>
                       <Poster media={entry.media} compact rounded="rounded-[1px]" />
                     </Polaroid>
                   </Link>

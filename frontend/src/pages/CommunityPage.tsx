@@ -17,7 +17,7 @@ function Post({ entry, position }: { entry: CommunityEntry; position: number }) 
   return (
     <article className="flex gap-4 border-b border-line/60 py-5">
       <Link to={link} className="group w-16 shrink-0 sm:w-20" aria-label={entry.media.title}>
-        <Polaroid position={position} small>
+        <Polaroid position={position} small album={entry.media.type === "album"}>
           <Poster media={entry.media} compact rounded="rounded-[1px]" />
         </Polaroid>
       </Link>

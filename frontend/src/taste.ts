@@ -44,6 +44,11 @@ const GENRE_TEAM: Record<string, string> = {
   "Trilha sonora": "das trilhas sonoras",
 };
 
+/** "do drama", "da MPB": o gênero com o artigo certo, para entrar numa frase. */
+export function genreTeam(genre: string): string {
+  return GENRE_TEAM[genre] ?? `de ${genre === genre.toUpperCase() ? genre : genre.toLowerCase()}`;
+}
+
 type MediaKind = "movie" | "series" | "album";
 
 /** Quantos registros de cada mídia, na ordem filme, série, álbum. */
@@ -109,9 +114,10 @@ export function tasteOf(entries: DiaryEntry[]): Taste | null {
 
   const [topGenre] = countBy(base, (e) => e.media.genres.slice(0, 2));
   if (!topGenre) return null;
-  const highlight = GENRE_TEAM[topGenre[0]] ?? `de ${topGenre[0] === topGenre[0].toUpperCase() ? topGenre[0] : topGenre[0].toLowerCase()}`;
+  const highlight = genreTeam(topGenre[0]);
 
-  const dated = base.filter((e) => e.media.year);
+  // A década sai dos títulos do gênero principal, para a frase não juntar a MPB dos discos com a década dos filmes
+  const dated = base.filter((e) => e.media.year && e.media.genres.slice(0, 2).includes(topGenre[0]));
   const [topDecade] = countBy(dated, (e) => [String(decadeOf(e.media.year ?? 0))]);
   const decade = topDecade && topDecade[1] / dated.length >= 0.4 ? decadeName(Number(topDecade[0])) : null;
 

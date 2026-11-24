@@ -1294,7 +1294,7 @@
           "recomendações"
         ],
         "summary": "Feed",
-        "description": "Sem `type`, o feed misto: filmes e séries do recomendador e, em lugares fixos (3º, 7º, 11º...), álbuns ligados\npor ponte ao que a pessoa curtiu. Com `type=album`, só álbuns, pelas pontes e depois os mais ouvidos.",
+        "description": "Sem `type`, o feed misto: filmes e séries do recomendador e, em lugares fixos (3º, 7º, 11º...), álbuns ligados\npor ponte ao que a pessoa curtiu. Com `type=album`, só álbuns, pelas pontes e depois os mais ouvidos. O modo\ndescoberta também vale para a música: parte dos discos passa a ser de gêneros que a pessoa ainda não ouve.",
         "operationId": "feed_recommendations_get",
         "security": [
           {
@@ -3217,7 +3217,8 @@
               "hybrid",
               "content",
               "trending",
-              "bridge"
+              "bridge",
+              "discovery"
             ],
             "title": "Strategy"
           },

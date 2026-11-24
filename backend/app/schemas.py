@@ -229,7 +229,7 @@ class RecommendationOut(BaseModel):
     media: MediaOut
     score: float
     reason: str
-    strategy: str  # hybrid | content | trending | bridge (álbum ligado por uma ponte)
+    strategy: str  # hybrid | content | trending | bridge (álbum ligado por uma ponte) | discovery (fora da bolha)
 
 
 class ProviderOut(BaseModel):
@@ -297,7 +297,7 @@ class ReviewerOut(BaseModel):
 
 class ImpressionIn(BaseModel):
     media_id: int
-    strategy: Literal["hybrid", "content", "trending", "bridge"]
+    strategy: Literal["hybrid", "content", "trending", "bridge", "discovery"]
     score: float
 
 

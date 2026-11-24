@@ -40,7 +40,7 @@ export default function MediaCard({
     <div className="group flex flex-1 flex-col">
       <div className="relative transition group-hover:-translate-y-0.5">
         {polaroid ? (
-          <Polaroid position={polaroid.position} caption={polaroid.caption}>
+          <Polaroid position={polaroid.position} caption={polaroid.caption} album={media.type === "album"}>
             {poster}
           </Polaroid>
         ) : pinned ? (

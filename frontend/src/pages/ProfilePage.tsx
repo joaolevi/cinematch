@@ -7,6 +7,7 @@ import MediaCard from "../components/MediaCard";
 import { StarsDisplay } from "../components/Stars";
 import { Avatar } from "../components/WatchedBy";
 import { plural } from "../format";
+import { genreTeam } from "../taste";
 import type { Media, Profile, Recommendation } from "../types";
 import { usePageTitle } from "../usePageTitle";
 
@@ -28,9 +29,9 @@ function Row({ label, items }: { label: string; items: { media: Media; rating?: 
   );
 }
 
-/** "ficção científica, drama e ação": a lista em português, com "e" antes do último. */
+/** "da ficção científica, do drama e da MPB": os gêneros com o artigo, com "e" antes do último. */
 function listaDeGeneros(genres: string[]): string {
-  const words = genres.map((g) => (g === g.toUpperCase() ? g : g.toLowerCase()));
+  const words = genres.map(genreTeam);
   return words.length > 1 ? `${words.slice(0, -1).join(", ")} e ${words[words.length - 1]}` : words[0];
 }
 
@@ -83,7 +84,7 @@ export default function ProfilePage() {
               <p className="font-hand text-3xl leading-none font-bold text-[#b9452f]">Vocês combinam {c.percent}%</p>
               <p className="mt-2 font-semibold text-stone-800">{c.label}</p>
               {c.genres.length > 0 && (
-                <p className="mt-2 text-sm text-stone-600">Vocês curtem {listaDeGeneros(c.genres)}.</p>
+                <p className="mt-2 text-sm text-stone-600">Vocês são do time {listaDeGeneros(c.genres)}.</p>
               )}
             </>
           ) : (

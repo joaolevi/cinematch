@@ -12,6 +12,7 @@ O grafo de conteúdo (RNFF12) fica para depois da entrega: trocar o motor em um 
 """
 
 import csv
+from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import lru_cache
@@ -23,7 +24,7 @@ from sqlalchemy.orm import Session
 from ..config import DATA_DIR
 from ..models import Media, MediaBridge, UserInterest, UserPreference
 from .catalog import search_text
-from .recommender import Recommendation, decade_label, excluded_ids, user_signals
+from .recommender import DISCOVERY, Recommendation, decade_label, excluded_ids, user_signals
 
 ALBUM_LIST_PATH = DATA_DIR / "albuns_demo.csv"
 GENRE_PAIRS_PATH = DATA_DIR / "generos_correspondencia.csv"
@@ -34,6 +35,8 @@ WEAK = {"genre": 0.3, "decade": 0.2, "country": 0.2}
 SAME_ARTIST = 0.8
 PREF_ARTIST = 0.7  # artista escolhido no onboarding
 PREF_GENRE = 0.25  # gênero musical escolhido no onboarding
+MAX_PER_ARTIST = 2  # no começo da lista, no máximo 2 discos do mesmo artista...
+MAX_PER_REASON = 2  # ...e 2 com o mesmo motivo; os outros vão para o fim
 MIN_WEAK_SIGNALS = 2
 ALBUM_POPULARITY_BONUS = 0.05  # desempate entre álbuns com a mesma ponte
 ALBUM_EVERY = 4  # no feed misto, um álbum a cada 4 lugares
@@ -243,9 +246,53 @@ def connections(db: Session, media: Media, limit: int = 12) -> list[tuple[Media,
 
 
 # ---------------------------------------------------------------- feed
-def album_suggestions(db: Session, user_id: int, skip: Iterable[int] = (), limit: int = 20) -> list[Recommendation]:
+def diversify(recs: list[Recommendation]) -> list[Recommendation]:
+    """Evita que um artista ou um motivo tome a lista: passado o limite, o disco vai para o fim da fila."""
+    artists: Counter[str] = Counter()
+    reasons: Counter[str] = Counter()
+    first, later = [], []
+    for r in recs:
+        artist = (r.media.creators or [""])[0]
+        repeated = r.strategy != "trending" and reasons[r.reason] >= MAX_PER_REASON  # "Em alta" não conta
+        if artists[artist] < MAX_PER_ARTIST and not repeated:
+            artists[artist] += 1
+            reasons[r.reason] += 1
+            first.append(r)
+        else:
+            later.append(r)
+    return first + later
+
+
+def familiar_music_genres(db: Session, user_id: int, liked: Iterable[Media]) -> set[str]:
+    """Os gêneros musicais que a pessoa já ouve: os dos discos que curtiu e os que escolheu no onboarding."""
+    music = {g for album in liked if album.type == "album" for g in album.genres or []}
+    chosen = set(db.scalars(select(UserPreference.genre).where(UserPreference.user_id == user_id)))
+    return music | chosen
+
+
+def outside_the_bubble(albums: list[Media], familiar: set[str], have: set[int], prefix: str, count: int) -> list[Recommendation]:
+    """Discos de gêneros que a pessoa ainda não ouve, um gênero de cada vez, do mais ouvido de cada gênero."""
+    by_genre: dict[str, list[Media]] = {}
+    for album in sorted(albums, key=lambda a: -a.popularity):
+        genre = (album.genres or [""])[0]
+        if album.id not in have and genre and not familiar & set(album.genres or []):
+            by_genre.setdefault(genre, []).append(album)
+    picked: list[Recommendation] = []
+    while len(picked) < count and any(by_genre.values()):
+        for genre, items in by_genre.items():
+            if items and len(picked) < count:
+                album = items.pop(0)
+                reason = f"{prefix}{genre}, um gênero que você ainda não ouve"
+                picked.append(Recommendation(album, album.popularity / 100, reason, "discovery"))
+    return picked
+
+
+def album_suggestions(
+    db: Session, user_id: int, skip: Iterable[int] = (), limit: int = 20, discovery: str = "taste"
+) -> list[Recommendation]:
     """Álbuns para a pessoa: pelas pontes com o que ela curtiu, depois pelos artistas e gêneros musicais que ela disse
-    curtir no onboarding e, por fim, os álbuns em alta."""
+    curtir no onboarding e, por fim, os álbuns em alta. No modo descoberta, parte dos lugares vai para discos de gêneros
+    que ela ainda não ouve: 3 de cada 10 em "Um pouco além" e 7 de cada 10 em "Fora da sua bolha"."""
     exclude = excluded_ids(db, user_id) | set(skip)
     signals = user_signals(db, user_id)
     liked_ids = [mid for mid, w in signals.items() if w > 0]
@@ -280,19 +327,34 @@ def album_suggestions(db: Session, user_id: int, skip: Iterable[int] = (), limit
     preferred.sort(key=lambda x: (-x[0], -x[1].popularity))
     recs = [Recommendation(album, score, reason, "bridge") for score, album, reason in scored]
     recs += [Recommendation(album, score, reason, "content") for score, album, reason in preferred]
-    recs = sorted(recs, key=lambda r: -r.score)[:limit]
+    recs = sorted(recs, key=lambda r: -r.score)
+    # Completa com os álbuns mais ouvidos; o limite por artista e por motivo vale para a lista toda
+    have = {r.media.id for r in recs}
+    popular = sorted((a for a in albums if a.id not in have), key=lambda a: -a.popularity)
+    recs += [Recommendation(a, a.popularity / 100, "Em alta na música", "trending") for a in popular]
+    recs = diversify(recs)[:limit]
 
-    if len(recs) < limit:  # completa com os álbuns mais ouvidos
-        have = {r.media.id for r in recs}
-        popular = sorted((a for a in albums if a.id not in have), key=lambda a: -a.popularity)
-        recs += [Recommendation(a, a.popularity / 100, "Em alta na música", "trending") for a in popular[: limit - len(recs)]]
+    _, share, prefix = DISCOVERY.get(discovery, DISCOVERY["taste"])
+    if share:
+        familiar = familiar_music_genres(db, user_id, by_id.values())
+        new = outside_the_bubble(albums, familiar, set(), prefix, round(limit * share))
+        new_ids = {r.media.id for r in new}
+        kept = [r for r in recs if r.media.id not in new_ids][: limit - len(new)]
+        # Intercala na proporção do modo: em cada trecho da lista, a mesma parte de discos novos
+        recs, placed = [], 0
+        while kept or new:
+            if new and (placed < round((len(recs) + 1) * share) or not kept):
+                recs.append(new.pop(0))
+                placed += 1
+            else:
+                recs.append(kept.pop(0))
     return recs
 
 
 def mix_albums(feed: list[Recommendation], albums: list[Recommendation], limit: int) -> list[Recommendation]:
-    """Põe os álbuns com motivo (ponte ou gosto declarado) em lugares fixos do feed: o 3º, o 7º, o 11º... Os álbuns só
+    """Põe os álbuns com motivo (ponte, gosto declarado ou descoberta) em lugares fixos do feed: o 3º, o 7º, o 11º... Os álbuns só
     "em alta" ficam de fora do feed misto, para o lugar de um filme não ir para um álbum sem motivo."""
-    bridged = [a for a in albums if a.strategy in ("bridge", "content")]
+    bridged = [a for a in albums if a.strategy in ("bridge", "content", "discovery")]
     out = list(feed)
     for n, album in enumerate(bridged):
         slot = FIRST_ALBUM_SLOT + n * ALBUM_EVERY

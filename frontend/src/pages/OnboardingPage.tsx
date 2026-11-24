@@ -169,14 +169,18 @@ export default function OnboardingPage() {
     setLoading(true);
     try {
       const genresChosen = chosenMusic();
-      const searches = [
-        ...[...selectedArtists].map((person) => api.search({ type: "album", person, limit: 4 })),
-        ...(genresChosen.length
-          ? genresChosen.map((genre) => api.search({ type: "album", genre, limit: ALBUM_COUNT }))
-          : [api.search({ type: "album", limit: ALBUM_COUNT })]),
-      ];
-      const pages = await Promise.all(searches);
-      setAlbums(interleave(pages.map((p) => p.items)).slice(0, ALBUM_COUNT));
+      const [byArtist, byGenre] = await Promise.all([
+        Promise.all([...selectedArtists].map((person) => api.search({ type: "album", person, limit: 4 }))),
+        Promise.all(
+          genresChosen.length
+            ? genresChosen.map((genre) => api.search({ type: "album", genre, limit: ALBUM_COUNT }))
+            : [api.search({ type: "album", limit: ALBUM_COUNT })],
+        ),
+      ]);
+      // Os discos dos artistas escolhidos vêm primeiro; depois, os dos gêneros, intercalados (sem repetir)
+      const artistAlbums = interleave(byArtist.map((p) => p.items));
+      const genreAlbums = interleave(byGenre.map((p) => p.items));
+      setAlbums(interleave([[...artistAlbums, ...genreAlbums]]).slice(0, ALBUM_COUNT));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -410,6 +414,10 @@ export default function OnboardingPage() {
             <button className="btn-ghost" onClick={() => goTo(3)}>
               Voltar
             </button>
+            {/* Para quem não liga para música: salva o que já escolheu e vai para as sugestões */}
+            <button className="btn-ghost" disabled={saving} onClick={() => finish(false)}>
+              Pular a música
+            </button>
           </div>
         </>
       )}
@@ -467,7 +475,7 @@ export default function OnboardingPage() {
                 className="relative cursor-pointer rounded-lg text-left transition hover:-translate-y-0.5"
               >
                 {liked.has(m.id) ? (
-                  <Polaroid position={position} caption="gostei ♥" straightenOnHover={false}>
+                  <Polaroid position={position} caption="gostei ♥" straightenOnHover={false} album>
                     <Poster media={m} rounded="rounded-[2px]" />
                   </Polaroid>
                 ) : (

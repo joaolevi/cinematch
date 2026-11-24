@@ -189,3 +189,28 @@ def test_artistas_e_generos_do_onboarding_viram_sugestoes(client, user_headers, 
     # no feed misto, os álbuns com motivo também entram nos lugares fixos
     misto = client.get("/recommendations", params={"limit": 12}, headers=user_headers).json()["items"]
     assert any(m["media"]["type"] == "album" for m in misto)
+
+
+def test_um_artista_nao_toma_a_lista_de_musica(client, user_headers, db, albums):
+    # Os três discos de Hans Zimmer têm ponte com o que a pessoa curtiu, mas só dois ficam no começo
+    curtir(client, user_headers, db, "Interestelar", "A Origem", "Duna")
+    feed = client.get("/recommendations", params={"type": "album", "limit": 50}, headers=user_headers).json()["items"]
+    artistas = [f["media"]["creators"][0] for f in feed]
+    assert artistas[:4].count("Hans Zimmer") == 2
+    assert artistas.count("Hans Zimmer") == 3 and artistas[-1] == "Hans Zimmer"  # o terceiro vai para o fim, não some
+
+
+def test_fora_da_bolha_traz_generos_que_a_pessoa_nao_ouve(client, user_headers, db, albums):
+    curtir(client, user_headers, db, "Interestelar", "A Origem")
+    client.put("/me/preferences", json={"genres": ["Trilha sonora"]}, headers=user_headers)
+    params = {"type": "album", "limit": 6}
+    no_gosto = client.get("/recommendations", params=params, headers=user_headers).json()["items"]
+    fora = client.get("/recommendations", params={**params, "discovery": "outside"}, headers=user_headers).json()["items"]
+    novos = [f for f in fora if f["strategy"] == "discovery"]
+    assert novos and len(novos) > len([f for f in no_gosto if f["strategy"] == "discovery"])
+    assert all(f["reason"].startswith("Fora da sua bolha: ") and "Trilha sonora" not in f["media"]["genres"] for f in novos)
+    assert {f["reason"] for f in novos} >= {"Fora da sua bolha: MPB, um gênero que você ainda não ouve"}
+    # no feed misto, os discos de fora da bolha também entram nos lugares fixos
+    misto = client.get("/recommendations", params={"limit": 12, "discovery": "outside"}, headers=user_headers).json()["items"]
+    assert any(m["strategy"] == "discovery" for m in misto)
+    assert client.post("/recommendations/impressions", json={"items": impressions_of(misto)}, headers=user_headers).status_code == 204
