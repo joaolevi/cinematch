@@ -13,6 +13,7 @@ import ListsPage from "./pages/ListsPage";
 import LoginPage from "./pages/LoginPage";
 import MediaPage from "./pages/MediaPage";
 import OnboardingPage from "./pages/OnboardingPage";
+import ProfilePage from "./pages/ProfilePage";
 import SearchPage from "./pages/SearchPage";
 
 function RequireAuth({ children, admin = false }: { children: ReactNode; admin?: boolean }) {
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="diario" element={<DiaryPage />} />
             <Route path="listas" element={<ListsPage />} />
             <Route path="comunidade" element={<CommunityPage />} />
+            <Route path="pessoas/:id" element={<ProfilePage />} />
             <Route path="sobre" element={<AboutPage />} />
             <Route path="admin" element={<RequireAuth admin><AdminPage /></RequireAuth>} />
           </Route>

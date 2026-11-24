@@ -54,7 +54,7 @@ Preparar a abertura para pessoas de fora, o social mínimo e o controle sobre o 
 | [RFF12](funcionais.md#rff12) | Registrar o mesmo título mais de uma vez | Funcional | Não iniciado | M | 3 | 3 | 1 | RNFF01 |
 | [RFF13](funcionais.md#rff13) | Adicionar qualquer título sem o admin | Funcional | Parcial | P | 3 | 3 | 1 | — |
 | [RFF14](funcionais.md#rff14) | Recuperar a senha e verificar o e-mail | Funcional | Não iniciado | M | 3 | 3 | 1 | RNFF01 |
-| [RFF15](funcionais.md#rff15) | Compatibilidade de gosto | Funcional | Não iniciado | P a M | 3 | 2 | 3 | RFF11 |
+| [RFF15](funcionais.md#rff15) | Compatibilidade de gosto | Funcional | Parcial | P a M | 3 | 2 | 3 | RFF11 |
 | [RFF16](funcionais.md#rff16) | Modo descoberta | Funcional | Não iniciado | P | 3 | 2 | 4 | — |
 | [RFF17](funcionais.md#rff17) | Página "Como recomendamos" | Funcional | Não iniciado | P | 4 | 3 | 2 | RNFF08 |
 | [RFF18](funcionais.md#rff18) | Importar o histórico de outros apps | Funcional | A definir | M | — | 2 | 2 | RFF12, RFF13, RFF01 |

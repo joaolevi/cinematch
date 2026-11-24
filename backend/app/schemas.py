@@ -243,12 +243,35 @@ class FeedOut(BaseModel):
 
 class CommunityEntryOut(BaseModel):
     id: int
+    user_id: int
     user_name: str
     media: MediaOut
     rating: float | None
     review: str | None
     consumed_at: date | None
     created_at: datetime
+
+
+class ProfileItemOut(BaseModel):
+    media: MediaOut
+    rating: float | None
+
+
+class CompatibilityOut(BaseModel):
+    percent: int | None = Field(description="0 a 100; None se uma das duas ainda não registrou o que curte")
+    label: str
+    shared: list[MediaOut] = Field(description="Títulos que as duas curtiram, nas três mídias")
+    genres: list[str]
+
+
+class ProfileOut(BaseModel):
+    id: int
+    name: str
+    is_me: bool
+    counts: dict[str, int] = Field(description="Registros por mídia: movie, series e album")
+    favorites: list[ProfileItemOut]
+    recent: list[ProfileItemOut]
+    compatibility: CompatibilityOut | None = Field(description="None no próprio perfil")
 
 
 class CommunityPage(BaseModel):
