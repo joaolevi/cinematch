@@ -8,6 +8,7 @@ import CommunityPage from "./pages/CommunityPage";
 import DiaryPage from "./pages/DiaryPage";
 import FeedPage from "./pages/FeedPage";
 import HomePage from "./pages/HomePage";
+import HowPage from "./pages/HowPage";
 import LandingPage from "./pages/LandingPage";
 import ListsPage from "./pages/ListsPage";
 import LoginPage from "./pages/LoginPage";
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="comunidade" element={<CommunityPage />} />
             <Route path="pessoas/:id" element={<ProfilePage />} />
             <Route path="sobre" element={<AboutPage />} />
+            <Route path="como-recomendamos" element={<HowPage />} />
             <Route path="admin" element={<RequireAuth admin><AdminPage /></RequireAuth>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

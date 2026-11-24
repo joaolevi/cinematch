@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 
@@ -34,6 +35,14 @@ export default function AboutPage() {
           popularidade, do{" "}
           <a href="https://listenbrainz.org" target="_blank" rel="noreferrer" className="underline hover:text-accent">ListenBrainz</a>, todos abertos e
           mantidos pela comunidade.
+        </p>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold">Como recomendamos</h2>
+        <p className="mt-2 text-sm text-muted">
+          De onde vêm as sugestões, as pontes entre filmes e música e o experimento em andamento:{" "}
+          <Link to="/como-recomendamos" className="underline hover:text-[#b9452f]">veja como recomendamos</Link>.
         </p>
       </section>
 

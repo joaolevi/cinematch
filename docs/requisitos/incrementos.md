@@ -56,7 +56,7 @@ Preparar a abertura para pessoas de fora, o social mínimo e o controle sobre o 
 | [RFF14](funcionais.md#rff14) | Recuperar a senha e verificar o e-mail | Funcional | Não iniciado | M | 3 | 3 | 1 | RNFF01 |
 | [RFF15](funcionais.md#rff15) | Compatibilidade de gosto | Funcional | Parcial | P a M | 3 | 2 | 3 | RFF11 |
 | [RFF16](funcionais.md#rff16) | Modo descoberta | Funcional | Feito | P | 3 | 2 | 4 | — |
-| [RFF17](funcionais.md#rff17) | Página "Como recomendamos" | Funcional | Não iniciado | P | 4 | 3 | 2 | RNFF08 |
+| [RFF17](funcionais.md#rff17) | Página "Como recomendamos" | Funcional | Parcial | P | 4 | 3 | 2 | RNFF08 |
 | [RFF18](funcionais.md#rff18) | Importar o histórico de outros apps | Funcional | A definir | M | — | 2 | 2 | RFF12, RFF13, RFF01 |
 | [EXP02](../tecnico/AVALIACAO.md#exp02) | Teste A/B do motivo reescrito por IA | Experimento | Não iniciado | P a M | 3 | 2 | 5 | RNFF02; e orçamento |
 
