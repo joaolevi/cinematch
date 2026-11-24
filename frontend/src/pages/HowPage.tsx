@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth";
+import ExperimentsToggle from "../components/ExperimentsToggle";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 
@@ -100,15 +101,10 @@ export default function HowPage() {
         <p>
           Para saber se o "quem curte o mesmo que você" ajuda de verdade, metade das contas recebe as sugestões de filmes e
           séries só pela parte do "parecido com o que você curtiu". Medimos quantas sugestões viram "Quero ver" ou "Já vi"
-          em cada metade.
-          {user && (
-            <>
-              {" "}
-              Sua conta está no grupo <strong>{user.ab_group}</strong>
-              {user.ab_group === "A" ? ", que recebe as duas partes." : ", que recebe só a parte do parecido."}
-            </>
-          )}
+          em cada metade. Se preferir, você pode sair: passa a receber as sugestões completas, e as suas reações deixam
+          de entrar na comparação.
         </p>
+        {user && <ExperimentsToggle />}
       </Part>
 
       <Part title="7. De onde vêm os dados">

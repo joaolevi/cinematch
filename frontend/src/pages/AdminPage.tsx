@@ -59,6 +59,12 @@ function pct(v: number) {
 
 const RED_INK = "text-[#b9452f]";
 
+/** Satisfação em linguagem simples (RFF04): das aceitas que ganharam nota, quantas ficaram com 3,5 ou mais. */
+function satisfactionInWords(m: VariantMetrics): string {
+  if (m.satisfaction_rate == null) return "Ainda nenhuma sugestão aceita ganhou nota.";
+  return `Das ${plural(m.rated, "aceita que ganhou nota", "aceitas que ganharam nota")}, ${m.satisfied} ${m.satisfied === 1 ? "ficou" : "ficaram"} com 3,5 ou mais.`;
+}
+
 /** Diz a taxa em linguagem simples: "de cada 100 sugestões, 54 viraram Quero ver ou Já vi". */
 function inWords(rate: number): string {
   return `De cada 100 sugestões que apareceram, ${Math.round(rate * 100)} viraram Quero ver ou Já vi.`;
@@ -75,7 +81,7 @@ function VariantCard({ m, label, note }: { m: VariantMetrics; label: string; not
       {/* O que aconteceu com as sugestões exibidas, em uma barra só */}
       {/* A barra usa a taxa de aceitação: Quero ver e Já vi no mesmo título contam uma vez só */}
       <div className="mt-4 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-bg" aria-hidden>
-        <div className="bg-accent" style={{ width: pct(m.acceptance_rate) }} title={`Aceitas: ${pct(m.acceptance_rate)}`} />
+        <div className="bg-accent" style={{ width: `${m.acceptance_rate * 100}%` }} title={`Aceitas: ${pct(m.acceptance_rate)}`} />
         <div className="bg-[#76655b]" style={{ width: share(m.dismiss) }} title={`Não me interesso: ${m.dismiss}`} />
       </div>
       <dl className="mt-4 grid grid-cols-[1fr_auto] gap-y-1 text-sm">
@@ -95,7 +101,12 @@ function VariantCard({ m, label, note }: { m: VariantMetrics; label: string; not
           <span className="h-2.5 w-2.5 rounded-sm bg-[#76655b]" /> Não me interesso
         </dt>
         <dd className="text-right">{m.dismiss}</dd>
+        <dt className="mt-2 border-t border-line/60 pt-2 font-semibold text-stone-200">Satisfação</dt>
+        <dd className="mt-2 border-t border-line/60 pt-2 text-right font-semibold">
+          {m.satisfaction_rate == null ? "–" : pct(m.satisfaction_rate)}
+        </dd>
       </dl>
+      <p className="mt-1 text-xs text-muted">{satisfactionInWords(m)}</p>
     </div>
   );
 }
@@ -156,6 +167,12 @@ function MetricsTab() {
             {m.trending_shown > 0 &&
               ` A comparação deixa de fora ${plural(m.trending_shown, "sugestão Em alta", "sugestões Em alta")}, que são iguais nos dois grupos.`}
           </li>
+          <li>→ Satisfação: {satisfactionInWords(m.overall).toLowerCase()}</li>
+          {m.opted_out > 0 && (
+            <li>
+              → {plural(m.opted_out, "pessoa saiu", "pessoas saíram")} dos experimentos e ficam fora da comparação.
+            </li>
+          )}
           <li>
             → {warning.title}: {warning.text}
           </li>
@@ -182,7 +199,12 @@ function MetricsTab() {
           <ul className="mt-1 space-y-2 text-sm leading-6">
             <li>
               <b>Taxa de aceitação:</b> das sugestões que apareceram na tela, quantas a pessoa marcou como Quero ver ou
-              Já vi. Uma sugestão só conta quando pelo menos metade do card fica na tela por 1 segundo.
+              Já vi. Uma sugestão só conta quando pelo menos metade do card fica na tela por 1 segundo, e a reação só
+              conta se vier até {m.acceptance_window_days} dias depois de a sugestão aparecer.
+            </li>
+            <li>
+              <b>Satisfação:</b> das sugestões aceitas que depois ganharam nota no diário, quantas ficaram com 3,5 ou mais.
+              A aceitação mede interesse; a satisfação, se a pessoa gostou.
             </li>
             <li>
               <b>Grupo A:</b> recebe o recomendador híbrido, que junta as características dos títulos com o que
@@ -195,7 +217,10 @@ function MetricsTab() {
               Os grupos são comparados só pelas sugestões personalizadas. As "Em alta", de quem ainda não tem
               histórico, são iguais nos dois grupos e entram só na taxa de todo mundo.
             </li>
-            <li>Cada pessoa entra em um grupo ao se cadastrar, e só este painel mostra o grupo.</li>
+            <li>
+              Cada pessoa entra em um grupo ao se cadastrar. Quem sai dos experimentos, em Minha conta ou em Como
+              recomendamos, recebe as sugestões completas e fica fora da comparação, mas continua na taxa de todo mundo.
+            </li>
             <li>O que alguém registra pelo + Registrar não entra na taxa: não veio de uma sugestão.</li>
           </ul>
         </section>
@@ -206,7 +231,7 @@ function MetricsTab() {
           <h2 className="font-hand text-2xl leading-8 font-bold">Como o recomendador está agora</h2>
           <ul className="mt-1 space-y-2 text-sm leading-6">
             <li>
-              <b>Catálogo:</b> {m.catalog_size} títulos ({m.movies} filmes e {m.series} séries).
+              <b>Catálogo:</b> {m.catalog_size} títulos ({m.movies} filmes, {m.series} séries e {m.albums} álbuns).
             </li>
             <li>
               <b>MovieLens:</b> {m.external_neighbors_enabled ? "ligado" : "desligado"}, com {m.titles_with_neighbors}{" "}

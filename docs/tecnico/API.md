@@ -13,7 +13,7 @@
 
 ## Autenticação
 
-1. `POST /auth/register` `{name, email, password}` (senha de 6 caracteres a 72 bytes) ou `POST /auth/login` `{email, password}`
+1. `POST /auth/register` `{name, email, password}` (senha de 6 caracteres a 72 bytes) ou `POST /auth/login` `{email, password}` (depois de 5 senhas erradas para o mesmo e-mail em 15 minutos, o login responde 429 com `Retry-After`)
 2. Resposta: `{access_token, token_type: "bearer", user: {id, name, email, role, ab_group, onboarded}}`
 3. Envie em todas as rotas protegidas: `Authorization: Bearer <access_token>` (validade de 24 h)
 4. `role == "admin"` libera as rotas `/admin/*`. Se `onboarded == false`, mostre o onboarding.
@@ -28,6 +28,9 @@ Swagger, com as regras na descrição de cada rota.
 | Método e rota | Para quê | Corpo / parâmetros |
 |---|---|---|
 | `GET /me` | Usuário logado | — |
+| `GET /me/export` | Baixar os próprios dados (RFF06) | → JSON com `account`, `preferences`, `diary`, `lists`, `dismissed`, `following`, `review_comments`, `taste_adjustments` e `recommendation_events`; a senha não vai |
+| `DELETE /me` | Excluir a própria conta e tudo o que é dela (RFF06) | `{password}` → 204; 403 com senha errada; 400 para contas de administração |
+| `PUT /me/experiments` | Sair ou voltar para os experimentos (RFF17) | `{in_experiments: bool}` → o usuário. Fora deles, `variant` no feed vem `"-"` e as reações ficam fora da comparação A/B |
 | `GET /me/preferences` | Preferências salvas | — → `{genres, decades, creators, artists, onboarded}` |
 | `PUT /me/preferences` | Onboarding | `{genres: string[], decades: number[], creators: string[], artists: string[], liked_media_ids: number[]}`. `genres` junta os gêneros de filme e de música; `artists` são os artistas de música |
 | `GET /media` | Busca/listagem | `q`, `type` (`movie`\|`series`), `genre`, `person` (nome exato de diretor, criador ou ator), `sort` (`popularity`\|`title`\|`year`; em `popularity`, com `q`, os títulos que começam com o termo vêm primeiro; em `year`, títulos de anos futuros ficam no fim), `limit`, `offset` → `{items, total}` |

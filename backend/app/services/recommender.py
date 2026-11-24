@@ -261,7 +261,7 @@ def recommend(
     content = np.asarray((X @ profile.T).todense()).ravel() / norm  # cosseno em [-1, 1]
 
     # --- Colaborativo item-item: "quem curtiu X também curtiu Y"
-    use_collab = user.ab_group == "A" and bool(sig_rows)
+    use_collab = user.variant != "B" and bool(sig_rows)  # quem saiu dos experimentos recebe o completo
     collab = np.zeros(len(catalog))
     item_sim = None
     if use_collab and sig_rows:

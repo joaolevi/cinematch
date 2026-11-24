@@ -17,10 +17,10 @@ Base técnica, a métrica corrigida e o grafo de conteúdo, que já melhora as s
 |---|---|---|---|---|---|---|---|---|
 | [RNFF01](nao-funcionais.md#rnff01) | Mudar o banco sem apagar dados, com migrações | Não funcional | Feito | P | 5 | 5 | 1 | — |
 | [RNFF02](nao-funcionais.md#rnff02) | Respeitar os termos e as licenças das fontes | Não funcional | Não iniciado | P | 5 | 4 | 1 | — |
-| [RNFF04](nao-funcionais.md#rnff04) | Contar a aceitação só perto da exibição | Não funcional | Não iniciado | P | 5 | 4 | 1 | — |
-| [RNFF05](nao-funcionais.md#rnff05) | Limitar tentativas de login | Não funcional | Não iniciado | P | 4 | 3 | 1 | — |
+| [RNFF04](nao-funcionais.md#rnff04) | Contar a aceitação só perto da exibição | Não funcional | Feito | P | 5 | 4 | 1 | — |
+| [RNFF05](nao-funcionais.md#rnff05) | Limitar tentativas de login | Não funcional | Feito | P | 4 | 3 | 1 | — |
 | [RFF03](funcionais.md#rff03) | Pedir a nota na hora certa | Funcional | Feito | P | 5 | 4 | 2 | — |
-| [RFF04](funcionais.md#rff04) | Taxa de satisfação no painel | Funcional | Não iniciado | P | 5 | 4 | 1 | — |
+| [RFF04](funcionais.md#rff04) | Taxa de satisfação no painel | Funcional | Feito | P | 5 | 4 | 1 | — |
 | [EXP01](../tecnico/AVALIACAO.md#exp01) | Comparar modelos de recomendação offline | Experimento | Feito | M | 4 | 3 | 3 | — |
 | [EXP04](../tecnico/AVALIACAO.md#exp04) | Confirmar o EXP01 no MovieLens 32M | Experimento | Não iniciado | P a M | 3 | 2 | 2 | EXP01 |
 | [RNFF12](nao-funcionais.md#rnff12) | Grafo de conteúdo para séries, música e grupo B | Não funcional | Não iniciado | M | 5 | 4 | 4 | EXP04 |
@@ -37,7 +37,7 @@ A música como terceira mídia, já pelo grafo, e o Meu gosto nas três mídias.
 | [RFF01](funcionais.md#rff01) | Álbuns como terceira mídia | Funcional | Feito | G | 5 | 5 | 4 | RNFF01, RNFF03 |
 | [RFF02](funcionais.md#rff02) | Recomendar música | Funcional | Parcial | M | 5 | 5 | 3 | RFF01, RNFF12 |
 | [RFF05](funcionais.md#rff05) | Retrospectiva do gosto | Funcional | Feito | P a M | 4 | 3 | 3 | usa o Meu gosto (RF23) |
-| [RFF06](funcionais.md#rff06) | Excluir e exportar os próprios dados | Funcional | Parcial | P | 4 | 3 | 2 | — |
+| [RFF06](funcionais.md#rff06) | Excluir e exportar os próprios dados | Funcional | Feito | P | 4 | 3 | 2 | — |
 
 ## Incremento 3: beta aberta, social e controle
 
@@ -56,7 +56,7 @@ Preparar a abertura para pessoas de fora, o social mínimo e o controle sobre o 
 | [RFF14](funcionais.md#rff14) | Recuperar a senha e verificar o e-mail | Funcional | Não iniciado | M | 3 | 3 | 1 | RNFF01 |
 | [RFF15](funcionais.md#rff15) | Compatibilidade de gosto | Funcional | Parcial | P a M | 3 | 2 | 3 | RFF11 |
 | [RFF16](funcionais.md#rff16) | Modo descoberta | Funcional | Feito | P | 3 | 2 | 4 | — |
-| [RFF17](funcionais.md#rff17) | Página "Como recomendamos" | Funcional | Parcial | P | 4 | 3 | 2 | RNFF08 |
+| [RFF17](funcionais.md#rff17) | Página "Como recomendamos" | Funcional | Feito | P | 4 | 3 | 2 | RNFF08 |
 | [RFF18](funcionais.md#rff18) | Importar o histórico de outros apps | Funcional | A definir | M | — | 2 | 2 | RFF12, RFF13, RFF01 |
 | [EXP02](../tecnico/AVALIACAO.md#exp02) | Teste A/B do motivo reescrito por IA | Experimento | Não iniciado | P a M | 3 | 2 | 5 | RNFF02; e orçamento |
 
