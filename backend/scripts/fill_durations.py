@@ -1,4 +1,4 @@
-"""Completa a duração dos filmes e séries do TMDB que ainda não têm (RFF20: "até 2 horas").
+"""Completa a duração (RFF20: "até 2 horas"), o idioma e o país (pontes fracas, RFF26) dos filmes e séries do TMDB.
 
 Uso: python -m scripts.fill_durations   (precisa da TASTORY_TMDB_API_KEY; uma consulta por título, uns 2 minutos)
 """

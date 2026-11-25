@@ -6,6 +6,7 @@ import type {
   AdminComment,
   AdminReview,
   Comment,
+  Pair,
   AdminUser,
   CommunityEntry,
   DiaryEntry,
@@ -182,6 +183,8 @@ export const api = {
   together: (id: number, limit = 12) => request<Recommendation[]>(`/users/${id}/together`, { query: { limit } }),
   togetherNow: (people: number[], moment: Moment = {}, limit = 20) =>
     request<Recommendation[]>("/recommendations/together", { query: { with: people.map(String), limit, ...moment } }),
+  pairs: (exclude: number[], moment: Moment = {}, limit = 3) =>
+    request<Pair[]>("/recommendations/pairs", { query: { exclude: exclude.map(String), limit, ...moment } }),
   followers: (id: number) => request<Person[]>(`/users/${id}/followers`),
   follows: (id: number) => request<Person[]>(`/users/${id}/follows`),
   like: (entry: number) => request<void>(`/community/${entry}/like`, { method: "PUT" }),

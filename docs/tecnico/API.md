@@ -57,6 +57,7 @@ Swagger, com as regras na descrição de cada rota.
 | `POST /lists/{id}/items` · `DELETE /lists/{id}/items/{media_id}` | Adicionar / remover título | `{media_id}` |
 | `GET /recommendations` | Feed "Para você" | `type`, `limit`, `exclude` (pode repetir: títulos que já foram mostrados, para trazer outros), `mood`, `max_minutes`, `occasion`, `only_mine` (só nos serviços da pessoa) → `{variant, strategy, items: [{media, score, reason, strategy, because, services}]}`. `services` traz os serviços da pessoa onde o título está |
 | `GET /recommendations/watchlist` | O Quero ver ordenado pelo que combina agora (RFF22) | `mood`, `max_minutes`, `occasion`, `only_mine` → `{items, later}`: o que cabe no momento, do que mais combina ao que menos, e o resto |
+| `GET /recommendations/pairs` | Sessão dupla (RFF27): um filme ou série sugerido e um disco ligado por ponte forte | `limit` (até 10), `exclude` (repete: filmes que já estão na tela), `mood`, `max_minutes`, `occasion`, `only_mine` → `[{video: {media, score, reason, strategy, because, services}, album, kind, reason}]`. `kind` é `soundtrack`, `composer`, `same_person`, `biopic` ou `documentary`. Não entra na comparação A/B |
 | `GET /recommendations/together` | Para ver ou ouvir junto com uma a quatro pessoas, no momento (RFF28, RFF20) | `with` (repete: o id de cada pessoa), `limit`, `mood`, `max_minutes`, `occasion`, `only_mine` (os serviços de quem pede) → `[{media, score, reason, strategy, because, services}]`: primeiro o que aparece para todas, e o motivo mostra cada lado. 422 sem ninguém ou com mais de quatro; 404 para perfil privado ou o próprio; 403 quando a pessoa só mostra para quem segue e quem pede não segue |
 | `POST /recommendations/{media_id}/feedback` | Botões do feed | `{action: "want"\|"seen"\|"dismiss", rating?, review?, consumed_at?}` |
 | `POST /recommendations/impressions` | Avisa quais títulos do feed apareceram na tela. É isso que conta como exibido | `{items: [{media_id, strategy, score}]}` (até 100) |
@@ -79,7 +80,7 @@ Swagger, com as regras na descrição de cada rota.
 | `POST /admin/tmdb/enrich` | Completar títulos sem pôster com dados do TMDB | → `{checked, enriched, not_found, merged}` |
 | `GET /admin/reviews` · `PATCH /admin/reviews/{id}` | Moderação | `hidden`; corpo `{hidden: bool}` |
 | `GET /admin/comments` · `PATCH /admin/comments/{id}` | Moderação dos comentários nas resenhas (RFF30) | `hidden`; corpo `{hidden: bool}` → `{id, user_name, user_email, entry_id, review_author, media_title, text, hidden, created_at}` |
-| `GET /admin/metrics` | Taxa de aceitação A/B | — |
+| `GET /admin/metrics` | Taxa de aceitação A/B | → inclui `by_bridge: [{kind, label, shown, accepted, acceptance_rate}]`, a aceitação dos discos sugeridos por tipo de ponte (EXP03) |
 | `GET /admin/users` | Pessoas cadastradas, das mais recentes às mais antigas, com o que cada uma fez | `q` (nome ou e-mail), `kind` (`real` padrão \| `simulated` \| `all`), `limit`, `offset` → `{items: [{id, name, email, role, ab_group, is_synthetic, onboarded, created_at, diary_entries, reviews, shown, accepted, last_active}], total}` |
 | `DELETE /admin/users/{id}` | Apaga a conta e tudo o que é dela (diário, listas, preferências e eventos) | 204; 400 para contas de administração; 404 se não existir |
 
@@ -125,6 +126,7 @@ placeholder (ex.: gradiente com o título). Exibir dados do TMDB exige o crédit
   sem tirar do diário.
 - **Pontes no detalhe (RFF26):** `GET /media/{id}/connections` traz os títulos da outra mídia ligados a este, com
   `reason` já escrito para o detalhe. Num filme ou série, mostre como "Para ouvir depois"; num álbum, "Para ver depois".
+  O `kind` pode ser `soundtrack`, `composer`, `same_person`, `biopic`, `documentary`, `artist` ou `weak`.
 - Os dados vêm do MusicBrainz (CC0) e do ListenBrainz. O crédito "Dados de álbuns: MusicBrainz" é recomendado, e não
   exigido.
 

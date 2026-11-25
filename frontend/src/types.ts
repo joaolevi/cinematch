@@ -57,7 +57,7 @@ export interface Provider {
 /** Um título da outra mídia ligado a este por uma ponte: "Para ouvir depois" ou "Para ver depois". */
 export interface Connection {
   media: Media;
-  kind: "soundtrack" | "composer" | "same_person" | "artist" | "weak";
+  kind: "soundtrack" | "composer" | "same_person" | "biopic" | "documentary" | "artist" | "weak";
   weight: number;
   reason: string;
 }
@@ -118,6 +118,23 @@ export interface Recommendation {
   because?: Because | null;
   /** Os serviços da pessoa onde o título está (RFF21), como ["Netflix"] */
   services?: string[];
+}
+
+/** Sessão dupla (RFF27): um filme ou série para ver e um disco para ouvir depois */
+export interface Pair {
+  video: Recommendation;
+  album: Media;
+  kind: "soundtrack" | "composer" | "same_person" | "biopic" | "documentary";
+  reason: string;
+}
+
+/** EXP03: aceitação dos discos sugeridos por ponte, por tipo de ponte */
+export interface BridgeMetrics {
+  kind: string;
+  label: string;
+  shown: number;
+  accepted: number;
+  acceptance_rate: number;
 }
 
 /** O Quero ver ordenado pelo que combina agora (RFF22) */
@@ -318,6 +335,7 @@ export interface Metrics {
   titles_with_neighbors: number;
   acceptance_window_days: number;
   opted_out: number;
+  by_bridge: BridgeMetrics[];
 }
 
 export type MediaInput = Pick<

@@ -35,6 +35,9 @@ async def lifespan(_app: FastAPI):
         from .services.moods import fill_moods
 
         fill_moods(db, only_missing=False)  # climas (RNFF09): recalcula todos, para valer a regra mais nova
+        from .services.bridges import build_biopic_bridges
+
+        build_biopic_bridges(db)  # cinebiografias (RFF26): liga os pares que já estão no catálogo
     yield
 
 

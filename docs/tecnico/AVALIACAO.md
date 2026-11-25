@@ -13,7 +13,7 @@ Avaliações planejadas, na ordem de implementação. O lugar de cada uma no pla
 | <a id="exp01"></a>EXP01 | Comparar offline, nos filmes do MovieLens, o modelo atual, o mesmo com *embeddings* e o grafo de gosto; fica o que ganhar (ver [O modelo depois do MVP](ARQUITETURA.md#o-modelo-depois-do-mvp)) | **Feito em 10/11:** empate com dados colaborativos; só com conteúdo, o grafo vence. Scripts `compare_models.py` e `check_popularity.py` | — | M | 2a | novo |
 | <a id="exp04"></a>EXP04 | Confirmar no MovieLens 32M o resultado do EXP01, antes de construir o grafo de conteúdo (RNFF12) | Não feito. A base grande exige guardar só os vizinhos mais próximos de cada título, em vez da matriz inteira | EXP01 | P a M | 2a | novo |
 | <a id="exp02"></a>EXP02 | Comparar, num teste A/B, o motivo escrito por modelo fixo com o mesmo motivo reescrito por IA | Não feito. Depende de guardar o motivo de forma estruturada e de orçamento | RNFF02 | P a M | 3 | RFF33 |
-| <a id="exp03"></a>EXP03 | Medir, no teste A/B, a aceitação das sugestões cruzadas por tipo de ponte | Não feito | RFF27 | P | 5 | novo |
+| <a id="exp03"></a>EXP03 | Medir, no teste A/B, a aceitação das sugestões cruzadas por tipo de ponte | Em andamento: desde 25/11, o painel do admin mostra a aceitação dos discos sugeridos por ponte, por tipo (trilha, compositor, mesma pessoa, cinebiografia, documentário, mesmo artista e ponte fraca), na mesma janela de 7 dias (`by_bridge` em `GET /admin/metrics`). A exibição não guarda o motivo, então o tipo é a ponte mais forte entre o disco e o que a pessoa curte hoje. Falta volume de exibições reais para concluir | RFF27 | P | 5 | novo |
 
 ### Resultado do EXP01
 
