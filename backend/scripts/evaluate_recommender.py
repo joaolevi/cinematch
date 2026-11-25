@@ -18,7 +18,7 @@ import numpy as np
 from scipy import sparse
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from app.services.recommender import POPULARITY_BONUS, _minmax, rating_weight
+from app.services.recommender import NEIGHBOR_ALPHA, POPULARITY_BONUS, _minmax, cooccurrence_similarity, rating_weight
 
 TOP_K = 20
 MIN_RATINGS_IN_CATALOG = 5  # filmes com menos avaliações ficam fora do catálogo
@@ -115,8 +115,10 @@ def split_by_user(ratings: list[Rating]) -> tuple[list[Rating], dict[int, set[in
 
 
 # ---------------------------------------------------------------- avaliação
-def item_similarity(train: list[Rating], index: dict[int, int], users: list[int] | None = None) -> np.ndarray:
-    """Matriz item x item (cosseno), como `_item_similarity` no recomendador."""
+def item_similarity(
+    train: list[Rating], index: dict[int, int], users: list[int] | None = None, alpha: float = NEIGHBOR_ALPHA
+) -> np.ndarray:
+    """Matriz item x item, como `_item_similarity` no recomendador. `alpha` = 0,5 é o cosseno simples (RNFF10)."""
     user_ids = sorted({r.user_id for r in train}) if users is None else sorted(users)
     position = {u: i for i, u in enumerate(user_ids)}
     rated = [r for r in train if r.user_id in position and r.movie_id in index]
@@ -128,12 +130,7 @@ def item_similarity(train: list[Rating], index: dict[int, int], users: list[int]
         shape=(len(user_ids), len(index)),
         dtype=np.float32,
     )
-    norms = np.sqrt(np.asarray(matrix.multiply(matrix).sum(0)).ravel())
-    norms[norms == 0] = 1
-    normalized = matrix @ sparse.diags(1 / norms)
-    similarity = np.asarray((normalized.T @ normalized).todense(), dtype=np.float32)
-    np.fill_diagonal(similarity, 0)
-    return similarity
+    return cooccurrence_similarity(np.asarray((matrix.T @ matrix).todense(), dtype=np.float32), alpha)
 
 
 def ndcg(hit_positions: list[int], relevant: int) -> float:
@@ -230,6 +227,53 @@ def print_user_effect(train: list[Rating], test: dict[int, set[int]], catalog: C
         print(f"{count:<26} {a:6.3f}  {b:6.3f}  {a - b:+.3f}")
 
 
+def print_popularity_effect(train: list[Rating], test: dict[int, set[int]], catalog: Catalog) -> None:
+    """RNFF10: compara o cosseno simples (0,5) com a normalização por popularidade (menos que 0,5), na qualidade e na
+    variedade do grupo A."""
+    index, features = catalog
+    counts = Counter(index[r.movie_id] for r in train if r.movie_id in index)
+    top_share = {i for i, _ in counts.most_common(max(1, len(index) // 100))}  # o 1% mais avaliado
+    print("\n### Normalização por popularidade (RNFF10, últimos 20% de cada usuário)")
+    print(f"{'alpha':10} A(ndcg)  A0,2(ndcg)  títulos diferentes  vagas do 1% mais popular")
+    for alpha in sorted({0.5, 0.45, 0.4, NEIGHBOR_ALPHA}, reverse=True):
+        similarity = item_similarity(train, index, alpha=alpha)
+        results = evaluate(train, test, catalog, similarity)
+        shown, slots, popular = set(), 0, 0
+        for top in top_lists(train, test, catalog, similarity):
+            shown |= set(top)
+            slots += len(top)
+            popular += sum(item in top_share for item in top)
+        print(
+            f"{alpha:<10} {results['híbrido atual (grupo A)'][:, 2].mean():6.3f}  "
+            f"{results['híbrido com peso 0,2 em conteúdo'][:, 2].mean():9.3f}  {len(shown):18}  {popular / slots:22.1%}"
+        )
+
+
+def top_lists(train: list[Rating], test: dict[int, set[int]], catalog: Catalog, similarity: np.ndarray):
+    """As listas do grupo A (peso 0,5 em conteúdo) de cada pessoa avaliada."""
+    index, features = catalog
+    history: dict[int, list[tuple[int, float]]] = defaultdict(list)
+    popularity = np.zeros(len(index))
+    for r in train:
+        if r.movie_id in index:
+            history[r.user_id].append((index[r.movie_id], rating_weight(r.value)))
+            popularity[index[r.movie_id]] += 1
+    popularity = np.log1p(popularity) / max(np.log1p(popularity).max(), 1e-9)
+    for user_id in test:
+        if len(history[user_id]) < MIN_HISTORY:
+            continue
+        seen = {i for i, _ in history[user_id]}
+        rows = np.array([i for i, _ in history[user_id]])
+        weights = np.array([w for _, w in history[user_id]], dtype=np.float32)
+        profile = sparse.csr_matrix(weights.reshape(1, -1)) @ features[rows]
+        norm = np.sqrt(profile.multiply(profile).sum()) or 1.0
+        content = np.asarray((features @ profile.T).todense()).ravel() / norm
+        collab = (weights @ similarity[rows]) / (np.abs(weights).sum() + 1e-9)
+        candidates = np.array([i for i in range(len(index)) if i not in seen])
+        score = variant_scores(_minmax(content[candidates]), _minmax(collab[candidates]), popularity[candidates])
+        yield [int(i) for i in candidates[np.argsort(-score["híbrido atual (grupo A)"])[:TOP_K]]]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("dataset", type=Path, help="pasta do ml-latest-small")
@@ -247,6 +291,7 @@ def main() -> None:
     results = evaluate(train, test, catalog, item_similarity(train, catalog.positions))
     print_report(results, "Últimos 20% de cada usuário")
     print_user_effect(train, test, catalog)
+    print_popularity_effect(train, test, catalog)
 
 
 if __name__ == "__main__":

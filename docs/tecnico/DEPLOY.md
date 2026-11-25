@@ -7,7 +7,7 @@ o sistema usado na apresentação de 10/11/2026. Por enquanto, o acesso está li
 pública (seção 4) e carregar o MovieLens (seção 3).
 
 Os comandos abaixo têm atalhos no `Makefile`: `make prod-up`, `make prod-logs`, `make prod-seed CONFIRMAR=sim`,
-`make prod-movielens DATA=/caminho/ml-32m` e `make backup`.
+`make prod-movielens DATA=/caminho/ml-32m`, `make prod-series-parecidas` e `make backup`.
 
 ## 1. Configurar
 
@@ -50,9 +50,17 @@ cd ~ && curl -LO https://files.grouplens.org/datasets/movielens/ml-32m.zip && un
 # 2. Importar, a partir da pasta do repositório (no teste: 31 s e 71.835 vizinhos para 1.438 filmes)
 make prod-movielens DATA=$HOME/ml-32m
 
-# 3. Ligar: no .env.production, TASTORY_USE_EXTERNAL_NEIGHBORS=true (acrescente a linha se não existir), e subir de novo
+# 3. Séries parecidas pela rota de recomendações do TMDB (RNFF06): traz até 60 séries novas, então rode depois os
+#    serviços e as durações delas
+make prod-series-parecidas
+make prod-duracoes && make prod-servicos
+
+# 4. Ligar: desde 25/11, TASTORY_USE_EXTERNAL_NEIGHBORS já vem true no docker-compose.prod.yml. Se o .env.production
+#    tiver a linha com false, troque para true. Depois, suba de novo
 make prod-up
 ```
+
+Sem vizinhos carregados, a opção ligada não quebra nada: o recomendador volta ao colaborativo das pessoas do Tastory.
 
 Para conferir, as duas coisas precisam ser verdade: a contagem bem maior que zero e a opção `=true`.
 

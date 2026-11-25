@@ -16,6 +16,7 @@
 | D25 | O banco muda só por migrações do Alembic, aplicadas pela própria API ao subir. Um banco criado antes delas é adotado na versão 0001 se conferir com o banco do MVP; se não conferir, a API não sobe (RNFF01) | Sem migrações, toda coluna nova obrigava a recriar o banco ou a rodar `ALTER TABLE` à mão no servidor. Adotar sozinho poupa o passo manual no deploy, e recusar o que não confere evita marcar um banco errado | Sophia (GP), 10/11 |
 | D26 | O contrato da API é o Swagger, gerado pelo código; o `API.md` guarda só autenticação, fluxo e regras gerais | A mesma equipe faz a API e a interface. Um contrato escrito à mão antes do código vira trabalho dobrado e se desatualiza; o Swagger nunca diverge do que a API faz | Sophia (GP), 10/11 |
 | D27 | O álbum é mais um tipo de `Media` (`type = "album"`), com o artista em `creators`, e não uma tabela à parte | Busca, diário, listas, feed e grafo tratam as três mídias do mesmo jeito; os campos só de uma mídia ficam opcionais | Sophia (GP), 10/11 |
+| D28 | Os vizinhos de fora vêm ligados por padrão no servidor (revê a D14): MovieLens nos filmes e rota de recomendações do TMDB nas séries. O colaborativo pesa conforme a parte do histórico que a fonte conhece e, sem vizinho de fora, volta ao das pessoas do Tastory. A normalização por popularidade (RNFF10) foi medida e não entrou | Ninguém estava no teste com pessoas, então mudar antes dele não perde aceitação; sem os vizinhos, o grupo A no servidor ficaria quase igual ao B | Sophia (GP), 25/11 |
 
 A recomendação cruzada entre filmes e música fica como evolução: o diário unificado vai gerar esses dados com o tempo.
 
@@ -113,7 +114,7 @@ Muda o que o alimenta e como ele decide pesos e motivos:
 |---|---|---|
 | Perfil | Registros, notas e questionário | O mesmo, mais os registros fora do cálculo e o perfil corrigido pela pessoa (RFF07) |
 | Conteúdo | TF-IDF com gênero, palavras-chave, direção e década | O mesmo cálculo com mais vocabulário: clima (RNFF09), país e idioma, para achar parecidos entre mídias |
-| Gosto parecido | Tabela de vizinhos com o MovieLens, só nos filmes | A mesma tabela com várias fontes: MovieLens, TMDB nas séries, ListenBrainz na música, pontes entre mídias e o diário do próprio Tastory (RNFF06), normalizada por popularidade (RNFF10) |
+| Gosto parecido | Tabela de vizinhos com o MovieLens nos filmes e a rota de recomendações do TMDB nas séries | A mesma tabela com mais fontes: ListenBrainz na música, pontes entre mídias e o diário do próprio Tastory (RNFF06); a normalização por popularidade (RNFF10) foi medida e não compensou ([avaliação](AVALIACAO.md#rnff10)) |
 | Mistura | Pesos fixos no código | Os mesmos pesos no começo, depois aprendidos com as aceitações (RNFF11), com lugares fixos para as sugestões cruzadas e o modo descoberta (RFF16) |
 | Motivo | A razão mais forte | As regras da seção acima (recente, específico, variado; "Em alta" por último) e o teste do motivo reescrito por IA (EXP02) |
 
