@@ -8,8 +8,11 @@ from sqlalchemy.orm import Session, selectinload
 from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Follow, User
-from ..schemas import CompatibilityOut, MediaOut, PersonOut, ProfileItemOut, ProfileOut, RecommendationOut
-from ..services.compatibility import compatibility
+from ..schemas import (
+    CompatibilityOut, MediaOut, PersonOut, ProfileItemOut, ProfileOut, RecommendationOut, SuggestedPersonOut,
+)
+from ..services.compatibility import compatibility, suggest_people
+from ..services.theme import badges
 from ..services.together import together
 from ..services.visibility import can_see_entries
 
@@ -52,6 +55,15 @@ def following(db: Session = Depends(get_db), me: User = Depends(get_current_user
     return people_out(
         db, select(User).join(Follow, Follow.followed_id == User.id).where(Follow.follower_id == me.id, listed(me))
     )
+
+
+@router.get("/suggestions", response_model=list[SuggestedPersonOut])
+def suggestions(
+    limit: int = Query(default=5, ge=1, le=20), db: Session = Depends(get_db), me: User = Depends(get_current_user)
+):
+    """Quem seguir (RFF15): pessoas de gosto parecido que eu ainda não sigo, da mais compatível para a menos, com
+    pelo menos 25%. Só entra quem deixa ver os registros para todos."""
+    return [SuggestedPersonOut(**p) for p in suggest_people(db, me, limit)]
 
 
 @router.get("/{user_id}/followers", response_model=list[PersonOut])
@@ -145,6 +157,7 @@ def profile(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_
         following=following_now,
         followers=followers,
         follows=follows,
+        badges=badges(db, user.id),
     )
 
 

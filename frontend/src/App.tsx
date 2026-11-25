@@ -18,6 +18,7 @@ import RetroPage from "./pages/RetroPage";
 import AccountPage from "./pages/AccountPage";
 import TastePage from "./pages/TastePage";
 import ProfilePage from "./pages/ProfilePage";
+import ActivityPage from "./pages/ActivityPage";
 import SearchPage from "./pages/SearchPage";
 import PrivacyPage from "./pages/PrivacyPage";
 
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="listas" element={<ListsPage />} />
             <Route path="comunidade" element={<CommunityPage />} />
             <Route path="pessoas/:id" element={<ProfilePage />} />
+            <Route path="atividade" element={<ActivityPage />} />
             <Route path="sobre" element={<AboutPage />} />
             <Route path="como-recomendamos" element={<HowPage />} />
             <Route path="admin" element={<RequireAuth admin><AdminPage /></RequireAuth>} />

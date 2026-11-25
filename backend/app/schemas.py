@@ -259,6 +259,12 @@ class BecauseOut(BaseModel):
     label: str = Field(description='Para mostrar: "Matrix", "Drama", "anos 90"')
 
 
+class StreamingOut(BaseModel):
+    key: str
+    label: str
+    logo: str | None
+
+
 class RecommendationOut(BaseModel):
     media: MediaOut
     score: float
@@ -269,6 +275,9 @@ class RecommendationOut(BaseModel):
     )
     services: list[str] = Field(
         default=[], description='Os serviços da pessoa onde o título está (RFF21), como ["Netflix"]'
+    )
+    streaming: list[StreamingOut] = Field(
+        default=[], description="Todos os serviços de assinatura onde o título está, com o logo (RFF19)"
     )
 
 
@@ -358,6 +367,25 @@ class CompatibilityOut(BaseModel):
     genres: list[str]
 
 
+class BadgeOut(BaseModel):
+    """Selo do desafio de um tema do mês (RFF32)."""
+
+    badge: str
+    title: str
+    month: str
+
+
+class ChallengeOut(BaseModel):
+    """O desafio do tema do mês (RFF32): registrar `goal` títulos do tema no mês para ganhar o selo."""
+
+    month: str
+    title: str
+    goal: int
+    badge: str
+    done: list[MediaOut] = Field(description="Os títulos do tema que a pessoa registrou no mês")
+    earned: bool
+
+
 class ProfileOut(BaseModel):
     id: int
     name: str
@@ -372,11 +400,33 @@ class ProfileOut(BaseModel):
     restricted: bool = Field(
         default=False, description="Os registros são só para quem segue a pessoa, e quem vê ainda não segue (RFF10)"
     )
+    badges: list[BadgeOut] = Field(default=[], description="Selos dos desafios do tema do mês (RFF32)")
 
 
 class PersonOut(BaseModel):
     id: int
     name: str
+
+
+class ActivityOut(BaseModel):
+    """Uma linha do histórico de atividades (RFF31)."""
+
+    kind: Literal["registro", "lista", "curtida", "comentario", "seguiu"]
+    at: datetime
+    media: MediaOut | None = None
+    rating: float | None = None
+    text: str | None = Field(default=None, description="A resenha do registro ou o comentário")
+    list_name: str | None = None
+    person: PersonOut | None = Field(default=None, description="Quem passou a seguir, ou quem escreveu a resenha")
+
+
+class SuggestedPersonOut(BaseModel):
+    """Alguém para seguir, pelo gosto parecido (RFF15)."""
+
+    id: int
+    name: str
+    percent: int
+    label: str
 
 
 class CommunityPage(BaseModel):

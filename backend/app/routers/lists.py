@@ -8,7 +8,8 @@ from .. import crud
 from ..auth import get_current_user
 from ..db import get_db
 from ..models import ListItem, User, UserList
-from ..schemas import ListIn, ListItemIn, ListOut
+from ..schemas import ChallengeOut, ListIn, ListItemIn, ListOut, MediaOut
+from ..services.theme import challenge, ensure_current_theme
 
 router = APIRouter(prefix="/lists", tags=["listas"])
 
@@ -25,8 +26,20 @@ def _own_list(db: Session, user: User, list_id: int) -> UserList:
 
 @router.get("/featured", response_model=list[ListOut])
 def featured_lists(db: Session = Depends(get_db), _user: User = Depends(get_current_user)):
-    """As listas em destaque no Início, como o Tema do mês (RFF32). Curadas pela administração."""
+    """As listas em destaque no Início, como o Tema do mês (RFF32). Curadas pela administração. Quando o mês vira, a
+    prateleira troca para o tema novo."""
+    ensure_current_theme(db)
     return list(db.scalars(select(UserList).where(UserList.featured.is_(True)).order_by(UserList.id)))
+
+
+@router.get("/featured/challenge", response_model=ChallengeOut | None)
+def theme_challenge(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """O desafio do tema do mês (RFF32): quantos títulos do tema registrar no diário dentro do mês, quais a pessoa já
+    registrou e se ganhou o selo. Sem tema com mês, devolve null."""
+    found = challenge(db, user.id)
+    if found is None:
+        return None
+    return ChallengeOut(**{**found, "done": [MediaOut.model_validate(m) for m in found["done"]]})
 
 
 @router.get("", response_model=list[ListOut])

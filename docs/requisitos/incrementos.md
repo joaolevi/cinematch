@@ -35,7 +35,7 @@ A música como terceira mídia, já pelo grafo, e o Meu gosto nas três mídias.
 | [RNFF06](nao-funcionais.md#rnff06) | Dados reais na parte colaborativa | Não funcional | Parcial | M | 4 | 4 | 1 | RFF01; a parte de música |
 | [RNFF07](nao-funcionais.md#rnff07) | Feed rápido com catálogo grande | Não funcional | Não iniciado | M | 4 | 3 | 1 | RNFF03 |
 | [RFF01](funcionais.md#rff01) | Álbuns como terceira mídia | Funcional | Feito | G | 5 | 5 | 4 | RNFF01, RNFF03 |
-| [RFF02](funcionais.md#rff02) | Recomendar música | Funcional | Parcial | M | 5 | 5 | 3 | RFF01, RNFF12 |
+| [RFF02](funcionais.md#rff02) | Recomendar música | Funcional | Feito | M | 5 | 5 | 3 | RFF01, RNFF12 |
 | [RFF05](funcionais.md#rff05) | Retrospectiva do gosto | Funcional | Feito | P a M | 4 | 3 | 3 | usa o Meu gosto (RF23) |
 | [RFF06](funcionais.md#rff06) | Excluir e exportar os próprios dados | Funcional | Feito | P | 4 | 3 | 2 | — |
 
@@ -54,7 +54,7 @@ Preparar a abertura para pessoas de fora, o social mínimo e o controle sobre o 
 | [RFF12](funcionais.md#rff12) | Registrar o mesmo título mais de uma vez | Funcional | Não iniciado | M | 3 | 3 | 1 | RNFF01 |
 | [RFF13](funcionais.md#rff13) | Adicionar qualquer título sem o admin | Funcional | Feito | P | 3 | 3 | 1 | — |
 | [RFF14](funcionais.md#rff14) | Recuperar a senha e verificar o e-mail | Funcional | Não iniciado | M | 3 | 3 | 1 | RNFF01 |
-| [RFF15](funcionais.md#rff15) | Compatibilidade de gosto | Funcional | Parcial | P a M | 3 | 2 | 3 | RFF11 |
+| [RFF15](funcionais.md#rff15) | Compatibilidade de gosto | Funcional | Feito | P a M | 3 | 2 | 3 | RFF11 |
 | [RFF16](funcionais.md#rff16) | Modo descoberta | Funcional | Feito | P | 3 | 2 | 4 | — |
 | [RFF17](funcionais.md#rff17) | Página "Como recomendamos" | Funcional | Feito | P | 4 | 3 | 2 | RNFF08 |
 | [RFF18](funcionais.md#rff18) | Importar o histórico de outros apps | Funcional | A definir | M | — | 2 | 2 | RFF12, RFF13, RFF01 |
@@ -67,7 +67,7 @@ O vocabulário de clima e tudo que depende dele, mais os serviços de streaming.
 | ID | Requisito | Tipo | Situação | Esforço | Prio. | Nec. | Inov. | Depende de |
 |---|---|---|---|---|---|---|---|---|
 | [RNFF09](nao-funcionais.md#rnff09) | Vocabulário de clima comum | Não funcional | Feito | M a G | 2 | 2 | 4 | RNFF02 |
-| [RFF19](funcionais.md#rff19) | Onde assistir ou ouvir | Funcional | Parcial | M a G | 2 | 2 | 3 | RNFF03; a música depende do RFF01 |
+| [RFF19](funcionais.md#rff19) | Onde assistir ou ouvir | Funcional | Feito | M a G | 2 | 2 | 3 | RNFF03; a música depende do RFF01 |
 | [RFF20](funcionais.md#rff20) | Sugestões pelo momento | Funcional | Feito | M | 2 | 2 | 4 | RNFF09 |
 | [RFF21](funcionais.md#rff21) | Meus serviços | Funcional | Feito | P a M | 2 | 2 | 2 | RFF19 |
 | [RFF22](funcionais.md#rff22) | Quero ver ordenado pelo que combina agora | Funcional | Feito | P a M | 2 | 2 | 3 | RFF19, RFF20 |
@@ -96,8 +96,8 @@ O fim das cadeias de dependência e o que precisa de muitas aceitações reais.
 | [RNFF11](nao-funcionais.md#rnff11) | Pesos aprendidos com as aceitações | Não funcional | Não iniciado | M | 1 | 2 | 3 | EXP03; e aceitações suficientes |
 | [RFF29](funcionais.md#rff29) | Aviso do Quero ver | Funcional | Não iniciado | M | 1 | 1 | 2 | RFF21 |
 | [RFF30](funcionais.md#rff30) | Curtir e comentar resenhas | Funcional | Feito | M | 1 | 1 | 1 | RNFF01 |
-| [RFF31](funcionais.md#rff31) | Histórico de atividades | Funcional | Não iniciado | M | 1 | 1 | 1 | RFF09, RFF30, RFF10 |
-| [RFF32](funcionais.md#rff32) | Tema do mês | Funcional | Parcial | P a M | 1 | 1 | 3 | usa as listas que já existem |
+| [RFF31](funcionais.md#rff31) | Histórico de atividades | Funcional | Feito | M | 1 | 1 | 1 | RFF09, RFF30, RFF10 |
+| [RFF32](funcionais.md#rff32) | Tema do mês | Funcional | Feito | P a M | 1 | 1 | 3 | usa as listas que já existem |
 
 ## Numeração anterior
 

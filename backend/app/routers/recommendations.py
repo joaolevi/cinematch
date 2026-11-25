@@ -16,7 +16,7 @@ from ..schemas import (
 from ..services.bridges import album_suggestions, double_features, mix_albums
 from ..services.moods import BY_KEY as MOODS, OCCASIONS_BY_KEY, fits_occasion
 from ..services.recommender import Recommendation, decade_label, recommend
-from ..services.streaming import available_ids, labels_on
+from ..services.streaming import available_ids, labels_on, streaming_on
 from ..services.together import MAX_PEOPLE, together
 from .users import companion
 
@@ -74,6 +74,7 @@ def rec_out(db: Session, r: Recommendation, services: list[str] | None = None) -
         strategy=r.strategy,
         because=because_out(db, r),
         services=labels_on(r.media, services or []),
+        streaming=streaming_on(r.media),
     )
 
 

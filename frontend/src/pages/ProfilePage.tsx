@@ -143,6 +143,20 @@ export default function ProfilePage() {
         )}
       </div>
 
+      {profile.badges.length > 0 && (
+        <ul className="mt-4 flex flex-wrap gap-2" aria-label="Selos">
+          {profile.badges.map((b) => (
+            <li
+              key={b.month}
+              title={`Desafio do tema "${b.title}", ${b.month.split("-").reverse().join("/")}`}
+              className="chip px-3 py-1 text-sm"
+            >
+              <span aria-hidden>🏅</span> {b.badge}
+            </li>
+          ))}
+        </ul>
+      )}
+
       {people && (
         <section className="card mt-4 max-w-3xl p-4" aria-label={people.kind === "followers" ? "Quem segue" : "Quem é seguido"}>
           <h2 className="text-sm font-semibold">
