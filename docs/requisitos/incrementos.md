@@ -72,7 +72,7 @@ O vocabulário de clima e tudo que depende dele, mais os serviços de streaming.
 | [RFF21](funcionais.md#rff21) | Meus serviços | Funcional | Feito | P a M | 2 | 2 | 2 | RFF19 |
 | [RFF22](funcionais.md#rff22) | Quero ver ordenado pelo que combina agora | Funcional | Feito | P a M | 2 | 2 | 3 | RFF19, RFF20 |
 | [RFF23](funcionais.md#rff23) | Buscar por clima | Funcional | Feito | M | 2 | 1 | 4 | RNFF09, RFF01 |
-| [RFF24](funcionais.md#rff24) | Séries por temporada | Funcional | Não iniciado | M | 2 | 2 | 2 | RFF12 |
+| [RFF24](funcionais.md#rff24) | Séries por temporada | Funcional | Feito | M | 2 | 2 | 2 | RFF12 |
 | [RFF25](funcionais.md#rff25) | Pedido em português | Funcional | Feito | M | 2 | 1 | 5 | RFF20, RNFF09; e orçamento |
 
 ## Incremento 5: pontes entre mídias e grupo
@@ -94,7 +94,7 @@ O fim das cadeias de dependência e o que precisa de muitas aceitações reais.
 | ID | Requisito | Tipo | Situação | Esforço | Prio. | Nec. | Inov. | Depende de |
 |---|---|---|---|---|---|---|---|---|
 | [RNFF11](nao-funcionais.md#rnff11) | Pesos aprendidos com as aceitações | Não funcional | Não iniciado | M | 1 | 2 | 3 | EXP03; e aceitações suficientes |
-| [RFF29](funcionais.md#rff29) | Aviso do Quero ver | Funcional | Não iniciado | M | 1 | 1 | 2 | RFF21 |
+| [RFF29](funcionais.md#rff29) | Aviso do Quero ver | Funcional | Feito | M | 1 | 1 | 2 | RFF21 |
 | [RFF30](funcionais.md#rff30) | Curtir e comentar resenhas | Funcional | Feito | M | 1 | 1 | 1 | RNFF01 |
 | [RFF31](funcionais.md#rff31) | Histórico de atividades | Funcional | Feito | M | 1 | 1 | 1 | RFF09, RFF30, RFF10 |
 | [RFF32](funcionais.md#rff32) | Tema do mês | Funcional | Feito | P a M | 1 | 1 | 3 | usa as listas que já existem |

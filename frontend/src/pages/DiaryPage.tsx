@@ -58,6 +58,8 @@ function Ranking({ title, entries, color }: { title: string; entries: DiaryEntry
 
 /** Legenda da polaroide, como se fosse escrita à mão: "3 de nov." */
 function caption(entry: DiaryEntry): string {
+  // Série que a pessoa ainda está vendo (RFF24)
+  if (entry.status === "watching") return entry.season ? `assistindo · T${entry.season}` : "assistindo";
   if (!entry.consumed_at) return entry.from_onboarding ? "favorito ♥" : "sem data";
   return new Date(`${entry.consumed_at}T12:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
 }

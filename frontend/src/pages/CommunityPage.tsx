@@ -161,6 +161,11 @@ function Post({ entry, position }: { entry: CommunityEntry; position: number }) 
             consumedAt={entry.consumed_at}
             createdAt={entry.created_at}
           />
+          {entry.status === "watching" && (
+            <p className="mt-1 text-xs text-muted">
+              ▶ Ainda assistindo{entry.season ? `, na temporada ${entry.season}` : ""}
+            </p>
+          )}
         </div>
         {entry.review && (
           <>

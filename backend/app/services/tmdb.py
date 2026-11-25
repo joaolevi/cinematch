@@ -160,6 +160,8 @@ class TmdbCatalogProvider:
         full["actors"] = [c["name"] for c in cast][:MAX_ACTORS]
         full["tags"] = [k["name"].lower() for k in keywords][:8]
         full["duration_min"] = runtime_of(d, tmdb_type)
+        if tmdb_type == "tv":
+            full["seasons"] = seasons_of(d)
         return full
 
     def _enrich_all(self, titles: list[ExternalTitle]) -> list[ExternalTitle]:
@@ -231,6 +233,16 @@ def countries_of(item: dict) -> list[str]:
     return [c for c in found if c][:3]
 
 
+def seasons_of(details: dict) -> list[dict]:
+    """As temporadas de uma série (RFF24), sem a "temporada 0" de especiais: número, nome, episódios e ano."""
+    return [
+        {"number": t["season_number"], "name": t.get("name"), "episodes": t.get("episode_count"),
+         "year": _year(t.get("air_date"))}
+        for t in details.get("seasons") or []
+        if (t.get("season_number") or 0) > 0
+    ]
+
+
 def runtime_of(details: dict, tmdb_type: str) -> int | None:
     """Duração em minutos: a do filme ou a de um episódio da série (RFF20)."""
     if tmdb_type == "movie":
@@ -242,20 +254,16 @@ def runtime_of(details: dict, tmdb_type: str) -> int | None:
 
 def fill_durations(db, provider: TmdbCatalogProvider) -> dict:
     """Completa a duração (RFF20), o idioma original e o país (pontes fracas, RFF26) dos filmes e séries do TMDB que
-    ainda não têm, com uma consulta de detalhes por título."""
-    from sqlalchemy import or_, select
+    ainda não têm, e as temporadas das séries (RFF24), com uma consulta de detalhes por título."""
+    from sqlalchemy import select
 
     from ..models import Media
 
-    rows = list(
-        db.scalars(
-            select(Media).where(
-                Media.source == "tmdb",
-                Media.type.in_(("movie", "series")),
-                or_(Media.duration_min.is_(None), Media.language.is_(None), Media.language == ""),
-            )
-        )
-    )
+    rows = [
+        m
+        for m in db.scalars(select(Media).where(Media.source == "tmdb", Media.type.in_(("movie", "series"))))
+        if m.duration_min is None or not m.language or (m.type == "series" and not m.seasons)
+    ]
 
     def details(m: Media) -> dict | None:
         tmdb_type, tmdb_id = m.external_id.split("-", 1)
@@ -266,7 +274,7 @@ def fill_durations(db, provider: TmdbCatalogProvider) -> dict:
 
     with ThreadPoolExecutor(max_workers=provider.max_workers) as pool:
         found = list(pool.map(details, rows))
-    filled = languages = 0
+    filled = languages = seasons = 0
     for m, d in zip(rows, found):
         if not d:
             continue
@@ -279,8 +287,11 @@ def fill_durations(db, provider: TmdbCatalogProvider) -> dict:
             languages += 1
         if not m.countries:
             m.countries = countries_of(d)
+        if m.type == "series" and not m.seasons and (found_seasons := seasons_of(d)):
+            m.seasons = found_seasons
+            seasons += 1
     db.commit()
-    return {"checked": len(rows), "filled": filled, "languages": languages}
+    return {"checked": len(rows), "filled": filled, "languages": languages, "seasons": seasons}
 
 
 def enrich_catalog(db, provider: TmdbCatalogProvider, only_missing_posters: bool = True) -> dict:

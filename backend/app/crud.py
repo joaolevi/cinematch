@@ -50,8 +50,11 @@ def upsert_diary(
     review: str | None = None,
     consumed_at: date | None = None,
     from_onboarding: bool = False,
+    status: str = "seen",
+    season: int | None = None,
 ) -> DiaryEntry:
-    """Registra consumo. Se já existir registro do mesmo título, atualiza."""
+    """Registra consumo. Se já existir registro do mesmo título, atualiza. Nas séries, `status` diz se a pessoa ainda
+    está assistindo, e `season`, em que temporada (RFF24); registrar como vista encerra o "assistindo"."""
     entry = db.scalar(
         select(DiaryEntry).where(DiaryEntry.user_id == user.id, DiaryEntry.media_id == media_id)
     )
@@ -65,6 +68,9 @@ def upsert_diary(
         db.add(entry)
     elif consumed_at:
         entry.consumed_at = consumed_at
+    entry.status = status
+    if season is not None:
+        entry.season = season
     if rating is not None:
         entry.rating = rating
     if review is not None:

@@ -105,3 +105,41 @@ def catalog_counts(db: Session) -> dict[str, int]:
         for key in services_of(m):
             counts[key] += 1
     return counts
+
+
+ARRIVAL_DAYS = 30
+
+
+def watchlist_arrivals(db: Session, user, days: int = ARRIVAL_DAYS) -> list[dict]:
+    """Títulos do Quero ver que chegaram a um serviço da pessoa (RFF29): o serviço passou a ter o título depois que ela
+    o guardou, nos últimos `days` dias. Um aviso por título, com o serviço que chegou primeiro."""
+    from datetime import datetime, timedelta, timezone
+
+    from ..models import ListItem, UserList
+
+    mine = set(user.services or [])
+    if not mine:
+        return []
+    now = datetime.now(timezone.utc)
+
+    def aware(at: datetime) -> datetime:
+        return at if at.tzinfo else at.replace(tzinfo=timezone.utc)
+
+    rows = db.execute(
+        select(Media, ListItem.added_at).join(ListItem, ListItem.media_id == Media.id).join(UserList)
+        .where(UserList.user_id == user.id, UserList.is_watchlist.is_(True))
+    ).all()
+    out = []
+    for media, added_at in rows:
+        best = None
+        for p in media.providers or []:
+            key = service_key(p.get("service", "")) if p.get("kind") == "flatrate" else None
+            if key not in mine or not p.get("since"):
+                continue
+            since = aware(datetime.fromisoformat(p["since"]))
+            if since > aware(added_at) and now - since <= timedelta(days=days) and (best is None or since < best[1]):
+                best = (key, since, p.get("logo"))
+        if best:
+            out.append({"media": media, "service": {"key": best[0], "label": BY_KEY[best[0]].label, "logo": best[2]},
+                        "since": best[1]})
+    return sorted(out, key=lambda a: a["since"], reverse=True)

@@ -76,6 +76,8 @@ def community(
                 review=None if e.review_hidden else e.review,
                 consumed_at=e.consumed_at,
                 created_at=e.created_at,
+                status=e.status or "seen",
+                season=e.season,
                 likes=likes.get(e.id, 0) if has_review(e) else 0,
                 liked=e.id in liked and has_review(e),
                 comments=comments.get(e.id, 0) if has_review(e) else 0,

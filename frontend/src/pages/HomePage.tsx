@@ -7,6 +7,7 @@ import Highlight from "../components/Highlight";
 import MediaCard from "../components/MediaCard";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
+import ArrivalsNote from "../components/ArrivalsNote";
 import RateReminder from "../components/RateReminder";
 import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
@@ -259,6 +260,7 @@ export default function HomePage() {
           </h1>
           <p className="font-hand text-2xl font-bold text-accent">o que vamos ver hoje?</p>
         </header>
+        <ArrivalsNote />
 
         {hero && (
           <section>

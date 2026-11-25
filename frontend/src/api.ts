@@ -36,6 +36,7 @@ import type {
   Occasion,
   Wish,
   LetterboxdResult,
+  Arrival,
   StreamingService,
   Visibility,
   WatchlistNow,
@@ -144,7 +145,12 @@ export const api = {
       method: "POST",
       body: { media_id, rating: rating ?? null, review: review || null, consumed_at: consumed_at || null },
     }),
-  updateDiary: (id: number, data: { rating?: number | null; review?: string | null; consumed_at?: string | null; excluded?: boolean }) =>
+  watching: (media_id: number, season: number | null) =>
+    request<DiaryEntry>("/diary", { method: "POST", body: { media_id, status: "watching", season } }),
+  updateDiary: (
+    id: number,
+    data: { rating?: number | null; review?: string | null; consumed_at?: string | null; excluded?: boolean; season?: number },
+  ) =>
     request<DiaryEntry>(`/diary/${id}`, { method: "PATCH", body: data }),
   deleteDiary: (id: number) => request<void>(`/diary/${id}`, { method: "DELETE" }),
 
@@ -181,6 +187,7 @@ export const api = {
     request<{ items: CommunityEntry[] }>("/community", { query: { limit, before_id, following: following || undefined } }),
   following: () => request<Person[]>("/users/following"),
   exportMyData: () => request<unknown>("/me/export"),
+  arrivals: () => request<Arrival[]>("/me/watchlist/arrivals"),
   importLetterboxd: (files: { name: string; content: string }[]) =>
     request<LetterboxdResult>("/me/import/letterboxd", { method: "POST", body: { files } }),
   deleteMyAccount: (password: string) => request<void>("/me", { method: "DELETE", body: { password } }),

@@ -31,8 +31,9 @@ logs: ## Acompanha os logs do Docker
 deps: .venv/bin/python
 	.venv/bin/pip install -q -r backend/requirements-dev.txt
 
-test: deps ## Roda todos os testes
+test: deps ## Roda todos os testes, da API e da interface
 	cd backend && $(PYTHON) -m pytest -q
+	cd frontend && npm test
 
 test-offline: deps ## Roda os testes que não usam o TMDB real
 	cd backend && $(PYTHON) -m pytest -q -m "not integration"
