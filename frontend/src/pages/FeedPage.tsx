@@ -12,7 +12,7 @@ import { diaryChanged, useSeen } from "../seen";
 import TuneMenu, { type Tune } from "../components/TuneMenu";
 import { formatMinutes } from "../format";
 import { useMoods } from "../moods";
-import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Occasion, Recommendation } from "../types";
+import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Occasion, Person, Recommendation } from "../types";
 import { MEDIA_GRID } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
@@ -20,6 +20,13 @@ import ListName from "../components/ListName";
 
 const PAGE = 18;
 const TONIGHT_MINUTES = 150; // "Hoje à noite": cabe numa noite, até 2h30
+const MAX_COMPANIONS = 4; // quem pede e mais quatro pessoas (RFF28)
+
+/** "Levi", "Levi e Bia", "Levi, Bia e Caio" */
+function names(people: Person[]): string {
+  const first = people.map((p) => p.name.split(" ")[0]);
+  return first.length > 1 ? `${first.slice(0, -1).join(", ")} e ${first[first.length - 1]}` : first[0];
+}
 
 const STRATEGY_LABEL: Record<Feed["strategy"], string> = {
   hybrid: "Escolhidos a dedo, com base no seu gosto e em quem curte coisas parecidas",
@@ -41,8 +48,13 @@ export default function FeedPage() {
   const [onlyMine, setOnlyMine] = useState(false); // só nos meus serviços (RFF21)
   const moods = useMoods();
   const [occasions, setOccasions] = useState<Occasion[]>([]);
+  // Para ver ou ouvir junto (RFF28): quem eu sigo e quem escolhi para hoje
+  const [following, setFollowing] = useState<Person[]>([]);
+  const [companions, setCompanions] = useState<number[]>([]);
+  const together = companions.length > 0;
   useEffect(() => {
     api.occasions().then(setOccasions).catch(() => {});
+    api.following().then(setFollowing).catch(() => {});
   }, []);
   const moment = useMemo(
     () => ({
@@ -83,10 +95,14 @@ export default function FeedPage() {
     setHasMore(true);
     setMoreFailed(false);
     try {
-      const first = await api.feed(type || undefined, PAGE, [], discovery, moment);
+      // Junto com outras pessoas, a lista vem inteira de uma vez, sem paginação
+      const first: Feed = together
+        ? { variant: "-", strategy: "hybrid", items: await api.togetherNow(companions, moment, 30) }
+        : await api.feed(type || undefined, PAGE, [], discovery, moment);
       if (thisLoad === latestLoad.current) {
         alreadyShown.current = new Set(first.items.map((i) => i.media.id));
         setFeed(first);
+        if (together) setHasMore(false);
       }
     } catch (e) {
       if (thisLoad === latestLoad.current) setError((e as Error).message);
@@ -96,7 +112,7 @@ export default function FeedPage() {
         setLoading(false);
       }
     }
-  }, [type, discovery, moment]);
+  }, [type, discovery, moment, together, companions]);
 
   useEffect(() => {
     load();
@@ -124,6 +140,7 @@ export default function FeedPage() {
   }, [feed, type, discovery, moment]);
 
   async function swap() {
+    if (together) return load();
     const thisLoad = ++latestLoad.current;
     replacing.current = true;
     setLoading(true);
@@ -166,7 +183,7 @@ export default function FeedPage() {
   ) {
     // A reação só conta se o título tiver sido exibido, mesmo com o card quase saindo da tela
     const rec = feed?.items.find((i) => i.media.id === media.id);
-    if (rec) impressions.mark(rec);
+    if (rec && !together) impressions.mark(rec);
     await impressions.send();
     await api.feedback(media.id, action, rating, review, date);
     const position = feed?.items.findIndex((i) => i.media.id === media.id) ?? -1;
@@ -238,8 +255,14 @@ export default function FeedPage() {
     }
   }
 
-  // O que a pessoa registrou em outra tela (como o Registrar) sai das sugestões
-  const [highlight, ...rest] = (feed?.items ?? []).filter((i) => !seen?.has(i.media.id));
+  // O que a pessoa registrou em outra tela (como o Registrar) sai das sugestões. Junto com outras pessoas, a lista
+  // vem com as três mídias, e o filtro de tipo é feito aqui
+  const [highlight, ...rest] = (feed?.items ?? []).filter(
+    (i) => !seen?.has(i.media.id) && (!together || !type || i.media.type === type),
+  );
+  const chosen = following.filter((p) => companions.includes(p.id));
+  // As sugestões para um grupo não entram na comparação A/B, que mede o feed de cada pessoa
+  const markShown = together ? () => {} : impressions.mark;
 
   return (
     <div>
@@ -249,7 +272,10 @@ export default function FeedPage() {
           <h1 className="text-3xl font-bold">Para você, {user?.name.split(" ")[0]}</h1>
           {feed && (
             <p className="mt-1 text-sm text-muted">
-              {STRATEGY_LABEL[feed.strategy]} ·{" "}
+              {together
+                ? `Para ver ou ouvir junto com ${names(chosen)}: primeiro o que agrada a todo mundo`
+                : STRATEGY_LABEL[feed.strategy]}{" "}
+              ·{" "}
               <Link to="/como-recomendamos" className="underline hover:text-accent">
                 Como escolhemos
               </Link>
@@ -272,7 +298,7 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {type !== "album" && (
+      {type !== "album" && !together && (
         <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Modo descoberta">
           <span className="text-sm text-muted">Quanto sair do óbvio:</span>
           {(
@@ -352,7 +378,7 @@ export default function FeedPage() {
           </button>
         )}
         <label className="sr-only" htmlFor="ocasiao">
-          Com quem
+          Ocasião
         </label>
         <select
           id="ocasiao"
@@ -360,7 +386,7 @@ export default function FeedPage() {
           onChange={(e) => setOccasion(e.target.value)}
           className={`chip cursor-pointer bg-surface px-3 py-1 text-sm ${occasion ? "border-accent text-accent" : ""}`}
         >
-          <option value="">Com qualquer pessoa</option>
+          <option value="">Qualquer ocasião</option>
           {occasions.map((o) => (
             <option key={o.key} value={o.key}>
               {o.label}
@@ -386,6 +412,37 @@ export default function FeedPage() {
         )}
       </div>
 
+      <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="Junto com">
+        <span className="text-sm text-muted">Junto com:</span>
+        {following.length === 0 ? (
+          <Link to="/comunidade" className="text-xs text-muted underline hover:text-accent">
+            Seguir alguém na Comunidade para ver junto
+          </Link>
+        ) : (
+          <>
+            {following.map((person) => {
+              const on = companions.includes(person.id);
+              return (
+                <button
+                  key={person.id}
+                  aria-pressed={on}
+                  disabled={!on && companions.length >= MAX_COMPANIONS}
+                  onClick={() => setCompanions(on ? companions.filter((id) => id !== person.id) : [...companions, person.id])}
+                  className={`chip cursor-pointer px-3 py-1 text-sm ${on ? "border-accent text-accent" : ""}`}
+                >
+                  {person.name.split(" ")[0]}
+                </button>
+              );
+            })}
+            {together && (
+              <button className="text-xs text-muted underline hover:text-accent" onClick={() => setCompanions([])}>
+                Ver só para mim
+              </button>
+            )}
+          </>
+        )}
+      </div>
+
       {user && feed?.strategy === "trending" && (
         <div className="card mt-6 flex flex-wrap items-center justify-between gap-3 p-4">
           <p className="text-sm">Conte o que você curte e a gente acerta muito mais.</p>
@@ -399,10 +456,10 @@ export default function FeedPage() {
       {loading && !feed && <HandNote className="mt-6">Procurando algo a sua cara...</HandNote>}
 
       {highlight && (
-        <OnScreen key={highlight.media.id} rec={highlight} onSeen={impressions.mark}>
+        <OnScreen key={highlight.media.id} rec={highlight} onSeen={markShown}>
           <Highlight
             rec={highlight}
-            label={feed?.strategy === "trending" ? "Em alta agora" : "Nossa aposta para você"}
+            label={together ? "Nossa aposta para vocês" : feed?.strategy === "trending" ? "Em alta agora" : "Nossa aposta para você"}
             act={act}
             onSeen={() => setSeenTarget(highlight.media)}
           />
@@ -411,7 +468,7 @@ export default function FeedPage() {
 
       <div className={`mt-8 ${MEDIA_GRID}`}>
         {rest.map((rec) => (
-          <OnScreen key={rec.media.id} rec={rec} onSeen={impressions.mark}>
+          <OnScreen key={rec.media.id} rec={rec} onSeen={markShown}>
             <MediaCard media={rec.media} overlay={<DismissButton onClick={() => act(rec.media, "dismiss")} />}>
               <p className="mt-1.5 line-clamp-2 text-xs text-muted" title={rec.reason}>
                 {rec.reason}
@@ -426,9 +483,11 @@ export default function FeedPage() {
 
       {feed && feed.items.length === 0 && !loading && (
         <HandNote className="mt-6">
-          {onlyMine
+          {together
+            ? "Nada para vocês com esses filtros. Tente outro clima, outra duração ou menos gente."
+            : onlyMine
             ? "Nada nos seus serviços com esses filtros. Tente outro clima, outra duração ou tire o filtro dos serviços."
-            : "Nada com esses filtros por enquanto. Tente outro clima, outra duração ou outra companhia."}
+            : "Nada com esses filtros por enquanto. Tente outro clima, outra duração ou outra ocasião."}
         </HandNote>
       )}
 
@@ -448,7 +507,7 @@ export default function FeedPage() {
           </button>
         </div>
       )}
-      {feed && !hasMore && !loading && (
+      {feed && !hasMore && !loading && !together && (
         <p className="mt-8 text-center text-muted">
           Você viu tudo por aqui! Clique em Trocar sugestões para recomeçar.
         </p>

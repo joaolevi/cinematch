@@ -265,6 +265,9 @@ class ReviewComment(Base):
     hidden: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
+    user: Mapped[User] = relationship()
+    entry: Mapped[DiaryEntry] = relationship()
+
 
 class TasteAdjustment(Base):
     """Ajuste que a pessoa fez no próprio gosto: mais ou menos de um gênero, década, pessoa, clima ou ponte.

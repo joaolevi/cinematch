@@ -204,6 +204,32 @@ export interface CommunityEntry {
   review: string | null;
   consumed_at: string | null;
   created_at: string;
+  /** Curtidas e comentários na resenha (RFF30) */
+  likes: number;
+  liked: boolean;
+  comments: number;
+}
+
+export interface Comment {
+  id: number;
+  user_id: number;
+  user_name: string;
+  text: string;
+  created_at: string;
+  /** Quem escreveu o comentário ou a resenha pode apagar */
+  can_delete: boolean;
+}
+
+export interface AdminComment {
+  id: number;
+  user_name: string;
+  user_email: string;
+  entry_id: number;
+  review_author: string;
+  media_title: string;
+  text: string;
+  hidden: boolean;
+  created_at: string;
 }
 
 export interface Profile {
@@ -227,9 +253,12 @@ export interface Person {
 }
 
 export interface Reviewer {
+  id: number;
   name: string;
   titles: number;
   reviews: number;
+  /** Curtidas recebidas nas resenhas, que ordenam o rank (RFF30) */
+  likes: number;
 }
 
 export interface AdminReview {

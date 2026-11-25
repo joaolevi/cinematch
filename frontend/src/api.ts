@@ -3,7 +3,9 @@ import type {
   Provider,
   Profile,
   Connection,
+  AdminComment,
   AdminReview,
+  Comment,
   AdminUser,
   CommunityEntry,
   DiaryEntry,
@@ -178,6 +180,16 @@ export const api = {
   reviewers: () => request<Reviewer[]>("/community/reviewers"),
   profile: (id: number) => request<Profile>(`/users/${id}`),
   together: (id: number, limit = 12) => request<Recommendation[]>(`/users/${id}/together`, { query: { limit } }),
+  togetherNow: (people: number[], moment: Moment = {}, limit = 20) =>
+    request<Recommendation[]>("/recommendations/together", { query: { with: people.map(String), limit, ...moment } }),
+  followers: (id: number) => request<Person[]>(`/users/${id}/followers`),
+  follows: (id: number) => request<Person[]>(`/users/${id}/follows`),
+  like: (entry: number) => request<void>(`/community/${entry}/like`, { method: "PUT" }),
+  unlike: (entry: number) => request<void>(`/community/${entry}/like`, { method: "DELETE" }),
+  comments: (entry: number) => request<Comment[]>(`/community/${entry}/comments`),
+  addComment: (entry: number, text: string) =>
+    request<Comment>(`/community/${entry}/comments`, { method: "POST", body: { text } }),
+  deleteComment: (id: number) => request<void>(`/community/comments/${id}`, { method: "DELETE" }),
   impressions: (items: Recommendation[]) =>
     request<void>("/recommendations/impressions", {
       method: "POST",
@@ -206,6 +218,9 @@ export const api = {
   adminReviews: () => request<AdminReview[]>("/admin/reviews"),
   adminModerate: (id: number, hidden: boolean) =>
     request<AdminReview>(`/admin/reviews/${id}`, { method: "PATCH", body: { hidden } }),
+  adminComments: () => request<AdminComment[]>("/admin/comments"),
+  adminModerateComment: (id: number, hidden: boolean) =>
+    request<AdminComment>(`/admin/comments/${id}`, { method: "PATCH", body: { hidden } }),
   adminMetrics: () => request<Metrics>("/admin/metrics"),
   adminUsers: (query: { q?: string; kind?: "real" | "simulated" | "all"; limit?: number }) =>
     request<{ items: AdminUser[]; total: number }>("/admin/users", { query }),

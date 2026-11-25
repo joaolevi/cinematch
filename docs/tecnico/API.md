@@ -57,15 +57,20 @@ Swagger, com as regras na descrição de cada rota.
 | `POST /lists/{id}/items` · `DELETE /lists/{id}/items/{media_id}` | Adicionar / remover título | `{media_id}` |
 | `GET /recommendations` | Feed "Para você" | `type`, `limit`, `exclude` (pode repetir: títulos que já foram mostrados, para trazer outros), `mood`, `max_minutes`, `occasion`, `only_mine` (só nos serviços da pessoa) → `{variant, strategy, items: [{media, score, reason, strategy, because, services}]}`. `services` traz os serviços da pessoa onde o título está |
 | `GET /recommendations/watchlist` | O Quero ver ordenado pelo que combina agora (RFF22) | `mood`, `max_minutes`, `occasion`, `only_mine` → `{items, later}`: o que cabe no momento, do que mais combina ao que menos, e o resto |
+| `GET /recommendations/together` | Para ver ou ouvir junto com uma a quatro pessoas, no momento (RFF28, RFF20) | `with` (repete: o id de cada pessoa), `limit`, `mood`, `max_minutes`, `occasion`, `only_mine` (os serviços de quem pede) → `[{media, score, reason, strategy, because, services}]`: primeiro o que aparece para todas, e o motivo mostra cada lado. 422 sem ninguém ou com mais de quatro; 404 para perfil privado ou o próprio; 403 quando a pessoa só mostra para quem segue e quem pede não segue |
 | `POST /recommendations/{media_id}/feedback` | Botões do feed | `{action: "want"\|"seen"\|"dismiss", rating?, review?, consumed_at?}` |
 | `POST /recommendations/impressions` | Avisa quais títulos do feed apareceram na tela. É isso que conta como exibido | `{items: [{media_id, strategy, score}]}` (até 100) |
 | `DELETE /recommendations/{media_id}/feedback` | Desfazer o "Não me interesso" | — |
-| `GET /community` | Página Comunidade: registros de "Já vi" de todas as pessoas, do mais recente ao mais antigo | `limit`, `before_id` (id do último item carregado), `following=true` (só de quem eu sigo) → `{items: [{id, user_id, user_name, media, rating, review, consumed_at, created_at}]}` |
-| `GET /community/reviewers` | Quem mais escreve resenhas | `limit` → `[{name, titles, reviews}]` |
+| `GET /community` | Página Comunidade: registros de "Já vi" de todas as pessoas, do mais recente ao mais antigo | `limit`, `before_id` (id do último item carregado), `following=true` (só de quem eu sigo) → `{items: [{id, user_id, user_name, media, rating, review, consumed_at, created_at, likes, liked, comments}]}` |
+| `GET /community/reviewers` | Resenhas mais curtidas: quem escreve, pelas curtidas recebidas (RFF30), entre quem tem resenha | `limit` → `[{id, name, titles, reviews, likes}]` |
+| `PUT /community/{entry_id}/like` · `DELETE /community/{entry_id}/like` | Curtir ou tirar a curtida de uma resenha (RFF30) | 204; repetir não muda nada; 400 para a própria resenha; 404 para resenha que quem vê não pode ver, oculta ou registro sem texto |
+| `GET /community/{entry_id}/comments` · `POST /community/{entry_id}/comments` | Comentários de uma resenha (RFF30), do mais antigo ao mais novo | corpo `{text}`, até 500 caracteres → `{id, user_id, user_name, text, created_at, can_delete}`; 201 ao comentar |
+| `DELETE /community/comments/{id}` | Apagar um comentário | 204; só quem escreveu o comentário ou a resenha (senão 403) |
 | `GET /users/{id}` | Perfil de uma pessoa, com a compatibilidade de gosto | → `{id, name, is_me, counts, favorites, recent, compatibility, following, followers, follows, restricted}`; 404 para perfil privado; `restricted` quando a pessoa só mostra para quem segue e quem vê não segue, e aí os registros vêm vazios |
 | `PUT /users/{id}/follow` | Seguir a pessoa (RFF09), sem pedido de aceite | 204; repetir não muda nada; 400 para o próprio perfil; 404 para perfil privado |
 | `DELETE /users/{id}/follow` | Deixar de seguir | 204, mesmo se não seguia |
 | `GET /users/following` | Quem eu sigo, por nome | → `[{id, name}]` |
+| `GET /users/{id}/followers` · `GET /users/{id}/follows` | Quem segue a pessoa e quem ela segue (RFF09) | → `[{id, name}]`; perfis privados ficam de fora, como nos números do perfil; 404 para perfil privado |
 | `GET /health` | Confere se a API está no ar (sem login) | — |
 | `POST /admin/media` · `PATCH`/`DELETE /admin/media/{id}` | Gerenciar catálogo | campos de mídia |
 | `POST /admin/sync` | Sincronizar catálogo externo | `provider` (`auto`\|`tmdb`\|`mock`), `pages` |
@@ -73,6 +78,7 @@ Swagger, com as regras na descrição de cada rota.
 | `POST /admin/tmdb/import` | Importar um título do TMDB | `{type, tmdb_id}` |
 | `POST /admin/tmdb/enrich` | Completar títulos sem pôster com dados do TMDB | → `{checked, enriched, not_found, merged}` |
 | `GET /admin/reviews` · `PATCH /admin/reviews/{id}` | Moderação | `hidden`; corpo `{hidden: bool}` |
+| `GET /admin/comments` · `PATCH /admin/comments/{id}` | Moderação dos comentários nas resenhas (RFF30) | `hidden`; corpo `{hidden: bool}` → `{id, user_name, user_email, entry_id, review_author, media_title, text, hidden, created_at}` |
 | `GET /admin/metrics` | Taxa de aceitação A/B | — |
 | `GET /admin/users` | Pessoas cadastradas, das mais recentes às mais antigas, com o que cada uma fez | `q` (nome ou e-mail), `kind` (`real` padrão \| `simulated` \| `all`), `limit`, `offset` → `{items: [{id, name, email, role, ab_group, is_synthetic, onboarded, created_at, diary_entries, reviews, shown, accepted, last_active}], total}` |
 | `DELETE /admin/users/{id}` | Apaga a conta e tudo o que é dela (diário, listas, preferências e eventos) | 204; 400 para contas de administração; 404 se não existir |

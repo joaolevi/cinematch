@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,6 +17,8 @@ from ..services.bridges import album_suggestions, mix_albums
 from ..services.moods import BY_KEY as MOODS, OCCASIONS_BY_KEY, fits_occasion
 from ..services.recommender import Recommendation, decade_label, recommend
 from ..services.streaming import available_ids, labels_on
+from ..services.together import MAX_PEOPLE, together
+from .users import companion
 
 router = APIRouter(prefix="/recommendations", tags=["recomendações"])
 
@@ -119,6 +121,32 @@ def feed(
             recs = mix_albums(recs, album_suggestions(db, user.id, exclude, limit, discovery, allow), limit)
 
     return FeedOut(variant=user.variant, strategy=strategy, items=[rec_out(db, r, user.services) for r in recs])
+
+
+@router.get("/together", response_model=list[RecommendationOut])
+def watch_together(
+    with_: list[int] = Query(
+        alias="with", description=f"Quem assiste ou ouve junto: de 1 a {MAX_PEOPLE - 1} pessoas, pelo id"
+    ),
+    limit: int = Query(default=20, ge=1, le=40),
+    mood: str | None = MOOD_QUERY,
+    max_minutes: int | None = MINUTES_QUERY,
+    occasion: str | None = OCCASION_QUERY,
+    only_mine: bool = ONLY_MINE_QUERY,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Para ver ou ouvir junto (RFF28), no momento (RFF20): sugestões para quem pede e mais uma a quatro pessoas.
+    Primeiro o que aparece para todas, depois para menos gente; o motivo mostra cada lado. Nada que alguma já
+    registrou, descartou ou guardou entra. `mood`, `max_minutes`, `occasion` e `only_mine` funcionam como no feed; os
+    serviços são os de quem pede, que é quem vai pôr para tocar. Cada pessoa precisa deixar quem pede ver os registros
+    (RFF10): perfil privado dá 404; só para quem segue, sem seguir, dá 403."""
+    ids = list(dict.fromkeys(with_))
+    if not 1 <= len(ids) <= MAX_PEOPLE - 1:
+        raise HTTPException(status_code=422, detail=f"Escolha de 1 a {MAX_PEOPLE - 1} pessoas")
+    people = [user] + [companion(db, i, user) for i in ids]
+    allow = moment_filter(db, mood, max_minutes, occasion, user.services or [] if only_mine else None)
+    return [rec_out(db, r, user.services) for r in together(db, people, limit, allow)]
 
 
 SERVICE_BONUS = 1.2  # no Quero ver, o que está nos serviços da pessoa sobe um pouco

@@ -1,16 +1,141 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
+import { useAuth } from "../auth";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
 import WatchedBy, { Avatar } from "../components/WatchedBy";
 import { plural } from "../format";
-import type { CommunityEntry, Person, Reviewer } from "../types";
+import type { Comment, CommunityEntry, Person, Reviewer } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
 
 const PAGE = 20;
+
+/** Os comentários de uma resenha, com o campo para comentar (RFF30). */
+function Comments({ entry, onCount }: { entry: CommunityEntry; onCount: (n: number) => void }) {
+  const [comments, setComments] = useState<Comment[] | null>(null);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.comments(entry.id).then(setComments).catch((e) => setError((e as Error).message));
+  }, [entry.id]);
+
+  function update(next: Comment[]) {
+    setComments(next);
+    onCount(next.length);
+  }
+
+  async function publish(e: FormEvent) {
+    e.preventDefault();
+    if (!text.trim() || !comments) return;
+    setBusy(true);
+    setError(null);
+    try {
+      update([...comments, await api.addComment(entry.id, text.trim())]);
+      setText("");
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove(c: Comment) {
+    if (!comments) return;
+    try {
+      await api.deleteComment(c.id);
+      update(comments.filter((x) => x.id !== c.id));
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  return (
+    <div className="mt-3 border-l-2 border-line/60 pl-4">
+      {comments === null && !error && <p className="text-sm text-muted">Abrindo os comentários...</p>}
+      {comments?.map((c) => (
+        <div key={c.id} className="py-1.5 text-sm">
+          <Link to={`/pessoas/${c.user_id}`} className="font-semibold hover:text-accent">
+            {c.user_name}
+          </Link>{" "}
+          <span className="break-words whitespace-pre-line text-stone-200">{c.text}</span>
+          {c.can_delete && (
+            <button className="ml-2 text-xs text-muted underline hover:text-accent" onClick={() => remove(c)}>
+              Apagar
+            </button>
+          )}
+        </div>
+      ))}
+      <form onSubmit={publish} className="mt-2 flex flex-wrap items-start gap-2">
+        <label className="sr-only" htmlFor={`comentario-${entry.id}`}>
+          Comentário sobre a resenha de {entry.user_name}
+        </label>
+        <textarea
+          id={`comentario-${entry.id}`}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          maxLength={500}
+          rows={1}
+          placeholder="Escreva um comentário"
+          className="input min-h-9 min-w-0 flex-1 resize-y py-1.5 text-sm"
+        />
+        <button className="btn-primary px-3 py-1.5 text-sm" disabled={busy || !text.trim()}>
+          {busy ? "Publicando..." : "Publicar comentário"}
+        </button>
+      </form>
+      {error && <p className="mt-2 text-sm text-red-300">{error}</p>}
+    </div>
+  );
+}
+
+/** Curtir e comentar a resenha (RFF30). A própria resenha mostra as curtidas, sem o botão. */
+function ReviewTalk({ entry }: { entry: CommunityEntry }) {
+  const { user } = useAuth();
+  const mine = user?.id === entry.user_id;
+  const [likes, setLikes] = useState(entry.likes);
+  const [liked, setLiked] = useState(entry.liked);
+  const [comments, setComments] = useState(entry.comments);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function toggleLike() {
+    setBusy(true);
+    const now = !liked;
+    try {
+      await (now ? api.like(entry.id) : api.unlike(entry.id));
+      setLiked(now);
+      setLikes((n) => n + (now ? 1 : -1));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-2">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+        {!mine && (
+          <button
+            onClick={toggleLike}
+            disabled={busy}
+            aria-pressed={liked}
+            className={`cursor-pointer hover:text-accent ${liked ? "text-accent" : ""}`}
+          >
+            <span aria-hidden>{liked ? "♥" : "♡"}</span> {liked ? "Tirar curtida" : "Curtir"}
+          </button>
+        )}
+        {likes > 0 && <span>{plural(likes, "curtida", "curtidas")}</span>}
+        <button onClick={() => setOpen(!open)} aria-expanded={open} className="cursor-pointer hover:text-accent">
+          {open ? "Esconder comentários" : comments > 0 ? `Ver ${plural(comments, "comentário", "comentários")}` : "Comentar"}
+        </button>
+      </div>
+      {open && <Comments entry={entry} onCount={setComments} />}
+    </div>
+  );
+}
 
 function Post({ entry, position }: { entry: CommunityEntry; position: number }) {
   const link = `/media/${entry.media.id}`;
@@ -37,7 +162,12 @@ function Post({ entry, position }: { entry: CommunityEntry; position: number }) 
             createdAt={entry.created_at}
           />
         </div>
-        {entry.review && <p className="mt-2 break-words whitespace-pre-line text-stone-200">{entry.review}</p>}
+        {entry.review && (
+          <>
+            <p className="mt-2 break-words whitespace-pre-line text-stone-200">{entry.review}</p>
+            <ReviewTalk entry={entry} />
+          </>
+        )}
       </div>
     </article>
   );
@@ -72,20 +202,22 @@ function Following({ people }: { people: Person[] }) {
 function Reviewers({ people }: { people: Reviewer[] }) {
   if (people.length === 0) return null;
   return (
-    // O ranking de quem mais escreve fica num bilhete colado ao lado da timeline
+    // O rank de quem escreve, pelas curtidas recebidas (RFF30), fica num bilhete colado ao lado da timeline
     <aside className="paper relative order-first self-start rounded-sm py-5 pr-5 pl-12 lg:order-none lg:rotate-1">
       <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 -rotate-3" style={{ background: TAPE_COLORS[1] }} />
-      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Quem mais escreve</h2>
+      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Resenhas mais curtidas</h2>
       <ul className="flex flex-wrap gap-x-6 lg:block">
-        {people.map((person, position) => (
-          <li key={position} className="flex items-center gap-3 py-3">
-            <Avatar name={person.name} size="h-10 w-10" />
-            <div className="min-w-0">
-              <p className="truncate font-semibold">{person.name}</p>
-              <p className="text-xs text-muted">
-                {plural(person.titles, "título", "títulos")}, {plural(person.reviews, "resenha", "resenhas")}
-              </p>
-            </div>
+        {people.map((person) => (
+          <li key={person.id} className="py-3">
+            <Link to={`/pessoas/${person.id}`} className="flex items-center gap-3 text-stone-800 hover:text-[#b9452f]">
+              <Avatar name={person.name} size="h-10 w-10" />
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{person.name}</p>
+                <p className="text-xs text-stone-600">
+                  {plural(person.likes, "curtida", "curtidas")}, {plural(person.reviews, "resenha", "resenhas")}
+                </p>
+              </div>
+            </Link>
           </li>
         ))}
       </ul>

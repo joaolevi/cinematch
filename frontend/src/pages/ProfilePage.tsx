@@ -9,7 +9,7 @@ import { StarsDisplay } from "../components/Stars";
 import { Avatar } from "../components/WatchedBy";
 import { plural } from "../format";
 import { genreTeam } from "../taste";
-import type { Media, Profile, Recommendation } from "../types";
+import type { Media, Person, Profile, Recommendation } from "../types";
 import { usePageTitle } from "../usePageTitle";
 
 function Row({ label, items }: { label: string; items: { media: Media; rating?: number | null }[] }) {
@@ -45,10 +45,24 @@ export default function ProfilePage() {
   const [together, setTogether] = useState<Recommendation[] | null>(null);
   const [loadingTogether, setLoadingTogether] = useState(false);
   const [following, setFollowing] = useState(false); // enquanto o Seguir é salvo
+  // A lista aberta pelos números: quem segue a pessoa ou quem ela segue (RFF09)
+  const [people, setPeople] = useState<{ kind: "followers" | "follows"; list: Person[] | null } | null>(null);
+
+  async function showPeople(kind: "followers" | "follows") {
+    if (people?.kind === kind) return setPeople(null);
+    setPeople({ kind, list: null });
+    try {
+      const list = await (kind === "followers" ? api.followers(Number(id)) : api.follows(Number(id)));
+      setPeople((current) => (current?.kind === kind ? { kind, list } : current));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
 
   useEffect(() => {
     setProfile(null);
     setTogether(null);
+    setPeople(null);
     api.profile(Number(id)).then(setProfile).catch((e) => setError((e as Error).message));
     window.scrollTo(0, 0);
   }, [id]);
@@ -80,8 +94,29 @@ export default function ProfilePage() {
                 : "Ainda não registrou nada no diário"}
           </p>
           <p className="mt-0.5 text-sm text-muted">
-            {plural(profile.followers, "pessoa segue", "pessoas seguem")} ·{" "}
-            {profile.follows ? `segue ${plural(profile.follows, "pessoa", "pessoas")}` : "não segue ninguém"}
+            {profile.followers ? (
+              <button
+                className="cursor-pointer underline-offset-2 hover:text-accent hover:underline"
+                aria-expanded={people?.kind === "followers"}
+                onClick={() => showPeople("followers")}
+              >
+                {plural(profile.followers, "pessoa segue", "pessoas seguem")}
+              </button>
+            ) : (
+              "ninguém segue ainda"
+            )}{" "}
+            ·{" "}
+            {profile.follows ? (
+              <button
+                className="cursor-pointer underline-offset-2 hover:text-accent hover:underline"
+                aria-expanded={people?.kind === "follows"}
+                onClick={() => showPeople("follows")}
+              >
+                segue {plural(profile.follows, "pessoa", "pessoas")}
+              </button>
+            ) : (
+              "não segue ninguém"
+            )}
           </p>
         </div>
         {!profile.is_me && (
@@ -107,6 +142,28 @@ export default function ProfilePage() {
           </button>
         )}
       </div>
+
+      {people && (
+        <section className="card mt-4 max-w-3xl p-4" aria-label={people.kind === "followers" ? "Quem segue" : "Quem é seguido"}>
+          <h2 className="text-sm font-semibold">
+            {people.kind === "followers" ? `Quem segue ${profile.is_me ? "você" : profile.name.split(" ")[0]}` : `Quem ${profile.is_me ? "você segue" : `${profile.name.split(" ")[0]} segue`}`}
+          </h2>
+          {people.list === null ? (
+            <p className="mt-2 text-sm text-muted">Abrindo a lista...</p>
+          ) : (
+            <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+              {people.list.map((p) => (
+                <li key={p.id}>
+                  <Link to={`/pessoas/${p.id}`} className="flex items-center gap-2 text-sm font-semibold hover:text-accent">
+                    <Avatar name={p.name} size="h-8 w-8" />
+                    {p.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {profile.is_me && (
         <p className="mt-4 text-sm text-muted">

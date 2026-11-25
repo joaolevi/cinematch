@@ -1,8 +1,8 @@
-"""Perfil de uma pessoa, a compatibilidade de gosto com quem está vendo (RFF15), seguir pessoas (RFF09) e quem vê os
-registros de cada uma (RFF10)."""
+"""Perfil de uma pessoa, a compatibilidade de gosto com quem está vendo (RFF15), seguir pessoas e ver quem segue quem
+(RFF09), quem vê os registros de cada uma (RFF10) e o "Para ver ou ouvir junto" (RFF28)."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from ..auth import get_current_user
@@ -26,16 +26,50 @@ def visible_person(db: Session, user_id: int, me: User) -> User:
     return user
 
 
+def companion(db: Session, user_id: int, me: User) -> User:
+    """Uma pessoa para ver ou ouvir junto (RFF28): não pode ser quem pede nem ter perfil privado (404), e quem pede
+    precisa poder ver os registros dela (403, quando ela só mostra para quem segue)."""
+    other = db.get(User, user_id)
+    if other is None or other.id == me.id or other.visibility == "private":
+        raise HTTPException(status_code=404, detail="Pessoa não encontrada")
+    if not can_see_entries(db, me, other):
+        raise HTTPException(status_code=403, detail=f"Só quem segue {other.name.split()[0]} vê os registros")
+    return other
+
+
+def listed(me: User):
+    """Quem aparece nas listas de quem segue e de quem é seguido: perfis privados ficam de fora, menos o de quem vê."""
+    return or_(User.visibility != "private", User.id == me.id)
+
+
+def people_out(db: Session, query) -> list[PersonOut]:
+    return [PersonOut(id=p.id, name=p.name) for p in db.scalars(query.order_by(User.name))]
+
+
 @router.get("/following", response_model=list[PersonOut])
 def following(db: Session = Depends(get_db), me: User = Depends(get_current_user)):
     """Quem eu sigo, por nome. Perfis que ficaram privados saem da lista."""
-    people = db.scalars(
-        select(User)
-        .join(Follow, Follow.followed_id == User.id)
-        .where(Follow.follower_id == me.id, User.visibility != "private")
-        .order_by(User.name)
+    return people_out(
+        db, select(User).join(Follow, Follow.followed_id == User.id).where(Follow.follower_id == me.id, listed(me))
     )
-    return [PersonOut(id=p.id, name=p.name) for p in people]
+
+
+@router.get("/{user_id}/followers", response_model=list[PersonOut])
+def followers_of(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_current_user)):
+    """Quem segue esta pessoa, por nome (RFF09). Perfis privados ficam de fora, como nos números do perfil."""
+    user = visible_person(db, user_id, me)
+    return people_out(
+        db, select(User).join(Follow, Follow.follower_id == User.id).where(Follow.followed_id == user.id, listed(me))
+    )
+
+
+@router.get("/{user_id}/follows", response_model=list[PersonOut])
+def follows_of(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_current_user)):
+    """Quem esta pessoa segue, por nome (RFF09). Perfis privados ficam de fora, como nos números do perfil."""
+    user = visible_person(db, user_id, me)
+    return people_out(
+        db, select(User).join(Follow, Follow.followed_id == User.id).where(Follow.follower_id == user.id, listed(me))
+    )
 
 
 @router.put("/{user_id}/follow", status_code=204)
@@ -66,8 +100,11 @@ def profile(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_
     pessoas ela segue e a seguem. Perfil privado (visibility = private) dá 404. Se a pessoa só deixa quem a segue ver
     os registros e quem vê não segue, volta o nome e os números de quem segue, com `restricted` e sem os registros."""
     user = visible_person(db, user_id, me)
-    followers = db.scalar(select(func.count()).where(Follow.followed_id == user.id)) or 0
-    follows = db.scalar(select(func.count()).where(Follow.follower_id == user.id)) or 0
+    count = lambda side, other: db.scalar(  # noqa: E731
+        select(func.count()).select_from(Follow).join(User, User.id == other).where(side == user.id, listed(me))
+    ) or 0
+    followers = count(Follow.followed_id, Follow.follower_id)
+    follows = count(Follow.follower_id, Follow.followed_id)
     following_now = db.scalar(select(Follow.id).where(Follow.follower_id == me.id, Follow.followed_id == user.id)) is not None
     if not can_see_entries(db, me, user):
         return ProfileOut(
@@ -121,13 +158,10 @@ def watch_together(
     """Assistir ou ouvir junto (RFF28): sugestões para quem vê e esta pessoa. Primeiro o que aparece para as duas,
     depois o que agrada a uma e a outra ainda não viu. O motivo mostra os dois lados ("Para você: ... · Para Levi: ...").
     Itens que alguma das duas já registrou, descartou ou guardou ficam de fora. Só vale com quem deixa ver os
-    registros (RFF10): com perfil privado dá 404; só para quem segue, sem seguir, dá 403."""
-    other = db.get(User, user_id)
-    if other is None or other.id == me.id or (other.visibility == "private"):
-        raise HTTPException(status_code=404, detail="Pessoa não encontrada")
-    if not can_see_entries(db, me, other):
-        raise HTTPException(status_code=403, detail="Só quem segue esta pessoa vê o que ela registrou")
+    registros (RFF10): com perfil privado dá 404; só para quem segue, sem seguir, dá 403. Para mais pessoas e com o
+    momento, use `GET /recommendations/together`."""
+    other = companion(db, user_id, me)
     return [
         RecommendationOut(media=MediaOut.model_validate(r.media), score=r.score, reason=r.reason, strategy=r.strategy)
-        for r in together(db, me, other, limit)
+        for r in together(db, [me, other], limit)
     ]

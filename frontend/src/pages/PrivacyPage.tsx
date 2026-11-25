@@ -43,6 +43,7 @@ export default function PrivacyPage() {
           <li>O seu diário: o que você viu ou ouviu, com notas, resenhas e datas.</li>
           <li>As suas listas, as preferências do começo e os ajustes que você faz no próprio gosto.</li>
           <li>Quem você segue, os serviços de streaming que você marcou e quem pode ver os seus registros.</li>
+          <li>As curtidas e os comentários que você faz nas resenhas da Comunidade.</li>
           <li>As sugestões que apareceram na sua tela e o que você fez com elas, como Quero ver ou Não me interesso.</li>
           <li>Se você participa dos experimentos e em qual grupo está.</li>
         </ul>
@@ -68,8 +69,12 @@ export default function PrivacyPage() {
           mundo, use "Só eu".
         </p>
         <p>
-          A administração vê nome, e-mail e resenhas, para moderar e cuidar das contas. Não vendemos nem passamos os
-          seus dados para ninguém.
+          Os seus comentários aparecem com o seu nome para quem vê a resenha comentada, e quem escreveu a resenha pode
+          apagá-los. As curtidas aparecem só como número.
+        </p>
+        <p>
+          A administração vê nome, e-mail, resenhas e comentários, para moderar e cuidar das contas. Não vendemos nem
+          passamos os seus dados para ninguém.
         </p>
       </Part>
 
