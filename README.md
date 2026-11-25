@@ -213,6 +213,6 @@ O MVP foi entregue em 10/11/2026 ([registro](docs/gestao/MVP.md)). O que vem dep
 ## 👥 Equipe
 
 Antônio Carlos Freitas Lopes · Bárbara Rocha de Albuquerque · João Levi Gomes de Lima ·
-Karla Sophia Santana da Cruz · Lara Nogueira · Vinicius Cortez
+Karla Sophia Santana da Cruz · Lara Nogueira da Costa Ayres · Vinicius Cortez
 
 Licença [MIT](LICENSE).
