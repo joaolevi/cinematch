@@ -157,6 +157,20 @@ def test_search_filters_by_genre_and_sorts(client, user_headers):
     assert len(years) > 1 and years == sorted(years, reverse=True)
 
 
+def test_search_filters_by_decade(client, user_headers):
+    def search(**params):
+        r = client.get("/media", params={"limit": 100, **params}, headers=user_headers)
+        return r
+
+    noventa = search(decade=1990).json()["items"]
+    assert noventa and all(1990 <= m["year"] < 2000 for m in noventa)
+    filmes = search(decade=1990, type="movie", sort="year").json()["items"]
+    assert {m["type"] for m in filmes} == {"movie"} and [m["year"] for m in filmes] == sorted(
+        (m["year"] for m in filmes), reverse=True)
+    assert search(decade=1995).status_code == 422  # década termina em zero
+    assert search(decade=1800).status_code == 422
+
+
 def test_most_recent_order_leaves_upcoming_titles_last(client, user_headers, db):
     next_year = date.today().year + 1
     db.add(Media(type="movie", title="Ainda Vai Estrear", year=next_year, source="manual"))

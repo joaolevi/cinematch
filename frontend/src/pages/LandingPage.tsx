@@ -49,10 +49,10 @@ export default function LandingPage() {
           </nav>
         </header>
 
-        <section className="mx-auto grid max-w-[1680px] items-center gap-12 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:px-10 lg:py-14">
+        <section aria-labelledby="landing-titulo" className="mx-auto grid max-w-[1680px] items-center gap-12 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:px-10 lg:py-14">
           <div>
             <p className={`font-hand text-3xl font-bold ${RED_INK}`}>Querido diário,</p>
-            <h1 className="mt-2 font-display text-4xl leading-tight font-bold sm:text-5xl xl:text-6xl">
+            <h1 id="landing-titulo" className="mt-2 font-display text-4xl leading-tight font-bold sm:text-5xl xl:text-6xl">
               A história do <mark className="marker">seu gosto</mark>, título por título.
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8">

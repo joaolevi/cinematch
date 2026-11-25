@@ -97,10 +97,9 @@ body::before {
   background: rgb(43 33 28 / 0.06);
 }
 
-/* Campos já mostram o foco pela borda e por um brilho suave; o contorno extra deixava dois traços */
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
+/* Campos com .input já mostram o foco pela borda e por um brilho suave; o contorno extra deixava dois traços.
+   Os outros campos, como os seletores em forma de etiqueta do Para você, ficam com o contorno de sempre */
+.input:focus-visible {
   outline: none;
 }
 .input:focus {

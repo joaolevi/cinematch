@@ -14,6 +14,15 @@ com o MovieLens ([avaliação](../tecnico/AVALIACAO.md#evidências)).
 - [ ] Apagar as contas de teste em **Administração → Usuários → Apagar conta** (ou como no [DEPLOY](../tecnico/DEPLOY.md#apagar-uma-conta)), para elas não entrarem na medição.
 - [ ] Fazer o [backup](../tecnico/DEPLOY.md#5-fazer-backup) e criar a tag `homologacao-AAAA-MM-DD` na versão testada, como no [CONTRIBUTING](../../CONTRIBUTING.md#branches-e-versões).
 
+### Acessibilidade
+
+Auditoria de 25/11/2026, na `homol` com o banco de demonstração, nos temas claro e escuro:
+
+- **Automática:** o [axe](https://github.com/dequelabs/axe-core) 4.10, com as regras WCAG 2.1 A e AA e as boas práticas, em 20 telas: as de quem não entrou (apresentação, login e privacidade) e todas as do menu, mais título, perfil, retrospectiva, onboarding e o Para você depois de um pedido em português. Achou quatro problemas, todos corrigidos: login sem título de nível 1, apresentação e privacidade com conteúdo fora das regiões da página, e os seletores de clima e de ocasião do Para você sem o contorno de foco. Depois da correção, zero violações.
+- **Teclado:** 60 Tabs no Para você, todos com o foco visível e na ordem da tela.
+- **Tela estreita:** a 320 px de largura, nenhuma das telas principais rola para o lado.
+- **Falta:** o teste com leitor de tela (NVDA ou VoiceOver), que precisa de uma pessoa usando. O axe confere nomes e papéis dos elementos, mas não a experiência de ouvir a tela.
+
 Se o sistema não estiver publicado, faça o teste em uma só máquina, com o [plano B](../tecnico/DEPLOY.md#plano-b), porque as métricas ficam
 em um único banco.
 

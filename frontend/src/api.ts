@@ -34,6 +34,8 @@ import type {
   Moment,
   TasteProfile,
   Occasion,
+  Wish,
+  LetterboxdResult,
   StreamingService,
   Visibility,
   WatchlistNow,
@@ -126,7 +128,7 @@ export const api = {
   genres: (type?: MediaType) => request<string[]>("/media/genres", { query: { type } }),
   facets: (genre: string[], type?: MediaType, limit?: number) =>
     request<{ decades: number[]; creators: string[] }>("/media/facets", { query: { genre, type, limit } }),
-  search: (query: { q?: string; type?: MediaType | ""; genre?: string; person?: string; mood?: string; sort?: MediaSort; limit?: number; offset?: number }) =>
+  search: (query: { q?: string; type?: MediaType | ""; genre?: string; person?: string; mood?: string; decade?: number; sort?: MediaSort; limit?: number; offset?: number }) =>
     request<{ items: Media[]; total: number }>("/media", { query }),
   similar: (id: number) => request<Media[]>(`/media/${id}/similar`),
   connections: (id: number) => request<Connection[]>(`/media/${id}/connections`),
@@ -163,6 +165,7 @@ export const api = {
     request<Feed>("/recommendations", { query: { type, limit, exclude: exclude.map(String), discovery, ...moment } }),
   moods: () => request<Mood[]>("/media/moods"),
   occasions: () => request<Occasion[]>("/media/occasions"),
+  understand: (q: string) => request<Wish>("/recommendations/understand", { query: { q } }),
   services: () => request<StreamingService[]>("/media/services"),
   setServices: (services: string[]) => request<User>("/me/services", { method: "PUT", body: { services } }),
   setVisibility: (visibility: Visibility) => request<User>("/me/visibility", { method: "PUT", body: { visibility } }),
@@ -178,6 +181,8 @@ export const api = {
     request<{ items: CommunityEntry[] }>("/community", { query: { limit, before_id, following: following || undefined } }),
   following: () => request<Person[]>("/users/following"),
   exportMyData: () => request<unknown>("/me/export"),
+  importLetterboxd: (files: { name: string; content: string }[]) =>
+    request<LetterboxdResult>("/me/import/letterboxd", { method: "POST", body: { files } }),
   deleteMyAccount: (password: string) => request<void>("/me", { method: "DELETE", body: { password } }),
   setExperiments: (in_experiments: boolean) => request<User>("/me/experiments", { method: "PUT", body: { in_experiments } }),
   follow: (id: number) => request<void>(`/users/${id}/follow`, { method: "PUT" }),

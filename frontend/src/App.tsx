@@ -46,10 +46,14 @@ function Anyone() {
   if (user) return <Layout />;
   return (
     <div className="mx-auto max-w-[1680px] px-4 py-8 sm:px-6 lg:px-10">
-      <Link to="/bem-vindo" aria-label="Conhecer o Tastory" className="mb-8 inline-block">
-        <Logo />
-      </Link>
-      <Outlet />
+      <header>
+        <Link to="/bem-vindo" aria-label="Conhecer o Tastory" className="mb-8 inline-block">
+          <Logo />
+        </Link>
+      </header>
+      <main>
+        <Outlet />
+      </main>
     </div>
   );
 }

@@ -25,10 +25,14 @@ from ..models import (
     UserList,
     UserPreference,
 )
+from ..config import settings
 from ..schemas import (
-    ActivityOut, DeleteAccountIn, ExperimentsIn, MediaOut, PersonOut, ServicesIn, UserOut, VisibilityIn,
+    ActivityOut, DeleteAccountIn, ExperimentsIn, LetterboxdIn, LetterboxdOut, MediaOut, PersonOut, ServicesIn, UserOut,
+    VisibilityIn,
 )
+from ..services.letterboxd import import_letterboxd
 from ..services.streaming import BY_KEY as SERVICES
+from ..services.tmdb import TmdbCatalogProvider
 
 router = APIRouter(prefix="/me", tags=["conta"])
 
@@ -107,6 +111,27 @@ def my_activity(
             items.append(ActivityOut(kind="seguiu", at=_utc(at), person=PersonOut(id=person_id, name=name)))
     items.sort(key=lambda a: a.at, reverse=True)
     return items[offset : offset + limit]
+
+
+def tmdb_provider() -> TmdbCatalogProvider | None:
+    """Sem a chave do TMDB, a importação só acha o que já está no catálogo pelo nome."""
+    if not settings.tmdb_api_key:
+        return None
+    return TmdbCatalogProvider(settings.tmdb_api_key, settings.tmdb_language, settings.tmdb_region, pages=1)
+
+
+@router.post("/import/letterboxd", response_model=LetterboxdOut)
+def import_from_letterboxd(data: LetterboxdIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Importa o histórico do Letterboxd (RFF18) a partir dos CSVs do arquivo exportado pela pessoa: `watched.csv`,
+    `ratings.csv`, `diary.csv`, `reviews.csv` e `watchlist.csv`. Cada filme é procurado no catálogo por nome e ano e,
+    se não estiver lá, no TMDB, que acha pelo nome original. Cada envio traz até 50 filmes novos para o catálogo;
+    enviar de novo traz os próximos. O que já está no diário fica como está, e a data do registro é a do Letterboxd."""
+    provider = tmdb_provider()
+    try:
+        return import_letterboxd(db, user, {f.name: f.content for f in data.files}, provider)
+    finally:
+        if provider is not None:
+            provider.close()
 
 
 @router.get("/export")

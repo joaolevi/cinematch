@@ -193,6 +193,30 @@ export interface Occasion {
   label: string;
 }
 
+/** Resultado da importação do Letterboxd (RFF18) */
+export interface LetterboxdResult {
+  registered: number;
+  want_to_watch: number;
+  already_in_diary: number;
+  brought: number;
+  next_time: number;
+  not_found: string[];
+  not_found_total: number;
+  ignored_files: string[];
+}
+
+/** Pedido em português (RFF25): os filtros que o texto escolheu */
+export interface Wish {
+  type: MediaType | null;
+  mood: string | null;
+  max_minutes: number | null;
+  occasion: string | null;
+  discovery: "beyond" | "outside" | null;
+  only_mine: boolean;
+  understood: { text: string; labels: string[] }[];
+  ignored: string[];
+}
+
 /** De onde vêm os dados do título (RNFF02) */
 export interface Credit {
   name: string;
