@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 from app.db import SessionLocal, engine
 from app.migrations import atualizar_banco
 from app.models import ItemNeighbor, Media
-from app.services.recommender import rating_weight
+from app.services.recommender import cooccurrence_similarity, rating_weight
 
 SOURCE = "movielens"
 NEIGHBORS_PER_TITLE = 50
@@ -66,17 +66,14 @@ def load_matrix(root: Path, links: dict[int, int], media_ids: list[int]) -> spar
 
 
 def similarity(matrix: sparse.csr_matrix) -> np.ndarray:
-    """Cosseno entre títulos, somando por blocos de usuários para caber na memória."""
+    """Similaridade entre títulos, como no recomendador (com a normalização por popularidade, RNFF10), somando por
+    blocos de usuários para caber na memória."""
     size = matrix.shape[1]
     products = np.zeros((size, size), dtype=np.float32)
     for start in range(0, matrix.shape[0], USERS_PER_CHUNK):
         block = matrix[start : start + USERS_PER_CHUNK].toarray()
         products += block.T @ block
-    norms = np.sqrt(np.diag(products))
-    norms[norms == 0] = 1
-    result = products / norms[:, None] / norms[None, :]
-    np.fill_diagonal(result, 0)
-    return result
+    return cooccurrence_similarity(products)
 
 
 def top_neighbors(scores: np.ndarray, media_ids: list[int]) -> list[ItemNeighbor]:

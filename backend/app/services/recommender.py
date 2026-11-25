@@ -46,7 +46,13 @@ W_ONBOARDING_LIKE = 0.8  # título marcado no onboarding, que entra no diário s
 
 POPULARITY_BONUS = 0.1
 SERIES_POPULARITY_BONUS = 1.0  # sem avaliações reais de séries, a popularidade evita títulos obscuros
-EXTERNAL_CONTENT_WEIGHT = 0.2  # com vizinhos de pessoas reais, o colaborativo pesa mais
+# Com vizinhos de fora, o colaborativo pesa mais: nos filmes, avaliações do MovieLens (EXP01); nas séries, a rota de
+# recomendações do TMDB (RNFF06), que ainda não foi medida offline e por isso pesa menos
+EXTERNAL_CONTENT_WEIGHTS = {"movie": 0.2, "series": 0.5}
+# Normalização por popularidade dos vizinhos (RNFF10): 0,5 é o cosseno simples; abaixo disso, o título muito popular
+# perde força como vizinho de tudo. No MovieLens, o cosseno já não deixou os populares dominarem e qualquer valor menor
+# piorou a qualidade, então fica 0,5 (ver AVALIACAO.md#rnff10)
+NEIGHBOR_ALPHA = 0.5
 DIVERSITY_PENALTY = 0.85  # multiplicador a cada repetição do gênero principal no topo
 
 # Modo descoberta (RFF16): (bônus de popularidade, penalidade para os gêneros mais consumidos, prefixo do motivo).
@@ -291,12 +297,13 @@ def recommend(
     use_collab = user.variant != "B" and bool(sig_rows)  # quem saiu dos experimentos recebe o completo
     collab = np.zeros(len(catalog))
     item_sim = None
+    external = False
     if use_collab and sig_rows:
-        item_sim = (
-            _external_similarity(db, catalog, index, sig_rows)
-            if settings.use_external_neighbors
-            else _item_similarity(db, index, len(catalog))
-        )
+        if settings.use_external_neighbors:
+            item_sim = _external_similarity(db, catalog, index, sig_rows)
+            external = item_sim is not None
+        if item_sim is None:  # sem vizinhos de fora para o histórico da pessoa, fica o das pessoas do Tastory
+            item_sim = _item_similarity(db, index, len(catalog))
         if item_sim is not None:
             rows = np.array([r for r, _ in sig_rows])
             ws = np.array([w for _, w in sig_rows])
@@ -320,10 +327,21 @@ def recommend(
         return ("hybrid" if use_collab else "content"), []
     cand = np.array(candidates)
     c_norm = _minmax(content[cand])
-    if use_collab and settings.use_external_neighbors:
-        # A base externa só cobre filmes: as séries seguem pelo conteúdo, para não sumirem do feed
-        alpha = np.array([EXTERNAL_CONTENT_WEIGHT if catalog[i].type == "movie" else 1.0 for i in cand])
-        cf_norm = _minmax(collab[cand])
+    if use_collab and external:
+        # Filmes e séries têm fontes diferentes, com notas que não se comparam: cada tipo é normalizado à parte. Um tipo
+        # sem vizinho nenhum segue só pelo conteúdo, para não sumir do feed
+        # O colaborativo pesa conforme quanto do que a pessoa curtiu daquele tipo a fonte conhece: se o MovieLens só
+        # conhece um dos três filmes curtidos, esse filme não explica o feed inteiro
+        alpha, cf_norm = np.ones(len(cand)), np.zeros(len(cand))
+        kinds = np.array([catalog[i].type for i in cand])
+        known = np.asarray(item_sim.getnnz(axis=1)).ravel() > 0
+        for kind, weight in EXTERNAL_CONTENT_WEIGHTS.items():
+            mask = kinds == kind
+            liked = [(r, w) for r, w in sig_rows if w > 0 and catalog[r].type == kind]
+            coverage = sum(w for r, w in liked if known[r]) / (sum(w for _, w in liked) or 1)
+            if mask.any() and coverage > 0 and np.any(collab[cand][mask]):
+                cf_norm[mask] = _minmax(collab[cand][mask])
+                alpha[mask] = 1 - (1 - weight) * coverage
         strategy = "hybrid"
     elif use_collab:
         alpha = np.full(len(cand), 0.8 if len(sig_rows) < 5 else 0.5)
@@ -459,10 +477,18 @@ def _item_similarity(db: Session, index: dict[int, int], n_items: int) -> np.nda
                 cols.append(index[mid])
                 vals.append(w)
     R = sparse.csr_matrix((vals, (rows, cols)), shape=(len(per_user), n_items))
-    col_norm = np.sqrt(np.asarray(R.multiply(R).sum(axis=0)).ravel())
-    col_norm[col_norm == 0] = 1.0
-    Rn = R @ sparse.diags(1.0 / col_norm)
-    sim = np.asarray((Rn.T @ Rn).todense())
+    return cooccurrence_similarity(np.asarray((R.T @ R).todense()))
+
+
+def cooccurrence_similarity(products: np.ndarray, alpha: float = NEIGHBOR_ALPHA) -> np.ndarray:
+    """Similaridade item x item a partir dos produtos entre as colunas da matriz pessoa x título (`R.T @ R`).
+
+    A linha é o título que a pessoa curtiu; a coluna, o candidato. Com `alpha` = 0,5, é o cosseno simples. Com menos,
+    o candidato muito popular é dividido por mais (cosseno assimétrico) e deixa de ser vizinho de tudo (RNFF10).
+    """
+    squares = np.clip(np.diag(products), 0, None).astype(float)  # o quadrado da norma de cada título
+    squares[squares == 0] = 1.0
+    sim = products / (squares[:, None] ** alpha) / (squares[None, :] ** (1 - alpha))
     np.fill_diagonal(sim, 0.0)
     return sim
 

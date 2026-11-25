@@ -121,6 +121,28 @@ séries. No sistema real, 1.438 dos 1.985 filmes do catálogo têm vizinhos: os 
 O `backend/scripts/evaluate_recommender.py` reproduz só a comparação principal. As variações com ALS, modelo de texto e
 usuários inventados foram testes pontuais e não estão no repositório.
 
+### <a id="rnff10"></a>Normalização por popularidade dos vizinhos (RNFF10)
+
+Medido em 25/11/2026 com o `evaluate_recommender.py` (seção final do relatório), no mesmo corte das 589 pessoas. O
+cosseno simples (alpha 0,5) foi comparado com o cosseno assimétrico, que divide mais o candidato muito popular (alpha
+abaixo de 0,5). "Vagas do 1% mais popular" é a parte das 20 sugestões de cada pessoa ocupada pelo 1% dos filmes com
+mais avaliações.
+
+| Alpha | NDCG@20, grupo A | NDCG@20, peso 0,2 no conteúdo | Filmes diferentes sugeridos | Vagas do 1% mais popular |
+|---|---|---|---|---|
+| **0,5 (cosseno, como hoje)** | **0,070** | **0,122** | 1.190 | 5,6% |
+| 0,45 | 0,065 | 0,111 | 1.254 | 4,3% |
+| 0,4 | 0,058 | 0,098 | 1.297 | 3,2% |
+| 0,3 | 0,040 | 0,053 | 1.371 | 1,5% |
+
+No corte por data (27 pessoas), a direção foi a mesma.
+
+**Conclusão:** com avaliações reais, o cosseno já não deixa os populares dominarem: eles ficam com 5,6% das vagas. Punir
+mais os populares aumenta pouco a variedade e custa entre 6% (alpha 0,45) e 57% (alpha 0,3) do NDCG. O cálculo fica como está, com o parâmetro
+`NEIGHBOR_ALPHA` no recomendador e a medição no script para repetir com o MovieLens 32M. O domínio de títulos como *O
+Exterminador do Futuro 2* no "Quem curtiu" vinha das 30 pessoas simuladas, e some quando os vizinhos do MovieLens estão
+ligados.
+
 ### Séries sem dados reais
 
 O MovieLens não tem séries, então testamos alternativas para elas. Como também não há avaliações públicas de séries, o teste
@@ -151,7 +173,10 @@ animação:
 
 **Decisão (D16):** usar peso 1 só para escolher quais séries ocupam os lugares delas no feed. Aplicar o peso direto na nota
 aumentava a parte de séries: quem só gostava de filmes passava de 7 para 17 séries em 36 sugestões. Assim, os filmes e os lugares
-das séries continuam iguais. A rota do TMDB fica como próximo passo, porque precisa de uma carga nova na tabela de vizinhos.
+das séries continuam iguais. A rota do TMDB entrou em 25/11 (RNFF06): `make prod-series-parecidas` guarda, para cada série, as recomendadas
+pelo TMDB que estão no catálogo, com nota pela posição, e traz as séries recomendadas para duas ou mais séries do catálogo
+(até 60). Com os vizinhos ligados, a série usa peso 0,5 no conteúdo, e o peso 1 da popularidade continua escolhendo
+quais séries ocupam os lugares delas. No catálogo de demonstração, as séries com vizinhos passaram de 35 de 77 para 117 de 137.
 
 O catálogo também tem 849 títulos sem sinopse em português e 153 com o nome em outro alfabeto, como 논스톱. Eles vêm assim do TMDB
 e pioravam a impressão do feed, então o feed só sugere títulos com sinopse, pôster e nome legível (RN20). Isso mantém 3.102 dos
