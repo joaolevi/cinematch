@@ -35,7 +35,7 @@ A música como terceira mídia, já pelo grafo, e o Meu gosto nas três mídias.
 | [RNFF06](nao-funcionais.md#rnff06) | Dados reais na parte colaborativa | Não funcional | Parcial | M | 4 | 4 | 1 | RFF01; a parte de música |
 | [RNFF07](nao-funcionais.md#rnff07) | Feed rápido com catálogo grande | Não funcional | Não iniciado | M | 4 | 3 | 1 | RNFF03 |
 | [RFF01](funcionais.md#rff01) | Álbuns como terceira mídia | Funcional | Feito | G | 5 | 5 | 4 | RNFF01, RNFF03 |
-| [RFF02](funcionais.md#rff02) | Recomendar música | Funcional | Parcial | M | 5 | 5 | 3 | RFF01, RNFF12 |
+| [RFF02](funcionais.md#rff02) | Recomendar música | Funcional | Feito | M | 5 | 5 | 3 | RFF01, RNFF12 |
 | [RFF05](funcionais.md#rff05) | Retrospectiva do gosto | Funcional | Feito | P a M | 4 | 3 | 3 | usa o Meu gosto (RF23) |
 | [RFF06](funcionais.md#rff06) | Excluir e exportar os próprios dados | Funcional | Feito | P | 4 | 3 | 2 | — |
 
