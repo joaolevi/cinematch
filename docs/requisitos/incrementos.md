@@ -57,7 +57,7 @@ Preparar a abertura para pessoas de fora, o social mínimo e o controle sobre o 
 | [RFF15](funcionais.md#rff15) | Compatibilidade de gosto | Funcional | Feito | P a M | 3 | 2 | 3 | RFF11 |
 | [RFF16](funcionais.md#rff16) | Modo descoberta | Funcional | Feito | P | 3 | 2 | 4 | — |
 | [RFF17](funcionais.md#rff17) | Página "Como recomendamos" | Funcional | Feito | P | 4 | 3 | 2 | RNFF08 |
-| [RFF18](funcionais.md#rff18) | Importar o histórico de outros apps | Funcional | A definir | M | — | 2 | 2 | RFF12, RFF13, RFF01 |
+| [RFF18](funcionais.md#rff18) | Importar o histórico de outros apps | Funcional | Parcial | M | — | 2 | 2 | RFF12, RFF13, RFF01 |
 | [EXP02](../tecnico/AVALIACAO.md#exp02) | Teste A/B do motivo reescrito por IA | Experimento | Não iniciado | P a M | 3 | 2 | 5 | RNFF02; e orçamento |
 
 ## Incremento 4: clima, momento e onde assistir
@@ -73,7 +73,7 @@ O vocabulário de clima e tudo que depende dele, mais os serviços de streaming.
 | [RFF22](funcionais.md#rff22) | Quero ver ordenado pelo que combina agora | Funcional | Feito | P a M | 2 | 2 | 3 | RFF19, RFF20 |
 | [RFF23](funcionais.md#rff23) | Buscar por clima | Funcional | Feito | M | 2 | 1 | 4 | RNFF09, RFF01 |
 | [RFF24](funcionais.md#rff24) | Séries por temporada | Funcional | Não iniciado | M | 2 | 2 | 2 | RFF12 |
-| [RFF25](funcionais.md#rff25) | Pedido em português | Funcional | Não iniciado | M | 2 | 1 | 5 | RFF20, RNFF09; e orçamento |
+| [RFF25](funcionais.md#rff25) | Pedido em português | Funcional | Feito | M | 2 | 1 | 5 | RFF20, RNFF09; e orçamento |
 
 ## Incremento 5: pontes entre mídias e grupo
 

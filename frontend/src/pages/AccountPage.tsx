@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import ExperimentsToggle from "../components/ExperimentsToggle";
-import type { StreamingService, Visibility } from "../types";
+import type { LetterboxdResult, StreamingService, Visibility } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 
@@ -14,6 +14,86 @@ function Part({ title, children, tape = 0, id }: { title: string; children: Reac
       <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">{title}</h2>
       <div className="mt-1 space-y-2 text-sm leading-6">{children}</div>
     </section>
+  );
+}
+
+const LETTERBOXD_FILES = ["watched.csv", "ratings.csv", "diary.csv", "reviews.csv", "watchlist.csv"];
+
+/** Trazer o histórico do Letterboxd (RFF18), pelos CSVs do arquivo que a pessoa exporta de lá. */
+function LetterboxdImport() {
+  const [files, setFiles] = useState<File[]>([]);
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<LetterboxdResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function send(e: FormEvent) {
+    e.preventDefault();
+    setSending(true);
+    setError(null);
+    try {
+      const contents = await Promise.all(files.map(async (f) => ({ name: f.name, content: await f.text() })));
+      setResult(await api.importLetterboxd(contents));
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  return (
+    <form onSubmit={send} className="space-y-2">
+      <p>
+        No Letterboxd, vá em Settings, Data e Export your data. Descompacte o arquivo e escolha os CSVs que quer trazer:{" "}
+        {LETTERBOXD_FILES.join(", ")}. O que já está no seu diário fica como está, e as resenhas seguem quem vê os seus
+        registros.
+      </p>
+      <label className="block">
+        <span className="font-semibold">Arquivos do Letterboxd</span>
+        <input
+          type="file"
+          accept=".csv,text/csv"
+          multiple
+          onChange={(e) => {
+            setFiles(Array.from(e.target.files ?? []));
+            setResult(null);
+          }}
+          className="mt-1 block w-full text-sm"
+        />
+      </label>
+      <button className="btn-primary" disabled={sending || files.length === 0}>
+        {sending ? "Procurando os filmes..." : "Trazer do Letterboxd"}
+      </button>
+      <div aria-live="polite">
+        {error && <p className="text-red-700">{error}</p>}
+        {result && (
+          <div className="space-y-1">
+            <p>
+              {plural(result.registered, "filme entrou", "filmes entraram")} no diário e{" "}
+              {plural(result.want_to_watch, "no Quero ver", "no Quero ver")}.
+              {result.already_in_diary > 0 && ` ${plural(result.already_in_diary, "já estava", "já estavam")} no diário.`}
+              {result.brought > 0 && ` ${plural(result.brought, "filme novo veio", "filmes novos vieram")} do TMDB para o catálogo.`}
+            </p>
+            {result.next_time > 0 && (
+              <p>
+                {plural(result.next_time, "filme ficou", "filmes ficaram")} para o próximo envio: envie os mesmos arquivos de
+                novo para trazer.
+              </p>
+            )}
+            {result.not_found_total > 0 && (
+              <p>
+                Não achamos {plural(result.not_found_total, "filme", "filmes")}: {result.not_found.join(", ")}
+                {result.not_found_total > result.not_found.length && " e outros"}. Dá para procurar cada um na Busca.
+              </p>
+            )}
+            {result.ignored_files.length > 0 && <p>Arquivos que não usamos: {result.ignored_files.join(", ")}.</p>}
+            <Link to="/diario" className="underline hover:text-[#b9452f]">
+              Ver meu diário
+            </Link>
+          </div>
+        )}
+      </div>
+    </form>
   );
 }
 
@@ -189,6 +269,10 @@ export default function AccountPage() {
           {exporting ? "Juntando seus dados..." : "Baixar meus dados"}
         </button>
         {exportError && <p className="text-red-700">{exportError}</p>}
+      </Part>
+
+      <Part title="Trazer do Letterboxd" tape={2} id="letterboxd">
+        <LetterboxdImport />
       </Part>
 
       <Part title="Quem vê meus registros" tape={1} id="quem-ve">

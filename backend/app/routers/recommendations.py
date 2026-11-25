@@ -12,12 +12,14 @@ from ..db import get_db
 from ..models import Media, RecEvent, User
 from ..schemas import (
     BecauseOut, FeedbackIn, FeedOut, ImpressionsIn, MediaOut, MediaType, PairOut, RecommendationOut, WatchlistNowOut,
+    WishOut,
 )
 from ..services.bridges import album_suggestions, double_features, mix_albums
 from ..services.moods import BY_KEY as MOODS, OCCASIONS_BY_KEY, fits_occasion
 from ..services.recommender import Recommendation, decade_label, recommend
 from ..services.streaming import available_ids, labels_on, streaming_on
 from ..services.together import MAX_PEOPLE, together
+from ..services.wish import understand
 from .users import companion
 
 router = APIRouter(prefix="/recommendations", tags=["recomendações"])
@@ -122,6 +124,18 @@ def feed(
             recs = mix_albums(recs, album_suggestions(db, user.id, exclude, limit, discovery, allow), limit)
 
     return FeedOut(variant=user.variant, strategy=strategy, items=[rec_out(db, r, user.services) for r in recs])
+
+
+@router.get("/understand", response_model=WishOut)
+def understand_wish(
+    q: str = Query(min_length=1, max_length=200, description='O pedido, como "algo leve para a Sessão da Tarde"'),
+    user: User = Depends(get_current_user),
+):
+    """Pedido em português (RFF25): transforma o texto nos filtros do momento (RFF20), no tipo de mídia, no modo
+    descoberta (RFF16) e no "só nos meus serviços" (RFF21). É um dicionário de expressões, sem IA, e não recomenda nada:
+    a tela aplica os filtros e pede o feed de sempre. `understood` mostra o que cada trecho virou; `ignored`, o que
+    ficou de fora."""
+    return understand(q)
 
 
 @router.get("/pairs", response_model=list[PairOut])

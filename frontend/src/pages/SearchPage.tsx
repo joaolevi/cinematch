@@ -33,6 +33,8 @@ export default function SearchPage() {
   const mood = params.get("clima") ?? "";
   const moods = useMoods();
   const [sort, setSort] = useState<MediaSort>("popularity");
+  const [decade, setDecade] = useState(0); // #17: 0 = qualquer década
+  const [decades, setDecades] = useState<number[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
   const [items, setItems] = useState<Media[]>([]);
   const [total, setTotal] = useState<number | null>(null); // null: a primeira busca ainda não voltou
@@ -43,14 +45,22 @@ export default function SearchPage() {
     api.genres().then(setGenres).catch(() => {});
   }, []);
 
+  // As décadas que têm títulos do tipo escolhido
+  useEffect(() => {
+    api
+      .facets([], type || undefined)
+      .then((f) => setDecades(f.decades))
+      .catch(() => {});
+  }, [type]);
+
   useEffect(() => {
     setOffset(0);
-  }, [q, type, genre, person, mood, sort]);
+  }, [q, type, genre, person, mood, decade, sort]);
 
   useEffect(() => {
     const t = setTimeout(() => {
       api
-        .search({ q, type, genre, person, mood, sort, limit: PAGE, offset })
+        .search({ q, type, genre, person, mood, decade: decade || undefined, sort, limit: PAGE, offset })
         .then((r) => {
           setItems((prev) => (offset === 0 ? r.items : [...prev, ...r.items]));
           setTotal(r.total);
@@ -59,7 +69,7 @@ export default function SearchPage() {
         .catch((e) => setError(e.message));
     }, 250);
     return () => clearTimeout(t);
-  }, [q, type, genre, person, mood, sort, offset]);
+  }, [q, type, genre, person, mood, decade, sort, offset]);
 
   function setFilter(name: "genero" | "pessoa" | "clima", value: string) {
     const next = new URLSearchParams(params);
@@ -105,6 +115,19 @@ export default function SearchPage() {
           <option value="">Todos os gêneros</option>
           {genres.map((g) => (
             <option key={g}>{g}</option>
+          ))}
+        </select>
+        <select
+          className="input select sm:w-44"
+          aria-label="Década"
+          value={decade}
+          onChange={(e) => setDecade(Number(e.target.value))}
+        >
+          <option value={0}>Qualquer década</option>
+          {(decade && !decades.includes(decade) ? [decade, ...decades] : decades).map((d) => (
+            <option key={d} value={d}>
+              {d < 2000 ? `Anos ${d % 100}` : `Anos ${d}`}
+            </option>
           ))}
         </select>
         <select className="input select sm:w-48" aria-label="Ordenar" value={sort} onChange={(e) => setSort(e.target.value as MediaSort)}>

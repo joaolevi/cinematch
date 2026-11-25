@@ -45,7 +45,8 @@ export default function LoginPage() {
   const hand = "block font-hand text-xl leading-6 font-bold";
   return (
     // Fundo escuro, como a apresentação: o diário de exemplo de um lado e a folha do login do outro
-    <div className="mx-auto flex min-h-screen max-w-[1680px] items-center justify-center gap-16 px-4 py-10 sm:px-6 lg:px-10">
+    <main className="mx-auto flex min-h-screen max-w-[1680px] items-center justify-center gap-16 px-4 py-10 sm:px-6 lg:px-10">
+      <h1 className="sr-only">{mode === "login" ? "Entrar no Tastory" : "Criar conta no Tastory"}</h1>
       <div className="hidden max-w-2xl flex-1 lg:block">
         <p className="font-hand text-3xl font-bold text-accent">Querido diário,</p>
         <p className="mb-8 font-display text-4xl leading-tight font-bold">
@@ -181,6 +182,6 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

@@ -320,6 +320,53 @@
         }
       }
     },
+    "/me/import/letterboxd": {
+      "post": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Import From Letterboxd",
+        "description": "Importa o histórico do Letterboxd (RFF18) a partir dos CSVs do arquivo exportado pela pessoa: `watched.csv`,\n`ratings.csv`, `diary.csv`, `reviews.csv` e `watchlist.csv`. Cada filme é procurado no catálogo por nome e ano e,\nse não estiver lá, no TMDB, que acha pelo nome original. Cada envio traz até 50 filmes novos para o catálogo;\nenviar de novo traz os próximos. O que já está no diário fica como está, e a data do registro é a do Letterboxd.",
+        "operationId": "import_from_letterboxd_me_import_letterboxd_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LetterboxdIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterboxdOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/me/export": {
       "get": {
         "tags": [
@@ -589,6 +636,27 @@
               "title": "Mood"
             },
             "description": "Clima (RFF23), como \"melancolico\"; veja GET /media/moods"
+          },
+          {
+            "name": "decade",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "multipleOf": 10,
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Década, como 1990 (#17)",
+              "title": "Decade"
+            },
+            "description": "Década, como 1990 (#17)"
           },
           {
             "name": "sort",
@@ -1890,6 +1958,58 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FeedOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recommendations/understand": {
+      "get": {
+        "tags": [
+          "recomendações"
+        ],
+        "summary": "Understand Wish",
+        "description": "Pedido em português (RFF25): transforma o texto nos filtros do momento (RFF20), no tipo de mídia, no modo\ndescoberta (RFF16) e no \"só nos meus serviços\" (RFF21). É um dicionário de expressões, sem IA, e não recomenda nada:\na tela aplica os filtros e pede o feed de sempre. `understood` mostra o que cada trecho virou; `ignored`, o que\nficou de fora.",
+        "operationId": "understand_wish_recommendations_understand_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "O pedido, como \"algo leve para a Sessão da Tarde\"",
+              "title": "Q"
+            },
+            "description": "O pedido, como \"algo leve para a Sessão da Tarde\""
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WishOut"
                 }
               }
             }
@@ -5421,6 +5541,28 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "ImportFile": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Name",
+            "description": "O nome do arquivo, como \"ratings.csv\""
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 5000000,
+            "title": "Content",
+            "description": "O texto do CSV"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "content"
+        ],
+        "title": "ImportFile"
+      },
       "ImpressionIn": {
         "properties": {
           "media_id": {
@@ -5467,6 +5609,86 @@
           "items"
         ],
         "title": "ImpressionsIn"
+      },
+      "LetterboxdIn": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ImportFile"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "LetterboxdIn"
+      },
+      "LetterboxdOut": {
+        "properties": {
+          "registered": {
+            "type": "integer",
+            "title": "Registered",
+            "description": "Filmes que entraram no diário"
+          },
+          "want_to_watch": {
+            "type": "integer",
+            "title": "Want To Watch",
+            "description": "Filmes que entraram no Quero ver"
+          },
+          "already_in_diary": {
+            "type": "integer",
+            "title": "Already In Diary",
+            "description": "Filmes que já estavam no diário e ficaram como estavam"
+          },
+          "brought": {
+            "type": "integer",
+            "title": "Brought",
+            "description": "Filmes trazidos do TMDB para o catálogo"
+          },
+          "next_time": {
+            "type": "integer",
+            "title": "Next Time",
+            "description": "Filmes achados no TMDB que ficam para o próximo envio (limite por envio)"
+          },
+          "not_found": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Not Found",
+            "description": "Até 50 filmes que não foram achados"
+          },
+          "not_found_total": {
+            "type": "integer",
+            "title": "Not Found Total"
+          },
+          "ignored_files": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ignored Files",
+            "description": "Arquivos que não são do export do Letterboxd ou que não usamos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "registered",
+          "want_to_watch",
+          "already_in_diary",
+          "brought",
+          "next_time",
+          "not_found",
+          "not_found_total",
+          "ignored_files"
+        ],
+        "title": "LetterboxdOut",
+        "description": "O resultado da importação do Letterboxd (RFF18)."
       },
       "ListIn": {
         "properties": {
@@ -7256,6 +7478,29 @@
         ],
         "title": "TokenOut"
       },
+      "UnderstoodPart": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "O trecho do pedido, como a pessoa escreveu"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Labels",
+            "description": "O que ele virou, como \"Leve\" ou \"Até 2h\""
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "labels"
+        ],
+        "title": "UnderstoodPart"
+      },
       "UserOut": {
         "properties": {
           "id": {
@@ -7471,6 +7716,106 @@
         ],
         "title": "WatchlistNowOut",
         "description": "O Quero ver ordenado pelo que combina agora (RFF22)."
+      },
+      "WishOut": {
+        "properties": {
+          "type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "movie",
+                  "series",
+                  "album"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "mood": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mood"
+          },
+          "max_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Minutes"
+          },
+          "occasion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occasion"
+          },
+          "discovery": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "beyond",
+                  "outside"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discovery"
+          },
+          "only_mine": {
+            "type": "boolean",
+            "title": "Only Mine"
+          },
+          "understood": {
+            "items": {
+              "$ref": "#/components/schemas/UnderstoodPart"
+            },
+            "type": "array",
+            "title": "Understood"
+          },
+          "ignored": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ignored",
+            "description": "O que o pedido tinha e não virou filtro, com o porquê"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "mood",
+          "max_minutes",
+          "occasion",
+          "discovery",
+          "only_mine",
+          "understood",
+          "ignored"
+        ],
+        "title": "WishOut",
+        "description": "Os filtros que o pedido em português escolheu (RFF25). Os vazios ficam como estão na tela."
       }
     },
     "securitySchemes": {

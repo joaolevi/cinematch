@@ -36,6 +36,7 @@ def search_media(
     genre: str | None = None,
     person: str | None = Query(default=None, description="Nome exato de um diretor, criador ou ator"),
     mood: str | None = Query(default=None, description='Clima (RFF23), como "melancolico"; veja GET /media/moods'),
+    decade: int | None = Query(default=None, ge=1900, le=2100, multiple_of=10, description="Década, como 1990 (#17)"),
     sort: str = Query(default="popularity", pattern="^(popularity|title|year)$"),
     limit: int = Query(default=24, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -49,6 +50,8 @@ def search_media(
         items = [m for m in items if genre in (m.genres or [])]
     if mood:
         items = [m for m in items if mood in (m.moods or [])]
+    if decade:
+        items = [m for m in items if m.year and m.year // 10 * 10 == decade]
     if person:
         wanted = search_text(person.strip())
         items = [m for m in items if wanted in {search_text(n) for n in (m.creators or []) + (m.actors or [])}]

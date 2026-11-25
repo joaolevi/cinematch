@@ -13,10 +13,11 @@ import { diaryChanged, useSeen } from "../seen";
 import TuneMenu, { type Tune } from "../components/TuneMenu";
 import { formatMinutes } from "../format";
 import { useMoods } from "../moods";
-import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Occasion, Pair, Person, Recommendation } from "../types";
+import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Occasion, Pair, Person, Recommendation, Wish } from "../types";
 import { MEDIA_GRID } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
+import WishBox from "../components/WishBox";
 import ListName from "../components/ListName";
 
 const PAGE = 18;
@@ -68,6 +69,15 @@ export default function FeedPage() {
   );
   const hasServices = (user?.services.length ?? 0) > 0;
   const tonight = maxMinutes === TONIGHT_MINUTES && onlyMine === hasServices;
+  // Pedido em português (RFF25): um pedido novo troca todos os filtros; limpar volta tudo ao padrão
+  function applyWish(wish: Wish | null) {
+    setType(wish?.type ?? "");
+    setDiscovery(wish?.discovery ?? "taste");
+    setMood(wish?.mood ?? "");
+    setMaxMinutes(wish?.max_minutes ?? 0);
+    setOccasion(wish?.occasion ?? "");
+    setOnlyMine(Boolean(wish?.only_mine) && hasServices);
+  }
   const [feed, setFeed] = useState<Feed | null>(null);
   const [pairs, setPairs] = useState<Pair[]>([]); // sessão dupla (RFF27), só no feed misto
   const [loading, setLoading] = useState(true);
@@ -308,6 +318,8 @@ export default function FeedPage() {
           </button>
         </div>
       </div>
+
+      <WishBox onWish={applyWish} />
 
       {type !== "album" && !together && (
         <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Modo descoberta">

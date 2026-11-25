@@ -328,6 +328,24 @@ class FeedOut(BaseModel):
     items: list[RecommendationOut]
 
 
+class UnderstoodPart(BaseModel):
+    text: str = Field(description="O trecho do pedido, como a pessoa escreveu")
+    labels: list[str] = Field(description='O que ele virou, como "Leve" ou "Até 2h"')
+
+
+class WishOut(BaseModel):
+    """Os filtros que o pedido em português escolheu (RFF25). Os vazios ficam como estão na tela."""
+
+    type: MediaType | None
+    mood: str | None
+    max_minutes: int | None
+    occasion: str | None
+    discovery: Literal["beyond", "outside"] | None
+    only_mine: bool
+    understood: list[UnderstoodPart]
+    ignored: list[str] = Field(description="O que o pedido tinha e não virou filtro, com o porquê")
+
+
 class CommunityEntryOut(BaseModel):
     id: int
     user_id: int
@@ -657,3 +675,25 @@ class MetricsOut(BaseModel):
     acceptance_window_days: int = Field(default=7, description="Aceitação só conta até tantos dias depois da exibição")
     opted_out: int = Field(default=0, description="Pessoas que saíram dos experimentos (RFF17)")
     by_bridge: list[BridgeMetrics] = Field(default=[], description="EXP03: aceitação dos discos por tipo de ponte")
+
+
+class ImportFile(BaseModel):
+    name: str = Field(max_length=200, description='O nome do arquivo, como "ratings.csv"')
+    content: str = Field(max_length=5_000_000, description="O texto do CSV")
+
+
+class LetterboxdIn(BaseModel):
+    files: list[ImportFile] = Field(min_length=1, max_length=10)
+
+
+class LetterboxdOut(BaseModel):
+    """O resultado da importação do Letterboxd (RFF18)."""
+
+    registered: int = Field(description="Filmes que entraram no diário")
+    want_to_watch: int = Field(description="Filmes que entraram no Quero ver")
+    already_in_diary: int = Field(description="Filmes que já estavam no diário e ficaram como estavam")
+    brought: int = Field(description="Filmes trazidos do TMDB para o catálogo")
+    next_time: int = Field(description="Filmes achados no TMDB que ficam para o próximo envio (limite por envio)")
+    not_found: list[str] = Field(description="Até 50 filmes que não foram achados")
+    not_found_total: int
+    ignored_files: list[str] = Field(description="Arquivos que não são do export do Letterboxd ou que não usamos")
