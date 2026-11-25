@@ -339,7 +339,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
         <section className="mt-12">
           <h2 className="font-display text-xl font-bold">{album ? "Para ver depois" : "Para ouvir depois"}</h2>
           <p className="mt-1 text-sm text-muted">
-            {album ? "Filmes e séries ligados a este álbum." : "Álbuns ligados a este título: a trilha, quem compôs e quem do elenco também canta."}
+            {album ? "Filmes e séries ligados a este álbum." : "Álbuns ligados a este título: a trilha, quem compôs, quem do elenco também canta e a música de quem o filme conta a história."}
           </p>
           <div className="mt-4">
             <Carousel label={album ? "para ver depois" : "para ouvir depois"}>

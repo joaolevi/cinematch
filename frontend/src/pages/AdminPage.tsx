@@ -192,6 +192,42 @@ function MetricsTab() {
         </button>
       </div>
 
+      <section className="card mt-8 p-5" aria-labelledby="por-ponte">
+        <h2 id="por-ponte" className="font-display text-lg font-bold">
+          Discos sugeridos, por tipo de ponte (EXP03)
+        </h2>
+        <p className="mt-1 text-sm text-muted">
+          Que ligação entre filme e música as pessoas mais aceitam. A ponte é a mais forte entre o disco e o que a
+          pessoa curte hoje, e vale a mesma janela de {m.acceptance_window_days} dias.
+        </p>
+        {m.by_bridge.length === 0 ? (
+          <p className="mt-3 text-sm text-muted">Nenhum disco sugerido por ponte apareceu na tela ainda.</p>
+        ) : (
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full min-w-[420px] text-left text-sm">
+              <thead className="text-xs tracking-wide text-muted uppercase">
+                <tr className="border-b border-line">
+                  <th className="py-2 pr-4 font-semibold">Ponte</th>
+                  <th className="py-2 pr-4 text-right font-semibold">Apareceram</th>
+                  <th className="py-2 pr-4 text-right font-semibold">Aceitos</th>
+                  <th className="py-2 text-right font-semibold">Aceitação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {m.by_bridge.map((b) => (
+                  <tr key={b.kind} className="border-b border-line/50">
+                    <td className="py-2 pr-4">{b.label}</td>
+                    <td className="py-2 pr-4 text-right tabular-nums">{b.shown}</td>
+                    <td className="py-2 pr-4 text-right tabular-nums">{b.accepted}</td>
+                    <td className="py-2 text-right tabular-nums">{pct(b.acceptance_rate)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       <div className="mt-8 grid items-start gap-6 md:grid-cols-2">
         <section className="paper relative rounded-sm py-6 pr-6 pl-14">
           <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 rotate-2" style={{ background: TAPE_COLORS[2] }} />

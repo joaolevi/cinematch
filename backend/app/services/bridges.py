@@ -4,9 +4,10 @@ As sugestões de filmes e séries continuam com o recomendador de `recommender.p
 cima, ligada ao que a pessoa curtiu por pontes:
 
 - Fortes, guardadas na tabela `media_bridges` por `build_bridges`, a partir da lista curada de álbuns
-  (`data/albuns_demo.csv`): trilha sonora, compositor e mesma pessoa. Uma sozinha basta.
-- Fracas, calculadas na hora: gênero (pela tabela `data/generos_correspondencia.csv`), década e país. Só valem juntas,
-  pelo menos duas, como manda a regra de corte do ARQUITETURA.md.
+  (`data/albuns_demo.csv`): trilha sonora, compositor e mesma pessoa. E, pela lista `data/cinebiografias.csv`, a
+  cinebiografia e o documentário sobre quem fez o disco ("Elis" e "Elis & Tom"). Uma sozinha basta.
+- Fracas, calculadas na hora: gênero (pela tabela `data/generos_correspondencia.csv`), década, país e idioma. Só valem
+  juntas, pelo menos duas, como manda a regra de corte do ARQUITETURA.md.
 
 O grafo de conteúdo (RNFF12) fica para depois da entrega: trocar o motor em um dia arriscaria quebrar o que funciona.
 """
@@ -22,16 +23,21 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from ..config import DATA_DIR
-from ..models import Media, MediaBridge, UserInterest, UserPreference
+from ..models import Media, MediaBridge, User, UserInterest, UserPreference
 from .catalog import search_text
-from .recommender import DISCOVERY, Recommendation, decade_label, excluded_ids, user_signals
+from .recommender import DISCOVERY, Recommendation, decade_label, excluded_ids, recommend, user_signals
 
 ALBUM_LIST_PATH = DATA_DIR / "albuns_demo.csv"
+BIOPIC_LIST_PATH = DATA_DIR / "cinebiografias.csv"
+BIOPIC_SOURCE = "cinebio"  # pontes que vêm da lista de cinebiografias e documentários
 GENRE_PAIRS_PATH = DATA_DIR / "generos_correspondencia.csv"
 LIST_SOURCE = "lista"  # pontes que vêm da lista curada de álbuns
 
-STRONG = {"soundtrack": 1.0, "composer": 0.9, "same_person": 0.9}
-WEAK = {"genre": 0.3, "decade": 0.2, "country": 0.2}
+STRONG = {"soundtrack": 1.0, "biopic": 1.0, "documentary": 0.95, "composer": 0.9, "same_person": 0.9}
+WEAK = {"genre": 0.3, "decade": 0.2, "country": 0.2, "language": 0.2}
+LANGUAGE_PHRASE = {"pt": "em português", "es": "em espanhol", "fr": "em francês", "it": "em italiano", "de": "em alemão",
+                   "ja": "em japonês", "ko": "em coreano"}  # o inglês fica de fora: é comum demais para ligar dois títulos
+COMMON_COUNTRIES = {"US", "GB"}  # pelo mesmo motivo, ser dos Estados Unidos ou do Reino Unido não liga dois títulos
 SAME_ARTIST = 0.8
 PREF_ARTIST = 0.7  # artista escolhido no onboarding
 PREF_GENRE = 0.25  # gênero musical escolhido no onboarding
@@ -48,7 +54,7 @@ VIDEO_TYPES = ("movie", "series")
 class Link:
     """Uma ligação entre dois títulos, com o peso e as palavras que viram motivo."""
 
-    kind: str  # soundtrack | composer | same_person | weak | artist
+    kind: str  # soundtrack | biopic | documentary | composer | same_person | weak | artist
     weight: float
     label: str = ""  # pessoa da ponte forte ou os sinais da ponte fraca
 
@@ -145,7 +151,40 @@ def build_bridges(db: Session, list_path: Path = ALBUM_LIST_PATH) -> dict:
         for a, b in ((video_id, album_id), (album_id, video_id)):
             db.add(MediaBridge(media_id=a, other_id=b, kind=kind, label=person, weight=STRONG[kind], source=LIST_SOURCE))
     db.commit()
-    return {"bridges": len(links), "unmatched": sorted(set(unmatched))}
+    return {"bridges": len(links), "unmatched": sorted(set(unmatched)), "biopics": build_biopic_bridges(db)}
+
+
+def biopic_rows(path: Path = BIOPIC_LIST_PATH) -> list[dict]:
+    if not path.exists():
+        return []
+    with open(path, encoding="utf-8") as f:
+        return [r for r in csv.DictReader(f) if r.get("filme", "").strip() and r.get("mbid", "").strip()]
+
+
+def build_biopic_bridges(db: Session, path: Path = BIOPIC_LIST_PATH) -> dict:
+    """Recalcula as pontes de cinebiografia e documentário (RFF26) a partir da lista curada, ligando pelo ID do TMDB e
+    do MusicBrainz. Os pares que ainda não estão no catálogo ficam em `missing`; `make cinebiografias` os traz. Pode
+    rodar de novo: apaga e refaz as da lista. Roda também ao subir a API."""
+    rows = biopic_rows(path)
+    wanted = {r["filme"].strip() for r in rows} | {f"album-{r['mbid'].strip()}" for r in rows}
+    found = {m.external_id: m for m in db.scalars(select(Media).where(Media.external_id.in_(wanted)))}
+    db.execute(delete(MediaBridge).where(MediaBridge.source == BIOPIC_SOURCE))
+    db.flush()
+    made, missing = set(), []
+    for r in rows:
+        film, album = found.get(r["filme"].strip()), found.get(f"album-{r['mbid'].strip()}")
+        if film is None or album is None:
+            missing.append(f"{r['titulo_filme']} e {r['titulo_album']}")
+            continue
+        kind = "documentary" if r["tipo"].strip() == "documentario" else "biopic"
+        if (film.id, album.id) in made:
+            continue
+        made.add((film.id, album.id))
+        for a, b in ((film.id, album.id), (album.id, film.id)):
+            db.add(MediaBridge(media_id=a, other_id=b, kind=kind, label=r["pessoa"].strip(), weight=STRONG[kind],
+                               source=BIOPIC_SOURCE))
+    db.commit()
+    return {"bridges": len(made), "missing": missing}
 
 
 def strong_links(db: Session, media_ids: Iterable[int]) -> dict[tuple[int, int], Link]:
@@ -167,9 +206,13 @@ def weak_link(a: Media, b: Media) -> Link | None:
         signals.append(("genre", f"{_phrase(match[0])} pede {_phrase(match[1])}"))
     if video.year and album.year and video.year // 10 == album.year // 10:
         signals.append(("decade", decade_label(video.year // 10 * 10)))
-    shared = set(video.countries or []) & set(album.countries or [])
+    shared = (set(video.countries or []) & set(album.countries or [])) - COMMON_COUNTRIES
     if shared:
         signals.append(("country", "feito no Brasil" if "BR" in shared else "do mesmo país"))
+    if video.language and video.language == album.language and video.language in LANGUAGE_PHRASE:
+        # Feito no Brasil já diz que é em português: o idioma só soma quando o país não disse
+        if not (video.language == "pt" and "BR" in shared):
+            signals.append(("language", LANGUAGE_PHRASE[video.language]))
     if len(signals) < MIN_WEAK_SIGNALS:
         return None
     return Link("weak", sum(WEAK[k] for k, _ in signals), ", ".join(text for _, text in signals))
@@ -212,6 +255,10 @@ def feed_reason(liked: Media, link: Link) -> str:
         return f"{link.label}, de {liked.title}, também canta"
     if link.kind == "artist":
         return f"Mais de {link.label}, que você curtiu"
+    if link.kind == "biopic":
+        return f"{liked.title}, que você curtiu, conta a história de {link.label}"
+    if link.kind == "documentary":
+        return f"Do documentário {liked.title}, sobre {link.label}"
     return f"Combina com {liked.title}: {link.label}"
 
 
@@ -227,6 +274,10 @@ def detail_reason(media: Media, other: Media, link: Link) -> str:
         return f"{link.label} está no elenco" if media.type == "album" else f"{link.label}, do elenco, também canta"
     if link.kind == "artist":
         return f"Também de {link.label}"
+    if link.kind in ("biopic", "documentary"):
+        if media.type == "album":
+            return f"{'Filme' if link.kind == 'biopic' else 'Documentário'} sobre {link.label}"
+        return f"A música de {link.label}" if link.kind == "biopic" else "A música que o documentário conta"
     return link.label[:1].upper() + link.label[1:]
 
 
@@ -378,3 +429,64 @@ def mix_albums(feed: list[Recommendation], albums: list[Recommendation], limit: 
             break
         out.insert(min(slot, len(out)), album)
     return out[:limit]
+
+
+# ---------------------------------------------------------------- sessão dupla (RFF27)
+PAIR_KINDS = ("soundtrack", "biopic", "documentary", "same_person", "composer")  # só pontes fortes formam par
+PAIR_POOL = 40  # quantas sugestões de filmes e séries entram na busca por pares
+
+
+@dataclass
+class Pair:
+    """Um filme ou série sugerido e um disco para ouvir depois, ligados por uma ponte forte."""
+
+    video: Recommendation
+    album: Media
+    kind: str
+    reason: str
+
+
+def pair_reason(video: Media, link: Link) -> str:
+    """Por que o disco acompanha o filme, do jeito que aparece no card da sessão dupla."""
+    if link.kind == "soundtrack":
+        return f"A trilha sonora de {video.title}"
+    if link.kind == "composer":
+        return f"{link.label} compôs a trilha de {video.title}"
+    if link.kind == "same_person":
+        return f"{link.label}, do elenco de {video.title}, também canta"
+    if link.kind == "biopic":
+        return f"{video.title} conta a história de {link.label}"
+    return f"{video.title} é um documentário sobre {link.label}"
+
+
+def double_features(
+    db: Session,
+    user: User,
+    limit: int = 3,
+    skip: Iterable[int] = (),
+    video_allow: set[int] | None = None,
+    album_allow: set[int] | None = None,
+) -> list[Pair]:
+    """Sessão dupla (RFF27): pares de um filme ou série que o recomendador sugere e um disco ligado a ele por uma ponte
+    forte, para ver e depois ouvir. Nada que a pessoa já viu, guardou ou descartou entra, de nenhum dos dois lados, e
+    cada disco aparece uma vez. `skip` tira filmes que já estão na tela; os `allow` são os filtros do momento (RFF20)."""
+    _, videos = recommend(db, user, None, PAIR_POOL, skip=skip, allow=video_allow)
+    seen = excluded_ids(db, user.id)
+    strong = strong_links(db, [r.media.id for r in videos])
+    by_video: dict[int, list[tuple[int, Link]]] = {}
+    for (video_id, other_id), link in strong.items():
+        if link.kind in PAIR_KINDS and other_id not in seen and (album_allow is None or other_id in album_allow):
+            by_video.setdefault(video_id, []).append((other_id, link))
+    albums = {m.id: m for m in db.scalars(select(Media).where(Media.id.in_({o for v in by_video.values() for o, _ in v})))}
+    pairs: list[Pair] = []
+    used: set[int] = set()
+    for rec in videos:
+        options = [(albums[o], link) for o, link in by_video.get(rec.media.id, []) if o in albums and o not in used]
+        if not options:
+            continue
+        album, link = max(options, key=lambda x: (x[1].weight, x[0].popularity))
+        used.add(album.id)
+        pairs.append(Pair(rec, album, link.kind, pair_reason(rec.media, link)))
+        if len(pairs) == limit:
+            break
+    return pairs

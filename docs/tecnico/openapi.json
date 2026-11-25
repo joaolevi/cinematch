@@ -1779,6 +1779,144 @@
         }
       }
     },
+    "/recommendations/pairs": {
+      "get": {
+        "tags": [
+          "recomendações"
+        ],
+        "summary": "Pairs",
+        "description": "Sessão dupla (RFF27): um filme ou série sugerido e um disco para ouvir depois, ligados por uma ponte forte\n(trilha, compositor, quem atua e canta, cinebiografia ou documentário). O momento vale para os dois lados, menos a\nduração e os serviços, que só valem para o filme ou a série. Não entra na comparação A/B.",
+        "operationId": "pairs_recommendations_pairs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10,
+              "minimum": 1,
+              "default": 3,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "exclude",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "description": "Filmes e séries que já estão na tela, para não repetir",
+              "default": [],
+              "title": "Exclude"
+            },
+            "description": "Filmes e séries que já estão na tela, para não repetir"
+          },
+          {
+            "name": "mood",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Momento (RFF20): só títulos com este clima, como \"leve\"",
+              "title": "Mood"
+            },
+            "description": "Momento (RFF20): só títulos com este clima, como \"leve\""
+          },
+          {
+            "name": "max_minutes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 600,
+                  "minimum": 10
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Momento (RFF20): duração máxima; na série, a do episódio",
+              "title": "Max Minutes"
+            },
+            "description": "Momento (RFF20): duração máxima; na série, a do episódio"
+          },
+          {
+            "name": "occasion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Momento (RFF20): a ocasião, \"a-dois\", \"amigos\" ou \"familia\"; veja GET /media/occasions",
+              "title": "Occasion"
+            },
+            "description": "Momento (RFF20): a ocasião, \"a-dois\", \"amigos\" ou \"familia\"; veja GET /media/occasions"
+          },
+          {
+            "name": "only_mine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Só filmes e séries que estão, por assinatura, nos serviços da pessoa (RFF21). Sem serviços marcados, não sobra nada",
+              "default": false,
+              "title": "Only Mine"
+            },
+            "description": "Só filmes e séries que estão, por assinatura, nos serviços da pessoa (RFF21). Sem serviços marcados, não sobra nada"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PairOut"
+                  },
+                  "title": "Response Pairs Recommendations Pairs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recommendations/together": {
       "get": {
         "tags": [
@@ -4266,6 +4404,40 @@
         ],
         "title": "BecauseOut"
       },
+      "BridgeMetrics": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "shown": {
+            "type": "integer",
+            "title": "Shown"
+          },
+          "accepted": {
+            "type": "integer",
+            "title": "Accepted"
+          },
+          "acceptance_rate": {
+            "type": "number",
+            "title": "Acceptance Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "label",
+          "shown",
+          "accepted",
+          "acceptance_rate"
+        ],
+        "title": "BridgeMetrics",
+        "description": "EXP03: a aceitação dos discos sugeridos por ponte, por tipo de ponte."
+      },
       "CommentIn": {
         "properties": {
           "text": {
@@ -5754,6 +5926,15 @@
             "title": "Opted Out",
             "description": "Pessoas que saíram dos experimentos (RFF17)",
             "default": 0
+          },
+          "by_bridge": {
+            "items": {
+              "$ref": "#/components/schemas/BridgeMetrics"
+            },
+            "type": "array",
+            "title": "By Bridge",
+            "description": "EXP03: aceitação dos discos por tipo de ponte",
+            "default": []
           }
         },
         "type": "object",
@@ -5872,6 +6053,35 @@
           "label"
         ],
         "title": "OccasionOut"
+      },
+      "PairOut": {
+        "properties": {
+          "video": {
+            "$ref": "#/components/schemas/RecommendationOut"
+          },
+          "album": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "A ponte: soundtrack, composer, same_person, biopic ou documentary"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Por que o disco acompanha o filme, como \"A trilha sonora de Interestelar\""
+          }
+        },
+        "type": "object",
+        "required": [
+          "video",
+          "album",
+          "kind",
+          "reason"
+        ],
+        "title": "PairOut",
+        "description": "Sessão dupla (RFF27): um filme ou série para ver e um disco para ouvir depois."
       },
       "PersonOut": {
         "properties": {

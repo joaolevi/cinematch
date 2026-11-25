@@ -69,7 +69,12 @@ export default function HowPage() {
             <strong>Mesma pessoa:</strong> quem atua e também canta, como Seu Jorge, de Cidade de Deus.
           </li>
           <li>
-            <strong>Gênero, década e país juntos:</strong> sozinhos não bastam; só valem pelo menos dois ao mesmo tempo.
+            <strong>Cinebiografia e documentário:</strong> o disco de quem o filme conta a história, como "Elis" e "Elis &
+            Tom", ou "Tropicália" e o disco do movimento.
+          </li>
+          <li>
+            <strong>Gênero, década, país e idioma juntos:</strong> sozinhos não bastam; só valem pelo menos dois ao mesmo
+            tempo. Inglês, Estados Unidos e Reino Unido não contam, porque são comuns demais.
           </li>
         </ul>
         <p>
@@ -77,6 +82,10 @@ export default function HowPage() {
           Regina") e, por fim, os discos mais ouvidos. Para a lista não ficar só com um artista, entram no máximo dois discos
           de cada um no começo. No detalhe de cada título, as mesmas pontes aparecem em "Para ouvir
           depois" e "Para ver depois".
+        </p>
+        <p>
+          No Para você, a "Sessão dupla" junta um filme ou uma série que combina com você e um disco ligado a ele por
+          uma das pontes fortes, para ver e depois ouvir.
         </p>
       </Part>
 

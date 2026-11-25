@@ -137,6 +137,9 @@ class TmdbCatalogProvider:
             "creators": [],
             "actors": [],
             "popularity": normalize_popularity(item.get("popularity"), item.get("vote_average")),
+            # Idioma original e país, para as pontes fracas com a música (RFF26)
+            "language": item.get("original_language") or None,
+            "countries": countries_of(item),
         }
 
     def _enrich(self, t: ExternalTitle) -> ExternalTitle:
@@ -222,6 +225,12 @@ class TmdbCatalogProvider:
         self._client.close()
 
 
+def countries_of(item: dict) -> list[str]:
+    """O país de origem: `origin_country` (séries e detalhes de filmes) ou os países de produção."""
+    found = item.get("origin_country") or [c.get("iso_3166_1") for c in item.get("production_countries") or []]
+    return [c for c in found if c][:3]
+
+
 def runtime_of(details: dict, tmdb_type: str) -> int | None:
     """Duração em minutos: a do filme ou a de um episódio da série (RFF20)."""
     if tmdb_type == "movie":
@@ -232,35 +241,46 @@ def runtime_of(details: dict, tmdb_type: str) -> int | None:
 
 
 def fill_durations(db, provider: TmdbCatalogProvider) -> dict:
-    """Completa a duração dos filmes e séries do TMDB que ainda não têm, com uma consulta de detalhes por título."""
-    from sqlalchemy import select
+    """Completa a duração (RFF20), o idioma original e o país (pontes fracas, RFF26) dos filmes e séries do TMDB que
+    ainda não têm, com uma consulta de detalhes por título."""
+    from sqlalchemy import or_, select
 
     from ..models import Media
 
     rows = list(
         db.scalars(
             select(Media).where(
-                Media.source == "tmdb", Media.type.in_(("movie", "series")), Media.duration_min.is_(None)
+                Media.source == "tmdb",
+                Media.type.in_(("movie", "series")),
+                or_(Media.duration_min.is_(None), Media.language.is_(None), Media.language == ""),
             )
         )
     )
 
-    def runtime(m: Media) -> int | None:
+    def details(m: Media) -> dict | None:
         tmdb_type, tmdb_id = m.external_id.split("-", 1)
         try:
-            return runtime_of(provider._get(f"/{tmdb_type}/{tmdb_id}"), tmdb_type)
+            return provider._get(f"/{tmdb_type}/{tmdb_id}")
         except TmdbError:
             return None
 
     with ThreadPoolExecutor(max_workers=provider.max_workers) as pool:
-        found = list(pool.map(runtime, rows))
-    filled = 0
-    for m, minutes in zip(rows, found):
-        if minutes:
+        found = list(pool.map(details, rows))
+    filled = languages = 0
+    for m, d in zip(rows, found):
+        if not d:
+            continue
+        tmdb_type = m.external_id.split("-", 1)[0]
+        if m.duration_min is None and (minutes := runtime_of(d, tmdb_type)):
             m.duration_min = minutes
             filled += 1
+        if not m.language and d.get("original_language"):
+            m.language = d["original_language"]
+            languages += 1
+        if not m.countries:
+            m.countries = countries_of(d)
     db.commit()
-    return {"checked": len(rows), "filled": filled}
+    return {"checked": len(rows), "filled": filled, "languages": languages}
 
 
 def enrich_catalog(db, provider: TmdbCatalogProvider, only_missing_posters: bool = True) -> dict:

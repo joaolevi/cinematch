@@ -124,9 +124,17 @@ internet; rodar de novo só atualiza):
 make prod-albuns
 ```
 
-**Duração e climas (RFF20, RNFF09).** Os climas são calculados sozinhos quando a API sobe. A duração dos filmes e das
-séries vem do TMDB e precisa ser buscada uma vez (uma consulta por título, uns 2 minutos), para o filtro "Até 2h"
-funcionar:
+**Cinebiografias (RFF26).** Os filmes e os discos da lista `backend/data/cinebiografias.csv`, como "Elis" e "Elis &
+Tom", entram com um comando (uns 2 minutos, porque o MusicBrainz pede uma consulta por segundo). As pontes entre eles
+são refeitas sozinhas quando a API sobe:
+
+```bash
+make prod-cinebiografias
+```
+
+**Duração, idioma e climas (RFF20, RFF26, RNFF09).** Os climas são calculados sozinhos quando a API sobe. A duração,
+o idioma original e o país dos filmes e das séries vêm do TMDB e precisam ser buscados uma vez (uma consulta por
+título, uns 2 minutos), para o filtro "Até 2h" e as pontes de idioma funcionarem:
 
 ```bash
 make prod-duracoes

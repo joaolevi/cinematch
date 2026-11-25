@@ -11,9 +11,9 @@ from ..auth import get_current_user
 from ..db import get_db
 from ..models import Media, RecEvent, User
 from ..schemas import (
-    BecauseOut, FeedbackIn, FeedOut, ImpressionsIn, MediaOut, MediaType, RecommendationOut, WatchlistNowOut,
+    BecauseOut, FeedbackIn, FeedOut, ImpressionsIn, MediaOut, MediaType, PairOut, RecommendationOut, WatchlistNowOut,
 )
-from ..services.bridges import album_suggestions, mix_albums
+from ..services.bridges import album_suggestions, double_features, mix_albums
 from ..services.moods import BY_KEY as MOODS, OCCASIONS_BY_KEY, fits_occasion
 from ..services.recommender import Recommendation, decade_label, recommend
 from ..services.streaming import available_ids, labels_on
@@ -121,6 +121,29 @@ def feed(
             recs = mix_albums(recs, album_suggestions(db, user.id, exclude, limit, discovery, allow), limit)
 
     return FeedOut(variant=user.variant, strategy=strategy, items=[rec_out(db, r, user.services) for r in recs])
+
+
+@router.get("/pairs", response_model=list[PairOut])
+def pairs(
+    limit: int = Query(default=3, ge=1, le=10),
+    exclude: list[int] = Query(default=[], description="Filmes e séries que já estão na tela, para não repetir"),
+    mood: str | None = MOOD_QUERY,
+    max_minutes: int | None = MINUTES_QUERY,
+    occasion: str | None = OCCASION_QUERY,
+    only_mine: bool = ONLY_MINE_QUERY,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Sessão dupla (RFF27): um filme ou série sugerido e um disco para ouvir depois, ligados por uma ponte forte
+    (trilha, compositor, quem atua e canta, cinebiografia ou documentário). O momento vale para os dois lados, menos a
+    duração e os serviços, que só valem para o filme ou a série. Não entra na comparação A/B."""
+    video_allow = moment_filter(db, mood, max_minutes, occasion, user.services or [] if only_mine else None)
+    album_allow = moment_filter(db, mood, None, occasion, None)
+    return [
+        PairOut(video=rec_out(db, p.video, user.services), album=MediaOut.model_validate(p.album), kind=p.kind,
+                reason=p.reason)
+        for p in double_features(db, user, limit, exclude, video_allow, album_allow)
+    ]
 
 
 @router.get("/together", response_model=list[RecommendationOut])

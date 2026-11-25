@@ -272,6 +272,15 @@ class RecommendationOut(BaseModel):
     )
 
 
+class PairOut(BaseModel):
+    """Sessão dupla (RFF27): um filme ou série para ver e um disco para ouvir depois."""
+
+    video: RecommendationOut
+    album: MediaOut
+    kind: str = Field(description="A ponte: soundtrack, composer, same_person, biopic ou documentary")
+    reason: str = Field(description='Por que o disco acompanha o filme, como "A trilha sonora de Interestelar"')
+
+
 class WatchlistNowOut(BaseModel):
     """O Quero ver ordenado pelo que combina agora (RFF22)."""
 
@@ -571,6 +580,16 @@ class AdjustmentIn(BaseModel):
     weight: float = Field(ge=0, le=3, description="1 volta ao normal; 1,5 mais; 0,5 menos; 0 tira do cálculo")
 
 
+class BridgeMetrics(BaseModel):
+    """EXP03: a aceitação dos discos sugeridos por ponte, por tipo de ponte."""
+
+    kind: str
+    label: str
+    shown: int
+    accepted: int
+    acceptance_rate: float
+
+
 class MetricsOut(BaseModel):
     overall: VariantMetrics
     by_variant: list[VariantMetrics]
@@ -587,3 +606,4 @@ class MetricsOut(BaseModel):
     titles_with_neighbors: int
     acceptance_window_days: int = Field(default=7, description="Aceitação só conta até tantos dias depois da exibição")
     opted_out: int = Field(default=0, description="Pessoas que saíram dos experimentos (RFF17)")
+    by_bridge: list[BridgeMetrics] = Field(default=[], description="EXP03: aceitação dos discos por tipo de ponte")

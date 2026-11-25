@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import DoubleFeature from "../components/DoubleFeature";
 import Highlight, { Buttons, DismissButton, OnMyServices } from "../components/Highlight";
 import MediaCard from "../components/MediaCard";
 import SeenModal from "../components/SeenModal";
@@ -12,7 +13,7 @@ import { diaryChanged, useSeen } from "../seen";
 import TuneMenu, { type Tune } from "../components/TuneMenu";
 import { formatMinutes } from "../format";
 import { useMoods } from "../moods";
-import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Occasion, Person, Recommendation } from "../types";
+import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Occasion, Pair, Person, Recommendation } from "../types";
 import { MEDIA_GRID } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
@@ -68,6 +69,7 @@ export default function FeedPage() {
   const hasServices = (user?.services.length ?? 0) > 0;
   const tonight = maxMinutes === TONIGHT_MINUTES && onlyMine === hasServices;
   const [feed, setFeed] = useState<Feed | null>(null);
+  const [pairs, setPairs] = useState<Pair[]>([]); // sessão dupla (RFF27), só no feed misto
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [seenTarget, setSeenTarget] = useState<Media | null>(null);
@@ -103,6 +105,14 @@ export default function FeedPage() {
         alreadyShown.current = new Set(first.items.map((i) => i.media.id));
         setFeed(first);
         if (together) setHasMore(false);
+        setPairs([]);
+        // A sessão dupla usa outros filmes, para não repetir o que já está na tela
+        if (!together && !type) {
+          api
+            .pairs(first.items.map((i) => i.media.id), moment)
+            .then((found) => thisLoad === latestLoad.current && setPairs(found))
+            .catch(() => {});
+        }
       }
     } catch (e) {
       if (thisLoad === latestLoad.current) setError((e as Error).message);
@@ -257,8 +267,9 @@ export default function FeedPage() {
 
   // O que a pessoa registrou em outra tela (como o Registrar) sai das sugestões. Junto com outras pessoas, a lista
   // vem com as três mídias, e o filtro de tipo é feito aqui
+  const inPairs = new Set(pairs.flatMap((p) => [p.video.media.id, p.album.id]));
   const [highlight, ...rest] = (feed?.items ?? []).filter(
-    (i) => !seen?.has(i.media.id) && (!together || !type || i.media.type === type),
+    (i) => !seen?.has(i.media.id) && !inPairs.has(i.media.id) && (!together || !type || i.media.type === type),
   );
   const chosen = following.filter((p) => companions.includes(p.id));
   // As sugestões para um grupo não entram na comparação A/B, que mede o feed de cada pessoa
@@ -465,6 +476,20 @@ export default function FeedPage() {
           />
         </OnScreen>
       )}
+
+      <DoubleFeature
+        pairs={pairs.filter((p) => !seen?.has(p.video.media.id) && !seen?.has(p.album.id))}
+        onSaved={(pair) => {
+          setPairs((all) => all.filter((p) => p !== pair));
+          setToast({
+            text: (
+              <>
+                Anotado! "{pair.video.media.title}" e "{pair.album.title}" estão na sua lista <ListName />
+              </>
+            ),
+          });
+        }}
+      />
 
       <div className={`mt-8 ${MEDIA_GRID}`}>
         {rest.map((rec) => (
