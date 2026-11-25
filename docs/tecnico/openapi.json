@@ -1779,6 +1779,143 @@
         }
       }
     },
+    "/recommendations/together": {
+      "get": {
+        "tags": [
+          "recomendações"
+        ],
+        "summary": "Watch Together",
+        "description": "Para ver ou ouvir junto (RFF28), no momento (RFF20): sugestões para quem pede e mais uma a quatro pessoas.\nPrimeiro o que aparece para todas, depois para menos gente; o motivo mostra cada lado. Nada que alguma já\nregistrou, descartou ou guardou entra. `mood`, `max_minutes`, `occasion` e `only_mine` funcionam como no feed; os\nserviços são os de quem pede, que é quem vai pôr para tocar. Cada pessoa precisa deixar quem pede ver os registros\n(RFF10): perfil privado dá 404; só para quem segue, sem seguir, dá 403.",
+        "operationId": "watch_together_recommendations_together_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "with",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "description": "Quem assiste ou ouve junto: de 1 a 4 pessoas, pelo id",
+              "title": "With"
+            },
+            "description": "Quem assiste ou ouve junto: de 1 a 4 pessoas, pelo id"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 40,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "mood",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Momento (RFF20): só títulos com este clima, como \"leve\"",
+              "title": "Mood"
+            },
+            "description": "Momento (RFF20): só títulos com este clima, como \"leve\""
+          },
+          {
+            "name": "max_minutes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 600,
+                  "minimum": 10
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Momento (RFF20): duração máxima; na série, a do episódio",
+              "title": "Max Minutes"
+            },
+            "description": "Momento (RFF20): duração máxima; na série, a do episódio"
+          },
+          {
+            "name": "occasion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Momento (RFF20): a ocasião, \"a-dois\", \"amigos\" ou \"familia\"; veja GET /media/occasions",
+              "title": "Occasion"
+            },
+            "description": "Momento (RFF20): a ocasião, \"a-dois\", \"amigos\" ou \"familia\"; veja GET /media/occasions"
+          },
+          {
+            "name": "only_mine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Só filmes e séries que estão, por assinatura, nos serviços da pessoa (RFF21). Sem serviços marcados, não sobra nada",
+              "default": false,
+              "title": "Only Mine"
+            },
+            "description": "Só filmes e séries que estão, por assinatura, nos serviços da pessoa (RFF21). Sem serviços marcados, não sobra nada"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecommendationOut"
+                  },
+                  "title": "Response Watch Together Recommendations Together Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recommendations/watchlist": {
       "get": {
         "tags": [
@@ -2107,7 +2244,7 @@
           "comunidade"
         ],
         "summary": "Reviewers",
-        "description": "Quem mais escreveu resenhas, entre quem deixa ver os registros (RFF10). Resenhas ocultas pela moderação não\ncontam.",
+        "description": "Quem escreve as resenhas que mais agradam: o rank pelas curtidas recebidas (RFF30), depois por quantas resenhas\nescreveu, entre quem deixa ver os registros (RFF10) e já escreveu alguma resenha. Resenhas ocultas pela moderação\nnão contam.",
         "operationId": "reviewers_community_reviewers_get",
         "security": [
           {
@@ -2156,6 +2293,235 @@
         }
       }
     },
+    "/community/{entry_id}/like": {
+      "put": {
+        "tags": [
+          "comunidade"
+        ],
+        "summary": "Like",
+        "description": "Curtir uma resenha. Repetir não muda nada, e não dá para curtir a própria.",
+        "operationId": "like_community__entry_id__like_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "comunidade"
+        ],
+        "summary": "Unlike",
+        "description": "Tirar a curtida. Quem não tinha curtido continua sem curtir.",
+        "operationId": "unlike_community__entry_id__like_delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/community/{entry_id}/comments": {
+      "get": {
+        "tags": [
+          "comunidade"
+        ],
+        "summary": "Comments",
+        "description": "Os comentários de uma resenha, do mais antigo ao mais novo. Os ocultos pela moderação não aparecem.",
+        "operationId": "comments_community__entry_id__comments_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommentOut"
+                  },
+                  "title": "Response Comments Community  Entry Id  Comments Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "comunidade"
+        ],
+        "summary": "Add Comment",
+        "description": "Comentar uma resenha, com até 500 caracteres. O comentário aparece com o nome de quem escreveu para todo mundo\nque vê a resenha, e a moderação pode ocultá-lo.",
+        "operationId": "add_comment_community__entry_id__comments_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/community/comments/{comment_id}": {
+      "delete": {
+        "tags": [
+          "comunidade"
+        ],
+        "summary": "Delete Comment",
+        "description": "Apagar um comentário: quem escreveu o comentário ou quem escreveu a resenha.",
+        "operationId": "delete_comment_community_comments__comment_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "comment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Comment Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/following": {
       "get": {
         "tags": [
@@ -2185,6 +2551,110 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/users/{user_id}/followers": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Followers Of",
+        "description": "Quem segue esta pessoa, por nome (RFF09). Perfis privados ficam de fora, como nos números do perfil.",
+        "operationId": "followers_of_users__user_id__followers_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonOut"
+                  },
+                  "title": "Response Followers Of Users  User Id  Followers Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{user_id}/follows": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Follows Of",
+        "description": "Quem esta pessoa segue, por nome (RFF09). Perfis privados ficam de fora, como nos números do perfil.",
+        "operationId": "follows_of_users__user_id__follows_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonOut"
+                  },
+                  "title": "Response Follows Of Users  User Id  Follows Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/users/{user_id}/follow": {
@@ -2321,7 +2791,7 @@
           "pessoas"
         ],
         "summary": "Watch Together",
-        "description": "Assistir ou ouvir junto (RFF28): sugestões para quem vê e esta pessoa. Primeiro o que aparece para as duas,\ndepois o que agrada a uma e a outra ainda não viu. O motivo mostra os dois lados (\"Para você: ... · Para Levi: ...\").\nItens que alguma das duas já registrou, descartou ou guardou ficam de fora. Só vale com quem deixa ver os\nregistros (RFF10): com perfil privado dá 404; só para quem segue, sem seguir, dá 403.",
+        "description": "Assistir ou ouvir junto (RFF28): sugestões para quem vê e esta pessoa. Primeiro o que aparece para as duas,\ndepois o que agrada a uma e a outra ainda não viu. O motivo mostra os dois lados (\"Para você: ... · Para Levi: ...\").\nItens que alguma das duas já registrou, descartou ou guardou ficam de fora. Só vale com quem deixa ver os\nregistros (RFF10): com perfil privado dá 404; só para quem segue, sem seguir, dá 403. Para mais pessoas e com o\nmomento, use `GET /recommendations/together`.",
         "operationId": "watch_together_users__user_id__together_get",
         "security": [
           {
@@ -3174,6 +3644,135 @@
         }
       }
     },
+    "/admin/comments": {
+      "get": {
+        "tags": [
+          "administração"
+        ],
+        "summary": "List Comments",
+        "description": "Os comentários nas resenhas (RFF30), do mais novo ao mais antigo, para moderar.",
+        "operationId": "list_comments_admin_comments_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "hidden",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Hidden"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminCommentOut"
+                  },
+                  "title": "Response List Comments Admin Comments Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/comments/{comment_id}": {
+      "patch": {
+        "tags": [
+          "administração"
+        ],
+        "summary": "Moderate Comment",
+        "description": "Ocultar ou mostrar de novo um comentário. Oculto, ele some da resenha e da contagem.",
+        "operationId": "moderate_comment_admin_comments__comment_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "comment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Comment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewModerationIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminCommentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/users": {
       "get": {
         "tags": [
@@ -3391,6 +3990,60 @@
           "weight"
         ],
         "title": "AdjustmentIn"
+      },
+      "AdminCommentOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "user_email": {
+            "type": "string",
+            "title": "User Email"
+          },
+          "entry_id": {
+            "type": "integer",
+            "title": "Entry Id"
+          },
+          "review_author": {
+            "type": "string",
+            "title": "Review Author"
+          },
+          "media_title": {
+            "type": "string",
+            "title": "Media Title"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_name",
+          "user_email",
+          "entry_id",
+          "review_author",
+          "media_title",
+          "text",
+          "hidden",
+          "created_at"
+        ],
+        "title": "AdminCommentOut"
       },
       "AdminReviewOut": {
         "properties": {
@@ -3613,6 +4266,61 @@
         ],
         "title": "BecauseOut"
       },
+      "CommentIn": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "CommentIn"
+      },
+      "CommentOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "can_delete": {
+            "type": "boolean",
+            "title": "Can Delete",
+            "description": "Quem escreveu e quem escreveu a resenha podem apagar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "user_name",
+          "text",
+          "created_at",
+          "can_delete"
+        ],
+        "title": "CommentOut"
+      },
       "CommunityEntryOut": {
         "properties": {
           "id": {
@@ -3668,6 +4376,24 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "likes": {
+            "type": "integer",
+            "title": "Likes",
+            "description": "Curtidas na resenha (RFF30)",
+            "default": 0
+          },
+          "liked": {
+            "type": "boolean",
+            "title": "Liked",
+            "description": "Se quem vê curtiu a resenha",
+            "default": false
+          },
+          "comments": {
+            "type": "integer",
+            "title": "Comments",
+            "description": "Comentários visíveis na resenha (RFF30)",
+            "default": 0
           }
         },
         "type": "object",
@@ -5568,6 +6294,10 @@
       },
       "ReviewerOut": {
         "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
           "name": {
             "type": "string",
             "title": "Name"
@@ -5579,13 +6309,20 @@
           "reviews": {
             "type": "integer",
             "title": "Reviews"
+          },
+          "likes": {
+            "type": "integer",
+            "title": "Likes",
+            "description": "Curtidas recebidas nas resenhas (RFF30)"
           }
         },
         "type": "object",
         "required": [
+          "id",
           "name",
           "titles",
-          "reviews"
+          "reviews",
+          "likes"
         ],
         "title": "ReviewerOut"
       },

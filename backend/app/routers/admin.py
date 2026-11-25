@@ -5,14 +5,15 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import and_, func, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from .. import crud
 from ..auth import require_admin
 from ..config import settings
 from ..db import get_db
-from ..models import DiaryEntry, Media, RecEvent, User
+from ..models import DiaryEntry, Media, RecEvent, ReviewComment, User
 from ..schemas import (
+    AdminCommentOut,
     AdminReviewOut,
     AlbumImportIn,
     AlbumImportOut,
@@ -248,6 +249,47 @@ def moderate_review(entry_id: int, data: ReviewModerationIn, db: Session = Depen
         review_hidden=e.review_hidden,
         created_at=e.created_at,
     )
+
+
+def admin_comment(c: ReviewComment) -> AdminCommentOut:
+    return AdminCommentOut(
+        id=c.id, user_name=c.user.name, user_email=c.user.email, entry_id=c.entry_id,
+        review_author=c.entry.user.name, media_title=c.entry.media.title, text=c.text, hidden=c.hidden,
+        created_at=c.created_at,
+    )
+
+
+@router.get("/comments", response_model=list[AdminCommentOut])
+def list_comments(
+    hidden: bool | None = None,
+    limit: int = Query(default=100, ge=1, le=500),
+    db: Session = Depends(get_db),
+):
+    """Os comentários nas resenhas (RFF30), do mais novo ao mais antigo, para moderar."""
+    q = (
+        select(ReviewComment)
+        .options(
+            selectinload(ReviewComment.user),
+            selectinload(ReviewComment.entry).selectinload(DiaryEntry.user),
+            selectinload(ReviewComment.entry).selectinload(DiaryEntry.media),
+        )
+        .order_by(ReviewComment.created_at.desc(), ReviewComment.id.desc())
+        .limit(limit)
+    )
+    if hidden is not None:
+        q = q.where(ReviewComment.hidden.is_(hidden))
+    return [admin_comment(c) for c in db.scalars(q)]
+
+
+@router.patch("/comments/{comment_id}", response_model=AdminCommentOut)
+def moderate_comment(comment_id: int, data: ReviewModerationIn, db: Session = Depends(get_db)):
+    """Ocultar ou mostrar de novo um comentário. Oculto, ele some da resenha e da contagem."""
+    c = db.get(ReviewComment, comment_id)
+    if c is None:
+        raise HTTPException(status_code=404, detail="Comentário não encontrado")
+    c.hidden = data.hidden
+    db.commit()
+    return admin_comment(c)
 
 
 # ---------- Usuários ----------

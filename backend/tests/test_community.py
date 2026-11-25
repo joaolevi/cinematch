@@ -165,8 +165,8 @@ def test_reviewers_are_ranked_by_reviews_and_skip_moderated_ones(client, user_he
     see(client, admin_headers, "Dark", review="Do admin")
 
     ranking = client.get("/community/reviewers", headers=user_headers).json()
-    assert ranking == [
-        {"name": "Outra Pessoa", "titles": 2, "reviews": 2},
-        {"name": "Fulano", "titles": 3, "reviews": 1},
+    assert [{k: r[k] for k in ("name", "titles", "reviews", "likes")} for r in ranking] == [
+        {"name": "Outra Pessoa", "titles": 2, "reviews": 2, "likes": 0},
+        {"name": "Fulano", "titles": 3, "reviews": 1, "likes": 0},
     ]
     assert client.get("/community/reviewers").status_code == 401

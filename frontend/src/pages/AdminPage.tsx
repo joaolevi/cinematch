@@ -5,7 +5,7 @@ import Poster from "../components/Poster";
 import { StarsDisplay } from "../components/Stars";
 import { Avatar } from "../components/WatchedBy";
 import { MEDIA_STYLE, formatDate, plural, timeAgo } from "../format";
-import type { AdminReview, AdminUser, ExternalTitle, Media, MediaInput, Metrics, VariantMetrics } from "../types";
+import type { AdminComment, AdminReview, AdminUser, ExternalTitle, Media, MediaInput, Metrics, VariantMetrics } from "../types";
 import { TAPE_COLORS, tabColor } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
@@ -672,24 +672,76 @@ function TmdbPanel({ onChange }: { onChange: () => void }) {
 // ------------------------------------------------------------------ Moderação
 function ModerationTab() {
   const [reviews, setReviews] = useState<AdminReview[]>([]);
+  const [comments, setComments] = useState<AdminComment[]>([]);
+  const [what, setWhat] = useState<"reviews" | "comments">("reviews");
   const [filter, setFilter] = useState<"all" | "visible" | "hidden">("all");
-  const load = () => api.adminReviews().then(setReviews);
+  const load = () => {
+    api.adminReviews().then(setReviews);
+    api.adminComments().then(setComments);
+  };
   useEffect(() => {
     load();
   }, []);
 
-  const shown = reviews.filter((r) => (filter === "all" ? true : filter === "hidden" ? r.review_hidden : !r.review_hidden));
+  const keep = (hidden: boolean) => (filter === "all" ? true : filter === "hidden" ? hidden : !hidden);
+  const shown = reviews.filter((r) => keep(r.review_hidden));
+  const shownComments = comments.filter((c) => keep(c.hidden));
 
   return (
     <div>
-      <div className="flex gap-2">
-        {(["all", "visible", "hidden"] as const).map((f) => (
-          <button key={f} onClick={() => setFilter(f)} className={`chip cursor-pointer ${filter === f ? "border-accent text-accent" : ""}`}>
-            {f === "all" ? "Todas" : f === "visible" ? "Visíveis" : "Ocultas"}
+      <div className="flex flex-wrap gap-2" role="group" aria-label="O que moderar">
+        {(
+          [
+            ["reviews", "Resenhas"],
+            ["comments", "Comentários nas resenhas"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            aria-pressed={what === key}
+            onClick={() => setWhat(key)}
+            className={`chip cursor-pointer ${what === key ? "border-accent text-accent" : ""}`}
+          >
+            {label}
           </button>
         ))}
       </div>
-      <div className="mt-4 space-y-2">
+      <div className="mt-3 flex gap-2">
+        {(["all", "visible", "hidden"] as const).map((f) => (
+          <button key={f} onClick={() => setFilter(f)} className={`chip cursor-pointer ${filter === f ? "border-accent text-accent" : ""}`}>
+            {f === "all" ? "Todos" : f === "visible" ? "Visíveis" : "Ocultos"}
+          </button>
+        ))}
+      </div>
+      {what === "comments" && (
+        <div className="mt-4 space-y-2">
+          {shownComments.length === 0 && <HandNote>Nenhum comentário por aqui.</HandNote>}
+          {shownComments.map((c) => (
+            <div key={c.id} className={`card flex flex-wrap items-center gap-4 p-4 ${c.hidden ? "opacity-60" : ""}`}>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm">
+                  <span className="font-semibold">{c.user_name}</span>{" "}
+                  <span className="text-muted">
+                    na resenha de {c.review_author} sobre {c.media_title}
+                  </span>
+                </p>
+                <p className="mt-1 text-xs text-muted">{c.user_email}</p>
+                <p className="mt-2 break-words whitespace-pre-line text-stone-200">{c.text}</p>
+              </div>
+              <button
+                className={c.hidden ? "btn-ghost" : "btn-danger"}
+                onClick={async () => {
+                  await api.adminModerateComment(c.id, !c.hidden);
+                  load();
+                }}
+              >
+                {c.hidden ? "Restaurar" : "Ocultar"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className={`mt-4 space-y-2 ${what === "reviews" ? "" : "hidden"}`}>
         {shown.length === 0 && <HandNote>Nenhuma resenha por aqui.</HandNote>}
         {shown.map((r) => (
           <div key={r.id} className={`card flex flex-wrap items-center gap-4 p-4 ${r.review_hidden ? "opacity-60" : ""}`}>

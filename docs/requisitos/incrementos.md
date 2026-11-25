@@ -68,7 +68,7 @@ O vocabulário de clima e tudo que depende dele, mais os serviços de streaming.
 |---|---|---|---|---|---|---|---|---|
 | [RNFF09](nao-funcionais.md#rnff09) | Vocabulário de clima comum | Não funcional | Feito | M a G | 2 | 2 | 4 | RNFF02 |
 | [RFF19](funcionais.md#rff19) | Onde assistir ou ouvir | Funcional | Parcial | M a G | 2 | 2 | 3 | RNFF03; a música depende do RFF01 |
-| [RFF20](funcionais.md#rff20) | Sugestões pelo momento | Funcional | Feito | M | 2 | 2 | 4 | RNFF09; "Hoje à noite" com outra pessoa vem com o RFF28 |
+| [RFF20](funcionais.md#rff20) | Sugestões pelo momento | Funcional | Feito | M | 2 | 2 | 4 | RNFF09 |
 | [RFF21](funcionais.md#rff21) | Meus serviços | Funcional | Feito | P a M | 2 | 2 | 2 | RFF19 |
 | [RFF22](funcionais.md#rff22) | Quero ver ordenado pelo que combina agora | Funcional | Feito | P a M | 2 | 2 | 3 | RFF19, RFF20 |
 | [RFF23](funcionais.md#rff23) | Buscar por clima | Funcional | Feito | M | 2 | 1 | 4 | RNFF09, RFF01 |
@@ -84,7 +84,7 @@ As sugestões que cruzam filmes, séries e música, e assistir ou ouvir junto.
 | [RNFF10](nao-funcionais.md#rnff10) | Vizinhos sem domínio dos populares | Não funcional | Não iniciado | P a M | 2 | 2 | 1 | RNFF06 |
 | [RFF26](funcionais.md#rff26) | Ligações entre mídias no detalhe | Funcional | Parcial | G | 2 | 1 | 5 | RFF01, RNFF03; começa por compositor e trilha (M) |
 | [RFF27](funcionais.md#rff27) | Sugestões cruzadas no feed | Funcional | Parcial | G | 2 | 1 | 5 | RFF26, RNFF09 |
-| [RFF28](funcionais.md#rff28) | Assistir ou ouvir junto | Funcional | Parcial | M | 2 | 1 | 3 | RFF15 |
+| [RFF28](funcionais.md#rff28) | Assistir ou ouvir junto | Funcional | Feito | M | 2 | 1 | 3 | RFF15 |
 | [EXP03](../tecnico/AVALIACAO.md#exp03) | Aceitação por tipo de ponte | Experimento | Não iniciado | P | 2 | 2 | 3 | RFF27 |
 
 ## Depois: com dados reais ou folga
@@ -95,7 +95,7 @@ O fim das cadeias de dependência e o que precisa de muitas aceitações reais.
 |---|---|---|---|---|---|---|---|---|
 | [RNFF11](nao-funcionais.md#rnff11) | Pesos aprendidos com as aceitações | Não funcional | Não iniciado | M | 1 | 2 | 3 | EXP03; e aceitações suficientes |
 | [RFF29](funcionais.md#rff29) | Aviso do Quero ver | Funcional | Não iniciado | M | 1 | 1 | 2 | RFF21 |
-| [RFF30](funcionais.md#rff30) | Curtir e comentar resenhas | Funcional | Não iniciado | M | 1 | 1 | 1 | RNFF01 |
+| [RFF30](funcionais.md#rff30) | Curtir e comentar resenhas | Funcional | Feito | M | 1 | 1 | 1 | RNFF01 |
 | [RFF31](funcionais.md#rff31) | Histórico de atividades | Funcional | Não iniciado | M | 1 | 1 | 1 | RFF09, RFF30, RFF10 |
 | [RFF32](funcionais.md#rff32) | Tema do mês | Funcional | Parcial | P a M | 1 | 1 | 3 | usa as listas que já existem |
 

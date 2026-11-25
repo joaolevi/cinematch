@@ -107,7 +107,8 @@ export default function HowPage() {
         </p>
         <p>
           Se você marcar os serviços que assina, em Minha conta, cada sugestão avisa se está num deles, e "Só nos meus
-          serviços" mostra só o que dá para ver agora. "Hoje à noite" junta isso com até 2h30. O Quero ver também se
+          serviços" mostra só o que dá para ver agora. "Hoje à noite" junta isso com até 2h30. Em "Junto com", você
+          escolhe quem você segue para ver junto: primeiro vem o que agrada a todo mundo. O Quero ver também se
           ordena pelo que combina agora: o gosto primeiro, e o que está nos seus serviços sobe um pouco. Onde assistir
           vem da JustWatch, pelo TMDB.
         </p>

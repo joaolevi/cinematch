@@ -319,6 +319,22 @@ class CommunityEntryOut(BaseModel):
     review: str | None
     consumed_at: date | None
     created_at: datetime
+    likes: int = Field(default=0, description="Curtidas na resenha (RFF30)")
+    liked: bool = Field(default=False, description="Se quem vê curtiu a resenha")
+    comments: int = Field(default=0, description="Comentários visíveis na resenha (RFF30)")
+
+
+class CommentIn(BaseModel):
+    text: str = Field(min_length=1, max_length=500)
+
+
+class CommentOut(BaseModel):
+    id: int
+    user_id: int
+    user_name: str
+    text: str
+    created_at: datetime
+    can_delete: bool = Field(description="Quem escreveu e quem escreveu a resenha podem apagar")
 
 
 class ProfileItemOut(BaseModel):
@@ -359,9 +375,11 @@ class CommunityPage(BaseModel):
 
 
 class ReviewerOut(BaseModel):
+    id: int
     name: str
     titles: int
     reviews: int
+    likes: int = Field(description="Curtidas recebidas nas resenhas (RFF30)")
 
 
 class ImpressionIn(BaseModel):
@@ -420,6 +438,18 @@ class AdminUserOut(BaseModel):
 class AdminUsersOut(BaseModel):
     items: list[AdminUserOut]
     total: int
+
+
+class AdminCommentOut(BaseModel):
+    id: int
+    user_name: str
+    user_email: str
+    entry_id: int
+    review_author: str
+    media_title: str
+    text: str
+    hidden: bool
+    created_at: datetime
 
 
 class ReviewModerationIn(BaseModel):
