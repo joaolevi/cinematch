@@ -68,6 +68,16 @@ def services_of(media: Media) -> set[str]:
     }
 
 
+def streaming_on(media: Media) -> list[dict]:
+    """Os serviços de assinatura da lista onde o título está, com o logo que veio do TMDB (RFF19), na ordem da lista."""
+    logos: dict[str, str | None] = {}
+    for p in media.providers or []:
+        key = service_key(p.get("service", "")) if p.get("kind") == "flatrate" else None
+        if key and key not in logos:
+            logos[key] = p.get("logo")
+    return [{"key": s.key, "label": s.label, "logo": logos[s.key]} for s in SERVICES if s.key in logos]
+
+
 def labels_on(media: Media, mine: list[str]) -> list[str]:
     """Os nomes dos serviços da pessoa onde o título está, na ordem da lista ("Netflix", "Max")."""
     if not mine:

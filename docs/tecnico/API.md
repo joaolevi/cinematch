@@ -28,6 +28,7 @@ Swagger, com as regras na descrição de cada rota.
 | Método e rota | Para quê | Corpo / parâmetros |
 |---|---|---|
 | `GET /me` | Usuário logado | — |
+| `GET /me/activity` | O próprio histórico de atividades (RFF31), do mais recente ao mais antigo | `kind` (`registros`, `notas`, `resenhas`, `listas`, `curtidas`, `comentarios` ou `seguindo`), `limit`, `offset` → `[{kind, at, media, rating, text, list_name, person}]`; `kind` de cada linha: `registro`, `lista`, `curtida`, `comentario` ou `seguiu` |
 | `GET /me/export` | Baixar os próprios dados (RFF06) | → JSON com `account`, `preferences`, `diary`, `lists`, `dismissed`, `following`, `review_comments`, `taste_adjustments` e `recommendation_events`; a senha não vai |
 | `DELETE /me` | Excluir a própria conta e tudo o que é dela (RFF06) | `{password}` → 204; 403 com senha errada; 400 para contas de administração |
 | `PUT /me/experiments` | Sair ou voltar para os experimentos (RFF17) | `{in_experiments: bool}` → o usuário. Fora deles, `variant` no feed vem `"-"` e as reações ficam fora da comparação A/B |
@@ -52,10 +53,12 @@ Swagger, com as regras na descrição de cada rota.
 | `POST /diary` | "Já vi". Sem `consumed_at`, o registro fica sem data | `{media_id, rating?: 0.5–5 (passo 0.5), review?, consumed_at?: "AAAA-MM-DD"}` |
 | `PATCH /diary/{id}` · `DELETE /diary/{id}` | Editar / remover registro | `{rating?, review?, consumed_at?}` |
 | `GET /lists` | Listas (a primeira é sempre a watchlist "Quero ver") | — |
+| `GET /lists/featured` | As listas em destaque no Início, como o Tema do mês (RFF32). Quando o mês vira, troca para o tema novo | → `[{id, name, description, featured, items}]` |
+| `GET /lists/featured/challenge` | O desafio do tema do mês (RFF32) | → `{month, title, goal, badge, done, earned}` ou `null`; `done` são os títulos do tema registrados no mês. Os selos ganhos ficam em `badges` no perfil (`GET /users/{id}`) |
 | `GET /lists/{id}` | Uma lista, com os títulos | — |
 | `POST /lists` · `PATCH /lists/{id}` · `DELETE /lists/{id}` | Criar / renomear / excluir | `{name}` |
 | `POST /lists/{id}/items` · `DELETE /lists/{id}/items/{media_id}` | Adicionar / remover título | `{media_id}` |
-| `GET /recommendations` | Feed "Para você" | `type`, `limit`, `exclude` (pode repetir: títulos que já foram mostrados, para trazer outros), `mood`, `max_minutes`, `occasion`, `only_mine` (só nos serviços da pessoa) → `{variant, strategy, items: [{media, score, reason, strategy, because, services}]}`. `services` traz os serviços da pessoa onde o título está |
+| `GET /recommendations` | Feed "Para você" | `type`, `limit`, `exclude` (pode repetir: títulos que já foram mostrados, para trazer outros), `mood`, `max_minutes`, `occasion`, `only_mine` (só nos serviços da pessoa) → `{variant, strategy, items: [{media, score, reason, strategy, because, services}]}`. `services` traz os serviços da pessoa onde o título está, e `streaming`, todos os serviços de assinatura onde ele está, com o logo: `[{key, label, logo}]` (RFF19) |
 | `GET /recommendations/watchlist` | O Quero ver ordenado pelo que combina agora (RFF22) | `mood`, `max_minutes`, `occasion`, `only_mine` → `{items, later}`: o que cabe no momento, do que mais combina ao que menos, e o resto |
 | `GET /recommendations/pairs` | Sessão dupla (RFF27): um filme ou série sugerido e um disco ligado por ponte forte | `limit` (até 10), `exclude` (repete: filmes que já estão na tela), `mood`, `max_minutes`, `occasion`, `only_mine` → `[{video: {media, score, reason, strategy, because, services}, album, kind, reason}]`. `kind` é `soundtrack`, `composer`, `same_person`, `biopic` ou `documentary`. Não entra na comparação A/B |
 | `GET /recommendations/together` | Para ver ou ouvir junto com uma a quatro pessoas, no momento (RFF28, RFF20) | `with` (repete: o id de cada pessoa), `limit`, `mood`, `max_minutes`, `occasion`, `only_mine` (os serviços de quem pede) → `[{media, score, reason, strategy, because, services}]`: primeiro o que aparece para todas, e o motivo mostra cada lado. 422 sem ninguém ou com mais de quatro; 404 para perfil privado ou o próprio; 403 quando a pessoa só mostra para quem segue e quem pede não segue |
@@ -71,6 +74,7 @@ Swagger, com as regras na descrição de cada rota.
 | `PUT /users/{id}/follow` | Seguir a pessoa (RFF09), sem pedido de aceite | 204; repetir não muda nada; 400 para o próprio perfil; 404 para perfil privado |
 | `DELETE /users/{id}/follow` | Deixar de seguir | 204, mesmo se não seguia |
 | `GET /users/following` | Quem eu sigo, por nome | → `[{id, name}]` |
+| `GET /users/suggestions` | Quem seguir (RFF15): pessoas de gosto parecido que eu ainda não sigo | `limit` → `[{id, name, percent, label}]`, com pelo menos 25%, só entre quem deixa ver os registros para todos |
 | `GET /users/{id}/followers` · `GET /users/{id}/follows` | Quem segue a pessoa e quem ela segue (RFF09) | → `[{id, name}]`; perfis privados ficam de fora, como nos números do perfil; 404 para perfil privado |
 | `GET /health` | Confere se a API está no ar (sem login) | — |
 | `POST /admin/media` · `PATCH`/`DELETE /admin/media/{id}` | Gerenciar catálogo | campos de mídia |

@@ -12,7 +12,7 @@ from collections import Counter
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import Media
+from ..models import Follow, Media, User
 from .recommender import user_signals
 
 W_TITLE = 2.0
@@ -44,6 +44,36 @@ def _cosine(a: Counter[str], b: Counter[str]) -> float:
     dot = sum(v * b[k] for k, v in a.items() if k in b)
     na, nb = math.sqrt(sum(v * v for v in a.values())), math.sqrt(sum(v * v for v in b.values()))
     return dot / (na * nb) if na and nb else 0.0
+
+
+MIN_SUGGEST = 25  # abaixo disso, "gostos bem diferentes": não vale sugerir
+
+
+def suggest_people(db: Session, me: User, limit: int = 5) -> list[dict]:
+    """Quem seguir (RFF15): as pessoas de gosto mais parecido que quem pede ainda não segue. Só entram contas de
+    pessoas reais que deixam ver os registros para todos (RFF10), com pelo menos 25% de compatibilidade."""
+    from ..seed import DEMO_EMAIL
+
+    mine, _, _ = taste_vector(db, me.id)
+    if not mine:
+        return []
+    followed = set(db.scalars(select(Follow.followed_id).where(Follow.follower_id == me.id)))
+    candidates = db.scalars(
+        select(User).where(
+            User.id != me.id, User.role == "user", User.is_synthetic.is_(False), User.email != DEMO_EMAIL,
+            User.visibility == "all",
+        )
+    )
+    found = []
+    for person in candidates:
+        if person.id in followed:
+            continue
+        theirs, _, _ = taste_vector(db, person.id)
+        percent = round(100 * _cosine(mine, theirs)) if theirs else 0
+        if percent >= MIN_SUGGEST:
+            found.append({"id": person.id, "name": person.name, "percent": percent, "label": label_for(percent)})
+    found.sort(key=lambda p: (-p["percent"], p["name"]))
+    return found[:limit]
 
 
 def label_for(percent: int) -> str:

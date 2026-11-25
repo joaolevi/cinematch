@@ -76,6 +76,9 @@ export default function UserMenu() {
             <Link role="menuitem" to="/listas" className={item}>
               Minhas listas
             </Link>
+            <Link role="menuitem" to="/atividade" className={item}>
+              Minha atividade
+            </Link>
             <Link role="menuitem" to="/onboarding" className={item}>
               Refazer minhas preferências
             </Link>

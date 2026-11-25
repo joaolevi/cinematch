@@ -5,8 +5,12 @@ import type {
   Connection,
   AdminComment,
   AdminReview,
+  Activity,
+  ActivityFilter,
+  Challenge,
   Comment,
   Pair,
+  SuggestedPerson,
   AdminUser,
   CommunityEntry,
   DiaryEntry,
@@ -185,6 +189,10 @@ export const api = {
     request<Recommendation[]>("/recommendations/together", { query: { with: people.map(String), limit, ...moment } }),
   pairs: (exclude: number[], moment: Moment = {}, limit = 3) =>
     request<Pair[]>("/recommendations/pairs", { query: { exclude: exclude.map(String), limit, ...moment } }),
+  suggestions: () => request<SuggestedPerson[]>("/users/suggestions"),
+  activity: (kind?: ActivityFilter, limit = 50, offset = 0) =>
+    request<Activity[]>("/me/activity", { query: { kind, limit, offset } }),
+  challenge: () => request<Challenge | null>("/lists/featured/challenge"),
   followers: (id: number) => request<Person[]>(`/users/${id}/followers`),
   follows: (id: number) => request<Person[]>(`/users/${id}/follows`),
   like: (entry: number) => request<void>(`/community/${entry}/like`, { method: "PUT" }),

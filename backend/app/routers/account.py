@@ -1,9 +1,10 @@
 """A própria conta: exportar os dados, excluir a conta (RFF06), sair dos experimentos (RFF17), escolher quem vê os
-registros (RFF10) e marcar os serviços que assina (RFF21)."""
+registros (RFF10), marcar os serviços que assina (RFF21) e ver o próprio histórico de atividades (RFF31)."""
 
 from datetime import datetime, timezone
+from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -19,11 +20,14 @@ from ..models import (
     ReviewLike,
     TasteAdjustment,
     User,
+    ListItem,
     UserInterest,
     UserList,
     UserPreference,
 )
-from ..schemas import DeleteAccountIn, ExperimentsIn, ServicesIn, UserOut, VisibilityIn
+from ..schemas import (
+    ActivityOut, DeleteAccountIn, ExperimentsIn, MediaOut, PersonOut, ServicesIn, UserOut, VisibilityIn,
+)
 from ..services.streaming import BY_KEY as SERVICES
 
 router = APIRouter(prefix="/me", tags=["conta"])
@@ -31,6 +35,78 @@ router = APIRouter(prefix="/me", tags=["conta"])
 
 def _title(media: Media) -> dict:
     return {"id": media.id, "title": media.title, "type": media.type, "year": media.year}
+
+
+def _utc(moment: datetime) -> datetime:
+    """O SQLite devolve as datas sem fuso; elas foram gravadas em UTC."""
+    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+
+
+ActivityKind = Literal["registros", "notas", "resenhas", "listas", "curtidas", "comentarios", "seguindo"]
+
+
+@router.get("/activity", response_model=list[ActivityOut])
+def my_activity(
+    kind: ActivityKind | None = Query(default=None, description="Só um tipo de atividade"),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """O próprio histórico de atividades (RFF31), do mais recente ao mais antigo: registros no diário (com nota e
+    resenha), títulos guardados em listas, curtidas e comentários em resenhas e pessoas que passou a seguir. `kind`
+    filtra: `notas` e `resenhas` são os registros com nota ou com resenha. O começo (onboarding) não entra."""
+    items: list[ActivityOut] = []
+    media_out = MediaOut.model_validate
+    if kind in (None, "registros", "notas", "resenhas"):
+        q = select(DiaryEntry).where(DiaryEntry.user_id == user.id, DiaryEntry.from_onboarding.is_(False))
+        if kind == "notas":
+            q = q.where(DiaryEntry.rating.is_not(None))
+        if kind == "resenhas":
+            q = q.where(DiaryEntry.review.is_not(None), DiaryEntry.review != "")
+        for e in db.scalars(q.options(selectinload(DiaryEntry.media))):
+            items.append(ActivityOut(kind="registro", at=_utc(e.created_at), media=media_out(e.media), rating=e.rating,
+                                     text=e.review or None))
+    if kind in (None, "listas"):
+        rows = db.execute(
+            select(ListItem, UserList.name, UserList.is_watchlist)
+            .join(UserList, UserList.id == ListItem.list_id)
+            .where(UserList.user_id == user.id, UserList.featured.is_(False))
+            .options(selectinload(ListItem.media))
+        )
+        for item, name, watchlist in rows:
+            items.append(ActivityOut(kind="lista", at=_utc(item.added_at), media=media_out(item.media),
+                                     list_name="Quero ver" if watchlist else name))
+    if kind in (None, "curtidas"):
+        rows = db.execute(
+            select(ReviewLike.created_at, DiaryEntry)
+            .join(DiaryEntry, DiaryEntry.id == ReviewLike.entry_id)
+            .where(ReviewLike.user_id == user.id)
+            .options(selectinload(DiaryEntry.media), selectinload(DiaryEntry.user))
+        )
+        for at, entry in rows:
+            items.append(ActivityOut(kind="curtida", at=_utc(at), media=media_out(entry.media),
+                                     person=PersonOut(id=entry.user.id, name=entry.user.name)))
+    if kind in (None, "comentarios"):
+        rows = db.scalars(
+            select(ReviewComment)
+            .where(ReviewComment.user_id == user.id)
+            .options(selectinload(ReviewComment.entry).selectinload(DiaryEntry.media),
+                     selectinload(ReviewComment.entry).selectinload(DiaryEntry.user))
+        )
+        for c in rows:
+            items.append(ActivityOut(kind="comentario", at=_utc(c.created_at), media=media_out(c.entry.media),
+                                     text=c.text, person=PersonOut(id=c.entry.user.id, name=c.entry.user.name)))
+    if kind in (None, "seguindo"):
+        rows = db.execute(
+            select(Follow.created_at, User.id, User.name)
+            .join(User, User.id == Follow.followed_id)
+            .where(Follow.follower_id == user.id)
+        )
+        for at, person_id, name in rows:
+            items.append(ActivityOut(kind="seguiu", at=_utc(at), person=PersonOut(id=person_id, name=name)))
+    items.sort(key=lambda a: a.at, reverse=True)
+    return items[offset : offset + limit]
 
 
 @router.get("/export")

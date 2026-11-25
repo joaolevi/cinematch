@@ -118,6 +118,45 @@ export interface Recommendation {
   because?: Because | null;
   /** Os serviços da pessoa onde o título está (RFF21), como ["Netflix"] */
   services?: string[];
+  /** Todos os serviços de assinatura onde o título está, com o logo (RFF19) */
+  streaming?: { key: string; label: string; logo: string | null }[];
+}
+
+/** Alguém para seguir, pelo gosto parecido (RFF15) */
+export interface SuggestedPerson {
+  id: number;
+  name: string;
+  percent: number;
+  label: string;
+}
+
+/** Uma linha do histórico de atividades (RFF31) */
+export interface Activity {
+  kind: "registro" | "lista" | "curtida" | "comentario" | "seguiu";
+  at: string;
+  media: Media | null;
+  rating: number | null;
+  text: string | null;
+  list_name: string | null;
+  person: Person | null;
+}
+
+export type ActivityFilter = "registros" | "notas" | "resenhas" | "listas" | "curtidas" | "comentarios" | "seguindo";
+
+/** Selo e desafio do tema do mês (RFF32) */
+export interface Badge {
+  badge: string;
+  title: string;
+  month: string;
+}
+
+export interface Challenge {
+  month: string;
+  title: string;
+  goal: number;
+  badge: string;
+  done: Media[];
+  earned: boolean;
 }
 
 /** Sessão dupla (RFF27): um filme ou série para ver e um disco para ouvir depois */
@@ -262,6 +301,8 @@ export interface Profile {
   follows: number;
   /** Os registros são só para quem segue a pessoa, e quem vê ainda não segue (RFF10) */
   restricted: boolean;
+  /** Selos dos desafios do tema do mês (RFF32) */
+  badges: Badge[];
 }
 
 export interface Person {

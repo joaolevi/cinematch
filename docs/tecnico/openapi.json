@@ -227,6 +227,99 @@
         ]
       }
     },
+    "/me/activity": {
+      "get": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "My Activity",
+        "description": "O próprio histórico de atividades (RFF31), do mais recente ao mais antigo: registros no diário (com nota e\nresenha), títulos guardados em listas, curtidas e comentários em resenhas e pessoas que passou a seguir. `kind`\nfiltra: `notas` e `resenhas` são os registros com nota ou com resenha. O começo (onboarding) não entra.",
+        "operationId": "my_activity_me_activity_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "registros",
+                    "notas",
+                    "resenhas",
+                    "listas",
+                    "curtidas",
+                    "comentarios",
+                    "seguindo"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Só um tipo de atividade",
+              "title": "Kind"
+            },
+            "description": "Só um tipo de atividade"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityOut"
+                  },
+                  "title": "Response My Activity Me Activity Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/me/export": {
       "get": {
         "tags": [
@@ -1262,7 +1355,7 @@
           "listas"
         ],
         "summary": "Featured Lists",
-        "description": "As listas em destaque no Início, como o Tema do mês (RFF32). Curadas pela administração.",
+        "description": "As listas em destaque no Início, como o Tema do mês (RFF32). Curadas pela administração. Quando o mês vira, a\nprateleira troca para o tema novo.",
         "operationId": "featured_lists_lists_featured_get",
         "responses": {
           "200": {
@@ -1275,6 +1368,41 @@
                   },
                   "type": "array",
                   "title": "Response Featured Lists Lists Featured Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/lists/featured/challenge": {
+      "get": {
+        "tags": [
+          "listas"
+        ],
+        "summary": "Theme Challenge",
+        "description": "O desafio do tema do mês (RFF32): quantos títulos do tema registrar no diário dentro do mês, quais a pessoa já\nregistrou e se ganhou o selo. Sem tema com mês, devolve null.",
+        "operationId": "theme_challenge_lists_featured_challenge_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ChallengeOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Theme Challenge Lists Featured Challenge Get"
                 }
               }
             }
@@ -2691,6 +2819,61 @@
         ]
       }
     },
+    "/users/suggestions": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Suggestions",
+        "description": "Quem seguir (RFF15): pessoas de gosto parecido que eu ainda não sigo, da mais compatível para a menos, com\npelo menos 25%. Só entra quem deixa ver os registros para todos.",
+        "operationId": "suggestions_users_suggestions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 5,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SuggestedPersonOut"
+                  },
+                  "title": "Response Suggestions Users Suggestions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/{user_id}/followers": {
       "get": {
         "tags": [
@@ -4094,6 +4277,88 @@
   },
   "components": {
     "schemas": {
+      "ActivityOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "registro",
+              "lista",
+              "curtida",
+              "comentario",
+              "seguiu"
+            ],
+            "title": "Kind"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "media": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MediaOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text",
+            "description": "A resenha do registro ou o comentário"
+          },
+          "list_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Name"
+          },
+          "person": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Quem passou a seguir, ou quem escreveu a resenha"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "at"
+        ],
+        "title": "ActivityOut",
+        "description": "Uma linha do histórico de atividades (RFF31)."
+      },
       "AdjustmentIn": {
         "properties": {
           "kind": {
@@ -4372,6 +4637,30 @@
         ],
         "title": "AlbumImportOut"
       },
+      "BadgeOut": {
+        "properties": {
+          "badge": {
+            "type": "string",
+            "title": "Badge"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "month": {
+            "type": "string",
+            "title": "Month"
+          }
+        },
+        "type": "object",
+        "required": [
+          "badge",
+          "title",
+          "month"
+        ],
+        "title": "BadgeOut",
+        "description": "Selo do desafio de um tema do mês (RFF32)."
+      },
       "BecauseOut": {
         "properties": {
           "kind": {
@@ -4437,6 +4726,49 @@
         ],
         "title": "BridgeMetrics",
         "description": "EXP03: a aceitação dos discos sugeridos por ponte, por tipo de ponte."
+      },
+      "ChallengeOut": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "goal": {
+            "type": "integer",
+            "title": "Goal"
+          },
+          "badge": {
+            "type": "string",
+            "title": "Badge"
+          },
+          "done": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "type": "array",
+            "title": "Done",
+            "description": "Os títulos do tema que a pessoa registrou no mês"
+          },
+          "earned": {
+            "type": "boolean",
+            "title": "Earned"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "title",
+          "goal",
+          "badge",
+          "done",
+          "earned"
+        ],
+        "title": "ChallengeOut",
+        "description": "O desafio do tema do mês (RFF32): registrar `goal` títulos do tema no mês para ganhar o selo."
       },
       "CommentIn": {
         "properties": {
@@ -6292,6 +6624,15 @@
             "title": "Restricted",
             "description": "Os registros são só para quem segue a pessoa, e quem vê ainda não segue (RFF10)",
             "default": false
+          },
+          "badges": {
+            "items": {
+              "$ref": "#/components/schemas/BadgeOut"
+            },
+            "type": "array",
+            "title": "Badges",
+            "description": "Selos dos desafios do tema do mês (RFF32)",
+            "default": []
           }
         },
         "type": "object",
@@ -6390,6 +6731,15 @@
             "type": "array",
             "title": "Services",
             "description": "Os serviços da pessoa onde o título está (RFF21), como [\"Netflix\"]",
+            "default": []
+          },
+          "streaming": {
+            "items": {
+              "$ref": "#/components/schemas/StreamingOut"
+            },
+            "type": "array",
+            "title": "Streaming",
+            "description": "Todos os serviços de assinatura onde o título está, com o logo (RFF19)",
             "default": []
           }
         },
@@ -6577,6 +6927,65 @@
           "services"
         ],
         "title": "ServicesIn"
+      },
+      "StreamingOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "logo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "logo"
+        ],
+        "title": "StreamingOut"
+      },
+      "SuggestedPersonOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "percent": {
+            "type": "integer",
+            "title": "Percent"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "percent",
+          "label"
+        ],
+        "title": "SuggestedPersonOut",
+        "description": "Alguém para seguir, pelo gosto parecido (RFF15)."
       },
       "SyncOut": {
         "properties": {

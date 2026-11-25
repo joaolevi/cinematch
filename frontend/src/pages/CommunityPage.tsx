@@ -6,7 +6,7 @@ import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
 import WatchedBy, { Avatar } from "../components/WatchedBy";
 import { plural } from "../format";
-import type { Comment, CommunityEntry, Person, Reviewer } from "../types";
+import type { Comment, CommunityEntry, Person, Reviewer, SuggestedPerson } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
@@ -199,6 +199,46 @@ function Following({ people }: { people: Person[] }) {
   );
 }
 
+/** Quem seguir (RFF15): pessoas de gosto parecido que eu ainda não sigo. */
+function Suggestions({ people, onFollow }: { people: SuggestedPerson[]; onFollow: (p: SuggestedPerson) => void }) {
+  const [busy, setBusy] = useState<number | null>(null);
+  if (people.length === 0) return null;
+  return (
+    <aside className="paper relative self-start rounded-sm py-5 pr-5 pl-12 lg:rotate-[0.6deg]">
+      <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 -rotate-2" style={{ background: TAPE_COLORS[0] }} />
+      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Gosto parecido com o seu</h2>
+      <ul className="flex flex-wrap gap-x-6 lg:block">
+        {people.map((person) => (
+          <li key={person.id} className="flex items-center gap-3 py-2.5">
+            <Link to={`/pessoas/${person.id}`} className="flex min-w-0 flex-1 items-center gap-3 text-stone-800 hover:text-[#b9452f]">
+              <Avatar name={person.name} size="h-10 w-10" />
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{person.name}</p>
+                <p className="text-xs text-stone-600">Vocês combinam {person.percent}%</p>
+              </div>
+            </Link>
+            <button
+              className="shrink-0 cursor-pointer rounded-full border border-[#b9452f] px-3 py-1 text-xs font-bold text-[#b9452f] hover:bg-[#b9452f] hover:text-white"
+              disabled={busy !== null}
+              onClick={async () => {
+                setBusy(person.id);
+                try {
+                  await api.follow(person.id);
+                  onFollow(person);
+                } finally {
+                  setBusy(null);
+                }
+              }}
+            >
+              {busy === person.id ? "Seguindo..." : "Seguir"}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  );
+}
+
 function Reviewers({ people }: { people: Reviewer[] }) {
   if (people.length === 0) return null;
   return (
@@ -237,12 +277,14 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
+  const [suggested, setSuggested] = useState<SuggestedPerson[]>([]);
   const bottom = useRef<HTMLDivElement>(null);
   const fetching = useRef(false);
 
   useEffect(() => {
     api.reviewers().then(setReviewers).catch(() => {});
     api.following().then(setPeople).catch(() => {});
+    api.suggestions().then(setSuggested).catch(() => {});
   }, []);
 
   function showFollowing(only: boolean) {
@@ -341,6 +383,13 @@ export default function CommunityPage() {
         </div>
         <div className="order-first flex flex-col gap-8 lg:order-none">
           <Following people={people} />
+          <Suggestions
+            people={suggested}
+            onFollow={(p) => {
+              setSuggested((all) => all.filter((x) => x.id !== p.id));
+              setPeople((all) => [...all, { id: p.id, name: p.name }].sort((a, b) => a.name.localeCompare(b.name)));
+            }}
+          />
           <Reviewers people={reviewers} />
         </div>
       </div>

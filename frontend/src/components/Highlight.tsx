@@ -63,9 +63,36 @@ export function DismissButton({ onClick }: { onClick: () => void }) {
 
 /** A primeira sugestão aparece grande, com o pôster desfocado ao fundo. */
 /** Os serviços da pessoa onde o título está (RFF21). */
+const MAX_LOGOS = 5;
+
+/** Onde assistir, na sugestão (RFF19, RFF21): os logos dos serviços de assinatura, com os da pessoa em destaque, e
+ * "Nos seus serviços: ..." quando o título está em algum que ela marcou. */
 export function OnMyServices({ rec, className = "" }: { rec: Recommendation; className?: string }) {
-  if (!rec.services?.length) return null;
-  return <p className={`font-semibold text-accent ${className}`}>Nos seus serviços: {rec.services.join(", ")}</p>;
+  const mine = new Set(rec.services ?? []);
+  const logos = (rec.streaming ?? []).filter((s) => s.logo).slice(0, MAX_LOGOS);
+  if (!logos.length && !mine.size) return null;
+  return (
+    <div className={className}>
+      {logos.length > 0 && (
+        <ul className="flex flex-wrap items-center gap-1.5" aria-label="Onde assistir, por assinatura">
+          {logos.map((s) => (
+            <li key={s.key}>
+              <img
+                src={s.logo!}
+                alt={s.label}
+                title={mine.has(s.label) ? `${s.label}: você assina` : s.label}
+                loading="lazy"
+                className={`h-6 w-6 rounded-md ${mine.has(s.label) ? "ring-2 ring-accent" : "opacity-80"}`}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+      {mine.size > 0 && (
+        <p className="mt-1 font-semibold text-accent">Nos seus serviços: {[...mine].join(", ")}</p>
+      )}
+    </div>
+  );
 }
 
 export default function Highlight({

@@ -1,21 +1,49 @@
 {
-  "titulo": "Feito no Nordeste",
-  "descricao": "Filmes e discos nordestinos, com Alagoas na frente: Djavan e Hermeto Pascoal abrem a prateleira.",
-  "itens": [
-    {"tipo": "album", "titulo": "Luz"},
-    {"tipo": "album", "titulo": "Slaves Mass"},
-    {"tipo": "album", "titulo": "Djavan"},
-    {"tipo": "album", "titulo": "A música livre de Hermeto Paschoal"},
-    {"tipo": "album", "titulo": "Samba 808"},
-    {"tipo": "movie", "titulo": "Bacurau"},
-    {"tipo": "movie", "titulo": "O Auto da Compadecida"},
-    {"tipo": "album", "titulo": "São João na Roça"},
-    {"tipo": "album", "titulo": "Da lama ao caos"},
-    {"tipo": "movie", "titulo": "Central do Brasil"},
-    {"tipo": "album", "titulo": "Vivo !"},
-    {"tipo": "album", "titulo": "A peleja do Diabo com o Dono do céu"},
-    {"tipo": "album", "titulo": "Alucinação"},
-    {"tipo": "album", "titulo": "Domingo Menino Dominguinhos"},
-    {"tipo": "album", "titulo": "Na Pressão"}
+  "temas": [
+    {
+      "mes": "2026-11",
+      "titulo": "Feito no Nordeste",
+      "descricao": "Filmes e discos nordestinos, com Alagoas na frente: Djavan e Hermeto Pascoal abrem a prateleira.",
+      "desafio": {"meta": 3, "selo": "Nordeste no coração"},
+      "itens": [
+        {"tipo": "album", "titulo": "Luz"},
+        {"tipo": "album", "titulo": "Slaves Mass"},
+        {"tipo": "album", "titulo": "Djavan"},
+        {"tipo": "album", "titulo": "A música livre de Hermeto Paschoal"},
+        {"tipo": "album", "titulo": "Samba 808"},
+        {"tipo": "movie", "titulo": "Bacurau"},
+        {"tipo": "movie", "titulo": "O Auto da Compadecida"},
+        {"tipo": "album", "titulo": "São João na Roça"},
+        {"tipo": "album", "titulo": "Da lama ao caos"},
+        {"tipo": "movie", "titulo": "Central do Brasil"},
+        {"tipo": "album", "titulo": "Vivo !"},
+        {"tipo": "album", "titulo": "A peleja do Diabo com o Dono do céu"},
+        {"tipo": "album", "titulo": "Alucinação"},
+        {"tipo": "album", "titulo": "Domingo Menino Dominguinhos"},
+        {"tipo": "album", "titulo": "Na Pressão"}
+      ]
+    },
+    {
+      "mes": "2026-12",
+      "titulo": "Trilhas que viraram disco",
+      "descricao": "Filmes cuja música vale ouvir depois, cada um ao lado do seu disco: uma sessão dupla por noite.",
+      "desafio": {"meta": 3, "selo": "Ouvido de cinema"},
+      "itens": [
+        {"tipo": "movie", "titulo": "Cidade de Deus"},
+        {"tipo": "album", "titulo": "Ciudad de Dios: Trilha sonora original do filme"},
+        {"tipo": "movie", "titulo": "Central do Brasil"},
+        {"tipo": "album", "titulo": "Central do Brasil"},
+        {"tipo": "movie", "titulo": "Interestelar"},
+        {"tipo": "album", "titulo": "Interstellar: Original Motion Picture Soundtrack"},
+        {"tipo": "movie", "titulo": "La La Land: Cantando Estações"},
+        {"tipo": "album", "titulo": "La La Land: Original Motion Picture Score"},
+        {"tipo": "movie", "titulo": "Whiplash: Em Busca da Perfeição"},
+        {"tipo": "album", "titulo": "Whiplash: Original Motion Picture Soundtrack"},
+        {"tipo": "movie", "titulo": "Viva: A Vida é uma Festa"},
+        {"tipo": "album", "titulo": "Coco: Original Motion Picture Soundtrack"},
+        {"tipo": "movie", "titulo": "Pulp Fiction: Tempo de Violência"},
+        {"tipo": "album", "titulo": "Pulp Fiction"}
+      ]
+    }
   ]
 }

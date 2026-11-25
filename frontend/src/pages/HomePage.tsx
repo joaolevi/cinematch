@@ -16,7 +16,7 @@ import { isUpcoming } from "../format";
 import { OnScreen, useImpressions } from "../impressions";
 import { diaryChanged, useDiaryVersion, useSeen } from "../seen";
 import { tasteOf } from "../taste";
-import type { CommunityEntry, DiaryEntry, Feed, FeedbackAction, Media, Recommendation, UserList } from "../types";
+import type { Challenge, CommunityEntry, DiaryEntry, Feed, FeedbackAction, Media, Recommendation, UserList } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import ListName from "../components/ListName";
@@ -83,6 +83,45 @@ function Shelf(props: {
 
 const shelfItem = "w-36 shrink-0 snap-start pt-2 sm:w-40";
 
+/** O desafio do tema do mês (RFF32): quantos títulos do tema registrar no mês e o selo de quem chega lá. */
+function ChallengeNote({ c, userId }: { c: Challenge; userId: number }) {
+  const done = Math.min(c.done.length, c.goal);
+  return (
+    <div className="card mt-3 max-w-3xl p-4">
+      {c.earned ? (
+        <p className="text-sm">
+          <span aria-hidden>🏅</span> Você ganhou o selo <b>"{c.badge}"</b>.{" "}
+          <Link to={`/pessoas/${userId}`} className="underline hover:text-accent">
+            Ver no meu perfil
+          </Link>
+        </p>
+      ) : (
+        <p className="text-sm">
+          <b>Desafio do mês:</b> registre {c.goal} títulos do tema até o fim do mês e ganhe o selo <b>"{c.badge}"</b>.
+        </p>
+      )}
+      <div className="mt-2 flex items-center gap-3">
+        <div
+          role="progressbar"
+          aria-label="Progresso do desafio"
+          aria-valuemin={0}
+          aria-valuemax={c.goal}
+          aria-valuenow={done}
+          className="h-2 flex-1 overflow-hidden rounded-full bg-line"
+        >
+          <div className="h-full rounded-full bg-accent" style={{ width: `${(100 * done) / c.goal}%` }} />
+        </div>
+        <span className="text-xs text-muted tabular-nums">
+          {done} de {c.goal}
+        </span>
+      </div>
+      {c.done.length > 0 && (
+        <p className="mt-1 text-xs text-muted">Já registrados: {c.done.map((m) => m.title).join(", ")}</p>
+      )}
+    </div>
+  );
+}
+
 /** Página inicial: um resumo de tudo, como a home do Letterboxd ou do Spotify. */
 export default function HomePage() {
   usePageTitle("Início");
@@ -97,6 +136,11 @@ export default function HomePage() {
   const [community, setCommunity] = useState<CommunityEntry[]>([]);
   const [watchlist, setWatchlist] = useState<UserList["items"]>([]);
   const [theme, setTheme] = useState<UserList | null>(null);
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
+  // O desafio do mês muda a cada registro no diário
+  useEffect(() => {
+    api.challenge().then(setChallenge).catch(() => {});
+  }, [version]);
   const [diary, setDiary] = useState<DiaryEntry[] | null>(null);
   const [seenTarget, setSeenTarget] = useState<Media | null>(null);
   const [stamp, setStamp] = useState(0);
@@ -368,6 +412,7 @@ export default function HomePage() {
           ))}
         </Shelf>
       )}
+      {theme && challenge && user && <ChallengeNote c={challenge} userId={user.id} />}
 
       {upcoming.length >= 3 && (
         <Shelf title="Em breve" note="pra anotar na agenda">
