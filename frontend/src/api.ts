@@ -37,6 +37,12 @@ import type {
   Wish,
   Episode,
   EpisodeDetail,
+  Listening,
+  Member,
+  Mix,
+  Top,
+  Trailer,
+  Watching,
   AdminReport,
   ReportReason,
   FoundPerson,
@@ -159,11 +165,20 @@ export const api = {
     request<TrackDetail>(`/media/${mediaId}/tracks/${disc}/${number}`),
   rateTrack: (mediaId: number, disc: number, number: number, data: Partial<PartMark>) =>
     request<PartMark>(`/media/${mediaId}/tracks/${disc}/${number}`, { method: "PUT", body: data }),
+  continueWatching: () => request<Watching[]>("/me/watching"),
+  continueListening: () => request<Listening[]>("/me/listening"),
+  top: (type?: MediaType) => request<Top>("/media/top", { query: { type } }),
+  trailer: (mediaId: number) => request<Trailer>(`/media/${mediaId}/trailer`),
+  mixes: () => request<Mix[]>("/recommendations/mixes"),
   report: (entryId: number, reason: ReportReason, note?: string) =>
     request<{ reported: boolean; spoiler: boolean }>(`/community/${entryId}/report`, { method: "POST", body: { reason, note } }),
   adminReports: () => request<AdminReport[]>("/admin/reports"),
   adminDecideReport: (entryId: number, action: "spoiler" | "not_spoiler" | "hide" | "dismiss") =>
     request<void>(`/admin/reports/${entryId}`, { method: "PATCH", body: { action } }),
+  popularPeople: (period: "semana" | "mes" | "sempre", limit = 30) =>
+    request<Member[]>("/users/popular", { query: { period, limit } }),
+  personReviews: (userId: number, sort: "recentes" | "populares", limit = 20, offset = 0) =>
+    request<CommunityEntry[]>(`/users/${userId}/reviews`, { query: { sort, limit, offset } }),
   searchPeople: (q: string, limit = 8) => request<FoundPerson[]>("/users/search", { query: { q, limit } }),
   avatars: () => request<Record<string, string>>("/users/avatars"),
   setAvatar: (image: string) => request<void>("/me/avatar", { method: "PUT", body: { image } }),

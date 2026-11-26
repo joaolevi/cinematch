@@ -5,7 +5,8 @@ import { OnMyServices } from "../components/Highlight";
 import { useMoods } from "../moods";
 import { useAuth } from "../auth";
 import MediaCard from "../components/MediaCard";
-import { MEDIA_GRID, tabColor } from "../ui";
+import { MEDIA_GRID } from "../ui";
+import { plural } from "../format";
 import type { Media, UserList, WatchlistNow } from "../types";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
@@ -104,6 +105,32 @@ function WatchlistNowView({ version, renderCard }: { version: number; renderCard
 }
 
 /** Gerenciar Listas (watchlist "Quero ver" + listas personalizadas). */
+/** A capa da lista: até cinco pôsteres sobrepostos, do primeiro para o último, como no Letterboxd. Vazia, um contorno. */
+function ListCover({ items }: { items: Media[] }) {
+  const shown = items.slice(0, 5);
+  if (shown.length === 0) {
+    return <div aria-hidden className="h-28 rounded-lg border-2 border-dashed border-line/80" />;
+  }
+  return (
+    <div aria-hidden className="relative h-28">
+      {shown.map((m, i) => (
+        <span
+          key={m.id}
+          className="absolute top-0 h-28 w-[4.7rem] overflow-hidden rounded-md bg-surface shadow-[3px_0_10px_rgba(0,0,0,.55)] ring-1 ring-black/40"
+          // 4 deslocamentos de 1,6rem + um pôster de 4,7rem cabem nos 11,5rem da capa, sem cortar o último
+          style={{ left: `${i * 1.6}rem`, zIndex: 10 - i }}
+        >
+          {m.poster_url ? (
+            <img src={m.poster_url} alt="" loading="lazy" className="h-full w-full object-cover" />
+          ) : (
+            <span className="flex h-full items-end p-1.5 text-[10px] leading-tight font-semibold text-stone-300">{m.title}</span>
+          )}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function ListsPage() {
   usePageTitle("Minhas listas");
   const { user } = useAuth();
@@ -169,20 +196,25 @@ export default function ListsPage() {
       <h1 className="text-3xl font-bold">Listas</h1>
       {error && <p className="mt-4 text-red-300">{error}</p>}
 
-      {/* Cada lista é uma aba de fichário, com a sua cor */}
-      <div className="mt-6 flex flex-wrap items-end gap-x-6 gap-y-3 border-b border-line">
-        <div role="tablist" aria-label="Minhas listas" className="flex flex-wrap gap-1">
-          {lists.map((l, position) => (
+      {/* Cada lista tem uma capa com os pôsteres em leque, como as listas do Letterboxd; a escolhida fica marcada */}
+      <div className="mt-6 flex flex-wrap items-end gap-x-6 gap-y-3 border-b border-line pb-4">
+        <div role="tablist" aria-label="Minhas listas" className="-m-1 flex gap-3 overflow-x-auto p-1">
+          {lists.map((l) => (
             <button
               key={l.id}
               role="tab"
               aria-selected={l.id === activeId}
               onClick={() => setActiveId(l.id)}
-              className="nb-tab"
-              style={tabColor(position)}
+              className={`w-52 shrink-0 cursor-pointer rounded-xl p-3 text-left transition ${
+                l.id === activeId ? "bg-surface-2 ring-2 ring-accent" : "hover:bg-surface-2"
+              }`}
             >
-              {l.is_watchlist ? "★ " : ""}
-              {l.name} <span className="ml-1 text-xs font-semibold opacity-70">{l.items.length}</span>
+              <ListCover items={l.items.map((i) => i.media)} />
+              <p className="mt-3 truncate font-semibold">
+                {l.is_watchlist ? "★ " : ""}
+                {l.name}
+              </p>
+              <p className="text-xs text-muted">{plural(l.items.length, "título", "títulos")}</p>
             </button>
           ))}
         </div>

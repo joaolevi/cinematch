@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import Carousel from "../components/Carousel";
 import MediaCard from "../components/MediaCard";
@@ -9,6 +9,7 @@ import ActionIcon from "../components/ActionIcon";
 import Episodes from "../components/Episodes";
 import { episodePath } from "./EpisodePage";
 import Tracks from "../components/Tracks";
+import TrailerButton from "../components/TrailerButton";
 import RatingsPanel from "../components/RatingsPanel";
 import ReviewTalk from "../components/ReviewTalk";
 import SpoilerText from "../components/SpoilerText";
@@ -129,8 +130,10 @@ function WatchProviders({ providers }: { providers: Provider[] }) {
 /** Cada título monta a página do zero, para nada do título anterior sobrar na tela. */
 export default function MediaPage() {
   const { id } = useParams();
-  return <MediaView key={id} mediaId={Number(id)} />;
+  const reviewsOnly = useLocation().pathname.endsWith("/resenhas");
+  return <MediaView key={id} mediaId={Number(id)} reviewsOnly={reviewsOnly} />;
 }
+
 
 /** Série que a pessoa está assistindo (RFF24): em que temporada ela está, com troca rápida. */
 /**
@@ -220,7 +223,7 @@ function WatchingSeason({
   );
 }
 
-function MediaView({ mediaId }: { mediaId: number }) {
+function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsOnly?: boolean }) {
   const [media, setMedia] = useState<MediaDetail | null>(null);
   const moods = useMoods();
   const [lists, setLists] = useState<UserList[]>([]);
@@ -229,6 +232,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [showSeen, setShowSeen] = useState(false);
   const [reviewTab, setReviewTab] = useState<"populares" | "recentes" | "seguindo">("populares");
+  const [params, setParams] = useSearchParams();
   const [fullOverview, setFullOverview] = useState(false); // no celular, a sinopse começa em 4 linhas
   const [stamp, setStamp] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -305,6 +309,136 @@ function MediaView({ mediaId }: { mediaId: number }) {
     else await api.feedback(mediaId, "dismiss");
     load();
   }
+
+  // A janela do Já vi, a mesma na página do título e na das resenhas
+  const seenModal = showSeen && (
+    <SeenModal
+      media={media}
+      initialRating={status.rating}
+      initialDate={status.consumed_at}
+      initialSpoiler={status.spoiler ?? false}
+      withSpoiler
+      onClose={() => setShowSeen(false)}
+      onDelete={
+        status.diary_entry_id
+          ? async () => {
+              await api.deleteDiary(status.diary_entry_id!);
+              diaryChanged();
+              setShowSeen(false);
+              load();
+            }
+          : undefined
+      }
+      onConfirm={async (rating, review, date, spoiler) => {
+        if (status.diary_entry_id) {
+          await api.updateDiary(status.diary_entry_id, {
+            rating,
+            consumed_at: date,
+            spoiler,
+            ...(review ? { review } : {}),
+          });
+        } else {
+          await api.feedback(mediaId, "seen", rating, review, date);
+          // O "Já vi" pela sugestão não leva o spoiler: ele é marcado no registro que acabou de nascer
+          if (spoiler) {
+            const created = (await api.media(mediaId)).my_status.diary_entry_id;
+            if (created) await api.updateDiary(created, { spoiler: true });
+          }
+          setStamp(Date.now());
+        }
+        diaryChanged();
+        setShowSeen(false);
+        load();
+      }}
+    />
+  );
+
+  type Tab = "episodios" | "faixas" | "resenhas" | "ligados" | "parecidos";
+  const tabs = (
+    [
+      media.type === "series" && media.seasons.length > 0 && ["episodios", "Episódios", media.seasons.length],
+      album && ["faixas", "Faixas", null],
+      ["resenhas", "Resenhas", media.reviews.length],
+      connections.length > 0 && ["ligados", album ? "Para ver depois" : "Para ouvir depois", connections.length],
+      similar.length > 0 && ["parecidos", album ? "Parecidos" : media.type === "series" ? "Parecidas" : "Parecidos", null],
+    ] as (false | [Tab, string, number | null])[]
+  ).filter((t): t is [Tab, string, number | null] => !!t);
+  const asked = (reviewsOnly ? "resenhas" : params.get("aba")) as Tab | null;
+  const tab: Tab = tabs.find(([key]) => key === asked)?.[0] ?? tabs[0][0];
+
+  // As resenhas, todas, na aba Resenhas
+  const reviewsSection = () => (
+        <section className="max-w-4xl">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-display text-xl font-bold">Resenhas</h2>
+            {media.reviews.length > 1 && (
+              <div role="group" aria-label="Ordem das resenhas" className="inline-flex rounded-full border border-line bg-bg/40 p-0.5">
+                {(
+                  [
+                    ["populares", "Populares"],
+                    ["recentes", "Recentes"],
+                    ["seguindo", "De quem eu sigo"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    aria-pressed={reviewTab === key}
+                    onClick={() => setReviewTab(key)}
+                    className={`cursor-pointer rounded-full px-3 py-0.5 text-sm transition ${
+                      reviewTab === key ? "bg-accent font-bold text-bg" : "text-stone-300 hover:text-cream"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {media.reviews.length === 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <HandNote>Ninguém escreveu sobre este {media.type === "album" ? "álbum" : "título"} ainda. Que tal ser a primeira pessoa?</HandNote>
+              <button className="btn-ghost px-4 py-1.5 text-sm" onClick={() => setShowSeen(true)}>
+                Escrever uma resenha
+              </button>
+            </div>
+          )}
+          <div className="mt-2 divide-y divide-line/60">
+            {reviewTab === "seguindo" && shownReviews.length === 0 && (
+              <HandNote className="py-4">Ninguém que você segue escreveu sobre este título ainda.</HandNote>
+            )}
+            {shownReviews.map((r) => (
+              // Como as resenhas do Letterboxd: a foto à esquerda, "Resenha de" com o nome e a nota, o texto e a conversa
+              <article key={r.id} className="flex gap-4 py-5">
+                {r.user_id ? (
+                  <Link to={`/pessoas/${r.user_id}`} aria-label={`Perfil de ${r.user_name}`} className="shrink-0">
+                    <Avatar name={r.user_name} userId={r.user_id} size="h-10 w-10" />
+                  </Link>
+                ) : (
+                  <Avatar name={r.user_name} size="h-10 w-10" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+                    <span>
+                      Resenha de{" "}
+                      {r.user_id ? (
+                        <Link to={`/pessoas/${r.user_id}`} className="font-bold text-cream hover:text-accent">
+                          {r.user_name}
+                        </Link>
+                      ) : (
+                        <strong className="text-cream">{r.user_name}</strong>
+                      )}
+                    </span>
+                    {r.rating != null && <StarsDisplay value={r.rating} size={14} />}
+                    <span>{r.consumed_at ? formatDate(r.consumed_at) : timeAgo(r.created_at)}</span>
+                  </p>
+                  <SpoilerText text={r.review} spoiler={r.spoiler} className="mt-2 leading-relaxed text-stone-200" />
+                  <ReviewTalk entry={r} />
+                </div>
+              </article>
+            ))}
+          </div>
+          </section>
+  );
 
   return (
     <div>
@@ -441,6 +575,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
                   {status.in_watchlist ? "Tirar do Quero ver" : words.want}
                 </button>
               )}
+              <TrailerButton media={media} />
               {!status.diary_entry_id && !status.in_watchlist && (
                 <button className="btn-skip" onClick={toggleDismiss}>
                   {status.dismissed ? (
@@ -503,134 +638,84 @@ function MediaView({ mediaId }: { mediaId: number }) {
         </div>
       </div>
 
-      {album && <Tracks album={media} />}
-
-      {media.type === "series" && (
-        <Episodes
-          mediaId={media.id}
-          seasons={media.seasons}
-          counts={status.episodes ?? {}}
-          onChange={() => {
-            diaryChanged();
-            load();
-          }}
-        />
-      )}
-
-      {connections.length > 0 && (
-        <section className="mt-12">
-          <h2 className="font-display text-xl font-bold">{album ? "Para ver depois" : "Para ouvir depois"}</h2>
-          <p className="mt-1 text-sm text-muted">
-            {album
-              ? "Filmes e séries ligados a este álbum."
-              : media.type === "series"
-                ? "Álbuns ligados a esta série: a trilha, quem compôs e quem do elenco também canta."
-                : "Álbuns ligados a este filme: a trilha, quem compôs, quem do elenco canta e a música de quem ele conta a história."}
-            {sameReason && ` Todos por um motivo: ${connections[0].reason}.`}
-          </p>
-          <div className="mt-4">
-            <Carousel label={album ? "para ver depois" : "para ouvir depois"}>
-              {connections.map((c) => (
-                <div key={c.media.id} className="w-36 shrink-0 snap-start sm:w-40">
-                  <MediaCard media={c.media}>
-                    {!sameReason && (
-                      <p className="mt-1 line-clamp-2 text-xs text-muted" title={c.reason}>
-                        {c.reason}
-                      </p>
-                    )}
-                  </MediaCard>
-                </div>
-              ))}
-            </Carousel>
-          </div>
-        </section>
-      )}
-
-      {similar.length > 0 && (
-        <section className="mt-12">
-          <h2 className="font-display text-xl font-bold">{album ? "Álbuns parecidos" : "Títulos parecidos"}</h2>
-          <div className="mt-4">
-            <Carousel label="títulos parecidos">
-              {similar.map((m) => (
-                <div key={m.id} className="w-36 shrink-0 snap-start sm:w-40">
-                  <MediaCard media={m} />
-                </div>
-              ))}
-            </Carousel>
-          </div>
-        </section>
-      )}
-
-      <section className="mt-12 max-w-4xl">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-xl font-bold">Resenhas</h2>
-          {media.reviews.length > 1 && (
-            <div role="group" aria-label="Ordem das resenhas" className="inline-flex rounded-full border border-line bg-bg/40 p-0.5">
-              {(
-                [
-                  ["populares", "Populares"],
-                  ["recentes", "Recentes"],
-                  ["seguindo", "De quem eu sigo"],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  aria-pressed={reviewTab === key}
-                  onClick={() => setReviewTab(key)}
-                  className={`cursor-pointer rounded-full px-3 py-0.5 text-sm transition ${
-                    reviewTab === key ? "bg-accent font-bold text-bg" : "text-stone-300 hover:text-cream"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        {media.reviews.length === 0 && (
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <HandNote>Ninguém escreveu sobre este {media.type === "album" ? "álbum" : "título"} ainda. Que tal ser a primeira pessoa?</HandNote>
-            <button className="btn-ghost px-4 py-1.5 text-sm" onClick={() => setShowSeen(true)}>
-              Escrever uma resenha
-            </button>
-          </div>
+      {/* As partes da página em abas, como no Letterboxd: o topo continua com o essencial, e o resto não vira uma
+          rolagem sem fim. A aba aberta fica no endereço (?aba=...), para dar para mandar o link */}
+      <div role="tablist" aria-label={`Sobre ${media.title}`} className="mt-10 flex gap-6 overflow-x-auto border-b border-line/60">
+        {tabs.map(([key, label, count]) => (
+          <button
+            key={key}
+            role="tab"
+            id={`aba-${key}`}
+            aria-selected={tab === key}
+            aria-controls="painel-do-titulo"
+            onClick={() => setParams(key === tabs[0][0] ? {} : { aba: key }, { replace: true })}
+            className={`-mb-px shrink-0 cursor-pointer border-b-2 px-1 pb-3 text-sm font-semibold transition ${
+              tab === key ? "border-accent text-accent" : "border-transparent text-stone-300 hover:text-cream"
+            }`}
+          >
+            {label}
+            {count != null && count > 0 && <span className="ml-1.5 text-xs font-normal text-muted">{count}</span>}
+          </button>
+        ))}
+      </div>
+      {/* Dentro das abas, o título de cada parte fica só para o leitor de tela: a aba já diz o que é */}
+      <div id="painel-do-titulo" role="tabpanel" aria-labelledby={`aba-${tab}`} className="mt-6 [&_h2]:sr-only [&>section]:mt-0">
+        {tab === "faixas" && <Tracks album={media} />}
+        {tab === "episodios" && (
+          <Episodes
+            mediaId={media.id}
+            seasons={media.seasons}
+            counts={status.episodes ?? {}}
+            onChange={() => {
+              diaryChanged();
+              load();
+            }}
+          />
         )}
-        <div className="mt-2 divide-y divide-line/60">
-          {reviewTab === "seguindo" && shownReviews.length === 0 && (
-            <HandNote className="py-4">Ninguém que você segue escreveu sobre este título ainda.</HandNote>
-          )}
-          {shownReviews.map((r) => (
-            // Como as resenhas do Letterboxd: a foto à esquerda, "Resenha de" com o nome e a nota, o texto e a conversa
-            <article key={r.id} className="flex gap-4 py-5">
-              {r.user_id ? (
-                <Link to={`/pessoas/${r.user_id}`} aria-label={`Perfil de ${r.user_name}`} className="shrink-0">
-                  <Avatar name={r.user_name} userId={r.user_id} size="h-10 w-10" />
-                </Link>
-              ) : (
-                <Avatar name={r.user_name} size="h-10 w-10" />
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-                  <span>
-                    Resenha de{" "}
-                    {r.user_id ? (
-                      <Link to={`/pessoas/${r.user_id}`} className="font-bold text-cream hover:text-accent">
-                        {r.user_name}
-                      </Link>
-                    ) : (
-                      <strong className="text-cream">{r.user_name}</strong>
-                    )}
-                  </span>
-                  {r.rating != null && <StarsDisplay value={r.rating} size={14} />}
-                  <span>{r.consumed_at ? formatDate(r.consumed_at) : timeAgo(r.created_at)}</span>
-                </p>
-                <SpoilerText text={r.review} spoiler={r.spoiler} className="mt-2 leading-relaxed text-stone-200" />
-                <ReviewTalk entry={r} />
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+        {tab === "ligados" && (
+          <section className="mt-12">
+            <h2 className="font-display text-xl font-bold">{album ? "Para ver depois" : "Para ouvir depois"}</h2>
+            <p className="mt-1 text-sm text-muted">
+              {album
+                ? "Filmes e séries ligados a este álbum."
+                : media.type === "series"
+                  ? "Álbuns ligados a esta série: a trilha, quem compôs e quem do elenco também canta."
+                  : "Álbuns ligados a este filme: a trilha, quem compôs, quem do elenco canta e a música de quem ele conta a história."}
+              {sameReason && ` Todos por um motivo: ${connections[0].reason}.`}
+            </p>
+            <div className="mt-4">
+              <Carousel label={album ? "para ver depois" : "para ouvir depois"}>
+                {connections.map((c) => (
+                  <div key={c.media.id} className="w-36 shrink-0 snap-start sm:w-40">
+                    <MediaCard media={c.media}>
+                      {!sameReason && (
+                        <p className="mt-1 line-clamp-2 text-xs text-muted" title={c.reason}>
+                          {c.reason}
+                        </p>
+                      )}
+                    </MediaCard>
+                  </div>
+                ))}
+              </Carousel>
+            </div>
+          </section>
+        )}
+        {tab === "parecidos" && (
+          <section className="mt-12">
+            <h2 className="font-display text-xl font-bold">{album ? "Álbuns parecidos" : "Títulos parecidos"}</h2>
+            <div className="mt-4">
+              <Carousel label="títulos parecidos">
+                {similar.map((m) => (
+                  <div key={m.id} className="w-36 shrink-0 snap-start sm:w-40">
+                    <MediaCard media={m} />
+                  </div>
+                ))}
+              </Carousel>
+            </div>
+          </section>
+        )}
+        {tab === "resenhas" && reviewsSection()}
+      </div>
 
       {/* De onde vêm os dados e com que licença (RNFF02) */}
       {media.credit && (
@@ -647,47 +732,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
         </p>
       )}
 
-      {showSeen && (
-        <SeenModal
-          media={media}
-          initialRating={status.rating}
-          initialDate={status.consumed_at}
-          initialSpoiler={status.spoiler ?? false}
-          withSpoiler
-          onClose={() => setShowSeen(false)}
-          onDelete={
-            status.diary_entry_id
-              ? async () => {
-                  await api.deleteDiary(status.diary_entry_id!);
-                  diaryChanged();
-                  setShowSeen(false);
-                  load();
-                }
-              : undefined
-          }
-          onConfirm={async (rating, review, date, spoiler) => {
-            if (status.diary_entry_id) {
-              await api.updateDiary(status.diary_entry_id, {
-                rating,
-                consumed_at: date,
-                spoiler,
-                ...(review ? { review } : {}),
-              });
-            } else {
-              await api.feedback(mediaId, "seen", rating, review, date);
-              // O "Já vi" pela sugestão não leva o spoiler: ele é marcado no registro que acabou de nascer
-              if (spoiler) {
-                const created = (await api.media(mediaId)).my_status.diary_entry_id;
-                if (created) await api.updateDiary(created, { spoiler: true });
-              }
-              setStamp(Date.now());
-            }
-            diaryChanged();
-            setShowSeen(false);
-            load();
-          }}
-        />
-      )}
+      {seenModal}
     </div>
   );
 }

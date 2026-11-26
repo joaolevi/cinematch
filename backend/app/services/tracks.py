@@ -8,6 +8,7 @@ Ouvi, nota e anotação de cada faixa usam a mesma tabela dos episódios (`Episo
 temporada e a faixa no lugar do episódio.
 """
 
+from datetime import timezone
 from threading import Lock
 
 from sqlalchemy import select
@@ -105,6 +106,48 @@ def track_detail(db: Session, user: User, media: Media, disc: int, number: int) 
         "next": _ref(tracks[index + 1]) if index + 1 < len(tracks) else None,
         **community_of(db, media.id, disc, number),
     }
+
+
+def cached_tracklist(media: Media) -> list[dict] | None:
+    """As faixas, só se já estão na memória da API. Serve para listas que não podem esperar o MusicBrainz."""
+    mbid = mbid_of(media)
+    with _lock:
+        return _cache.get(mbid) if mbid else None
+
+
+def listening_now(db: Session, user: User) -> list[dict]:
+    """Continuar ouvindo: os discos com faixas ouvidas que a pessoa ainda não registrou como "Já ouvi", da mexida por
+    último para a mais antiga. Quando a lista de faixas já está na memória, vêm o total e a próxima faixa; senão, só
+    quantas foram ouvidas (a lista não é buscada aqui, para o Início não esperar o MusicBrainz)."""
+    from sqlalchemy import func
+
+    from ..models import DiaryEntry
+
+    rows = db.execute(
+        select(EpisodeEntry.media_id, func.count(), func.max(EpisodeEntry.updated_at))
+        .join(Media, Media.id == EpisodeEntry.media_id)
+        .where(EpisodeEntry.user_id == user.id, Media.type == "album")
+        .group_by(EpisodeEntry.media_id)
+    ).all()
+    registered = set(db.scalars(select(DiaryEntry.media_id).where(DiaryEntry.user_id == user.id)))
+    out = []
+    for media_id, heard, moved in rows:
+        if media_id in registered:
+            continue
+        media = db.get(Media, media_id)
+        tracks = cached_tracklist(media)
+        nxt = None
+        if tracks:
+            if heard >= len(tracks):
+                continue  # ouviu tudo: o disco sai daqui, e o "Já ouvi" fica com a pessoa
+            mine = {(e.season, e.episode) for e in db.scalars(
+                select(EpisodeEntry).where(EpisodeEntry.user_id == user.id, EpisodeEntry.media_id == media_id))}
+            nxt = next(({"disc": t["disc"], "number": t["number"], "title": t["title"]}
+                        for t in tracks if (t["disc"], t["number"]) not in mine), None)
+        moved = moved if moved.tzinfo else moved.replace(tzinfo=timezone.utc)
+        out.append({"media": media, "heard": heard, "total": len(tracks) if tracks else None, "next_track": nxt,
+                    "moved_at": moved})
+    return sorted(out, key=lambda x: x["moved_at"], reverse=True)
 
 
 def has_track(media: Media, disc: int, number: int) -> bool:

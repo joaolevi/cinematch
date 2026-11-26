@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { plural } from "../format";
-import type { Bar, DiaryFilter, TasteCharts } from "../taste";
+import type { Bar, DiaryFilter, MonthBar, TasteCharts } from "../taste";
 import HandNote from "./HandNote";
 
 // Cor de quem fica em segundo plano: contraste de 3:1 com o fundo dos cards
@@ -31,7 +31,8 @@ function leader(bars: Bar[]): number {
 
 function ChartCard({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
-    <section className="card p-5">
+    // Sem caixa, como as estatísticas do Letterboxd: uma linha fina em cima, o título e o gráfico com espaço em volta
+    <section className="border-t border-line/60 pt-4">
       <h3 className="font-display text-lg font-bold">{title}</h3>
       <p className="text-xs text-muted">{subtitle}</p>
       <div className="mt-4">{children}</div>
@@ -157,12 +158,76 @@ function Split({ bars, onPick }: { bars: Bar[]; onPick: Pick }) {
   );
 }
 
+const TYPE_NAMES: [keyof Omit<MonthBar, "month" | "label">, string, string][] = [
+  ["movie", "Filmes", "filme"],
+  ["series", "Séries", "série"],
+  ["album", "Álbuns", "álbum"],
+];
+
+/**
+ * Mês a mês, como os scrobbles do Last.fm: uma coluna por mês, empilhada por filme, série e álbum, com o total em cima.
+ * Clicar numa coluna mostra os títulos daquele mês.
+ */
+function Months({ months, onPick }: { months: MonthBar[]; onPick: Pick }) {
+  const grown = useGrown();
+  const max = Math.max(1, ...months.map((m) => m.movie + m.series + m.album));
+  return (
+    <>
+      <div className="flex h-36 items-end gap-3">
+        {months.map((m) => {
+          const total = m.movie + m.series + m.album;
+          const label = `${m.label.replace(".", "")} ${m.month.slice(0, 4)}`;
+          const parts = TYPE_NAMES.filter(([k]) => m[k] > 0)
+            .map(([k, , one]) => `${m[k]} ${m[k] === 1 ? one : one === "álbum" ? "álbuns" : `${one}s`}`)
+            .join(", ");
+          return (
+            <button
+              key={m.month}
+              type="button"
+              disabled={total === 0}
+              onClick={() => onPick({ kind: "month", value: m.month, label: `Em ${label}` })}
+              aria-label={`${label}: ${total ? parts : "nada registrado"}. ${total ? "Ver no diário" : ""}`}
+              title={`${label}: ${total ? parts : "nada registrado"}`}
+              className="group flex h-full flex-1 cursor-pointer flex-col items-center justify-end disabled:cursor-default"
+            >
+              <span className="mb-1 text-xs font-bold text-stone-200">{total || ""}</span>
+              <span
+                className={`flex w-full max-w-10 flex-col-reverse gap-0.5 overflow-hidden rounded-t transition-[height] duration-700 group-hover:brightness-110`}
+                style={{ height: grown ? `${(total / max) * 100}%` : "0%" }}
+              >
+                {TYPE_NAMES.map(([k], i) =>
+                  m[k] > 0 ? <span key={k} style={{ flexGrow: m[k], background: TYPE_COLORS[i] }} className="w-full" /> : null,
+                )}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-1 flex gap-3 border-t border-line/60 pt-1">
+        {months.map((m) => (
+          <span key={m.month} className="flex-1 text-center text-xs text-muted">
+            {m.label.replace(".", "")}
+          </span>
+        ))}
+      </div>
+      <ul className="mt-2 flex gap-4 text-xs text-stone-300">
+        {TYPE_NAMES.map(([k, name], i) => (
+          <li key={k} className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: TYPE_COLORS[i] }} />
+            {name}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
 /** Os gráficos do gosto. Com `who` (o primeiro nome), os títulos falam da outra pessoa, no perfil dela (RFF11). */
 export default function TasteChartsView({ data, onPick, who }: { data: TasteCharts; onPick: Pick; who?: string }) {
   const rated = data.ratings.reduce((sum, b) => sum + b.value, 0);
   const diary = who ? "do diário" : "do meu diário";
   return (
-    <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+    <div className="grid gap-x-12 gap-y-10 md:grid-cols-2">
       {data.genres.length > 0 && (
         <ChartCard
           title={who ? `Os gêneros que ${who} mais vê` : "Os gêneros que eu mais vejo"}
@@ -206,9 +271,22 @@ export default function TasteChartsView({ data, onPick, who }: { data: TasteChar
       <ChartCard title={data.types[2].value > 0 ? "Filmes, séries e álbuns" : "Filmes e séries"} subtitle={who ? "Como o diário se divide" : "Como o meu diário se divide"}>
         <Split bars={data.types} onPick={onPick} />
       </ChartCard>
+      {data.months.some((m) => m.movie + m.series + m.album > 0) && (
+        <ChartCard title="Mês a mês" subtitle={who ? `O que ${who} registrou nos últimos 6 meses` : "O que eu registrei nos últimos 6 meses"}>
+          <Months months={data.months} onPick={onPick} />
+        </ChartCard>
+      )}
+      {data.artists.length > 0 && (
+        <ChartCard
+          title={who ? `Os artistas que ${who} mais ouve` : "Os artistas que eu mais ouço"}
+          subtitle={`Quantos discos de cada artista ${diary}`}
+        >
+          <BarList bars={data.artists} color="#7fa58b" total={data.total} onPick={onPick} />
+        </ChartCard>
+      )}
       {data.creators.length > 0 && (
-        <ChartCard title="Quem mais aparece" subtitle={`Direção, criação e artistas com mais títulos ${diary}`}>
-          <BarList bars={data.creators} color="#7fa58b" total={data.total} onPick={onPick} />
+        <ChartCard title="Quem mais aparece" subtitle={`Direção e criação com mais filmes e séries ${diary}`}>
+          <BarList bars={data.creators} color="#8fb3c9" total={data.total} onPick={onPick} />
         </ChartCard>
       )}
     </div>

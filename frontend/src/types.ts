@@ -80,6 +80,46 @@ export interface Review {
   reported?: boolean;
 }
 
+/** Uma série em andamento, para o "Continuar assistindo" */
+export interface Watching {
+  media: Media;
+  season: number;
+  seen: number;
+  total: number | null;
+  next_episode: number | null;
+  moved_at?: string | null;
+}
+
+/** Um disco em andamento, para o "Continuar ouvindo" */
+export interface Listening {
+  media: Media;
+  heard: number;
+  total: number | null;
+  next_track: { disc: number; number: number; title: string } | null;
+  moved_at: string;
+}
+
+/** O Top 10 do Tastory, pelos registros da comunidade */
+export interface Top {
+  days: number;
+  items: { media: Media; count: number; average: number | null }[];
+}
+
+export interface Trailer {
+  key: string;
+  name: string;
+  language: string | null;
+  url: string;
+  embed_url: string;
+}
+
+/** Um mix de música, como os do Spotify */
+export interface Mix {
+  title: string;
+  subtitle: string;
+  items: Media[];
+}
+
 export type ReportReason = "spoiler" | "ofensa" | "spam" | "outro";
 
 /** Uma resenha com denúncias abertas, na moderação */
@@ -95,6 +135,19 @@ export interface AdminReport {
   reasons: Partial<Record<ReportReason, number>>;
   notes: string[];
   last_at: string;
+}
+
+/** Uma pessoa na tela Pessoas, como os membros do Letterboxd */
+export interface Member {
+  id: number;
+  name: string;
+  titles: number | null;
+  active: number | null;
+  reviews: number | null;
+  likes: number;
+  followers: number;
+  following: boolean;
+  recent: Media[];
 }
 
 /** Alguém encontrado pelo nome na busca de pessoas */

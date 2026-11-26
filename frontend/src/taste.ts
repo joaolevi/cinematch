@@ -185,7 +185,7 @@ export function notesOf(entries: DiaryEntry[], today = new Date(), who?: string)
 
 /** Recorte do diário escolhido ao clicar em um gráfico. */
 export interface DiaryFilter {
-  kind: "genre" | "decade" | "before" | "rating" | "creator" | "type";
+  kind: "genre" | "decade" | "before" | "rating" | "creator" | "type" | "month";
   value: string;
   label: string;
 }
@@ -205,6 +205,8 @@ export function matches(entry: DiaryEntry, filter: DiaryFilter): boolean {
       return entry.rating != null && Math.round(entry.rating * 2) === Math.round(Number(filter.value) * 2);
     case "type":
       return media.type === filter.value;
+    case "month":
+      return monthOf(entry) === filter.value;
   }
 }
 
@@ -231,13 +233,31 @@ export interface Bar {
   filter: DiaryFilter;
 }
 
+/** O mês do registro ("2026-11"): quando a pessoa viu ou ouviu, ou, sem data, quando registrou. */
+export function monthOf(entry: DiaryEntry): string {
+  return (entry.consumed_at ?? localMonthOf(entry.created_at)).slice(0, 7);
+}
+
+/** Um mês no gráfico "Mês a mês", com quantos filmes, séries e álbuns. */
+export interface MonthBar {
+  month: string; // "2026-11"
+  label: string; // "nov."
+  movie: number;
+  series: number;
+  album: number;
+}
+
+const MONTHS_SHOWN = 6;
+
 export interface TasteCharts {
   total: number;
   genres: Bar[]; // de filmes e séries
   musicGenres: Bar[]; // dos álbuns
   decades: Bar[];
   ratings: Bar[]; // de 0,5 a 5, nesta ordem
-  creators: Bar[];
+  creators: Bar[]; // direção e criação, dos filmes e séries
+  artists: Bar[]; // quem a pessoa mais ouve, dos álbuns
+  months: MonthBar[]; // os últimos meses, como os scrobbles do Last.fm
   types: Bar[];
 }
 
@@ -283,10 +303,27 @@ export function tasteCharts(entries: DiaryEntry[]): TasteCharts {
     ratings[step - 1].value += 1;
   }
 
-  const creators = countBy(entries, (e) => e.media.creators)
-    .filter(([, n]) => n >= 2)
-    .slice(0, 5)
-    .map(([label, value]): Bar => ({ label, value, filter: { kind: "creator", value: label, label } }));
+  const creatorBars = (items: DiaryEntry[], min: number) =>
+    countBy(items, (e) => e.media.creators)
+      .filter(([, n]) => n >= min)
+      .slice(0, 5)
+      .map(([label, value]): Bar => ({ label, value, filter: { kind: "creator", value: label, label } }));
+  const creators = creatorBars(entries.filter((e) => e.media.type !== "album"), 2);
+  const artists = creatorBars(entries.filter((e) => e.media.type === "album"), 1);
+
+  // Mês a mês: os últimos meses até o mês atual, mesmo os vazios, para a linha do tempo não pular
+  const now = new Date();
+  const months: MonthBar[] = Array.from({ length: MONTHS_SHOWN }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (MONTHS_SHOWN - 1 - i), 1);
+    const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    return { month, label: d.toLocaleDateString("pt-BR", { month: "short" }), movie: 0, series: 0, album: 0 };
+  });
+  const byMonth = new Map(months.map((m) => [m.month, m]));
+  for (const e of entries) {
+    if (e.from_onboarding) continue;
+    const bar = byMonth.get(monthOf(e));
+    if (bar) bar[e.media.type] += 1;
+  }
 
   const counts = countTypes(entries);
   const types: Bar[] = [
@@ -294,5 +331,5 @@ export function tasteCharts(entries: DiaryEntry[]): TasteCharts {
     { label: "Séries", value: counts.series, filter: { kind: "type", value: "series", label: "Séries" } },
     { label: "Álbuns", value: counts.album, filter: { kind: "type", value: "album", label: "Álbuns" } },
   ];
-  return { total: entries.length, genres, musicGenres, decades, ratings, creators, types };
+  return { total: entries.length, genres, musicGenres, decades, ratings, creators, artists, months, types };
 }

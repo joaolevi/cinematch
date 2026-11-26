@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import DiaryTable, { monthLabel } from "../components/DiaryTable";
 import MediaCard from "../components/MediaCard";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
@@ -22,10 +23,11 @@ import {
   type Period,
 } from "../taste";
 import type { DiaryEntry } from "../types";
-import { MEDIA_GRID, TAPE_COLORS, tabColor } from "../ui";
+import { DIARY_GRID, TAPE_COLORS, tabColor } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 
 const RANKING_SIZE = 10;
+const FOLDED_START = 8; // quantos títulos de um grupo sem data aparecem antes de "Ver os N títulos"
 const LOVED_FROM = 3.5;
 const HATED_BELOW = 3; // quem só dá notas altas não vê títulos bons na lista dos que odiou
 const INK = "text-[#2b211c]";
@@ -64,14 +66,6 @@ function caption(entry: DiaryEntry): string {
   return new Date(`${entry.consumed_at}T12:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
 }
 
-function monthLabel(entry: DiaryEntry): string {
-  if (!entry.consumed_at) return entry.from_onboarding ? "Meus primeiros favoritos" : "Sem data";
-  const label = new Date(`${entry.consumed_at}T12:00:00`).toLocaleDateString("pt-BR", {
-    month: "long",
-    year: "numeric",
-  });
-  return label.charAt(0).toUpperCase() + label.slice(1); // "Novembro de 2026"
-}
 
 /** Uma linha com os números do diário, embaixo do título. A frase do gosto e os post-its ficam no perfil. */
 function Summary({ entries }: { entries: DiaryEntry[] }) {
@@ -98,6 +92,23 @@ export default function DiaryPage() {
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>("always");
   const [filter, setFilter] = useState<DiaryFilter | null>(null);
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set()); // os grupos sem data que a pessoa abriu
+  // Polaroides (o caderno) ou tabela (como o diário do Letterboxd). A escolha fica neste navegador
+  const [view, setViewState] = useState<"fotos" | "tabela">(() => {
+    try {
+      return localStorage.getItem("tastory.diario.visao") === "tabela" ? "tabela" : "fotos";
+    } catch {
+      return "fotos";
+    }
+  });
+  const setView = (v: "fotos" | "tabela") => {
+    setViewState(v);
+    try {
+      localStorage.setItem("tastory.diario.visao", v);
+    } catch {
+      /* sem armazenamento: vale só nesta visita */
+    }
+  };
   const [params, setParams] = useSearchParams();
   const tabs = useRef<HTMLDivElement>(null);
   const tab = params.get("aba") === "gosto" ? "gosto" : "linha";
@@ -261,14 +272,41 @@ export default function DiaryPage() {
             </button>
           </div>
         )}
-        <div className="mt-8 space-y-10">
-          {groups.map(([label, list]) => (
+        <div className="mt-6 flex justify-end">
+          <div role="group" aria-label="Como ver o diário" className="inline-flex rounded-full border border-line bg-bg/40 p-0.5">
+            {(
+              [
+                ["fotos", "Polaroides"],
+                ["tabela", "Tabela"],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                aria-pressed={view === key}
+                onClick={() => setView(key)}
+                className={`cursor-pointer rounded-full px-3 py-0.5 text-sm transition ${
+                  view === key ? "bg-accent font-bold text-bg" : "text-stone-300 hover:text-cream"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {view === "tabela" && <DiaryTable groups={groups} onEdit={setEditing} />}
+        <div className={`mt-4 space-y-10 ${view === "tabela" ? "hidden" : ""}`}>
+          {groups.map(([label, list]) => {
+            // Os grupos sem data (os favoritos do começo e o que foi registrado sem dia) não contam uma história no
+            // tempo e costumam ser grandes: ficam recolhidos, com o botão para abrir
+            const foldable = label === "Meus primeiros favoritos" || label === "Sem data";
+            const folded = foldable && !openGroups.has(label) && list.length > FOLDED_START;
+            return (
             <section key={label}>
               <h2 className="inline-block rounded-t-xl border border-b-0 border-line/60 bg-surface px-4 py-1.5 text-sm font-bold text-accent">
-                {label}
+                {label} <span className="ml-1 text-xs font-normal text-muted">{list.length}</span>
               </h2>
-              <div className={`${MEDIA_GRID} border-t border-line/60 pt-6`}>
-                {list.map((e, position) => (
+              <div className={`${DIARY_GRID} border-t border-line/60 pt-6`}>
+                {(folded ? list.slice(0, FOLDED_START) : list).map((e, position) => (
                   <MediaCard
                     key={e.id}
                     media={e.media}
@@ -311,8 +349,14 @@ export default function DiaryPage() {
                   </MediaCard>
                 ))}
               </div>
+              {folded && (
+                <button className="btn-ghost mt-4 px-4 py-1.5 text-sm" onClick={() => setOpenGroups(new Set(openGroups).add(label))}>
+                  Ver os {list.length} títulos
+                </button>
+              )}
             </section>
-          ))}
+            );
+          })}
         </div>
       </div>
 

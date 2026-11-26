@@ -495,6 +495,20 @@ class FoundPersonOut(BaseModel):
     following: bool = Field(description="Se quem buscou já segue")
 
 
+class MemberOut(BaseModel):
+    """Uma pessoa na tela Pessoas, como os membros do Letterboxd."""
+
+    id: int
+    name: str
+    titles: int | None = Field(default=None, description="Títulos no diário; vazio quando o diário é só para quem segue")
+    active: int | None = Field(default=None, description="Registros no período escolhido")
+    reviews: int | None = Field(default=None, description="Resenhas escritas")
+    likes: int = Field(description="Curtidas que as resenhas receberam")
+    followers: int
+    following: bool = Field(description="Se quem vê já segue")
+    recent: list["MediaOut"] = Field(default=[], description="Os três últimos títulos registrados")
+
+
 class SuggestedPersonOut(BaseModel):
     """Alguém para seguir, pelo gosto parecido (RFF15)."""
 
@@ -864,6 +878,44 @@ class EpisodeOut(BaseModel):
     note: str | None = None
 
 
+class WatchingOut(BaseModel):
+    """Uma série em andamento, para o "Continuar assistindo"."""
+
+    media: "MediaOut"
+    season: int
+    seen: int = Field(description="Episódios vistos da temporada")
+    total: int | None = Field(default=None, description="Episódios da temporada, quando o catálogo sabe")
+    next_episode: int | None = Field(default=None, description="O próximo episódio; vazio quando a temporada acabou")
+    moved_at: datetime | None = Field(default=None, description="A última vez que a pessoa mexeu na série")
+
+
+class TopItemOut(BaseModel):
+    media: "MediaOut"
+    count: int = Field(description="Quantos registros no período")
+    average: float | None = Field(default=None, description="A nota média desses registros")
+
+
+class TopOut(BaseModel):
+    days: int = Field(description="O período usado: 7 dias, ou 30 quando a semana teve poucos registros")
+    items: list[TopItemOut]
+
+
+class TrailerOut(BaseModel):
+    key: str = Field(description="O código do vídeo no YouTube")
+    name: str
+    language: str | None = None
+    url: str
+    embed_url: str = Field(description="Para tocar dentro da página, no modo de privacidade do YouTube")
+
+
+class MixOut(BaseModel):
+    """Um mix de música, como os do Spotify: discos de um gênero que a pessoa ouve, que ela ainda não registrou."""
+
+    title: str
+    subtitle: str
+    items: list["MediaOut"]
+
+
 class PartRef(BaseModel):
     """O episódio de antes ou de depois. Na virada de temporada, o nome pode não vir."""
 
@@ -901,6 +953,16 @@ class TrackRef(BaseModel):
     disc: int
     number: int
     title: str
+
+
+class ListeningOut(BaseModel):
+    """Um disco em andamento, para o "Continuar ouvindo"."""
+
+    media: "MediaOut"
+    heard: int = Field(description="Faixas ouvidas")
+    total: int | None = Field(default=None, description="Faixas do disco, quando a lista já está na memória da API")
+    next_track: TrackRef | None = Field(default=None, description="A próxima faixa ainda não ouvida")
+    moved_at: datetime = Field(description="A última vez que a pessoa marcou uma faixa")
 
 
 class TrackDetailOut(TrackOut):

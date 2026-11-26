@@ -93,7 +93,7 @@ export default function Layout() {
             </TabLink>
             {/* O perfil é a ponte entre o pessoal e o social: o que as outras pessoas veem do meu diário */}
             {user && (
-              <TabLink to={`/pessoas/${user.id}`} end position={4}>
+              <TabLink to={`/pessoas/${user.id}`} position={4}>
                 Meu perfil
               </TabLink>
             )}

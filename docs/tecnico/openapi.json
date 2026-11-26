@@ -272,6 +272,68 @@
         ]
       }
     },
+    "/me/watching": {
+      "get": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Watching",
+        "description": "Continuar assistindo: as séries em andamento, da mexida por último para a mais antiga, com a temporada, quantos\nepisódios dela foram vistos e o próximo episódio.",
+        "operationId": "watching_me_watching_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WatchingOut"
+                  },
+                  "type": "array",
+                  "title": "Response Watching Me Watching Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/me/listening": {
+      "get": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Listening",
+        "description": "Continuar ouvindo: os discos com faixas ouvidas que ainda não foram registrados como \"Já ouvi\", com quantas\nfaixas foram ouvidas e a próxima, quando a lista do disco já está na memória da API.",
+        "operationId": "listening_me_listening_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ListeningOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listening Me Listening Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/me/activity": {
       "get": {
         "tags": [
@@ -1247,6 +1309,78 @@
         }
       }
     },
+    "/media/top": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Top",
+        "description": "O Top 10 do Tastory: os títulos mais registrados pela comunidade nos últimos 7 dias, com a nota média. Se a\nsemana teve poucos registros, vale o último mês (`days` diz qual). Contas simuladas não entram.",
+        "operationId": "top_media_top_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "movie",
+                    "series",
+                    "album"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/media/showcase": {
       "get": {
         "tags": [
@@ -1382,6 +1516,57 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{media_id}/trailer": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Trailer",
+        "description": "O trailer do filme ou da série, do TMDB (YouTube): em português quando há, senão em inglês. 404 quando não\nhá trailer, para álbuns e para títulos que não vieram do TMDB.",
+        "operationId": "trailer_media__media_id__trailer_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailerOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sem trailer"
           },
           "422": {
             "description": "Validation Error",
@@ -2273,6 +2458,37 @@
             }
           }
         }
+      }
+    },
+    "/recommendations/mixes": {
+      "get": {
+        "tags": [
+          "recomendações"
+        ],
+        "summary": "Mixes",
+        "description": "Mixes de música, como os do Spotify: um para cada gênero que a pessoa mais ouve (MPB, tropicália, bossa\nnova...), com discos que ela ainda não registrou, e um com as trilhas do que ela viu. Cada disco entra em um mix\nsó; mix com menos de 3 discos não aparece.",
+        "operationId": "mixes_recommendations_mixes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MixOut"
+                  },
+                  "type": "array",
+                  "title": "Response Mixes Recommendations Mixes Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/recommendations/pairs": {
@@ -3367,6 +3583,78 @@
         }
       }
     },
+    "/users/popular": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Popular People",
+        "description": "Pessoas, como os membros do Letterboxd: as mais ativas no período (registros na semana, no mês ou desde\nsempre), com resenhas, curtidas recebidas, seguidores e os três últimos títulos. Quem só mostra o diário para quem\nsegue aparece sem os números do diário; perfis privados, a conta de demonstração e as contas simuladas ficam de\nfora.",
+        "operationId": "popular_people_users_popular_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "semana",
+                "mes",
+                "sempre"
+              ],
+              "type": "string",
+              "description": "De quando contam os registros",
+              "default": "semana",
+              "title": "Period"
+            },
+            "description": "De quando contam os registros"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 60,
+              "minimum": 1,
+              "default": 30,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MemberOut"
+                  },
+                  "title": "Response Popular People Users Popular Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/following": {
       "get": {
         "tags": [
@@ -3668,6 +3956,95 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{user_id}/reviews": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Person Reviews",
+        "description": "As resenhas da pessoa, como a aba Resenhas do perfil no Letterboxd: as mais novas ou as mais curtidas, com\ncurtidas e comentários. Quem só mostra o diário para quem segue: 403 para quem não segue. Perfil privado: 404.",
+        "operationId": "person_reviews_users__user_id__reviews_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "recentes",
+                "populares"
+              ],
+              "type": "string",
+              "default": "recentes",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommunityEntryOut"
+                  },
+                  "title": "Response Person Reviews Users  User Id  Reviews Get"
                 }
               }
             }
@@ -7539,6 +7916,55 @@
         ],
         "title": "ListOut"
       },
+      "ListeningOut": {
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "heard": {
+            "type": "integer",
+            "title": "Heard",
+            "description": "Faixas ouvidas"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total",
+            "description": "Faixas do disco, quando a lista já está na memória da API"
+          },
+          "next_track": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A próxima faixa ainda não ouvida"
+          },
+          "moved_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Moved At",
+            "description": "A última vez que a pessoa marcou uma faixa"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media",
+          "heard",
+          "moved_at"
+        ],
+        "title": "ListeningOut",
+        "description": "Um disco em andamento, para o \"Continuar ouvindo\"."
+      },
       "LoginIn": {
         "properties": {
           "email": {
@@ -8211,6 +8637,87 @@
         "type": "object",
         "title": "MediaUpdate"
       },
+      "MemberOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "titles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Titles",
+            "description": "Títulos no diário; vazio quando o diário é só para quem segue"
+          },
+          "active": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active",
+            "description": "Registros no período escolhido"
+          },
+          "reviews": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviews",
+            "description": "Resenhas escritas"
+          },
+          "likes": {
+            "type": "integer",
+            "title": "Likes",
+            "description": "Curtidas que as resenhas receberam"
+          },
+          "followers": {
+            "type": "integer",
+            "title": "Followers"
+          },
+          "following": {
+            "type": "boolean",
+            "title": "Following",
+            "description": "Se quem vê já segue"
+          },
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "type": "array",
+            "title": "Recent",
+            "description": "Os três últimos títulos registrados",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "likes",
+          "followers",
+          "following"
+        ],
+        "title": "MemberOut",
+        "description": "Uma pessoa na tela Pessoas, como os membros do Letterboxd."
+      },
       "MetricsOut": {
         "properties": {
           "overall": {
@@ -8306,6 +8813,33 @@
           "titles_with_neighbors"
         ],
         "title": "MetricsOut"
+      },
+      "MixOut": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "subtitle": {
+            "type": "string",
+            "title": "Subtitle"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "title": "MixOut",
+        "description": "Um mix de música, como os do Spotify: discos de um gênero que a pessoa ouve, que ela ainda não registrou."
       },
       "MoodOut": {
         "properties": {
@@ -9655,6 +10189,58 @@
         ],
         "title": "TokenOut"
       },
+      "TopItemOut": {
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Quantos registros no período"
+          },
+          "average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average",
+            "description": "A nota média desses registros"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media",
+          "count"
+        ],
+        "title": "TopItemOut"
+      },
+      "TopOut": {
+        "properties": {
+          "days": {
+            "type": "integer",
+            "title": "Days",
+            "description": "O período usado: 7 dias, ou 30 quando a semana teve poucos registros"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TopItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "days",
+          "items"
+        ],
+        "title": "TopOut"
+      },
       "TrackDetailOut": {
         "properties": {
           "disc": {
@@ -9886,6 +10472,47 @@
         ],
         "title": "TrackRef"
       },
+      "TrailerOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "O código do vídeo no YouTube"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "embed_url": {
+            "type": "string",
+            "title": "Embed Url",
+            "description": "Para tocar dentro da página, no modo de privacidade do YouTube"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "url",
+          "embed_url"
+        ],
+        "title": "TrailerOut"
+      },
       "UnderstoodPart": {
         "properties": {
           "text": {
@@ -10097,6 +10724,67 @@
           "visibility"
         ],
         "title": "VisibilityIn"
+      },
+      "WatchingOut": {
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "season": {
+            "type": "integer",
+            "title": "Season"
+          },
+          "seen": {
+            "type": "integer",
+            "title": "Seen",
+            "description": "Episódios vistos da temporada"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total",
+            "description": "Episódios da temporada, quando o catálogo sabe"
+          },
+          "next_episode": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Episode",
+            "description": "O próximo episódio; vazio quando a temporada acabou"
+          },
+          "moved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moved At",
+            "description": "A última vez que a pessoa mexeu na série"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media",
+          "season",
+          "seen"
+        ],
+        "title": "WatchingOut",
+        "description": "Uma série em andamento, para o \"Continuar assistindo\"."
       },
       "WatchlistNowOut": {
         "properties": {

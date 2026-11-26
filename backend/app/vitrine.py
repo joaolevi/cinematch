@@ -9,6 +9,7 @@ com diário, resenhas, curtidas e comentários. A Visitante segue quatro delas; 
 - Pode rodar de novo sem duplicar nada. Títulos que não estão no catálogo são pulados.
 """
 
+import secrets
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 
@@ -17,9 +18,10 @@ from sqlalchemy.orm import Session
 
 from . import crud
 from .auth import hash_password
-from .config import settings
+from .config import DATA_DIR, settings
 from .models import (
-    DiaryEntry, EpisodeEntry, Follow, ListItem, Media, ReviewComment, ReviewLike, User, UserList, UserPreference,
+    DiaryEntry, EpisodeEntry, Follow, ListItem, Media, ReviewComment, ReviewLike, User, UserAvatar, UserList,
+    UserPreference,
 )
 from .seed import DEMO_EMAIL, VITRINE_DOMAIN
 from .services.theme import _theme_media, current_theme
@@ -200,6 +202,9 @@ EPISODES = [(1, n, r) for n, r in enumerate([4, 4.5, 4.5, 5, 4, 4.5, 5, 5, 4.5, 
 EPISODE_NOTES = {(1, 10): "Agora entendi a caverna. Preciso de um caderno para os nomes.",
                  (2, 3): "O episódio que amarra as três épocas."}
 
+# Um disco pela metade, para o "Continuar ouvindo": as quatro primeiras faixas, algumas com nota
+LISTENING = ("Acabou chorare", [(1, 1, 5.0), (1, 2, 4.5), (1, 3, None), (1, 4, 5.0)])
+
 # Quem a Visitante segue (a Júlia fica de fora, para aparecer em "Quem seguir") e quem segue de volta
 FOLLOWS = [("visitante", "marina"), ("visitante", "davi"), ("visitante", "bia"), ("visitante", "tomas"),
            ("marina", "visitante"), ("davi", "visitante"), ("bia", "visitante"),
@@ -255,17 +260,30 @@ def _user(db: Session, person: Person, password_hash: str) -> User:
     else:
         user = db.scalar(select(User).where(User.email == person.email))
         if user is None:
-            user = User(name=person.name, email=person.email, password_hash=password_hash)
+            # Só as contas que a vitrine cria começam abertas para todos; a escolha de quem já existe fica como está
+            user = User(name=person.name, email=person.email, password_hash=password_hash, visibility="all")
             db.add(user)
             db.flush()
     user.onboarded = True
-    user.visibility = "all"
+    _avatar(db, user, person.slug)
     crud.get_or_create_watchlist(db, user)
     have = {p.genre for p in user.preferences}
     for genre in person.genres:
         if genre not in have:
             db.add(UserPreference(user_id=user.id, genre=genre))
     return user
+
+
+AVATAR_DIR = DATA_DIR / "avatares"
+
+
+def _avatar(db: Session, user: User, slug: str) -> None:
+    """A foto de exemplo: um avatar ilustrado (Notionists, de Zoish, CC0, pelo DiceBear), guardado em data/avatares.
+    Quem já tem foto fica com a sua."""
+    path = AVATAR_DIR / f"{slug}.png"
+    if not path.exists() or db.get(UserAvatar, user.id) is not None:
+        return
+    db.add(UserAvatar(user_id=user.id, image=path.read_bytes(), content_type="image/png", token=secrets.token_hex(16)))
 
 
 def _when(days: int, hour: int = 21) -> datetime:
@@ -374,6 +392,16 @@ def build_vitrine(db: Session) -> dict:
                 db.add(row)
             row.rating, row.note = rating, EPISODE_NOTES.get((season, number))
             episodes += 1
+
+    disco = _media(db, LISTENING[0], A)
+    if disco:
+        for disc, number, rating in LISTENING[1]:
+            row = db.scalar(select(EpisodeEntry).where(
+                EpisodeEntry.user_id == users["visitante"].id, EpisodeEntry.media_id == disco.id,
+                EpisodeEntry.season == disc, EpisodeEntry.episode == number))
+            if row is None:
+                db.add(EpisodeEntry(user_id=users["visitante"].id, media_id=disco.id, season=disc, episode=number,
+                                    rating=rating, updated_at=datetime.now(timezone.utc) - timedelta(hours=1)))
 
     follows = 0
     for a, b in FOLLOWS:

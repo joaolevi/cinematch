@@ -67,7 +67,7 @@ export default function Polaroid({
       {children}
       {caption != null ? (
         <p
-          className={`truncate text-center font-hand leading-6 font-bold text-stone-800 ${small ? "py-0.5 text-base" : "py-1 text-xl"}`}
+          className={`truncate text-center font-hand leading-6 font-bold text-stone-800 ${small ? "py-0.5 text-base" : "py-1 text-base sm:text-xl"}`}
         >
           {caption}
         </p>

@@ -66,7 +66,9 @@ function FacetRow({
   );
   return (
     // No celular, os botões descem para uma segunda linha: o nome e a barra ficam com a largura toda
-    <li className="grid grid-cols-[minmax(0,7rem)_1fr] items-center gap-x-3 gap-y-1.5 text-sm sm:grid-cols-[minmax(0,8rem)_1fr_auto]">
+    // No computador, os botões aparecem só na linha em que o mouse ou o foco está (ou quando já há um ajuste):
+    // 60 botões de uma vez deixavam a tela carregada. No celular, que não tem mouse, eles ficam sempre à mostra
+    <li className="group/facet grid grid-cols-[minmax(0,7rem)_1fr] items-center gap-x-3 gap-y-1.5 rounded-md text-sm sm:grid-cols-[minmax(0,8rem)_1fr_auto] sm:hover:bg-surface-2/60">
       <span className="truncate" title={facet.label}>
         {facet.label}
       </span>
@@ -76,7 +78,13 @@ function FacetRow({
         </span>
         <span className="w-20 text-xs text-muted sm:w-24">{state ?? `${Math.round(facet.share * 100)}%`}</span>
       </span>
-      <span className="col-span-2 flex gap-1 sm:col-span-1" role="group" aria-label={`Ajustar ${facet.label}`}>
+      <span
+        className={`col-span-2 flex gap-1 transition-opacity sm:col-span-1 ${
+          state ? "" : "sm:opacity-0 sm:group-focus-within/facet:opacity-100 sm:group-hover/facet:opacity-100"
+        }`}
+        role="group"
+        aria-label={`Ajustar ${facet.label}`}
+      >
         {button(MORE, "Mais", `Pedir mais ${facet.label}`)}
         {button(LESS, "Menos", `Pedir menos ${facet.label}`)}
         {button(OFF, "Não sugerir", `Não sugerir ${facet.label}`)}
@@ -135,8 +143,8 @@ export default function TastePage() {
         <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[2] }} />
         <p>
           É assim que o recomendador enxerga você, a partir do que você registrou: cada título curtido espalha o peso dele
-          pelos gêneros, climas, épocas e pessoas. <strong>Mais</strong> e <strong>Menos</strong> mudam as sugestões na
-          hora; <strong>Não sugerir</strong> para de sugerir aquilo. Um registro marcado para não contar continua no diário, mas
+          pelos gêneros, climas, épocas e pessoas. Passe o mouse numa linha: <strong>Mais</strong> e <strong>Menos</strong> mudam as
+          sugestões na hora; <strong>Não sugerir</strong> para de sugerir aquilo. Um registro marcado para não contar continua no diário, mas
           sai do cálculo.{" "}
           <Link to="/como-recomendamos" className="underline hover:text-[#b9452f]">
             Como recomendamos
