@@ -65,7 +65,7 @@ export default function AboutPage() {
       <section>
         <h2 className="text-xl font-semibold">Como recomendamos</h2>
         <p className="mt-2 text-sm text-muted">
-          De onde vêm as sugestões, as pontes entre filmes e música e o experimento em andamento:{" "}
+          De onde vêm as sugestões, as pontes entre filmes e música e como medimos:{" "}
           <Link to="/como-recomendamos" className="underline hover:text-[#b9452f]">veja como recomendamos</Link>.
         </p>
       </section>

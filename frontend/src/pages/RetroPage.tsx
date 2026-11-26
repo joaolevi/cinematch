@@ -32,8 +32,8 @@ function periodFrom(params: URLSearchParams, years: { year: number; months: numb
   return { year, month: month && month >= 1 && month <= 12 ? month : null };
 }
 
-/** Retrospectiva do gosto por mês e por ano, com um cartão para compartilhar (RFF05). */
-export default function RetroPage() {
+/** Retrospectiva do gosto por mês e por ano, com um cartão para compartilhar (RFF05). Fica numa aba do Diário. */
+export default function RetroPage({ embedded = false }: { embedded?: boolean }) {
   const [entries, setEntries] = useState<DiaryEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
@@ -67,7 +67,14 @@ export default function RetroPage() {
     };
   }, [retro]);
 
-  const choose = (p: RetroPeriod) => setParams(p.month ? { ano: String(p.year), mes: String(p.month) } : { ano: String(p.year) }, { replace: true });
+  // Troca o período sem perder o resto do endereço (no Diário, a aba fica em ?aba=retrospectiva)
+  const choose = (p: RetroPeriod) => {
+    const next = new URLSearchParams(params);
+    next.set("ano", String(p.year));
+    if (p.month) next.set("mes", String(p.month));
+    else next.delete("mes");
+    setParams(next, { replace: true });
+  };
 
   if (error) return <HandNote>{error}</HandNote>;
   if (!entries) return <HandNote>Folheando o diário...</HandNote>;
@@ -87,8 +94,12 @@ export default function RetroPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Minha retrospectiva</h1>
-      <p className="font-hand text-2xl font-bold text-accent">o meu gosto, mês a mês</p>
+      {!embedded && (
+        <>
+          <h1 className="text-3xl font-bold">Minha retrospectiva</h1>
+          <p className="font-hand text-2xl font-bold text-accent">o meu gosto, mês a mês</p>
+        </>
+      )}
 
       {!period || !retro ? (
         <section className={`paper relative mt-8 max-w-3xl -rotate-[0.3deg] rounded-sm py-7 pr-6 pl-14 ${INK}`}>
@@ -303,11 +314,6 @@ export default function RetroPage() {
         </>
       )}
 
-      <p className="mt-12 text-sm">
-        <Link to="/diario?aba=gosto" className="underline hover:text-accent">
-          Ver o Meu gosto completo
-        </Link>
-      </p>
     </div>
   );
 }

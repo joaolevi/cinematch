@@ -45,7 +45,6 @@ export default function PrivacyPage() {
           <li>Quem você segue, os serviços de streaming que você marcou e quem pode ver os seus registros.</li>
           <li>As curtidas e os comentários que você faz nas resenhas da Comunidade.</li>
           <li>As sugestões que apareceram na sua tela e o que você fez com elas, como Quero ver ou Não me interesso.</li>
-          <li>Se você participa dos experimentos e em qual grupo está.</li>
         </ul>
       </Part>
 
@@ -55,10 +54,9 @@ export default function PrivacyPage() {
           Essa é a base do serviço que você pede ao criar a conta (art. 7º, V, da LGPD).
         </p>
         <p>
-          Para os experimentos, que comparam duas formas de sugerir e medem quanto as sugestões são aceitas: só com o
-          seu consentimento (art. 7º, I). Você escolhe no cadastro, e a caixa começa desmarcada. Dá para sair ou voltar
-          quando quiser, em {account}. Sem os experimentos, você recebe as sugestões completas, e as suas reações ficam
-          fora da comparação.
+          Para medir se as sugestões funcionam: contamos quantas sugestões que apareceram na tela viraram Quero ver ou Já
+          vi, somando todas as contas, sem mostrar ninguém. Até 26/11/2026 houve um teste que comparava duas formas de
+          sugerir, só com quem aceitou participar; ele acabou, e todo mundo recebe agora a mesma versão, a completa.
         </p>
       </Part>
 
@@ -116,7 +114,6 @@ export default function PrivacyPage() {
             .
           </li>
           <li>Escolher quem vê os seus registros.</li>
-          <li>Sair dos experimentos, o que retira o consentimento.</li>
           <li>Excluir a conta e tudo o que é dela.</li>
         </ul>
         <p>

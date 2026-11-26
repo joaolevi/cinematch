@@ -57,8 +57,10 @@ class User(Base):
 
     @property
     def variant(self) -> str:
-        """O grupo que vale nas sugestões e nos eventos: "A", "B" ou "-" para quem saiu dos experimentos."""
-        return self.ab_group if self.in_experiments else "-"
+        """O grupo que vale nas sugestões e nos eventos. O teste A/B acabou em 26/11/2026, na entrega final (D29): todo
+        mundo recebe o recomendador completo, o híbrido (grupo "A"). `ab_group` e `in_experiments` ficam no banco, para
+        o histórico do que foi medido até lá."""
+        return "A"
 
     preferences: Mapped[list["UserPreference"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

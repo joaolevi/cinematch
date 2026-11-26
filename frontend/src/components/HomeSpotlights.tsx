@@ -85,7 +85,7 @@ function TasteCard({ diary }: { diary: DiaryEntry[] }) {
   const taste = tasteOf(diary);
   return (
     <Link
-      to={taste ? "/retrospectiva" : "/diario"}
+      to={taste ? "/diario?aba=retrospectiva" : "/diario"}
       style={{ "--i": 2 } as CSSProperties}
       className="rise group flex flex-col rounded-2xl border border-line bg-surface/70 p-5 transition hover:border-accent/60"
     >

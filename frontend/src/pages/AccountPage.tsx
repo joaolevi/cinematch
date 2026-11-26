@@ -2,7 +2,6 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
-import ExperimentsToggle from "../components/ExperimentsToggle";
 import { Avatar } from "../components/WatchedBy";
 import { refreshAvatars } from "../avatars";
 import type { LetterboxdResult, StreamingService, Visibility } from "../types";
@@ -363,7 +362,7 @@ function ServicesPicker() {
   );
 }
 
-/** Minha conta: dados, quem vê, serviços, experimentos e excluir a conta (RFF06, RFF10, RFF17, RFF21). */
+/** Minha conta: dados, quem vê, serviços e excluir a conta (RFF06, RFF10, RFF21). */
 type Tab = "perfil" | "privacidade" | "servicos" | "dados";
 const TABS: [Tab, string][] = [
   ["perfil", "Perfil"],
@@ -497,23 +496,6 @@ export default function AccountPage() {
           agora, e cada sugestão avisa se está num serviço seu.
         </p>
         <ServicesPicker />
-      </Part>
-      )}
-
-      {tab === "privacidade" && (
-        <Part title="Experimentos">
-        <p>
-          Comparamos duas formas de sugerir filmes e séries. Saiba mais em{" "}
-          <Link to="/como-recomendamos" className="underline hover:text-accent">
-            Como recomendamos
-          </Link>
-          . Participar é uma escolha sua, como explica a{" "}
-          <Link to="/privacidade" className="underline hover:text-accent">
-            política de privacidade
-          </Link>
-          .
-        </p>
-        <ExperimentsToggle />
       </Part>
       )}
 

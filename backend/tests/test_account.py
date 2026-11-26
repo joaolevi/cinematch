@@ -46,20 +46,16 @@ def test_admin_nao_se_exclui_por_aqui(client):
 
 
 # ---------------------------------------------------------------- sair dos experimentos
-def test_quem_sai_dos_experimentos_fica_fora_da_comparacao(client, user_headers, admin_headers, db):
-    db.execute(update(User).where(User.email == "fulano@teste.com").values(ab_group="B"))
+def test_fim_do_ab_quem_era_do_grupo_b_recebe_o_completo(client, user_headers, admin_headers, db):
+    """O A/B acabou na entrega final (D29): quem tinha ficado no grupo B, ou saído dos experimentos, recebe o híbrido,
+    e os eventos novos contam no grupo A e na taxa geral."""
+    db.execute(update(User).where(User.email == "fulano@teste.com").values(ab_group="B", in_experiments=False))
     db.commit()
-    r = client.put("/me/experiments", json={"in_experiments": False}, headers=user_headers)
-    assert r.status_code == 200 and r.json()["in_experiments"] is False
     feed = client.get("/recommendations", params={"limit": 5}, headers=user_headers).json()
-    assert feed["variant"] == "-"  # recebe o recomendador completo, não o do grupo B
-    items = see_feed(client, user_headers, limit=5)
-    client.post(f"/recommendations/{items[0]['media']['id']}/feedback", json={"action": "want"}, headers=user_headers)
+    assert feed["variant"] == "A"
+    see_feed(client, user_headers, limit=5)
     m = client.get("/admin/metrics", headers=admin_headers).json()
-    assert m["opted_out"] == 1
-    assert all(v["shown"] == 0 for v in m["by_variant"])  # nem no A nem no B
-    assert m["overall"]["shown"] == 5  # a taxa geral continua contando
-    assert client.put("/me/experiments", json={"in_experiments": True}, headers=user_headers).json()["in_experiments"]
+    assert m["overall"]["shown"] == 5
 
 
 # ---------------------------------------------------------------- limite de login
