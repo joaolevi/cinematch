@@ -64,11 +64,25 @@ export interface Connection {
 
 export interface Review {
   id: number;
+  user_id?: number | null;
+  likes: number;
+  liked: boolean;
+  comments: number;
   user_name: string;
   rating: number | null;
   review: string;
   consumed_at: string | null;
   created_at: string;
+}
+
+/** Um episódio, com a nota e a anotação de quem vê (RFF24) */
+export interface Episode {
+  number: number;
+  name: string | null;
+  air_date: string | null;
+  overview: string | null;
+  rating: number | null;
+  note: string | null;
 }
 
 /** Temporada de uma série (RFF24) */
@@ -94,6 +108,7 @@ export interface MediaDetail extends Media {
   consumed_at: string | null;
     status: Progress | null;
     season: number | null;
+    episodes?: Record<string, number>;
     in_watchlist: boolean;
     dismissed: boolean;
     list_ids: number[];

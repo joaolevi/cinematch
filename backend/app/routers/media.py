@@ -10,13 +10,15 @@ from sqlalchemy.orm import Session
 from .. import crud
 from ..auth import get_current_user
 from ..db import get_db
-from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList
+from ..models import DiaryEntry, Dismissed, ListItem, Media, ReviewComment, ReviewLike, User, UserList
 from ..schemas import (
     ConnectionOut, MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MoodOut, MyStatus, OccasionOut, ProviderOut,
     ReviewOut, ServiceOut,
     ShowcaseOut,
 )
 from ..services.bridges import connections, showcase
+from .community import counts_by_entry
+from ..services.episodes import counts_by_season
 from ..services.catalog import search_text
 from ..services.moods import MOODS, OCCASIONS
 from ..services.streaming import SERVICES, catalog_counts
@@ -216,14 +218,23 @@ def media_detail(
         .order_by(DiaryEntry.created_at.desc())
         .limit(20)
     ).all()
+    # Curtir e comentar a resenha também na página do título, como na Comunidade (RFF30)
+    ids = [e.id for e in entries]
+    likes = counts_by_entry(db, ReviewLike.entry_id, ids)
+    comments = counts_by_entry(db, ReviewComment.entry_id, ids, ReviewComment.hidden.is_(False))
+    liked = set(db.scalars(select(ReviewLike.entry_id).where(ReviewLike.entry_id.in_(ids), ReviewLike.user_id == user.id)))
     reviews = [
         ReviewOut(
             id=e.id,
+            user_id=e.user_id,
             user_name=e.user.name,
             rating=e.rating,
             review=e.review or "",
             consumed_at=e.consumed_at,
             created_at=e.created_at,
+            likes=likes.get(e.id, 0),
+            liked=e.id in liked,
+            comments=comments.get(e.id, 0),
         )
         for e in entries
     ]
@@ -245,6 +256,7 @@ def media_detail(
         consumed_at=mine.consumed_at if mine else None,
         status=mine.status if mine else None,
         season=mine.season if mine else None,
+        episodes=counts_by_season(db, user.id, media_id) if media.type == "series" else {},
         in_watchlist=any(is_wl for _, is_wl in lists),
         dismissed=dismissed is not None,
         list_ids=[lid for lid, is_wl in lists if not is_wl],

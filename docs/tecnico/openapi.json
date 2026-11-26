@@ -4709,6 +4709,147 @@
         ]
       }
     },
+    "/media/{media_id}/seasons/{season}/episodes": {
+      "get": {
+        "tags": [
+          "episódios"
+        ],
+        "summary": "Season Episodes",
+        "description": "Os episódios da temporada, com nome, data e sinopse do TMDB, e a nota e a anotação de quem pede. Sem o TMDB, a\nlista sai do número de episódios da temporada.",
+        "operationId": "season_episodes_media__media_id__seasons__season__episodes_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Season"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EpisodeOut"
+                  },
+                  "title": "Response Season Episodes Media  Media Id  Seasons  Season  Episodes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{media_id}/seasons/{season}/episodes/{episode}": {
+      "put": {
+        "tags": [
+          "episódios"
+        ],
+        "summary": "Rate Episode",
+        "description": "Dá nota a um episódio e/ou guarda uma anotação, que só a própria pessoa vê. Sem nota e sem anotação, o episódio\nvolta a não visto. O primeiro episódio marcado põe a série no diário como \"assistindo\".",
+        "operationId": "rate_episode_media__media_id__seasons__season__episodes__episode__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Season"
+            }
+          },
+          {
+            "name": "episode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Episode"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EpisodeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EpisodeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -5864,6 +6005,107 @@
         },
         "type": "object",
         "title": "DiaryUpdate"
+      },
+      "EpisodeIn": {
+        "properties": {
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating",
+            "description": "De 0,5 a 5; sem nota e sem anotação, o episódio volta a não visto"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Anotação sobre o episódio, só para a própria pessoa"
+          }
+        },
+        "type": "object",
+        "title": "EpisodeIn"
+      },
+      "EpisodeOut": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "air_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Air Date"
+          },
+          "overview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overview"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number"
+        ],
+        "title": "EpisodeOut",
+        "description": "Um episódio da temporada, com a nota e a anotação de quem vê (RFF24)."
       },
       "ExperimentsIn": {
         "properties": {
@@ -7125,6 +7367,15 @@
             "title": "Season",
             "description": "Série: a temporada em que a pessoa está (RFF24)"
           },
+          "episodes": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Episodes",
+            "description": "Série: quantos episódios a pessoa marcou em cada temporada",
+            "default": {}
+          },
           "in_watchlist": {
             "type": "boolean",
             "title": "In Watchlist",
@@ -7602,6 +7853,17 @@
             "type": "integer",
             "title": "Id"
           },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
           "user_name": {
             "type": "string",
             "title": "User Name"
@@ -7637,6 +7899,24 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "likes": {
+            "type": "integer",
+            "title": "Likes",
+            "description": "Curtidas na resenha (RFF30)",
+            "default": 0
+          },
+          "liked": {
+            "type": "boolean",
+            "title": "Liked",
+            "description": "Se quem vê curtiu a resenha",
+            "default": false
+          },
+          "comments": {
+            "type": "integer",
+            "title": "Comments",
+            "description": "Comentários visíveis na resenha (RFF30)",
+            "default": 0
           }
         },
         "type": "object",

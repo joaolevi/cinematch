@@ -140,11 +140,15 @@ class MediaUpdate(BaseModel):
 
 class ReviewOut(BaseModel):
     id: int
+    user_id: int | None = None
     user_name: str
     rating: float | None
     review: str
     consumed_at: date | None
     created_at: datetime
+    likes: int = Field(default=0, description="Curtidas na resenha (RFF30)")
+    liked: bool = Field(default=False, description="Se quem vê curtiu a resenha")
+    comments: int = Field(default=0, description="Comentários visíveis na resenha (RFF30)")
 
 
 class MyStatus(BaseModel):
@@ -153,6 +157,7 @@ class MyStatus(BaseModel):
     consumed_at: date | None = None
     status: Literal["seen", "watching"] | None = Field(default=None, description="Série: vista ou assistindo (RFF24)")
     season: int | None = Field(default=None, description="Série: a temporada em que a pessoa está (RFF24)")
+    episodes: dict[str, int] = Field(default={}, description="Série: quantos episódios a pessoa marcou em cada temporada")
     in_watchlist: bool = False
     dismissed: bool = False
     list_ids: list[int] = []
@@ -774,3 +779,24 @@ class PasswordChangeIn(BaseModel):
         if len(v.encode()) > MAX_PASSWORD_BYTES:
             raise ValueError(f"a senha deve ter no máximo {MAX_PASSWORD_BYTES} bytes")
         return v
+
+
+class EpisodeOut(BaseModel):
+    """Um episódio da temporada, com a nota e a anotação de quem vê (RFF24)."""
+
+    number: int
+    name: str | None = None
+    air_date: date | None = None
+    overview: str | None = None
+    rating: float | None = None
+    note: str | None = None
+
+
+class EpisodeIn(BaseModel):
+    rating: float | None = Field(default=None, description="De 0,5 a 5; sem nota e sem anotação, o episódio volta a não visto")
+    note: str | None = Field(default=None, max_length=1000, description="Anotação sobre o episódio, só para a própria pessoa")
+
+    @field_validator("rating")
+    @classmethod
+    def validate_rating(cls, v: float | None) -> float | None:
+        return _check_rating(v)

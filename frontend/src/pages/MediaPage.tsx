@@ -5,6 +5,8 @@ import Carousel from "../components/Carousel";
 import MediaCard from "../components/MediaCard";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
+import Episodes from "../components/Episodes";
+import ReviewTalk from "../components/ReviewTalk";
 import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
 import { diaryChanged, useDiaryVersion } from "../seen";
@@ -438,6 +440,18 @@ function MediaView({ mediaId }: { mediaId: number }) {
         </div>
       </div>
 
+      {media.type === "series" && (
+        <Episodes
+          mediaId={media.id}
+          seasons={media.seasons}
+          counts={status.episodes ?? {}}
+          onChange={() => {
+            diaryChanged();
+            load();
+          }}
+        />
+      )}
+
       {connections.length > 0 && (
         <section className="mt-12">
           <h2 className="font-display text-xl font-bold">{album ? "Para ver depois" : "Para ouvir depois"}</h2>
@@ -495,8 +509,15 @@ function MediaView({ mediaId }: { mediaId: number }) {
         <div className="mt-2 divide-y divide-line/60">
           {media.reviews.map((r) => (
             <article key={r.id} className="py-4">
-              <WatchedBy name={r.user_name} rating={r.rating} consumedAt={r.consumed_at} createdAt={r.created_at} />
+              <WatchedBy
+                name={r.user_name}
+                userId={r.user_id ?? undefined}
+                rating={r.rating}
+                consumedAt={r.consumed_at}
+                createdAt={r.created_at}
+              />
               <p className="mt-2 break-words whitespace-pre-line text-stone-200">{r.review}</p>
+              <ReviewTalk entry={r} />
             </article>
           ))}
         </div>

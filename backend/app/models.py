@@ -133,6 +133,23 @@ class ItemNeighbor(Base):
     score: Mapped[float] = mapped_column(Float)
 
 
+class EpisodeEntry(Base):
+    """A nota e a anotação de um episódio de série, só para a própria pessoa (RFF24). Fica fora do diário, que tem um
+    registro por título: assim dá para acompanhar episódio por episódio sem mudar a regra do diário (RN05)."""
+
+    __tablename__ = "episode_entries"
+    __table_args__ = (UniqueConstraint("user_id", "media_id", "season", "episode"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    media_id: Mapped[int] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"), index=True)
+    season: Mapped[int] = mapped_column(Integer)
+    episode: Mapped[int] = mapped_column(Integer)
+    rating: Mapped[float | None] = mapped_column(Float, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class UserAvatar(Base):
     """A foto de perfil, já reduzida pela tela para 256 x 256. O `token` muda a cada troca: entra no endereço da foto,
     para o navegador guardar em cache e para só quem pode ver a pessoa saber o endereço."""
