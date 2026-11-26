@@ -4,6 +4,7 @@
 - Contas de demonstração: admin e demo
 - ~30 usuários sintéticos com "personas" de gosto, para o filtro colaborativo ter dados
 - Simulação opcional do teste A/B (usuários sintéticos interagindo com o feed)
+- Vitrine (app/vitrine.py): a conta demo cheia e cinco pessoas de exemplo, para ver o sistema com dados
 """
 
 import random
@@ -21,6 +22,8 @@ from .services.recommender import recommend
 ADMIN_EMAIL, ADMIN_PASSWORD = "admin@tastory.dev", settings.admin_password
 DEMO_EMAIL, DEMO_PASSWORD = "demo@tastory.dev", settings.demo_password
 SYNTHETIC_PASSWORD = settings.synthetic_password
+# Pessoas de exemplo da vitrine (app/vitrine.py): aparecem na Comunidade, mas ficam fora das métricas de pessoas reais
+VITRINE_DOMAIN = "vitrine.tastory.dev"
 
 PERSONAS: list[tuple[str, list[str]]] = [
     ("terror", ["Terror", "Suspense"]),
@@ -166,7 +169,7 @@ def simulate_ab_test(db: Session, rounds: int = 2, feed_size: int = 10, seed: in
     return events
 
 
-def seed_all(db: Session, synthetic: bool = True, simulate: bool = True) -> dict:
+def seed_all(db: Session, synthetic: bool = True, simulate: bool = True, vitrine: bool = True) -> dict:
     summary = {"catalog": load_catalog(db), "albums": load_albums(db)}
     from .services.bridges import build_bridges
 
@@ -179,4 +182,8 @@ def seed_all(db: Session, synthetic: bool = True, simulate: bool = True) -> dict
         summary["synthetic_users"] = create_synthetic_users(db)
         if simulate:
             summary["simulated_events"] = simulate_ab_test(db)
+    if vitrine:
+        from .vitrine import build_vitrine
+
+        summary["vitrine"] = build_vitrine(db)
     return summary
