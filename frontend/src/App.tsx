@@ -19,6 +19,7 @@ import OnboardingPage from "./pages/OnboardingPage";
 import RetroPage from "./pages/RetroPage";
 import AccountPage from "./pages/AccountPage";
 import TastePage from "./pages/TastePage";
+import PeoplePage from "./pages/PeoplePage";
 import ProfilePage from "./pages/ProfilePage";
 import ActivityPage from "./pages/ActivityPage";
 import SearchPage from "./pages/SearchPage";
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="onboarding" element={<OnboardingPage />} />
             <Route path="buscar" element={<SearchPage />} />
             <Route path="media/:id" element={<MediaPage />} />
+            <Route path="media/:id/resenhas" element={<MediaPage />} />
             <Route path="media/:id/temporada/:season/episodio/:episode" element={<EpisodePage />} />
             <Route path="media/:id/faixa/:disc/:number" element={<TrackPage />} />
             <Route path="diario" element={<DiaryPage />} />
@@ -84,7 +86,8 @@ export default function App() {
             <Route path="meu-gosto" element={<TastePage />} />
             <Route path="listas" element={<ListsPage />} />
             <Route path="comunidade" element={<CommunityPage />} />
-            <Route path="pessoas/:id" element={<ProfilePage />} />
+            <Route path="comunidade/pessoas" element={<PeoplePage />} />
+            <Route path="pessoas/:id/:aba?" element={<ProfilePage />} />
             <Route path="atividade" element={<ActivityPage />} />
             <Route path="sobre" element={<AboutPage />} />
             <Route path="como-recomendamos" element={<HowPage />} />

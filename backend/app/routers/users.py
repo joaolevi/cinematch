@@ -2,6 +2,8 @@
 (RFF09), quem vê os registros de cada uma (RFF10) e o "Para ver ou ouvir junto" (RFF28)."""
 
 import secrets
+from datetime import datetime, timedelta, timezone
+from typing import Literal
 import unicodedata
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
@@ -10,8 +12,10 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..auth import get_current_user
 from ..db import get_db
-from ..models import DiaryEntry, Follow, Media, User, UserAvatar
+from ..models import DiaryEntry, Follow, Media, ReviewLike, User, UserAvatar
 from ..schemas import (
+    CommunityEntryOut,
+    MemberOut,
     FoundPersonOut,
     CompatibilityOut, DiaryOut, MediaOut, PersonOut, ProfileItemOut, ProfileOut, RecommendationOut, SuggestedPersonOut,
 )
@@ -122,6 +126,68 @@ def search_people(
         )
         for p in found
     ]
+
+
+PERIOD_DAYS = {"semana": 7, "mes": 30, "sempre": None}
+
+
+@router.get("/popular", response_model=list[MemberOut])
+def popular_people(
+    period: Literal["semana", "mes", "sempre"] = Query(default="semana", description="De quando contam os registros"),
+    limit: int = Query(default=30, ge=1, le=60),
+    db: Session = Depends(get_db),
+    me: User = Depends(get_current_user),
+):
+    """Pessoas, como os membros do Letterboxd: as mais ativas no período (registros na semana, no mês ou desde
+    sempre), com resenhas, curtidas recebidas, seguidores e os três últimos títulos. Quem só mostra o diário para quem
+    segue aparece sem os números do diário; perfis privados, a conta de demonstração e as contas simuladas ficam de
+    fora."""
+    from ..seed import DEMO_EMAIL
+    from .community import HAS_REVIEW
+
+    people = list(db.scalars(select(User).where(
+        User.role == "user", User.is_synthetic.is_(False), User.email != DEMO_EMAIL, User.visibility != "private",
+    )))
+    if not people:
+        return []
+    ids = [p.id for p in people]
+    days = PERIOD_DAYS[period]
+    since = datetime.now(timezone.utc) - timedelta(days=days) if days else None
+    base = [DiaryEntry.user_id.in_(ids), DiaryEntry.from_onboarding.is_(False)]
+    per_user = lambda *where: dict(db.execute(  # noqa: E731
+        select(DiaryEntry.user_id, func.count()).where(*base, *where).group_by(DiaryEntry.user_id)
+    ).all())
+    titles = per_user()
+    active = per_user(DiaryEntry.created_at >= since) if since else titles
+    reviews = per_user(*HAS_REVIEW)
+    likes = dict(db.execute(
+        select(DiaryEntry.user_id, func.count(ReviewLike.id)).join(ReviewLike, ReviewLike.entry_id == DiaryEntry.id)
+        .where(DiaryEntry.user_id.in_(ids)).group_by(DiaryEntry.user_id)
+    ).all())
+    followers = dict(db.execute(
+        select(Follow.followed_id, func.count()).where(Follow.followed_id.in_(ids)).group_by(Follow.followed_id)
+    ).all())
+    mine = set(db.scalars(select(Follow.followed_id).where(Follow.follower_id == me.id)))
+    open_diary = {p.id: can_see_entries(db, me, p) for p in people}
+    # Quem não deixa ver o diário entra pela quantidade de seguidores, sem revelar quanto registrou
+    people.sort(key=lambda p: (-(active.get(p.id, 0) if open_diary[p.id] else 0), -followers.get(p.id, 0), p.name))
+    out = []
+    for p in people[:limit]:
+        recent = []
+        if open_diary[p.id]:
+            recent = [MediaOut.model_validate(m) for m in db.scalars(
+                select(Media).join(DiaryEntry, DiaryEntry.media_id == Media.id)
+                .where(DiaryEntry.user_id == p.id, DiaryEntry.from_onboarding.is_(False))
+                .order_by(DiaryEntry.created_at.desc()).limit(3)
+            )]
+        out.append(MemberOut(
+            id=p.id, name=p.name, followers=followers.get(p.id, 0), following=p.id in mine, likes=likes.get(p.id, 0),
+            titles=titles.get(p.id, 0) if open_diary[p.id] else None,
+            active=active.get(p.id, 0) if open_diary[p.id] else None,
+            reviews=reviews.get(p.id, 0) if open_diary[p.id] else None,
+            recent=recent,
+        ))
+    return out
 
 
 @router.get("/following", response_model=list[PersonOut])
@@ -248,6 +314,33 @@ def pinned_media(db: Session, user: User) -> list:
 
 
 MAX_DIARY = 1000
+
+
+@router.get("/{user_id}/reviews", response_model=list[CommunityEntryOut])
+def person_reviews(
+    user_id: int,
+    sort: Literal["recentes", "populares"] = "recentes",
+    limit: int = Query(default=20, ge=1, le=50),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+    me: User = Depends(get_current_user),
+):
+    """As resenhas da pessoa, como a aba Resenhas do perfil no Letterboxd: as mais novas ou as mais curtidas, com
+    curtidas e comentários. Quem só mostra o diário para quem segue: 403 para quem não segue. Perfil privado: 404."""
+    from .community import HAS_REVIEW, entries_out
+
+    user = visible_person(db, user_id, me)
+    if not can_see_entries(db, me, user):
+        raise HTTPException(status_code=403, detail="As resenhas são só para quem segue")
+    q = select(DiaryEntry).where(DiaryEntry.user_id == user.id, *HAS_REVIEW).options(
+        selectinload(DiaryEntry.media), selectinload(DiaryEntry.user)
+    )
+    if sort == "populares":
+        likes = select(func.count(ReviewLike.id)).where(ReviewLike.entry_id == DiaryEntry.id).scalar_subquery()
+        q = q.order_by(likes.desc(), DiaryEntry.created_at.desc())
+    else:
+        q = q.order_by(DiaryEntry.created_at.desc(), DiaryEntry.id.desc())
+    return entries_out(db, list(db.scalars(q.offset(offset).limit(limit))), me)
 
 
 @router.get("/{user_id}/diary", response_model=list[DiaryOut])

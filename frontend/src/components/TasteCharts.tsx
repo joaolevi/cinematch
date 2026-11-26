@@ -31,7 +31,8 @@ function leader(bars: Bar[]): number {
 
 function ChartCard({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
-    <section className="card p-5">
+    // Sem caixa, como as estatísticas do Letterboxd: uma linha fina em cima, o título e o gráfico com espaço em volta
+    <section className="border-t border-line/60 pt-4">
       <h3 className="font-display text-lg font-bold">{title}</h3>
       <p className="text-xs text-muted">{subtitle}</p>
       <div className="mt-4">{children}</div>
@@ -226,7 +227,7 @@ export default function TasteChartsView({ data, onPick, who }: { data: TasteChar
   const rated = data.ratings.reduce((sum, b) => sum + b.value, 0);
   const diary = who ? "do diário" : "do meu diário";
   return (
-    <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+    <div className="grid gap-x-12 gap-y-10 md:grid-cols-2">
       {data.genres.length > 0 && (
         <ChartCard
           title={who ? `Os gêneros que ${who} mais vê` : "Os gêneros que eu mais vejo"}

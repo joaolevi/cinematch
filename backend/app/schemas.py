@@ -495,6 +495,20 @@ class FoundPersonOut(BaseModel):
     following: bool = Field(description="Se quem buscou já segue")
 
 
+class MemberOut(BaseModel):
+    """Uma pessoa na tela Pessoas, como os membros do Letterboxd."""
+
+    id: int
+    name: str
+    titles: int | None = Field(default=None, description="Títulos no diário; vazio quando o diário é só para quem segue")
+    active: int | None = Field(default=None, description="Registros no período escolhido")
+    reviews: int | None = Field(default=None, description="Resenhas escritas")
+    likes: int = Field(description="Curtidas que as resenhas receberam")
+    followers: int
+    following: bool = Field(description="Se quem vê já segue")
+    recent: list["MediaOut"] = Field(default=[], description="Os três últimos títulos registrados")
+
+
 class SuggestedPersonOut(BaseModel):
     """Alguém para seguir, pelo gosto parecido (RFF15)."""
 

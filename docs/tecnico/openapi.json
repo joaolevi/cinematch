@@ -3552,6 +3552,78 @@
         }
       }
     },
+    "/users/popular": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Popular People",
+        "description": "Pessoas, como os membros do Letterboxd: as mais ativas no período (registros na semana, no mês ou desde\nsempre), com resenhas, curtidas recebidas, seguidores e os três últimos títulos. Quem só mostra o diário para quem\nsegue aparece sem os números do diário; perfis privados, a conta de demonstração e as contas simuladas ficam de\nfora.",
+        "operationId": "popular_people_users_popular_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "semana",
+                "mes",
+                "sempre"
+              ],
+              "type": "string",
+              "description": "De quando contam os registros",
+              "default": "semana",
+              "title": "Period"
+            },
+            "description": "De quando contam os registros"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 60,
+              "minimum": 1,
+              "default": 30,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MemberOut"
+                  },
+                  "title": "Response Popular People Users Popular Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/following": {
       "get": {
         "tags": [
@@ -3853,6 +3925,95 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{user_id}/reviews": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Person Reviews",
+        "description": "As resenhas da pessoa, como a aba Resenhas do perfil no Letterboxd: as mais novas ou as mais curtidas, com\ncurtidas e comentários. Quem só mostra o diário para quem segue: 403 para quem não segue. Perfil privado: 404.",
+        "operationId": "person_reviews_users__user_id__reviews_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "recentes",
+                "populares"
+              ],
+              "type": "string",
+              "default": "recentes",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommunityEntryOut"
+                  },
+                  "title": "Response Person Reviews Users  User Id  Reviews Get"
                 }
               }
             }
@@ -8395,6 +8556,87 @@
         },
         "type": "object",
         "title": "MediaUpdate"
+      },
+      "MemberOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "titles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Titles",
+            "description": "Títulos no diário; vazio quando o diário é só para quem segue"
+          },
+          "active": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active",
+            "description": "Registros no período escolhido"
+          },
+          "reviews": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviews",
+            "description": "Resenhas escritas"
+          },
+          "likes": {
+            "type": "integer",
+            "title": "Likes",
+            "description": "Curtidas que as resenhas receberam"
+          },
+          "followers": {
+            "type": "integer",
+            "title": "Followers"
+          },
+          "following": {
+            "type": "boolean",
+            "title": "Following",
+            "description": "Se quem vê já segue"
+          },
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "type": "array",
+            "title": "Recent",
+            "description": "Os três últimos títulos registrados",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "likes",
+          "followers",
+          "following"
+        ],
+        "title": "MemberOut",
+        "description": "Uma pessoa na tela Pessoas, como os membros do Letterboxd."
       },
       "MetricsOut": {
         "properties": {

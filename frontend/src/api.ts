@@ -37,6 +37,7 @@ import type {
   Wish,
   Episode,
   EpisodeDetail,
+  Member,
   Mix,
   Top,
   Trailer,
@@ -172,6 +173,10 @@ export const api = {
   adminReports: () => request<AdminReport[]>("/admin/reports"),
   adminDecideReport: (entryId: number, action: "spoiler" | "not_spoiler" | "hide" | "dismiss") =>
     request<void>(`/admin/reports/${entryId}`, { method: "PATCH", body: { action } }),
+  popularPeople: (period: "semana" | "mes" | "sempre", limit = 30) =>
+    request<Member[]>("/users/popular", { query: { period, limit } }),
+  personReviews: (userId: number, sort: "recentes" | "populares", limit = 20, offset = 0) =>
+    request<CommunityEntry[]>(`/users/${userId}/reviews`, { query: { sort, limit, offset } }),
   searchPeople: (q: string, limit = 8) => request<FoundPerson[]>("/users/search", { query: { q, limit } }),
   avatars: () => request<Record<string, string>>("/users/avatars"),
   setAvatar: (image: string) => request<void>("/me/avatar", { method: "PUT", body: { image } }),

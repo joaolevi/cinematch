@@ -127,6 +127,19 @@ export interface AdminReport {
   last_at: string;
 }
 
+/** Uma pessoa na tela Pessoas, como os membros do Letterboxd */
+export interface Member {
+  id: number;
+  name: string;
+  titles: number | null;
+  active: number | null;
+  reviews: number | null;
+  likes: number;
+  followers: number;
+  following: boolean;
+  recent: Media[];
+}
+
 /** Alguém encontrado pelo nome na busca de pessoas */
 export interface FoundPerson {
   id: number;

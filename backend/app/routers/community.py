@@ -70,33 +70,36 @@ def community(
             .limit(limit)
         )
     )
+    return CommunityPage(items=entries_out(db, entries, user))
+
+
+def entries_out(db: Session, entries: list[DiaryEntry], user: User) -> list[CommunityEntryOut]:
+    """Os registros como a Comunidade mostra: com curtidas, comentários e se quem vê curtiu ou denunciou (RFF30)."""
     ids = [e.id for e in entries]
     likes = counts_by_entry(db, ReviewLike.entry_id, ids)
     comments = counts_by_entry(db, ReviewComment.entry_id, ids, ReviewComment.hidden.is_(False))
     liked = set(db.scalars(select(ReviewLike.entry_id).where(ReviewLike.entry_id.in_(ids), ReviewLike.user_id == user.id)))
     reported = reported_by(db, ids, user.id)
-    return CommunityPage(
-        items=[
-            CommunityEntryOut(
-                id=e.id,
-                user_id=e.user_id,
-                user_name=e.user.name,
-                media=MediaOut.model_validate(e.media),
-                rating=e.rating,
-                review=None if e.review_hidden else e.review,
-                consumed_at=e.consumed_at,
-                created_at=e.created_at,
-                status=e.status or "seen",
-                season=e.season,
-                spoiler=bool(e.spoiler),
-                likes=likes.get(e.id, 0) if has_review(e) else 0,
-                liked=e.id in liked and has_review(e),
-                comments=comments.get(e.id, 0) if has_review(e) else 0,
-                reported=e.id in reported,
-            )
-            for e in entries
-        ]
-    )
+    return [
+        CommunityEntryOut(
+            id=e.id,
+            user_id=e.user_id,
+            user_name=e.user.name,
+            media=MediaOut.model_validate(e.media),
+            rating=e.rating,
+            review=None if e.review_hidden else e.review,
+            consumed_at=e.consumed_at,
+            created_at=e.created_at,
+            status=e.status or "seen",
+            season=e.season,
+            spoiler=bool(e.spoiler),
+            likes=likes.get(e.id, 0) if has_review(e) else 0,
+            liked=e.id in liked and has_review(e),
+            comments=comments.get(e.id, 0) if has_review(e) else 0,
+            reported=e.id in reported,
+        )
+        for e in entries
+    ]
 
 
 def has_review(e: DiaryEntry) -> bool:
