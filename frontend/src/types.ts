@@ -35,6 +35,7 @@ export interface Media {
   year: number | null;
   overview: string;
   poster_url: string | null;
+  backdrop_url?: string | null;
   genres: string[];
   tags: string[];
   creators: string[];

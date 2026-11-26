@@ -3,6 +3,7 @@ import { MEDIA_STYLE, formatMinutes, verbs } from "../format";
 import { moodLabel, useMoods } from "../moods";
 import type { FeedbackAction, Media, Recommendation } from "../types";
 import { TAPE_COLORS } from "../ui";
+import ActionIcon from "./ActionIcon";
 import GenreChip from "./GenreChip";
 import Poster from "./Poster";
 
@@ -25,9 +26,11 @@ export function Buttons({
   return (
     <div className={big ? "mt-5 flex flex-wrap gap-2" : "mt-auto grid grid-cols-2 gap-1.5 pt-2.5"}>
       <button className={`btn-want ${size}`} onClick={() => act(rec.media, "want")}>
+        <ActionIcon kind="want" className="hidden h-4 w-4 shrink-0 sm:block" />
         {words.want}
       </button>
       <button className={`btn-seen ${size}`} onClick={onSeen}>
+        <ActionIcon kind="seen" className="hidden h-4 w-4 shrink-0 sm:block" />
         {words.seen}
       </button>
       {big && (

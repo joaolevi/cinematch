@@ -22,6 +22,7 @@ class ExternalTitle(TypedDict, total=False):
     year: int
     overview: str
     poster_url: str | None
+    backdrop_url: str | None
     genres: list[str]
     tags: list[str]
     creators: list[str]
@@ -56,7 +57,7 @@ class MockCatalogProvider:
 SOURCE_PRIORITY = {"manual": 0, "mock": 1, "tmdb": 2, "musicbrainz": 2}
 
 _FIELDS = (
-    "type", "title", "year", "overview", "poster_url", "genres", "tags", "creators", "actors", "popularity",
+    "type", "title", "year", "overview", "poster_url", "backdrop_url", "genres", "tags", "creators", "actors", "popularity",
     "duration_min", "countries", "language", "links", "seasons",
 )
 

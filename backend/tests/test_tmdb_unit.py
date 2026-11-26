@@ -240,3 +240,10 @@ def test_duracao_do_filme_e_do_episodio():
     assert runtime_of({"episode_run_time": [47]}, "tv") == 47
     assert runtime_of({"episode_run_time": [], "last_episode_to_air": {"runtime": 52}}, "tv") == 52
     assert runtime_of({}, "tv") is None
+
+
+def test_imagem_larga_do_titulo_vem_do_tmdb():
+    provider = make_provider()
+    t = provider._from_item({"id": 7, "title": "Filme", "backdrop_path": "/cena.jpg", "genre_ids": []}, "movie")
+    assert t["backdrop_url"] == "https://image.tmdb.org/t/p/w1280/cena.jpg"
+    assert provider._from_item({"id": 8, "title": "Sem cena", "genre_ids": []}, "movie")["backdrop_url"] is None

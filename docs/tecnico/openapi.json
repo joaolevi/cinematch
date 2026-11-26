@@ -6743,6 +6743,17 @@
             ],
             "title": "Poster Url"
           },
+          "backdrop_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdrop Url"
+          },
           "genres": {
             "items": {
               "type": "string"
@@ -7076,6 +7087,17 @@
               }
             ],
             "title": "Poster Url"
+          },
+          "backdrop_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdrop Url"
           },
           "genres": {
             "items": {

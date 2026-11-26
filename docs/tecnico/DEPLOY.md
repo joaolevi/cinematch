@@ -148,7 +148,8 @@ título, uns 2 minutos), para o filtro "Até 2h" e as pontes de idioma funcionar
 make prod-duracoes
 ```
 
-O mesmo comando busca as temporadas das séries (RFF24), para o "Estou assistindo".
+O mesmo comando busca as temporadas das séries (RFF24), para o "Estou assistindo" e os episódios, e a imagem larga
+de cada filme e série, para o topo da página do título.
 
 **Aviso do Quero ver (RFF29).** O aviso de que um título guardado chegou a um serviço da pessoa depende de atualizar onde
 assistir. Rode `make prod-servicos` uma vez por semana, por exemplo com o `cron` do servidor
