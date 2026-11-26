@@ -303,6 +303,37 @@
         ]
       }
     },
+    "/me/listening": {
+      "get": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Listening",
+        "description": "Continuar ouvindo: os discos com faixas ouvidas que ainda não foram registrados como \"Já ouvi\", com quantas\nfaixas foram ouvidas e a próxima, quando a lista do disco já está na memória da API.",
+        "operationId": "listening_me_listening_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ListeningOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listening Me Listening Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/me/activity": {
       "get": {
         "tags": [
@@ -7885,6 +7916,55 @@
         ],
         "title": "ListOut"
       },
+      "ListeningOut": {
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "heard": {
+            "type": "integer",
+            "title": "Heard",
+            "description": "Faixas ouvidas"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total",
+            "description": "Faixas do disco, quando a lista já está na memória da API"
+          },
+          "next_track": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A próxima faixa ainda não ouvida"
+          },
+          "moved_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Moved At",
+            "description": "A última vez que a pessoa marcou uma faixa"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media",
+          "heard",
+          "moved_at"
+        ],
+        "title": "ListeningOut",
+        "description": "Um disco em andamento, para o \"Continuar ouvindo\"."
+      },
       "LoginIn": {
         "properties": {
           "email": {
@@ -10682,6 +10762,19 @@
             ],
             "title": "Next Episode",
             "description": "O próximo episódio; vazio quando a temporada acabou"
+          },
+          "moved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moved At",
+            "description": "A última vez que a pessoa mexeu na série"
           }
         },
         "type": "object",

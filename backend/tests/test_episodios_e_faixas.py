@@ -114,3 +114,20 @@ def test_album_sem_musicbrainz_tem_lista_vazia(client, user_headers, db):
     db.add(media)
     db.commit()
     assert client.get(f"/media/{media.id}/tracks", headers=user_headers).json() == []
+
+
+def test_continuar_ouvindo(client, user_headers, db, album):
+    assert client.get("/me/listening", headers=user_headers).json() == []
+    client.put(f"/media/{album.id}/tracks/1/1", json={"seen": True}, headers=user_headers)
+    item = client.get("/me/listening", headers=user_headers).json()[0]
+    assert (item["media"]["title"], item["heard"], item["total"]) == ("Clube da Esquina", 1, 3)
+    assert item["next_track"] == {"disc": 1, "number": 2, "title": "Cais"}
+
+    # Sem a lista na memória da API, o disco continua aparecendo, só sem o total
+    tracks_service._cache.clear()
+    item = client.get("/me/listening", headers=user_headers).json()[0]
+    assert item["heard"] == 1 and item["total"] is None and item["next_track"] is None
+
+    client.post("/diary", json={"media_id": album.id, "rating": 5}, headers=user_headers)  # Já ouvi
+    assert client.get("/me/listening", headers=user_headers).json() == []
+    assert client.get("/me/listening").status_code == 401

@@ -37,6 +37,7 @@ import type {
   Wish,
   Episode,
   EpisodeDetail,
+  Listening,
   Member,
   Mix,
   Top,
@@ -165,6 +166,7 @@ export const api = {
   rateTrack: (mediaId: number, disc: number, number: number, data: Partial<PartMark>) =>
     request<PartMark>(`/media/${mediaId}/tracks/${disc}/${number}`, { method: "PUT", body: data }),
   continueWatching: () => request<Watching[]>("/me/watching"),
+  continueListening: () => request<Listening[]>("/me/listening"),
   top: (type?: MediaType) => request<Top>("/media/top", { query: { type } }),
   trailer: (mediaId: number) => request<Trailer>(`/media/${mediaId}/trailer`),
   mixes: () => request<Mix[]>("/recommendations/mixes"),

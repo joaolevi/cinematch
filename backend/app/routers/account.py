@@ -34,6 +34,7 @@ from ..models import (
 )
 from ..config import settings
 from ..schemas import (
+    ListeningOut,
     WatchingOut,
     AccountEditIn, ActivityOut, ArrivalOut, AvatarIn, DeleteAccountIn, PasswordChangeIn, PinnedIn, ExperimentsIn, LetterboxdIn, LetterboxdOut, MediaOut, PersonOut, ServicesIn, UserOut,
     VisibilityIn,
@@ -43,6 +44,7 @@ from ..services.streaming import BY_KEY as SERVICES, watchlist_arrivals
 from ..services.tmdb import TmdbCatalogProvider
 
 from ..services.episodes import watching_now
+from ..services.tracks import listening_now
 router = APIRouter(prefix="/me", tags=["conta"])
 
 
@@ -63,6 +65,13 @@ def watching(db: Session = Depends(get_db), user: User = Depends(get_current_use
     """Continuar assistindo: as séries em andamento, da mexida por último para a mais antiga, com a temporada, quantos
     episódios dela foram vistos e o próximo episódio."""
     return watching_now(db, user)
+
+
+@router.get("/listening", response_model=list[ListeningOut])
+def listening(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Continuar ouvindo: os discos com faixas ouvidas que ainda não foram registrados como "Já ouvi", com quantas
+    faixas foram ouvidas e a próxima, quando a lista do disco já está na memória da API."""
+    return listening_now(db, user)
 
 
 @router.get("/activity", response_model=list[ActivityOut])

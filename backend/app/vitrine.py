@@ -202,6 +202,9 @@ EPISODES = [(1, n, r) for n, r in enumerate([4, 4.5, 4.5, 5, 4, 4.5, 5, 5, 4.5, 
 EPISODE_NOTES = {(1, 10): "Agora entendi a caverna. Preciso de um caderno para os nomes.",
                  (2, 3): "O episódio que amarra as três épocas."}
 
+# Um disco pela metade, para o "Continuar ouvindo": as quatro primeiras faixas, algumas com nota
+LISTENING = ("Acabou chorare", [(1, 1, 5.0), (1, 2, 4.5), (1, 3, None), (1, 4, 5.0)])
+
 # Quem a Visitante segue (a Júlia fica de fora, para aparecer em "Quem seguir") e quem segue de volta
 FOLLOWS = [("visitante", "marina"), ("visitante", "davi"), ("visitante", "bia"), ("visitante", "tomas"),
            ("marina", "visitante"), ("davi", "visitante"), ("bia", "visitante"),
@@ -389,6 +392,16 @@ def build_vitrine(db: Session) -> dict:
                 db.add(row)
             row.rating, row.note = rating, EPISODE_NOTES.get((season, number))
             episodes += 1
+
+    disco = _media(db, LISTENING[0], A)
+    if disco:
+        for disc, number, rating in LISTENING[1]:
+            row = db.scalar(select(EpisodeEntry).where(
+                EpisodeEntry.user_id == users["visitante"].id, EpisodeEntry.media_id == disco.id,
+                EpisodeEntry.season == disc, EpisodeEntry.episode == number))
+            if row is None:
+                db.add(EpisodeEntry(user_id=users["visitante"].id, media_id=disco.id, season=disc, episode=number,
+                                    rating=rating, updated_at=datetime.now(timezone.utc) - timedelta(hours=1)))
 
     follows = 0
     for a, b in FOLLOWS:

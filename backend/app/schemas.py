@@ -886,6 +886,7 @@ class WatchingOut(BaseModel):
     seen: int = Field(description="Episódios vistos da temporada")
     total: int | None = Field(default=None, description="Episódios da temporada, quando o catálogo sabe")
     next_episode: int | None = Field(default=None, description="O próximo episódio; vazio quando a temporada acabou")
+    moved_at: datetime | None = Field(default=None, description="A última vez que a pessoa mexeu na série")
 
 
 class TopItemOut(BaseModel):
@@ -952,6 +953,16 @@ class TrackRef(BaseModel):
     disc: int
     number: int
     title: str
+
+
+class ListeningOut(BaseModel):
+    """Um disco em andamento, para o "Continuar ouvindo"."""
+
+    media: "MediaOut"
+    heard: int = Field(description="Faixas ouvidas")
+    total: int | None = Field(default=None, description="Faixas do disco, quando a lista já está na memória da API")
+    next_track: TrackRef | None = Field(default=None, description="A próxima faixa ainda não ouvida")
+    moved_at: datetime = Field(description="A última vez que a pessoa marcou uma faixa")
 
 
 class TrackDetailOut(TrackOut):

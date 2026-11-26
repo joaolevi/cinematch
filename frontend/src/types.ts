@@ -87,6 +87,16 @@ export interface Watching {
   seen: number;
   total: number | null;
   next_episode: number | null;
+  moved_at?: string | null;
+}
+
+/** Um disco em andamento, para o "Continuar ouvindo" */
+export interface Listening {
+  media: Media;
+  heard: number;
+  total: number | null;
+  next_track: { disc: number; number: number; title: string } | null;
+  moved_at: string;
 }
 
 /** O Top 10 do Tastory, pelos registros da comunidade */
