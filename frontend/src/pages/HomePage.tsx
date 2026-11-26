@@ -9,6 +9,8 @@ import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
 import ArrivalsNote from "../components/ArrivalsNote";
 import ChallengeCard from "../components/ChallengeCard";
+import ContinueWatching from "../components/ContinueWatching";
+import TopTen from "../components/TopTen";
 import RateReminder from "../components/RateReminder";
 import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
@@ -17,7 +19,7 @@ import WatchedBy from "../components/WatchedBy";
 import { isUpcoming } from "../format";
 import { OnScreen, useImpressions } from "../impressions";
 import { diaryChanged, seenLabel, useDiaryVersion, useSeen } from "../seen";
-import type { Challenge, CommunityEntry, DiaryEntry, Feed, FeedbackAction, Media, Recommendation, UserList } from "../types";
+import type { Top, Challenge, CommunityEntry, DiaryEntry, Feed, FeedbackAction, Media, Recommendation, UserList } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import ListName from "../components/ListName";
@@ -97,6 +99,13 @@ function Shelf(props: {
 
 const shelfItem = "w-36 shrink-0 snap-start pt-2 sm:w-40";
 
+type ShelfView = "top" | "trending" | "upcoming";
+const SHELF_VIEWS: Record<ShelfView, { button: string; title: string; note: string }> = {
+  top: { button: "Top 10", title: "Top 10 do Tastory", note: "o que a comunidade mais registrou" },
+  trending: { button: "Em alta", title: "Em alta agora", note: "o que todo mundo está vendo" },
+  upcoming: { button: "Em breve", title: "Em breve", note: "pra anotar na agenda" },
+};
+
 /** Página inicial: um resumo de tudo, como a home do Letterboxd ou do Spotify. */
 export default function HomePage() {
   usePageTitle("Início");
@@ -112,7 +121,9 @@ export default function HomePage() {
   const [watchlist, setWatchlist] = useState<UserList["items"]>([]);
   const [theme, setTheme] = useState<UserList | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [showUpcoming, setShowUpcoming] = useState(false); // a fileira de baixo: em alta ou em breve
+  const [top, setTop] = useState<Top | null>(null);
+  const [view, setView] = useState<ShelfView>("top"); // a fileira de baixo: Top 10, em alta ou em breve
+  const hasTop = (top?.items.length ?? 0) >= 3;
   // O desafio do mês muda a cada registro no diário
   useEffect(() => {
     api.challenge().then(setChallenge).catch(() => {});
@@ -131,6 +142,13 @@ export default function HomePage() {
         setStrategy(f.strategy);
       })
       .catch(() => setRecs([]));
+    api
+      .top()
+      .then((t) => {
+        setTop(t);
+        if (t.items.length < 3) setView("trending");
+      })
+      .catch(() => setView("trending"));
     api
       .trending(undefined, SHELF)
       .then(setTrending)
@@ -261,6 +279,8 @@ export default function HomePage() {
         )}
       </div>
 
+      <ContinueWatching />
+
       {/* O desafio do mês vem logo depois da aposta: é o convite do mês, e não um rodapé da prateleira do tema */}
       {theme && challenge && user && <ChallengeCard c={challenge} userId={user.id} all={theme.items.map((i) => i.media)} />}
 
@@ -286,40 +306,45 @@ export default function HomePage() {
         </Shelf>
       )}
 
-      {trending.length > 0 && (
-        <Shelf
-          title={showUpcoming ? "Em breve" : "Em alta agora"}
-          note={showUpcoming ? "pra anotar na agenda" : "o que todo mundo está vendo"}
-          to="/buscar"
-          linkLabel="Buscar mais"
-          actions={
-            upcoming.length >= 3 && (
+      {(trending.length > 0 || hasTop) && (
+        // Uma fileira com três visões: o Top 10 do Tastory (dos registros da comunidade), o que está em alta e o que vem aí
+        <section>
+          <SectionHeader
+            title={SHELF_VIEWS[view].title}
+            note={view === "top" && top ? (top.days <= 7 ? "o mais registrado da semana" : "o mais registrado do mês") : SHELF_VIEWS[view].note}
+            to="/buscar"
+            linkLabel="Buscar mais"
+            actions={
               <div role="group" aria-label="O que mostrar" className="inline-flex rounded-full border border-line bg-bg/40 p-0.5">
-                {([
-                  [false, "Em alta"],
-                  [true, "Em breve"],
-                ] as const).map(([value, text]) => (
-                  <button
-                    key={text}
-                    aria-pressed={showUpcoming === value}
-                    onClick={() => setShowUpcoming(value)}
-                    className={`cursor-pointer rounded-full px-3 py-0.5 text-sm transition ${
-                      showUpcoming === value ? "bg-accent font-bold text-bg" : "text-stone-300 hover:text-cream"
-                    }`}
-                  >
-                    {text}
-                  </button>
-                ))}
+                {(Object.keys(SHELF_VIEWS) as ShelfView[])
+                  .filter((key) => (key === "top" ? hasTop : key === "upcoming" ? upcoming.length >= 3 : true))
+                  .map((key) => (
+                    <button
+                      key={key}
+                      aria-pressed={view === key}
+                      onClick={() => setView(key)}
+                      className={`cursor-pointer rounded-full px-3 py-0.5 text-sm transition ${
+                        view === key ? "bg-accent font-bold text-bg" : "text-stone-300 hover:text-cream"
+                      }`}
+                    >
+                      {SHELF_VIEWS[key].button}
+                    </button>
+                  ))}
               </div>
-            )
-          }
-        >
-          {(showUpcoming ? upcoming : trending).map((media) => (
-            <div key={media.id} className={shelfItem}>
-              <MediaCard media={media} sticker={visto(media.id)} compact />
-            </div>
-          ))}
-        </Shelf>
+            }
+          />
+          {view === "top" && top ? (
+            <TopTen top={top} />
+          ) : (
+            <Carousel label={SHELF_VIEWS[view].title}>
+              {(view === "upcoming" ? upcoming : trending).map((media) => (
+                <div key={media.id} className={shelfItem}>
+                  <MediaCard media={media} sticker={visto(media.id)} compact />
+                </div>
+              ))}
+            </Carousel>
+          )}
+        </section>
       )}
 
       {/* As duas colunas terminam na mesma altura: a folha do diário cresce até o fim da lista da Comunidade */}

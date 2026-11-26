@@ -186,6 +186,33 @@ def episode_detail(db: Session, user: User, media: Media, season: int, number: i
     }
 
 
+def watching_now(db: Session, user: User) -> list[dict]:
+    """As séries que a pessoa está assistindo, da mexida por último para a mais antiga: a temporada, quantos episódios
+    dela foram vistos, quantos ela tem e o próximo episódio."""
+    entries = db.scalars(
+        select(DiaryEntry).where(DiaryEntry.user_id == user.id, DiaryEntry.status == "watching")
+    ).all()
+    out = []
+    for e in entries:
+        media = e.media
+        if media.type != "series":
+            continue
+        counts = counts_by_season(db, user.id, media.id)
+        season = e.season or (max(int(s) for s in counts) if counts else 1)
+        seen = counts.get(str(season), 0)
+        total = next((t.get("episodes") for t in media.seasons or [] if t.get("number") == season), None)
+        last = db.scalar(
+            select(func.max(EpisodeEntry.updated_at)).where(EpisodeEntry.user_id == user.id, EpisodeEntry.media_id == media.id)
+        )
+        moved = max(x for x in (last, e.created_at) if x is not None)
+        moved = moved if moved.tzinfo else moved.replace(tzinfo=timezone.utc)
+        out.append({
+            "media": media, "season": season, "seen": seen, "total": total,
+            "next_episode": seen + 1 if total is None or seen < total else None, "moved_at": moved,
+        })
+    return sorted(out, key=lambda w: w["moved_at"], reverse=True)
+
+
 def counts_by_season(db: Session, user_id: int, media_id: int) -> dict[str, int]:
     rows = db.execute(
         select(EpisodeEntry.season, func.count())

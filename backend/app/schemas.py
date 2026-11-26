@@ -864,6 +864,43 @@ class EpisodeOut(BaseModel):
     note: str | None = None
 
 
+class WatchingOut(BaseModel):
+    """Uma série em andamento, para o "Continuar assistindo"."""
+
+    media: "MediaOut"
+    season: int
+    seen: int = Field(description="Episódios vistos da temporada")
+    total: int | None = Field(default=None, description="Episódios da temporada, quando o catálogo sabe")
+    next_episode: int | None = Field(default=None, description="O próximo episódio; vazio quando a temporada acabou")
+
+
+class TopItemOut(BaseModel):
+    media: "MediaOut"
+    count: int = Field(description="Quantos registros no período")
+    average: float | None = Field(default=None, description="A nota média desses registros")
+
+
+class TopOut(BaseModel):
+    days: int = Field(description="O período usado: 7 dias, ou 30 quando a semana teve poucos registros")
+    items: list[TopItemOut]
+
+
+class TrailerOut(BaseModel):
+    key: str = Field(description="O código do vídeo no YouTube")
+    name: str
+    language: str | None = None
+    url: str
+    embed_url: str = Field(description="Para tocar dentro da página, no modo de privacidade do YouTube")
+
+
+class MixOut(BaseModel):
+    """Um mix de música, como os do Spotify: discos de um gênero que a pessoa ouve, que ela ainda não registrou."""
+
+    title: str
+    subtitle: str
+    items: list["MediaOut"]
+
+
 class PartRef(BaseModel):
     """O episódio de antes ou de depois. Na virada de temporada, o nome pode não vir."""
 

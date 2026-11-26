@@ -4,6 +4,7 @@ import { api } from "../api";
 import { useAuth } from "../auth";
 import DoubleFeature from "../components/DoubleFeature";
 import Highlight, { Buttons, DismissButton, OnMyServices } from "../components/Highlight";
+import Carousel from "../components/Carousel";
 import MediaCard from "../components/MediaCard";
 import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
@@ -13,7 +14,7 @@ import { diaryChanged, useSeen } from "../seen";
 import TuneMenu, { type Tune } from "../components/TuneMenu";
 import { formatMinutes } from "../format";
 import { useMoods } from "../moods";
-import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Occasion, Pair, Person, Recommendation, Wish } from "../types";
+import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Mix, Occasion, Pair, Person, Recommendation, Wish } from "../types";
 import { MEDIA_GRID } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
@@ -21,7 +22,104 @@ import WishBox from "../components/WishBox";
 import { Avatar } from "../components/WatchedBy";
 import ListName from "../components/ListName";
 
-const PAGE = 18;
+const PAGE = 30; // em fileiras, 30 sugestões formam fileiras de gênero com pelo menos 3 títulos
+const MIN_ROW = 3; // fileira com menos que isso não vale a pena: os títulos vão para "Mais sugestões"
+
+interface Row {
+  key: string;
+  title: string;
+  note?: string;
+  items: Recommendation[];
+}
+
+/**
+ * Agrupa as sugestões em fileiras, como a Netflix e o Spotify. Na ordem: pelo título que puxou a sugestão ("Porque você
+ * curtiu Interestelar") ou pela pessoa ("Mais de Christopher Nolan"), quando juntam pelo menos 3; "Nos seus serviços";
+ * os discos ("Para ouvir"); e os filmes e séries pelo gênero principal. Cada título entra em uma fileira só; o que sobra
+ * fica em "Mais sugestões para você", no fim.
+ */
+function thematicRows(recs: Recommendation[], withServices: boolean): Row[] {
+  const rows: Row[] = [];
+  const used = new Set<number>();
+  const add = (row: Row) => {
+    const items = row.items.filter((r) => !used.has(r.media.id));
+    if (items.length < MIN_ROW) return;
+    items.forEach((r) => used.add(r.media.id));
+    rows.push({ ...row, items });
+  };
+  // 1. O que puxou a sugestão: um título ou uma pessoa
+  const reasons = new Map<string, Row>();
+  for (const rec of recs) {
+    const b = rec.because;
+    if (!b || (b.kind !== "title" && b.kind !== "person")) continue;
+    const key = `${b.kind}:${b.value}`;
+    if (!reasons.has(key)) {
+      reasons.set(key, { key, title: b.kind === "title" ? `Porque você curtiu ${b.label}` : `Mais de ${b.label}`, items: [] });
+    }
+    reasons.get(key)!.items.push(rec);
+  }
+  [...reasons.values()].sort((a, b) => b.items.length - a.items.length).forEach(add);
+  // 2. Nos seus serviços
+  if (withServices) {
+    add({ key: "servicos", title: "Nos seus serviços", note: "pra ver hoje", items: recs.filter((r) => (r.services?.length ?? 0) > 0) });
+  }
+  // 3. Os discos
+  add({ key: "ouvir", title: "Para ouvir", note: "do jeito que você ouve", items: recs.filter((r) => r.media.type === "album") });
+  // 4. Os filmes e séries pelo gênero principal
+  const genres = new Map<string, Recommendation[]>();
+  for (const rec of recs) {
+    const genre = rec.media.genres[0];
+    if (!genre || used.has(rec.media.id) || rec.media.type === "album") continue;
+    genres.set(genre, [...(genres.get(genre) ?? []), rec]);
+  }
+  [...genres.entries()]
+    .sort((a, b) => b[1].length - a[1].length)
+    .forEach(([genre, items]) => add({ key: `genero:${genre}`, title: genre, note: "escolhidos pelo seu gosto", items }));
+  const others = recs.filter((r) => !used.has(r.media.id));
+  if (others.length) rows.push({ key: "mais", title: rows.length ? "Mais sugestões para você" : "Sugestões para você", items: others });
+  return rows;
+}
+
+/** Mixes de música, como os do Spotify: um mosaico com as capas, o nome e quem toca; os discos em fileira. */
+function Mixes({ mixes }: { mixes: Mix[] }) {
+  return (
+    <section className="mt-10" aria-label="Mixes para você">
+      <h2 className="mb-4 font-display text-2xl font-bold">
+        Seus mixes
+        <span className="block font-hand text-xl font-bold text-accent sm:ml-3 sm:inline">do jeito que você ouve</span>
+      </h2>
+      <div className="space-y-8">
+        {mixes.map((mix) => (
+          <div key={mix.title} className="grid gap-5 md:grid-cols-[11rem_minmax(0,1fr)]">
+            <div className="flex items-center gap-4 md:block">
+              <div aria-hidden className="grid w-28 shrink-0 grid-cols-2 overflow-hidden rounded-xl shadow-lg md:w-44">
+                {mix.items.slice(0, 4).map((m) =>
+                  m.poster_url ? (
+                    <img key={m.id} src={m.poster_url} alt="" loading="lazy" className="aspect-square w-full object-cover" />
+                  ) : (
+                    <span key={m.id} className="aspect-square w-full bg-surface-2" />
+                  ),
+                )}
+              </div>
+              <div className="md:mt-3">
+                <h3 className="font-display text-lg leading-tight font-bold">{mix.title}</h3>
+                <p className="mt-0.5 text-sm text-muted">{mix.subtitle}</p>
+              </div>
+            </div>
+            <Carousel label={mix.title}>
+              {mix.items.map((m) => (
+                <div key={m.id} className="w-36 shrink-0 snap-start pt-2">
+                  <MediaCard media={m} compact />
+                </div>
+              ))}
+            </Carousel>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 const TONIGHT_MINUTES = 150; // "Hoje à noite": cabe numa noite, até 2h30
 const MAX_COMPANIONS = 4; // quem pede e mais quatro pessoas (RFF28)
 
@@ -83,6 +181,11 @@ export default function FeedPage() {
   usePageTitle("Para você");
   const { user } = useAuth();
   const [type, setType] = useState<MediaType | "">("");
+  const [mixes, setMixes] = useState<Mix[]>([]);
+  // Os mixes de música aparecem na aba Música
+  useEffect(() => {
+    if (type === "album" && mixes.length === 0) api.mixes().then(setMixes).catch(() => {});
+  }, [type, mixes.length]);
   const [discovery, setDiscovery] = useState<Discovery>("taste");
   // Momento (RFF20): clima e duração máxima; vazio e 0 = qualquer um
   const [mood, setMood] = useState("");
@@ -330,12 +433,26 @@ export default function FeedPage() {
   // O que a pessoa registrou em outra tela (como o Registrar) sai das sugestões. Junto com outras pessoas, a lista
   // vem com as três mídias, e o filtro de tipo é feito aqui
   const inPairs = new Set(pairs.flatMap((p) => [p.video.media.id, p.album.id]));
+  const card = (rec: Recommendation) => (
+    <OnScreen key={rec.media.id} rec={rec} onSeen={markShown}>
+      <MediaCard media={rec.media} overlay={<DismissButton onClick={() => act(rec.media, "dismiss")} />}>
+        <p className="mt-1.5 line-clamp-2 text-xs text-muted" title={rec.reason}>
+          {rec.reason}
+        </p>
+        <OnMyServices rec={rec} className="mt-1 text-xs" logos={false} />
+        <TuneMenu rec={rec} state={{ mood, maxMinutes, discovery }} onTune={(choice, label) => tune(rec, choice, label)} />
+        <Buttons rec={rec} act={act} onSeen={() => setSeenTarget(rec.media)} />
+      </MediaCard>
+    </OnScreen>
+  );
+
   const [highlight, ...rest] = (feed?.items ?? []).filter(
     (i) => !seen?.has(i.media.id) && !inPairs.has(i.media.id) && (!together || !type || i.media.type === type),
   );
   const chosen = following.filter((p) => companions.includes(p.id));
   // As sugestões para um grupo não entram na comparação A/B, que mede o feed de cada pessoa
   const markShown = together ? () => {} : impressions.mark;
+  const rows = thematicRows(rest, !onlyMine);
 
   return (
     <div>
@@ -563,20 +680,31 @@ export default function FeedPage() {
         }}
       />
 
-      <div className={`mt-8 ${MEDIA_GRID}`}>
-        {rest.map((rec) => (
-          <OnScreen key={rec.media.id} rec={rec} onSeen={markShown}>
-            <MediaCard media={rec.media} overlay={<DismissButton onClick={() => act(rec.media, "dismiss")} />}>
-              <p className="mt-1.5 line-clamp-2 text-xs text-muted" title={rec.reason}>
-                {rec.reason}
-              </p>
-              <OnMyServices rec={rec} className="mt-1 text-xs" logos={false} />
-              <TuneMenu rec={rec} state={{ mood, maxMinutes, discovery }} onTune={(choice, label) => tune(rec, choice, label)} />
-              <Buttons rec={rec} act={act} onSeen={() => setSeenTarget(rec.media)} />
-            </MediaCard>
-          </OnScreen>
-        ))}
-      </div>
+      {type === "album" && mixes.length > 0 && <Mixes mixes={mixes} />}
+
+      {/* Fileiras temáticas, como na Netflix e no Spotify: "Porque você curtiu...", "Nos seus serviços"... Sem fileiras
+          que valham a pena (pelo menos 3 títulos cada), fica a grade de antes */}
+      {rows.length > 1 ? (
+        <div className="mt-10 space-y-12">
+          {rows.map((row) => (
+            <section key={row.key} aria-label={row.title}>
+              <h2 className="mb-4 font-display text-2xl font-bold">
+                {row.title}
+                {row.note && <span className="block font-hand text-xl font-bold text-accent sm:ml-3 sm:inline">{row.note}</span>}
+              </h2>
+              <Carousel label={row.title}>
+                {row.items.map((rec) => (
+                  <div key={rec.media.id} className="flex w-44 shrink-0 snap-start pt-2 sm:w-48">
+                    {card(rec)}
+                  </div>
+                ))}
+              </Carousel>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <div className={`mt-8 ${MEDIA_GRID}`}>{rest.map(card)}</div>
+      )}
 
       {feed && feed.items.length === 0 && !loading && (
         <HandNote className="mt-6">

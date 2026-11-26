@@ -9,6 +9,7 @@ import ActionIcon from "../components/ActionIcon";
 import Episodes from "../components/Episodes";
 import { episodePath } from "./EpisodePage";
 import Tracks from "../components/Tracks";
+import TrailerButton from "../components/TrailerButton";
 import RatingsPanel from "../components/RatingsPanel";
 import ReviewTalk from "../components/ReviewTalk";
 import SpoilerText from "../components/SpoilerText";
@@ -441,6 +442,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
                   {status.in_watchlist ? "Tirar do Quero ver" : words.want}
                 </button>
               )}
+              <TrailerButton media={media} />
               {!status.diary_entry_id && !status.in_watchlist && (
                 <button className="btn-skip" onClick={toggleDismiss}>
                   {status.dismissed ? (

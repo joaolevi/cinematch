@@ -510,6 +510,78 @@ def album_suggestions(
     return recs
 
 
+GENERIC_TAGS = {"latin", "pop", "rock", "soundtrack", "score", "singer-songwriter"}  # largos demais para um mix
+MIX_SIZE = 10
+SOUNDTRACK_GENRE = "Trilha sonora"
+MIX_COUNT = 4
+
+
+def _mix_name(tag: str) -> str:
+    """"mpb" -> "MPB", "bossa nova" -> "Bossa nova", "r&b" -> "R&B"."""
+    return tag.upper() if len(tag) <= 3 or "&" in tag else tag[:1].upper() + tag[1:]
+
+
+def _who(items: list[Media]) -> str:
+    names: list[str] = []
+    for m in items:
+        for c in m.creators or []:
+            if c not in names:
+                names.append(c)
+    shown = names[:3]
+    return ", ".join(shown) + (" e mais" if len(names) > 3 else "")
+
+
+def music_mixes(db: Session, user_id: int) -> list[dict]:
+    """Mixes de música, como os do Spotify: um para cada gênero que a pessoa mais ouve (pelos gêneros finos do
+    MusicBrainz dos discos que curtiu), com discos desse gênero que ela ainda não registrou, e um com as trilhas dos
+    filmes e séries que ela curtiu. Cada disco entra em um mix só."""
+    signals = user_signals(db, user_id)
+    liked = {m.id: m for m in db.scalars(select(Media).where(Media.id.in_([k for k, w in signals.items() if w > 0])))}
+    exclude = excluded_ids(db, user_id)
+    albums = [m for m in db.scalars(select(Media).where(Media.type == "album")) if m.id not in exclude]
+    heard = [m for m in liked.values() if m.type == "album"]
+    weight: Counter[str] = Counter()
+    for m in heard:
+        for tag in m.tags or []:
+            if tag not in GENERIC_TAGS:
+                weight[tag] += signals[m.id]
+    heard_tags = {t for m in heard for t in m.tags or []}
+    used: set[int] = set()
+    mixes = []
+    for tag, _ in weight.most_common():
+        if len(mixes) >= MIX_COUNT - 1:
+            break
+        # As trilhas sonoras ficam no mix delas: um compositor marcado como "jazz" não vira disco de jazz
+        pool = [a for a in albums if tag in (a.tags or []) and a.id not in used and SOUNDTRACK_GENRE not in (a.genres or [])]
+        # Primeiro os discos que mais se parecem com o que a pessoa ouve, depois os mais ouvidos no mundo
+        pool.sort(key=lambda a: (-len(set(a.tags or []) & heard_tags), -a.popularity))
+        items = pool[:MIX_SIZE]
+        if len(items) >= 3:
+            used.update(a.id for a in items)
+            mixes.append({"title": f"Mix {_mix_name(tag)}", "subtitle": _who(items), "items": items})
+    # As trilhas e os discos dos compositores do que a pessoa viu
+    videos = [m for m in liked.values() if m.type in VIDEO_TYPES]
+    strong = strong_links(db, [m.id for m in videos])
+    by_id = {a.id: a for a in albums}
+    tracks: list[tuple[float, Media, Media]] = []
+    for (vid, aid), link in strong.items():
+        if aid in by_id and aid not in used and link.kind in ("soundtrack", "composer"):
+            tracks.append((link.weight * signals.get(vid, 0), by_id[aid], liked[vid]))
+    tracks.sort(key=lambda x: -x[0])
+    seen_ids: set[int] = set()
+    items, sources = [], []
+    for _, album, video in tracks:
+        if album.id not in seen_ids:
+            seen_ids.add(album.id)
+            items.append(album)
+            if video.title not in sources:
+                sources.append(video.title)
+    if len(items) >= 3:
+        subtitle = "De " + ", ".join(sources[:2]) + (" e mais" if len(sources) > 2 else "")
+        mixes.append({"title": "Trilhas do que você viu", "subtitle": subtitle, "items": items[:MIX_SIZE]})
+    return mixes
+
+
 def mix_albums(feed: list[Recommendation], albums: list[Recommendation], limit: int) -> list[Recommendation]:
     """Põe os álbuns com motivo (ponte, gosto declarado ou descoberta) em lugares fixos do feed: o 3º, o 7º, o 11º... Os álbuns só
     "em alta" ficam de fora do feed misto, para o lugar de um filme não ir para um álbum sem motivo."""

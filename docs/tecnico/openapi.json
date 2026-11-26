@@ -272,6 +272,37 @@
         ]
       }
     },
+    "/me/watching": {
+      "get": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Watching",
+        "description": "Continuar assistindo: as séries em andamento, da mexida por último para a mais antiga, com a temporada, quantos\nepisódios dela foram vistos e o próximo episódio.",
+        "operationId": "watching_me_watching_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WatchingOut"
+                  },
+                  "type": "array",
+                  "title": "Response Watching Me Watching Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/me/activity": {
       "get": {
         "tags": [
@@ -1247,6 +1278,78 @@
         }
       }
     },
+    "/media/top": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Top",
+        "description": "O Top 10 do Tastory: os títulos mais registrados pela comunidade nos últimos 7 dias, com a nota média. Se a\nsemana teve poucos registros, vale o último mês (`days` diz qual). Contas simuladas não entram.",
+        "operationId": "top_media_top_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "movie",
+                    "series",
+                    "album"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/media/showcase": {
       "get": {
         "tags": [
@@ -1382,6 +1485,57 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{media_id}/trailer": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Trailer",
+        "description": "O trailer do filme ou da série, do TMDB (YouTube): em português quando há, senão em inglês. 404 quando não\nhá trailer, para álbuns e para títulos que não vieram do TMDB.",
+        "operationId": "trailer_media__media_id__trailer_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailerOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sem trailer"
           },
           "422": {
             "description": "Validation Error",
@@ -2273,6 +2427,37 @@
             }
           }
         }
+      }
+    },
+    "/recommendations/mixes": {
+      "get": {
+        "tags": [
+          "recomendações"
+        ],
+        "summary": "Mixes",
+        "description": "Mixes de música, como os do Spotify: um para cada gênero que a pessoa mais ouve (MPB, tropicália, bossa\nnova...), com discos que ela ainda não registrou, e um com as trilhas do que ela viu. Cada disco entra em um mix\nsó; mix com menos de 3 discos não aparece.",
+        "operationId": "mixes_recommendations_mixes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MixOut"
+                  },
+                  "type": "array",
+                  "title": "Response Mixes Recommendations Mixes Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/recommendations/pairs": {
@@ -8307,6 +8492,33 @@
         ],
         "title": "MetricsOut"
       },
+      "MixOut": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "subtitle": {
+            "type": "string",
+            "title": "Subtitle"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "subtitle",
+          "items"
+        ],
+        "title": "MixOut",
+        "description": "Um mix de música, como os do Spotify: discos de um gênero que a pessoa ouve, que ela ainda não registrou."
+      },
       "MoodOut": {
         "properties": {
           "key": {
@@ -9655,6 +9867,58 @@
         ],
         "title": "TokenOut"
       },
+      "TopItemOut": {
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Quantos registros no período"
+          },
+          "average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average",
+            "description": "A nota média desses registros"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media",
+          "count"
+        ],
+        "title": "TopItemOut"
+      },
+      "TopOut": {
+        "properties": {
+          "days": {
+            "type": "integer",
+            "title": "Days",
+            "description": "O período usado: 7 dias, ou 30 quando a semana teve poucos registros"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TopItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "days",
+          "items"
+        ],
+        "title": "TopOut"
+      },
       "TrackDetailOut": {
         "properties": {
           "disc": {
@@ -9886,6 +10150,47 @@
         ],
         "title": "TrackRef"
       },
+      "TrailerOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "O código do vídeo no YouTube"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "embed_url": {
+            "type": "string",
+            "title": "Embed Url",
+            "description": "Para tocar dentro da página, no modo de privacidade do YouTube"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "url",
+          "embed_url"
+        ],
+        "title": "TrailerOut"
+      },
       "UnderstoodPart": {
         "properties": {
           "text": {
@@ -10097,6 +10402,54 @@
           "visibility"
         ],
         "title": "VisibilityIn"
+      },
+      "WatchingOut": {
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "season": {
+            "type": "integer",
+            "title": "Season"
+          },
+          "seen": {
+            "type": "integer",
+            "title": "Seen",
+            "description": "Episódios vistos da temporada"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total",
+            "description": "Episódios da temporada, quando o catálogo sabe"
+          },
+          "next_episode": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Episode",
+            "description": "O próximo episódio; vazio quando a temporada acabou"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media",
+          "season",
+          "seen"
+        ],
+        "title": "WatchingOut",
+        "description": "Uma série em andamento, para o \"Continuar assistindo\"."
       },
       "WatchlistNowOut": {
         "properties": {

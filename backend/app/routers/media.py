@@ -3,7 +3,7 @@
 from collections import Counter
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
@@ -12,6 +12,9 @@ from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Dismissed, Follow, ListItem, Media, ReviewComment, ReviewLike, User, UserList
 from ..schemas import (
+    TopItemOut,
+    TopOut,
+    TrailerOut,
     ConnectionOut, MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MoodOut, MyStatus, OccasionOut, ProviderOut,
     ReviewOut, ServiceOut,
     ShowcaseOut,
@@ -20,6 +23,8 @@ from ..schemas import (
 from ..services.bridges import connections, showcase
 from .community import counts_by_entry
 from ..services.episodes import counts_by_season
+from ..services.top import top_titles
+from ..services.trailers import trailer_of
 from ..services.catalog import search_text
 from ..services.moods import MOODS, OCCASIONS
 from ..services.streaming import SERVICES, catalog_counts
@@ -153,6 +158,20 @@ def trending(
     return [r.media for r in trending_service(db, type, limit)]
 
 
+@router.get("/top", response_model=TopOut)
+def top(
+    type: MediaType | None = None,
+    limit: int = Query(default=10, ge=1, le=20),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """O Top 10 do Tastory: os títulos mais registrados pela comunidade nos últimos 7 dias, com a nota média. Se a
+    semana teve poucos registros, vale o último mês (`days` diz qual). Contas simuladas não entram."""
+    days, items = top_titles(db, 7, limit, type)
+    return TopOut(days=days, items=[TopItemOut(media=MediaOut.model_validate(i["media"]), count=i["count"],
+                                               average=i["average"]) for i in items])
+
+
 @router.get("/showcase", response_model=ShowcaseOut)
 def media_showcase(db: Session = Depends(get_db)):
     """Exemplos para a página de apresentação, sem login: pares de filme ou série e disco ligados por trilha,
@@ -188,6 +207,17 @@ def media_connections(
         ConnectionOut(media=MediaOut.model_validate(other), kind=link.kind, weight=link.weight, reason=reason)
         for other, link, reason in connections(db, media, limit)
     ]
+
+
+@router.get("/{media_id}/trailer", response_model=TrailerOut, responses={404: {"description": "Sem trailer"}})
+def trailer(media_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """O trailer do filme ou da série, do TMDB (YouTube): em português quando há, senão em inglês. 404 quando não
+    há trailer, para álbuns e para títulos que não vieram do TMDB."""
+    found = trailer_of(crud.get_media_or_404(db, media_id))
+    if found is None:
+        raise HTTPException(status_code=404, detail="Este título não tem trailer")
+    return TrailerOut(**found, url=f"https://www.youtube.com/watch?v={found['key']}",
+                      embed_url=f"https://www.youtube-nocookie.com/embed/{found['key']}?autoplay=1&rel=0")
 
 
 @router.get("/{media_id}/providers", response_model=list[ProviderOut])

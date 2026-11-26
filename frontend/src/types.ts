@@ -80,6 +80,36 @@ export interface Review {
   reported?: boolean;
 }
 
+/** Uma série em andamento, para o "Continuar assistindo" */
+export interface Watching {
+  media: Media;
+  season: number;
+  seen: number;
+  total: number | null;
+  next_episode: number | null;
+}
+
+/** O Top 10 do Tastory, pelos registros da comunidade */
+export interface Top {
+  days: number;
+  items: { media: Media; count: number; average: number | null }[];
+}
+
+export interface Trailer {
+  key: string;
+  name: string;
+  language: string | null;
+  url: string;
+  embed_url: string;
+}
+
+/** Um mix de música, como os do Spotify */
+export interface Mix {
+  title: string;
+  subtitle: string;
+  items: Media[];
+}
+
 export type ReportReason = "spoiler" | "ofensa" | "spam" | "outro";
 
 /** Uma resenha com denúncias abertas, na moderação */

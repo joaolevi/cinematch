@@ -11,10 +11,11 @@ from ..auth import get_current_user
 from ..db import get_db
 from ..models import Media, RecEvent, User
 from ..schemas import (
+    MixOut,
     BecauseOut, FeedbackIn, FeedOut, ImpressionsIn, MediaOut, MediaType, PairOut, RecommendationOut, WatchlistNowOut,
     WishOut,
 )
-from ..services.bridges import album_suggestions, double_features, mix_albums
+from ..services.bridges import album_suggestions, double_features, mix_albums, music_mixes
 from ..services.moods import BY_KEY as MOODS, OCCASIONS_BY_KEY, fits_occasion
 from ..services.recommender import Recommendation, decade_label, recommend
 from ..services.streaming import available_ids, labels_on, streaming_on
@@ -136,6 +137,15 @@ def understand_wish(
     a tela aplica os filtros e pede o feed de sempre. `understood` mostra o que cada trecho virou; `ignored`, o que
     ficou de fora."""
     return understand(q)
+
+
+@router.get("/mixes", response_model=list[MixOut])
+def mixes(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Mixes de música, como os do Spotify: um para cada gênero que a pessoa mais ouve (MPB, tropicália, bossa
+    nova...), com discos que ela ainda não registrou, e um com as trilhas do que ela viu. Cada disco entra em um mix
+    só; mix com menos de 3 discos não aparece."""
+    return [MixOut(title=m["title"], subtitle=m["subtitle"], items=[MediaOut.model_validate(a) for a in m["items"]])
+            for m in music_mixes(db, user.id)]
 
 
 @router.get("/pairs", response_model=list[PairOut])
