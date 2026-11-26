@@ -150,6 +150,28 @@ export interface Member {
   recent: Media[];
 }
 
+/** Um aviso: alguém seguiu, curtiu, comentou, indicou ou registrou algo do seu Quero ver */
+export interface AppNotification {
+  id: number;
+  kind: "seguiu" | "curtiu" | "comentou" | "indicou" | "registrou";
+  actor: Person | null;
+  media: Media | null;
+  entry_id: number | null;
+  text: string | null;
+  read: boolean;
+  created_at: string;
+}
+
+/** Uma indicação recebida */
+export interface ReceivedSuggestion {
+  id: number;
+  media: Media;
+  sender: Person;
+  note: string | null;
+  created_at: string;
+  in_watchlist: boolean;
+}
+
 /** Alguém encontrado pelo nome na busca de pessoas */
 export interface FoundPerson {
   id: number;

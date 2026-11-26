@@ -10,6 +10,7 @@ from ..db import get_db
 from ..models import DiaryEntry, Follow, ReviewComment, ReviewLike, ReviewReport, User
 from ..schemas import CommentIn, CommentOut, CommunityEntryOut, CommunityPage, MediaOut, ReportIn, ReportOut, ReviewerOut
 from ..seed import DEMO_EMAIL
+from ..services.notifications import notify
 from ..services.visibility import visible_owner
 
 router = APIRouter(prefix="/community", tags=["comunidade"])
@@ -150,6 +151,7 @@ def like(entry_id: int, db: Session = Depends(get_db), user: User = Depends(get_
         raise HTTPException(status_code=400, detail="Não dá para curtir a própria resenha")
     if db.scalar(select(ReviewLike.id).where(ReviewLike.entry_id == entry.id, ReviewLike.user_id == user.id)) is None:
         db.add(ReviewLike(entry_id=entry.id, user_id=user.id))
+        notify(db, entry.user_id, "curtiu", user.id, media_id=entry.media_id, entry_id=entry.id)
         db.commit()
     return Response(status_code=204)
 
@@ -192,6 +194,7 @@ def add_comment(entry_id: int, data: CommentIn, db: Session = Depends(get_db), u
         raise HTTPException(status_code=422, detail="Escreva o comentário")
     c = ReviewComment(entry_id=entry.id, user_id=user.id, text=text)
     db.add(c)
+    notify(db, entry.user_id, "comentou", user.id, media_id=entry.media_id, entry_id=entry.id, text=text)
     db.commit()
     db.refresh(c)
     return comment_out(c, entry, user)

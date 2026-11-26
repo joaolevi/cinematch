@@ -37,6 +37,8 @@ import type {
   Wish,
   Episode,
   EpisodeDetail,
+  AppNotification,
+  ReceivedSuggestion,
   Listening,
   Member,
   Mix,
@@ -179,6 +181,11 @@ export const api = {
     request<Member[]>("/users/popular", { query: { period, limit } }),
   personReviews: (userId: number, sort: "recentes" | "populares", limit = 20, offset = 0) =>
     request<CommunityEntry[]>(`/users/${userId}/reviews`, { query: { sort, limit, offset } }),
+  notifications: () => request<{ unread: number; items: AppNotification[] }>("/me/notifications"),
+  readNotifications: () => request<void>("/me/notifications/read", { method: "POST" }),
+  suggest: (mediaId: number, to: number[], note?: string) =>
+    request<{ sent: number }>(`/media/${mediaId}/suggest`, { method: "POST", body: { to, note } }),
+  receivedSuggestions: () => request<ReceivedSuggestion[]>("/me/suggestions"),
   searchPeople: (q: string, limit = 8) => request<FoundPerson[]>("/users/search", { query: { q, limit } }),
   avatars: () => request<Record<string, string>>("/users/avatars"),
   setAvatar: (image: string) => request<void>("/me/avatar", { method: "PUT", body: { image } }),

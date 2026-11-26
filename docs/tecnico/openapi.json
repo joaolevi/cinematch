@@ -5815,6 +5815,190 @@
         }
       }
     },
+    "/media/{media_id}/suggest": {
+      "post": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Suggest",
+        "description": "Indicar um filme, uma série ou um disco para pessoas que você segue, com um recado opcional. Cada pessoa recebe\numa notificação. Indicar de novo o mesmo título para a mesma pessoa só troca o recado. Quem já registrou o título\nno diário não recebe.",
+        "operationId": "suggest_media__media_id__suggest_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/suggestions": {
+      "get": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Received",
+        "description": "As indicações que a pessoa recebeu, da mais nova para a mais antiga, sem o que ela já registrou no diário.",
+        "operationId": "received_me_suggestions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SuggestionOut"
+                  },
+                  "title": "Response Received Me Suggestions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/notifications": {
+      "get": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Notifications",
+        "description": "Os avisos da pessoa, do mais novo para o mais antigo, e quantos ainda não foram lidos.",
+        "operationId": "notifications_me_notifications_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 30,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/notifications/read": {
+      "post": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Mark Read",
+        "description": "Marca todos os avisos como lidos.",
+        "operationId": "mark_read_me_notifications_read_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -8966,6 +9150,105 @@
         "type": "object",
         "title": "MyStatus"
       },
+      "NotificationOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "seguiu",
+              "curtiu",
+              "comentou",
+              "indicou",
+              "registrou"
+            ],
+            "title": "Kind"
+          },
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "media": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MediaOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "entry_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entry Id"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "read": {
+            "type": "boolean",
+            "title": "Read"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "read",
+          "created_at"
+        ],
+        "title": "NotificationOut"
+      },
+      "NotificationsOut": {
+        "properties": {
+          "unread": {
+            "type": "integer",
+            "title": "Unread"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unread",
+          "items"
+        ],
+        "title": "NotificationsOut"
+      },
       "OccasionOut": {
         "properties": {
           "key": {
@@ -9891,6 +10174,53 @@
         ],
         "title": "StreamingOut"
       },
+      "SuggestIn": {
+        "properties": {
+          "to": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "To",
+            "description": "Os ids de quem recebe"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 280
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Um recado, se quiser"
+          }
+        },
+        "type": "object",
+        "required": [
+          "to"
+        ],
+        "title": "SuggestIn",
+        "description": "Indicar um título para uma ou mais pessoas que você segue."
+      },
+      "SuggestOut": {
+        "properties": {
+          "sent": {
+            "type": "integer",
+            "title": "Sent",
+            "description": "Para quantas pessoas a indicação foi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent"
+        ],
+        "title": "SuggestOut"
+      },
       "SuggestedPersonOut": {
         "properties": {
           "id": {
@@ -9919,6 +10249,51 @@
         ],
         "title": "SuggestedPersonOut",
         "description": "Alguém para seguir, pelo gosto parecido (RFF15)."
+      },
+      "SuggestionOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/PersonOut"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "in_watchlist": {
+            "type": "boolean",
+            "title": "In Watchlist",
+            "description": "Se o título já está no Quero ver de quem recebeu"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "media",
+          "sender",
+          "created_at",
+          "in_watchlist"
+        ],
+        "title": "SuggestionOut",
+        "description": "Uma indicação recebida."
       },
       "SyncOut": {
         "properties": {

@@ -519,3 +519,13 @@ h1 {
   .caret::after { content: ""; display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -0.15em; background: currentColor; animation: caret-blink 1s steps(1) infinite; }
   .float { animation: float 5s ease-in-out infinite; }
 }
+
+/* O sino balança quando há aviso novo */
+@keyframes bell-ring {
+  0%, 60%, 100% { transform: rotate(0); }
+  10%, 30% { transform: rotate(14deg); }
+  20%, 40% { transform: rotate(-12deg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bell-ring { transform-origin: 50% 10%; animation: bell-ring 2.4s ease-in-out 3; }
+}

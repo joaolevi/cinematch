@@ -10,6 +10,7 @@ import Episodes from "../components/Episodes";
 import { episodePath } from "./EpisodePage";
 import Tracks from "../components/Tracks";
 import TrailerButton from "../components/TrailerButton";
+import SuggestButton from "../components/SuggestButton";
 import RatingsPanel from "../components/RatingsPanel";
 import ReviewTalk from "../components/ReviewTalk";
 import SpoilerText from "../components/SpoilerText";
@@ -576,6 +577,7 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
                 </button>
               )}
               <TrailerButton media={media} />
+              <SuggestButton media={media} />
               {!status.diary_entry_id && !status.in_watchlist && (
                 <button className="btn-skip" onClick={toggleDismiss}>
                   {status.dismissed ? (

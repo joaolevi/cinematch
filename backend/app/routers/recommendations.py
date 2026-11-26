@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from .. import crud
 from ..auth import get_current_user
 from ..db import get_db
-from ..models import Media, RecEvent, User
+from ..models import DiaryEntry, Media, RecEvent, User
 from ..schemas import (
     MixOut,
     BecauseOut, FeedbackIn, FeedOut, ImpressionsIn, MediaOut, MediaType, PairOut, RecommendationOut, WatchlistNowOut,
@@ -20,6 +20,7 @@ from ..services.moods import BY_KEY as MOODS, OCCASIONS_BY_KEY, fits_occasion
 from ..services.recommender import Recommendation, decade_label, recommend
 from ..services.streaming import available_ids, labels_on, streaming_on
 from ..services.together import MAX_PEOPLE, together
+from ..services.notifications import notify_watchlist_owners
 from ..services.wish import understand
 from .users import companion
 
@@ -273,9 +274,13 @@ def feedback(
     if data.action == "want":
         crud.add_to_list(db, crud.get_or_create_watchlist(db, user), media_id)
     elif data.action == "seen":
-        crud.upsert_diary(
+        is_new = db.scalar(select(DiaryEntry.id).where(DiaryEntry.user_id == user.id, DiaryEntry.media_id == media_id)) is None
+        entry = crud.upsert_diary(
             db, user, media_id, rating=data.rating, review=data.review, consumed_at=data.consumed_at
         )
+        if is_new:
+            db.flush()
+            notify_watchlist_owners(db, user, entry)
     else:
         crud.dismiss(db, user, media_id)
     db.add(RecEvent(user_id=user.id, media_id=media_id, action=data.action, variant=user.variant))

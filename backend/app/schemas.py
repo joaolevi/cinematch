@@ -919,6 +919,44 @@ class MixOut(BaseModel):
     items: list["MediaOut"]
 
 
+class SuggestIn(BaseModel):
+    """Indicar um título para uma ou mais pessoas que você segue."""
+
+    to: list[int] = Field(min_length=1, max_length=10, description="Os ids de quem recebe")
+    note: str | None = Field(default=None, max_length=280, description="Um recado, se quiser")
+
+
+class SuggestOut(BaseModel):
+    sent: int = Field(description="Para quantas pessoas a indicação foi")
+
+
+class SuggestionOut(BaseModel):
+    """Uma indicação recebida."""
+
+    id: int
+    media: "MediaOut"
+    sender: "PersonOut"
+    note: str | None = None
+    created_at: datetime
+    in_watchlist: bool = Field(description="Se o título já está no Quero ver de quem recebeu")
+
+
+class NotificationOut(BaseModel):
+    id: int
+    kind: Literal["seguiu", "curtiu", "comentou", "indicou", "registrou"]
+    actor: "PersonOut | None" = None
+    media: "MediaOut | None" = None
+    entry_id: int | None = None
+    text: str | None = None
+    read: bool
+    created_at: datetime
+
+
+class NotificationsOut(BaseModel):
+    unread: int
+    items: list[NotificationOut]
+
+
 class PartRef(BaseModel):
     """O episódio de antes ou de depois. Na virada de temporada, o nome pode não vir."""
 

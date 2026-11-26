@@ -331,6 +331,43 @@ class ReviewReport(Base):
     entry: Mapped[DiaryEntry] = relationship()
 
 
+class Suggestion(Base):
+    """Uma indicação: alguém indica um filme, uma série ou um disco para quem segue, com um recado opcional."""
+
+    __tablename__ = "suggestions"
+    __table_args__ = (UniqueConstraint("from_id", "to_id", "media_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    from_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    to_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    media_id: Mapped[int] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"))
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    sender: Mapped[User] = relationship(foreign_keys=[from_id])
+    media: Mapped[Media] = relationship()
+
+
+class Notification(Base):
+    """Um aviso para a pessoa: alguém a seguiu, curtiu ou comentou a resenha dela, indicou algo para ela, ou alguém que
+    ela segue registrou um título que está no Quero ver dela."""
+
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(20))  # seguiu | curtiu | comentou | indicou | registrou
+    actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    media_id: Mapped[int | None] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"), nullable=True)
+    entry_id: Mapped[int | None] = mapped_column(ForeignKey("diary_entries.id", ondelete="CASCADE"), nullable=True)
+    text: Mapped[str | None] = mapped_column(Text, nullable=True)  # o recado da indicação ou o começo do comentário
+    read: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+    actor: Mapped[User | None] = relationship(foreign_keys=[actor_id])
+    media: Mapped[Media | None] = relationship()
+
+
 class TasteAdjustment(Base):
     """Ajuste que a pessoa fez no próprio gosto: mais ou menos de um gênero, década, pessoa, clima ou ponte.
 
