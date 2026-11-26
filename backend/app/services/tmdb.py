@@ -20,6 +20,7 @@ from .catalog import ExternalTitle
 
 BASE_URL = "https://api.themoviedb.org/3"
 IMAGE_URL = "https://image.tmdb.org/t/p/w342"
+BACKDROP_URL = "https://image.tmdb.org/t/p/w1280"  # a cena larga, para o topo da página do título
 MAX_ACTORS = 8
 
 # IDs de gênero do TMDB -> gêneros do Tastory (IDs são estáveis e independem do idioma)
@@ -132,6 +133,7 @@ class TmdbCatalogProvider:
             "year": _year(item.get("release_date") or item.get("first_air_date")),
             "overview": (item.get("overview") or "").strip(),
             "poster_url": f"{IMAGE_URL}{poster}" if poster else None,
+            "backdrop_url": f"{BACKDROP_URL}{item['backdrop_path']}" if item.get("backdrop_path") else None,
             "genres": map_genres(media_type, genre_ids),
             "tags": [],
             "creators": [],
@@ -262,7 +264,7 @@ def fill_durations(db, provider: TmdbCatalogProvider) -> dict:
     rows = [
         m
         for m in db.scalars(select(Media).where(Media.source == "tmdb", Media.type.in_(("movie", "series"))))
-        if m.duration_min is None or not m.language or (m.type == "series" and not m.seasons)
+        if m.duration_min is None or not m.language or (m.type == "series" and not m.seasons) or not m.backdrop_url
     ]
 
     def details(m: Media) -> dict | None:
@@ -287,6 +289,8 @@ def fill_durations(db, provider: TmdbCatalogProvider) -> dict:
             languages += 1
         if not m.countries:
             m.countries = countries_of(d)
+        if not m.backdrop_url and d.get("backdrop_path"):
+            m.backdrop_url = f"{BACKDROP_URL}{d['backdrop_path']}"
         if m.type == "series" and not m.seasons and (found_seasons := seasons_of(d)):
             m.seasons = found_seasons
             seasons += 1

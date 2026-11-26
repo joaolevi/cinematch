@@ -99,6 +99,7 @@ class MediaOut(ORM):
     year: int | None
     overview: str
     poster_url: str | None
+    backdrop_url: str | None = None
     genres: list[str]
     tags: list[str]
     creators: list[str]

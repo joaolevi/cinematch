@@ -102,6 +102,8 @@ class Media(Base):
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     overview: Mapped[str] = mapped_column(Text, default="")
     poster_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # A cena larga do filme ou da série (TMDB), para o topo da página do título, como no Letterboxd
+    backdrop_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     genres: Mapped[list[str]] = mapped_column(JSON, default=list)
     tags: Mapped[list[str]] = mapped_column(JSON, default=list)
     creators: Mapped[list[str]] = mapped_column(JSON, default=list)  # direção, criação ou, no álbum, artistas

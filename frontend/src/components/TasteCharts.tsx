@@ -5,7 +5,7 @@ import HandNote from "./HandNote";
 
 // Cor de quem fica em segundo plano: contraste de 3:1 com o fundo dos cards
 const QUIET = "#76655b";
-const TYPE_COLORS = ["#e8735a", "#f2b33d", "#7fa58b"]; // filme coral, série âmbar, álbum verde, como em MEDIA_STYLE
+const TYPE_COLORS = ["#8fb3c9", "#c2a8e6", "#8fc09d"]; // filme azul, série lilás, álbum verde, como em MEDIA_STYLE
 
 type Pick = (filter: DiaryFilter) => void;
 

@@ -11,10 +11,15 @@
   --color-cream: #f5ebe0;
   --color-accent: #f2b33d; /* âmbar: ações principais e estrelas */
   --color-accent-dim: #d99a24;
-  --color-coral: #e8735a; /* Quero ver e filmes */
-  --color-sage: #7fa58b; /* apoio e, no futuro, álbuns */
+  --color-coral: #e8735a; /* Quero ver */
+  --color-sage: #7fa58b; /* apoio */
   --color-amber: #f2b33d;
   --color-muted: #b5a495;
+  /* Cada cor diz uma coisa só, como no Letterboxd: âmbar é registrar e nota, coral é Quero ver. Os tipos de mídia têm
+     cores próprias, que não se confundem com as ações */
+  --color-movie: #8fb3c9;
+  --color-series: #c2a8e6;
+  --color-album: #8fc09d;
 }
 
 html {
@@ -62,6 +67,10 @@ body::before {
 /* Estrelas sobre o papel: âmbar escuro, com contraste de 4,2:1 (o âmbar normal some no papel) */
 .paper {
   --color-amber: #a15c00;
+  /* No papel, as cores dos tipos escurecem para manter o contraste */
+  --color-movie: #2f5f86;
+  --color-series: #6a4fa0;
+  --color-album: #3f6b4c;
 }
 
 /* Formulários e textos sobre o papel: tinta escura no lugar do creme */

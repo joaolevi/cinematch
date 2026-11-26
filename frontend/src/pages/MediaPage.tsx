@@ -5,6 +5,7 @@ import Carousel from "../components/Carousel";
 import MediaCard from "../components/MediaCard";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
+import ActionIcon from "../components/ActionIcon";
 import Episodes from "../components/Episodes";
 import RatingsPanel from "../components/RatingsPanel";
 import ReviewTalk from "../components/ReviewTalk";
@@ -280,14 +281,25 @@ function MediaView({ mediaId }: { mediaId: number }) {
     <div>
       <SeenStamp id={stamp} album={media.type === "album"} />
       <div className="relative overflow-hidden rounded-2xl border border-line/60 bg-surface/40 p-6 md:p-8">
-        {media.poster_url && (
+        {/* Como no Letterboxd: a cena larga do título no topo, sumindo no fundo; sem ela, o pôster desfocado */}
+        {media.backdrop_url ? (
           <div
             aria-hidden
-            className="absolute inset-0 scale-110 bg-cover bg-center opacity-20 blur-2xl"
-            style={{ backgroundImage: `url(${media.poster_url})` }}
-          />
+            className="absolute inset-x-0 top-0 h-72 [mask-image:linear-gradient(to_bottom,black_35%,transparent)] sm:h-[26rem]"
+          >
+            <img src={media.backdrop_url} alt="" className="h-full w-full object-cover opacity-60" />
+            <div className="absolute inset-0 bg-gradient-to-r from-bg/70 via-transparent to-bg/30" />
+          </div>
+        ) : (
+          media.poster_url && (
+            <div
+              aria-hidden
+              className="absolute inset-0 scale-110 bg-cover bg-center opacity-20 blur-2xl"
+              style={{ backgroundImage: `url(${media.poster_url})` }}
+            />
+          )
         )}
-        <div className="relative grid gap-8 md:grid-cols-[240px_1fr]">
+        <div className={`relative grid gap-8 md:grid-cols-[240px_1fr] ${media.backdrop_url ? "pt-40 sm:pt-56" : ""}`}>
           <div className="group mx-auto w-48 md:w-full">
             {/* O que a pessoa viu vira polaroide; o que ela quer ver fica preso com fita */}
             {status.diary_entry_id ? (
@@ -377,22 +389,39 @@ function MediaView({ mediaId }: { mediaId: number }) {
             <RatingsPanel media={media} />
 
             <div className="mt-6 flex flex-wrap gap-2">
-              <button className="btn-primary" onClick={() => setShowSeen(true)}>
+              {/* Ícone cheio e borda colorida quando a ação já está feita, como no Letterboxd; o texto diz o que o clique faz */}
+              <button
+                className={status.diary_entry_id && status.status !== "watching" ? "btn-ghost border-accent text-accent" : "btn-primary"}
+                onClick={() => setShowSeen(true)}
+              >
+                <ActionIcon kind="seen" on={!!status.diary_entry_id && status.status !== "watching"} />
                 {status.status === "watching" ? "Terminei" : status.diary_entry_id ? "Editar registro" : words.seen}
               </button>
               {media.type === "series" && !status.diary_entry_id && (
                 <button className="btn-ghost" onClick={() => startWatching(media.seasons[0]?.number ?? null)}>
-                  ▶ Estou assistindo
+                  <ActionIcon kind="watching" />
+                  Estou assistindo
                 </button>
               )}
               {watchlist && status.status !== "watching" && (
-                <button className={status.in_watchlist ? "btn-ghost" : "btn-want"} onClick={() => toggleList(watchlist, status.in_watchlist)}>
+                <button
+                  className={status.in_watchlist ? "btn-ghost border-coral text-coral" : "btn-want"}
+                  onClick={() => toggleList(watchlist, status.in_watchlist)}
+                >
+                  <ActionIcon kind="want" on={status.in_watchlist} />
                   {status.in_watchlist ? "Tirar do Quero ver" : words.want}
                 </button>
               )}
               {!status.diary_entry_id && !status.in_watchlist && (
                 <button className="btn-skip" onClick={toggleDismiss}>
-                  {status.dismissed ? "↩ Voltar para as sugestões" : "✕ Não me interesso"}
+                  {status.dismissed ? (
+                    "Voltar para as sugestões"
+                  ) : (
+                    <>
+                      <ActionIcon kind="skip" />
+                      Não me interesso
+                    </>
+                  )}
                 </button>
               )}
             </div>

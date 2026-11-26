@@ -28,10 +28,11 @@ export function timeAgo(isoDate: string): string {
 const COLORS = ["#f2b33d", "#e8735a", "#7fa58b", "#e59bb0", "#8fb3c9", "#b39ddb", "#c9b27c"];
 
 /** Cada tipo de mídia tem sua cor; os álbuns, em sálvia. */
+// As cores vêm do tema (index.css): no papel elas escurecem sozinhas
 export const MEDIA_STYLE = {
-  movie: { label: "Filme", color: "#e8735a" },
-  series: { label: "Série", color: "#f2b33d" },
-  album: { label: "Álbum", color: "#7fa58b" },
+  movie: { label: "Filme", color: "var(--color-movie)" },
+  series: { label: "Série", color: "var(--color-series)" },
+  album: { label: "Álbum", color: "var(--color-album)" },
 } as const;
 
 /** Os verbos de cada mídia: um álbum se ouve; filmes e séries se veem. */
