@@ -303,7 +303,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
           <div className="group mx-auto w-48 md:w-full">
             {/* O que a pessoa viu vira polaroide; o que ela quer ver fica preso com fita */}
             {status.diary_entry_id ? (
-              <Polaroid position={1} caption={statusCaption(status, album)} album={album}>
+              <Polaroid position={1} tape caption={statusCaption(status, album)} album={album}>
                 <Poster media={media} rounded="rounded-[2px]" />
               </Polaroid>
             ) : status.in_watchlist ? (

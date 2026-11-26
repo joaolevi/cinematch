@@ -5,14 +5,14 @@ import type { DiaryEntry, Media } from "../types";
 import Polaroid from "./Polaroid";
 import Poster from "./Poster";
 
-const MAX = 4;
+const MAX = 5;
 
 /** Para procurar sem diferenciar acentos nem maiúsculas. */
 function search_text(text: string): string {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
-/** Escolher os quatro favoritos entre os títulos do próprio diário, na ordem dos cliques. */
+/** Escolher os cinco favoritos entre os títulos do próprio diário, na ordem dos cliques. */
 function Picker({
   entries,
   initial,
@@ -106,8 +106,7 @@ function Picker({
 }
 
 /**
- * Os quatro favoritos do perfil, como o cartão de visita do Letterboxd: quatro polaroides grandes, na ordem que a
- * pessoa escolheu. No próprio perfil, dá para escolher entre os títulos do diário.
+ * Os cinco favoritos do perfil: cinco polaroides grandes, na ordem que a pessoa escolheu. No próprio perfil, dá para escolher entre os títulos do diário.
  */
 export default function PinnedFavorites({
   pinned,
@@ -127,7 +126,7 @@ export default function PinnedFavorites({
     <section aria-labelledby="favoritos-titulo">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h2 id="favoritos-titulo" className="font-display text-xl font-bold">
-          {isMe ? "Meus quatro favoritos" : `Os quatro favoritos de ${who}`}
+          {isMe ? "Meus cinco favoritos" : `Os cinco favoritos de ${who}`}
         </h2>
         {isMe && !editing && (
           <button className="btn-ghost px-3 py-1 text-sm" onClick={() => setEditing(true)} disabled={!entries?.length}>
@@ -147,14 +146,14 @@ export default function PinnedFavorites({
         />
       ) : current.length === 0 ? (
         <p className="mt-2 text-sm text-muted">
-          Escolha os quatro títulos que dizem quem você é: eles ficam no topo do seu perfil, para quem visitar.
+          Escolha os cinco títulos que dizem quem você é: eles ficam no topo do seu perfil, para quem visitar.
         </p>
       ) : (
-        <ul className="mt-4 grid grid-cols-2 gap-6 sm:grid-cols-4 lg:max-w-4xl">
+        <ul className="mt-4 grid grid-cols-3 gap-4 sm:grid-cols-5 sm:gap-6 lg:max-w-5xl">
           {current.map((m, i) => (
             <li key={m.id}>
               <Link to={`/media/${m.id}`} className="block" aria-label={m.title}>
-                <Polaroid position={i} album={m.type === "album"} straightenOnHover={false}>
+                <Polaroid position={i} tape album={m.type === "album"} straightenOnHover={false}>
                   <Poster media={m} rounded="rounded-[2px]" />
                 </Polaroid>
               </Link>

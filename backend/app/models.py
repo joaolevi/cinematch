@@ -50,7 +50,7 @@ class User(Base):
     visibility: Mapped[str] = mapped_column(String(10), default="all", server_default="all")
     # Serviços de streaming que a pessoa assina, como "netflix" (RFF21)
     services: Mapped[list[str]] = mapped_column(JSON, default=list, server_default=text("'[]'"))
-    # Os quatro favoritos do perfil, na ordem escolhida (ids de mídia), como o cartão de visita do Letterboxd
+    # Os cinco favoritos do perfil, na ordem escolhida (ids de mídia)
     pinned: Mapped[list[int]] = mapped_column(JSON, default=list, server_default=text("'[]'"))
     # False = saiu dos experimentos (RFF17): recebe o recomendador completo e fica fora da comparação A/B
     in_experiments: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())

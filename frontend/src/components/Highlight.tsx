@@ -20,17 +20,19 @@ export function Buttons({
   onSeen: () => void;
   big?: boolean;
 }) {
-  // Nos cards, os dois botões ficam sempre lado a lado, mesmo com "Quero ouvir" e "Já ouvi", que são mais longos
-  const size = big ? "px-5 whitespace-nowrap" : "min-w-0 px-2 text-center leading-tight";
   const words = verbs(rec.media.type);
+  // Nos cards, os botões são claros e numa linha só: com 20 cards na tela, botões cheios de cor viram uma parede de
+  // coral e âmbar. A cor continua dizendo o que cada um faz, e o botão se enche ao passar o mouse
+  const want = big ? "btn-want px-5 whitespace-nowrap" : "btn min-w-0 bg-coral/15 px-1.5 py-1.5 text-[13px] whitespace-nowrap text-coral hover:bg-coral hover:text-bg";
+  const seen = big ? "btn-seen px-5 whitespace-nowrap" : "btn min-w-0 bg-accent/15 px-1.5 py-1.5 text-[13px] whitespace-nowrap text-accent hover:bg-accent hover:text-bg";
   return (
     <div className={big ? "mt-5 flex flex-wrap gap-2" : "mt-auto grid grid-cols-2 gap-1.5 pt-2.5"}>
-      <button className={`btn-want ${size}`} onClick={() => act(rec.media, "want")}>
-        <ActionIcon kind="want" className="hidden h-4 w-4 shrink-0 sm:block" />
+      <button className={want} onClick={() => act(rec.media, "want")}>
+        {big && <ActionIcon kind="want" className="hidden h-4 w-4 shrink-0 sm:block" />}
         {words.want}
       </button>
-      <button className={`btn-seen ${size}`} onClick={onSeen}>
-        <ActionIcon kind="seen" className="hidden h-4 w-4 shrink-0 sm:block" />
+      <button className={seen} onClick={onSeen}>
+        {big && <ActionIcon kind="seen" className="hidden h-4 w-4 shrink-0 sm:block" />}
         {words.seen}
       </button>
       {big && (
@@ -72,9 +74,18 @@ const MAX_LOGOS = 5;
 
 /** Onde assistir, na sugestão (RFF19, RFF21): os logos dos serviços de assinatura, com os da pessoa em destaque, e
  * "Nos seus serviços: ..." quando o título está em algum que ela marcou. */
-export function OnMyServices({ rec, className = "" }: { rec: Recommendation; className?: string }) {
+export function OnMyServices({
+  rec,
+  className = "",
+  logos: withLogos = true,
+}: {
+  rec: Recommendation;
+  className?: string;
+  /** Sem os logos, nos cards pequenos: fica só "Nos seus serviços", que é o que interessa */
+  logos?: boolean;
+}) {
   const mine = new Set(rec.services ?? []);
-  const logos = (rec.streaming ?? []).filter((s) => s.logo).slice(0, MAX_LOGOS);
+  const logos = withLogos ? (rec.streaming ?? []).filter((s) => s.logo).slice(0, MAX_LOGOS) : [];
   if (!logos.length && !mine.size) return null;
   return (
     <div className={className}>
@@ -94,7 +105,7 @@ export function OnMyServices({ rec, className = "" }: { rec: Recommendation; cla
         </ul>
       )}
       {mine.size > 0 && (
-        <p className="mt-1 font-semibold text-accent">Nos seus serviços: {[...mine].join(", ")}</p>
+        <p className={`${logos.length ? "mt-1 " : ""}font-semibold text-accent`}>Nos seus serviços: {[...mine].join(", ")}</p>
       )}
     </div>
   );

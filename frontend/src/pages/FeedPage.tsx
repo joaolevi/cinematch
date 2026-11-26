@@ -570,7 +570,7 @@ export default function FeedPage() {
               <p className="mt-1.5 line-clamp-2 text-xs text-muted" title={rec.reason}>
                 {rec.reason}
               </p>
-              <OnMyServices rec={rec} className="mt-1 text-xs" />
+              <OnMyServices rec={rec} className="mt-1 text-xs" logos={false} />
               <TuneMenu rec={rec} state={{ mood, maxMinutes, discovery }} onTune={(choice, label) => tune(rec, choice, label)} />
               <Buttons rec={rec} act={act} onSeen={() => setSeenTarget(rec.media)} />
             </MediaCard>

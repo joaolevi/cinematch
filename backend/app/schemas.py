@@ -452,7 +452,7 @@ class ProfileOut(BaseModel):
     id: int
     name: str
     is_me: bool
-    pinned: list["MediaOut"] = Field(default=[], description="Os quatro favoritos que a pessoa escolheu, na ordem dela")
+    pinned: list["MediaOut"] = Field(default=[], description="Os cinco favoritos que a pessoa escolheu, na ordem dela")
     counts: dict[str, int] = Field(description="Registros por mídia: movie, series e album")
     favorites: list[ProfileItemOut]
     recent: list[ProfileItemOut]
@@ -821,4 +821,4 @@ class EpisodeIn(BaseModel):
 
 
 class PinnedIn(BaseModel):
-    media_ids: list[int] = Field(max_length=4, description="Até 4 títulos do próprio diário, na ordem em que aparecem")
+    media_ids: list[int] = Field(max_length=5, description="Até 5 títulos do próprio diário, na ordem em que aparecem")

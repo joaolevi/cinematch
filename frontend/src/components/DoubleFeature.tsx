@@ -52,7 +52,7 @@ export default function DoubleFeature({ pairs, onSaved }: { pairs: Pair[]; onSav
               {pair.video.media.title}: {pair.video.reason.charAt(0).toLowerCase() + pair.video.reason.slice(1)}
             </p>
             <div className="mt-auto pt-3">
-              <button className="btn-want w-full" disabled={busy !== null} onClick={() => saveBoth(pair)}>
+              <button className="btn w-full bg-coral/15 text-coral hover:bg-coral hover:text-bg" disabled={busy !== null} onClick={() => saveBoth(pair)}>
                 {busy === pair.album.id ? "Guardando..." : "Guardar os dois no Quero ver"}
               </button>
             </div>

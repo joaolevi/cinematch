@@ -253,7 +253,7 @@ def edit_account(data: AccountEditIn, db: Session = Depends(get_db), user: User 
 
 @router.put("/favorites", response_model=list[MediaOut])
 def set_favorites(data: PinnedIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    """Escolhe os quatro favoritos do perfil, na ordem. Só valem títulos do próprio diário; repetidos contam uma vez."""
+    """Escolhe os cinco favoritos do perfil, na ordem. Só valem títulos do próprio diário; repetidos contam uma vez."""
     ids = list(dict.fromkeys(data.media_ids))
     in_diary = set(db.scalars(select(DiaryEntry.media_id).where(DiaryEntry.user_id == user.id, DiaryEntry.media_id.in_(ids))))
     missing = [i for i in ids if i not in in_diary]

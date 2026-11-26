@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
@@ -17,7 +17,6 @@ import WatchedBy from "../components/WatchedBy";
 import { isUpcoming } from "../format";
 import { OnScreen, useImpressions } from "../impressions";
 import { diaryChanged, seenLabel, useDiaryVersion, useSeen } from "../seen";
-import { tasteOf } from "../taste";
 import type { Challenge, CommunityEntry, DiaryEntry, Feed, FeedbackAction, Media, Recommendation, UserList } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
@@ -225,7 +224,6 @@ export default function HomePage() {
   // Para você, que é sempre a primeira
   const unseen = (recs ?? []).filter((r) => !seen?.has(r.media.id)).slice(0, 5);
   const hero = unseen.length ? unseen[dayNumber() % unseen.length] : undefined;
-  const taste = diary ? tasteOf(diary) : null;
   const visto = (id: number) => {
     const label = seenLabel(seen?.get(id));
     return label ? <span className="text-sm">{label}</span> : undefined;
@@ -280,9 +278,9 @@ export default function HomePage() {
           to="/listas"
           linkLabel="Ver lista"
         >
-          {watchlist.slice(0, SHELF).map(({ media }, position) => (
+          {watchlist.slice(0, SHELF).map(({ media }) => (
             <div key={media.id} className={shelfItem}>
-              <MediaCard media={media} pinned={{ position }} sticker={visto(media.id)} compact />
+              <MediaCard media={media} sticker={visto(media.id)} compact />
             </div>
           ))}
         </Shelf>
@@ -330,47 +328,21 @@ export default function HomePage() {
           <SectionHeader title="Do meu diário" to="/diario" linkLabel="Abrir meu diário" />
           <div className="paper relative flex flex-1 -rotate-[0.4deg] flex-col rounded-sm py-6 pr-6 pl-14">
             <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[0] }} />
-            {taste ? (
-              <>
-                <p className={`font-hand text-xl leading-8 font-bold ${RED_INK}`}>Meu gosto em uma frase:</p>
-                <p className="font-display text-2xl leading-tight font-bold sm:text-3xl">
-                  Sou do time <mark className="marker">{taste.highlight}</mark>
-                  {taste.decade && (
-                    <>
-                      {" "}
-                      dos{" "}
-                      <mark className="marker" style={{ "--marker": "rgb(232 115 90 / 0.5)" } as CSSProperties}>
-                        {taste.decade}
-                      </mark>
-                    </>
-                  )}
-                  .
-                </p>
-                <ul className="mt-2 font-hand text-xl leading-8 font-semibold opacity-85">
-                  {taste.facts.slice(0, 2).map((fact) => (
-                    <li key={fact}>→ {fact}</li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              <>
-                <p className={`font-hand text-xl leading-8 font-bold ${RED_INK}`}>Querido diário,</p>
-                <p className="font-display text-2xl leading-tight font-bold">
-                  {diary?.length ? "estou só começando." : "ainda não registrei nada."}
-                </p>
-                <p className="mt-2 font-hand text-2xl leading-8 font-semibold opacity-85">
-                  {diary?.length
-                    ? "Com 3 títulos, eu descubro aqui o meu gosto em uma frase."
-                    : "Minha história começa quando eu marcar Já vi ou usar o + Registrar, lá em cima."}
-                </p>
-              </>
+            {/* A frase do gosto fica no perfil; aqui, só os últimos registros */}
+            <p className={`font-hand text-xl leading-8 font-bold ${RED_INK}`}>
+              {diary?.length ? "Os últimos que eu registrei:" : "Querido diário,"}
+            </p>
+            {!diary?.length && (
+              <p className="mt-1 font-hand text-2xl leading-8 font-semibold opacity-85">
+                Minha história começa quando eu marcar Já vi ou usar o + Registrar, lá em cima.
+              </p>
             )}
             {!!diary?.length && (
-              <ul className="mt-6 grid grid-cols-4 gap-3 sm:gap-4">
+              <ul className="mt-4 grid grid-cols-4 gap-3 sm:gap-5">
                 {diary.slice(0, 4).map((e, position) => (
                   <li key={e.id} className="group">
                     <Link to={`/media/${e.media.id}`} title={e.media.title}>
-                      <Polaroid position={position} caption={e.consumed_at ? shortDate(e.consumed_at) : "♥"} small album={e.media.type === "album"}>
+                      <Polaroid position={position} caption={e.consumed_at ? shortDate(e.consumed_at) : "♥"} album={e.media.type === "album"}>
                         <Poster media={e.media} compact rounded="rounded-[1px]" />
                       </Polaroid>
                     </Link>
