@@ -6,20 +6,19 @@ import ExperimentsToggle from "../components/ExperimentsToggle";
 import { Avatar } from "../components/WatchedBy";
 import { refreshAvatars } from "../avatars";
 import type { LetterboxdResult, StreamingService, Visibility } from "../types";
-import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 
-function Part({ title, children, tape = 0, id }: { title: string; children: ReactNode; tape?: number; id?: string }) {
+function Part({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
   return (
-    <section id={id} className="paper relative -rotate-[0.2deg] scroll-mt-24 rounded-sm py-6 pr-6 pl-14 text-[#2b211c] sm:pl-16">
-      <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[tape] }} />
-      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">{title}</h2>
+    // Cartão escuro com o título à mão: a conta é um lugar de ajustes, sem papel colado
+    <section id={id} className="card scroll-mt-24 p-6">
+      <h2 className="font-hand text-2xl leading-8 font-bold text-accent">{title}</h2>
       <div className="mt-1 space-y-2 text-sm leading-6">{children}</div>
     </section>
   );
 }
 
-const FIELD = "mt-1 block w-full max-w-sm rounded-md border border-stone-400 bg-white/70 px-3 py-2 text-[#2b211c]";
+const FIELD = "input mt-1 block w-full max-w-sm";
 
 /** Reduz a foto a um quadrado de 256 px, cortando as sobras do centro, e devolve como JPEG. */
 async function squarePhoto(file: File): Promise<string> {
@@ -85,7 +84,7 @@ function ProfileEditor() {
             />
             <label
               htmlFor="foto-de-perfil"
-              className="btn-primary cursor-pointer px-4 py-1.5 text-sm peer-focus-visible:outline-2 peer-focus-visible:outline-[#b9452f]"
+              className="btn-primary cursor-pointer px-4 py-1.5 text-sm peer-focus-visible:outline-2 peer-focus-visible:outline-accent"
             >
               {busy === "foto" ? "Enviando..." : "Escolher uma foto"}
             </label>
@@ -103,9 +102,9 @@ function ProfileEditor() {
               Tirar a foto
             </button>
           </div>
-          <p className="text-xs text-stone-600">
+          <p className="text-xs text-muted">
             A foto aparece no seu perfil, na Comunidade e nas resenhas.{" "}
-            <Link to={`/pessoas/${user.id}`} className="underline hover:text-[#b9452f]">
+            <Link to={`/pessoas/${user.id}`} className="underline hover:text-accent">
               Ver meu perfil como os outros veem
             </Link>
           </p>
@@ -155,7 +154,7 @@ function ProfileEditor() {
         <label className="block">
           <span className="font-semibold">Nova senha</span>
           <input required minLength={6} type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={FIELD} />
-          <span className="text-xs text-stone-600">Pelo menos 6 caracteres.</span>
+          <span className="text-xs text-muted">Pelo menos 6 caracteres.</span>
         </label>
         <button className="btn-primary" disabled={busy !== null || !current || next.length < 6}>
           {busy === "senha" ? "Trocando..." : "Trocar a senha"}
@@ -214,7 +213,7 @@ function LetterboxdImport() {
           />
           <label
             htmlFor="letterboxd-arquivos"
-            className="btn-ghost cursor-pointer px-4 py-1.5 text-sm peer-focus-visible:outline-2 peer-focus-visible:outline-[#b9452f]"
+            className="btn-ghost cursor-pointer px-4 py-1.5 text-sm peer-focus-visible:outline-2 peer-focus-visible:outline-accent"
           >
             Escolher arquivos CSV
           </label>
@@ -249,7 +248,7 @@ function LetterboxdImport() {
               </p>
             )}
             {result.ignored_files.length > 0 && <p>Arquivos que não usamos: {result.ignored_files.join(", ")}.</p>}
-            <Link to="/diario" className="underline hover:text-[#b9452f]">
+            <Link to="/diario" className="underline hover:text-accent">
               Ver meu diário
             </Link>
           </div>
@@ -294,7 +293,7 @@ function VisibilityPicker() {
               }
             }}
             className={`cursor-pointer rounded-full border px-3 py-1 text-sm font-semibold ${
-              user.visibility === key ? "border-[#b9452f] bg-[#b9452f] text-white" : "border-stone-400 hover:border-[#b9452f]"
+              user.visibility === key ? "border-accent bg-accent text-bg" : "border-line hover:border-accent"
             }`}
           >
             {label}
@@ -343,7 +342,7 @@ function ServicesPicker() {
             onClick={() => toggle(s.key)}
             title={s.count === 1 ? "1 título do catálogo está aqui" : `${s.count} títulos do catálogo estão aqui`}
             className={`cursor-pointer rounded-full border px-3 py-1 text-sm font-semibold ${
-              mine.has(s.key) ? "border-[#b9452f] bg-[#b9452f] text-white" : "border-stone-400 hover:border-[#b9452f]"
+              mine.has(s.key) ? "border-accent bg-accent text-bg" : "border-line hover:border-accent"
             }`}
           >
             {mine.has(s.key) ? "✓ " : ""}
@@ -461,13 +460,13 @@ export default function AccountPage() {
       <div id="painel-da-conta" role="tabpanel" aria-labelledby={`aba-${tab}`} className="space-y-8">
 
       {tab === "perfil" && (
-        <Part title="Meu perfil" tape={2} id="perfil">
+        <Part title="Meu perfil" id="perfil">
         <ProfileEditor />
       </Part>
       )}
 
       {tab === "dados" && (
-        <Part title="Meus dados" tape={0}>
+        <Part title="Meus dados">
         <p>
           Baixe tudo o que o Tastory guarda sobre você, num arquivo JSON: o diário com notas e resenhas, as listas, as
           preferências do começo, quem você segue e as sugestões que você viu e o que fez com elas. A senha não vai junto.
@@ -480,19 +479,19 @@ export default function AccountPage() {
       )}
 
       {tab === "dados" && (
-        <Part title="Trazer do Letterboxd" tape={2} id="letterboxd">
+        <Part title="Trazer do Letterboxd" id="letterboxd">
         <LetterboxdImport />
       </Part>
       )}
 
       {tab === "privacidade" && (
-        <Part title="Quem vê meus registros" tape={1} id="quem-ve">
+        <Part title="Quem vê meus registros" id="quem-ve">
         <VisibilityPicker />
       </Part>
       )}
 
       {tab === "servicos" && (
-        <Part title="Meus serviços" tape={0} id="servicos">
+        <Part title="Meus serviços" id="servicos">
         <p>
           Marque o que você assina. No Para você, "Só nos meus serviços" e "Hoje à noite" mostram só o que dá para ver
           agora, e cada sugestão avisa se está num serviço seu.
@@ -502,14 +501,14 @@ export default function AccountPage() {
       )}
 
       {tab === "privacidade" && (
-        <Part title="Experimentos" tape={2}>
+        <Part title="Experimentos">
         <p>
           Comparamos duas formas de sugerir filmes e séries. Saiba mais em{" "}
-          <Link to="/como-recomendamos" className="underline hover:text-[#b9452f]">
+          <Link to="/como-recomendamos" className="underline hover:text-accent">
             Como recomendamos
           </Link>
           . Participar é uma escolha sua, como explica a{" "}
-          <Link to="/privacidade" className="underline hover:text-[#b9452f]">
+          <Link to="/privacidade" className="underline hover:text-accent">
             política de privacidade
           </Link>
           .
@@ -519,7 +518,7 @@ export default function AccountPage() {
       )}
 
       {tab === "dados" && (
-        <Part title="Excluir minha conta" tape={1}>
+        <Part title="Excluir minha conta">
         {user.role === "admin" ? (
           <p>Contas de administração não podem ser excluídas por aqui.</p>
         ) : (
@@ -536,7 +535,7 @@ export default function AccountPage() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full max-w-xs rounded-md border border-stone-400 bg-white/70 px-3 py-2 text-[#2b211c]"
+                className="input mt-1 block w-full max-w-xs"
               />
             </label>
             <button type="submit" className="btn-primary bg-[#b42318]! text-white!" disabled={deleting || !password}>

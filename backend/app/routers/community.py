@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..auth import get_current_user
 from ..db import get_db
-from ..models import DiaryEntry, Follow, ReviewComment, ReviewLike, User
-from ..schemas import CommentIn, CommentOut, CommunityEntryOut, CommunityPage, MediaOut, ReviewerOut
+from ..models import DiaryEntry, Follow, ReviewComment, ReviewLike, ReviewReport, User
+from ..schemas import CommentIn, CommentOut, CommunityEntryOut, CommunityPage, MediaOut, ReportIn, ReportOut, ReviewerOut
 from ..seed import DEMO_EMAIL
 from ..services.visibility import visible_owner
 
@@ -35,6 +35,15 @@ def reachable_review(db: Session, entry_id: int, me: User) -> DiaryEntry:
     if entry is None:
         raise HTTPException(status_code=404, detail="Resenha não encontrada")
     return entry
+
+
+# Com duas denúncias de spoiler, a resenha passa a aparecer escondida até a moderação decidir
+SPOILER_REPORTS = 2
+
+
+def reported_by(db: Session, ids: list[int], user_id: int) -> set[int]:
+    """As resenhas desta lista que a pessoa já denunciou."""
+    return set(db.scalars(select(ReviewReport.entry_id).where(ReviewReport.entry_id.in_(ids), ReviewReport.user_id == user_id)))
 
 
 def counts_by_entry(db: Session, column, ids: list[int], *where) -> dict[int, int]:
@@ -65,6 +74,7 @@ def community(
     likes = counts_by_entry(db, ReviewLike.entry_id, ids)
     comments = counts_by_entry(db, ReviewComment.entry_id, ids, ReviewComment.hidden.is_(False))
     liked = set(db.scalars(select(ReviewLike.entry_id).where(ReviewLike.entry_id.in_(ids), ReviewLike.user_id == user.id)))
+    reported = reported_by(db, ids, user.id)
     return CommunityPage(
         items=[
             CommunityEntryOut(
@@ -82,6 +92,7 @@ def community(
                 likes=likes.get(e.id, 0) if has_review(e) else 0,
                 liked=e.id in liked and has_review(e),
                 comments=comments.get(e.id, 0) if has_review(e) else 0,
+                reported=e.id in reported,
             )
             for e in entries
         ]
@@ -181,6 +192,37 @@ def add_comment(entry_id: int, data: CommentIn, db: Session = Depends(get_db), u
     db.commit()
     db.refresh(c)
     return comment_out(c, entry, user)
+
+
+@router.post("/{entry_id}/report", response_model=ReportOut)
+def report_review(entry_id: int, data: ReportIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Denunciar uma resenha para a moderação: spoiler sem aviso, ofensa, spam ou outro motivo, com um detalhe se
+    quiser. Cada pessoa denuncia uma vez; denunciar de novo troca o motivo. Com duas denúncias de spoiler, a resenha já
+    passa a aparecer escondida, com "Mostrar mesmo assim", até a moderação decidir. Não dá para denunciar a própria."""
+    entry = db.scalar(
+        select(DiaryEntry)
+        .join(User, User.id == DiaryEntry.user_id)
+        .where(DiaryEntry.id == entry_id, *HAS_REVIEW, visible_owner(user.id))
+    )
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Resenha não encontrada")
+    if entry.user_id == user.id:
+        raise HTTPException(status_code=400, detail="Não dá para denunciar a própria resenha")
+    report = db.scalar(select(ReviewReport).where(ReviewReport.entry_id == entry.id, ReviewReport.user_id == user.id))
+    if report is None:
+        report = ReviewReport(entry_id=entry.id, user_id=user.id, reason=data.reason)
+        db.add(report)
+    report.reason, report.note, report.resolved = data.reason, (data.note or "").strip() or None, False
+    db.flush()
+    spoilers = db.scalar(
+        select(func.count()).select_from(ReviewReport).where(
+            ReviewReport.entry_id == entry.id, ReviewReport.reason == "spoiler", ReviewReport.resolved.is_(False)
+        )
+    )
+    if spoilers >= SPOILER_REPORTS:
+        entry.spoiler = True
+    db.commit()
+    return ReportOut(spoiler=bool(entry.spoiler))
 
 
 @router.delete("/comments/{comment_id}", status_code=204)

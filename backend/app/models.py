@@ -309,6 +309,26 @@ class ReviewComment(Base):
     entry: Mapped[DiaryEntry] = relationship()
 
 
+class ReviewReport(Base):
+    """Denúncia de uma resenha, para a moderação (RFF30): spoiler sem aviso, ofensa, spam ou outro motivo.
+
+    Cada pessoa denuncia uma resenha uma vez (a segunda troca o motivo). A denúncia fica aberta até o admin decidir.
+    """
+
+    __tablename__ = "review_reports"
+    __table_args__ = (UniqueConstraint("entry_id", "user_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    entry_id: Mapped[int] = mapped_column(ForeignKey("diary_entries.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    reason: Mapped[str] = mapped_column(String(20))  # spoiler | ofensa | spam | outro
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    resolved: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    entry: Mapped[DiaryEntry] = relationship()
+
+
 class TasteAdjustment(Base):
     """Ajuste que a pessoa fez no próprio gosto: mais ou menos de um gênero, década, pessoa, clima ou ponte.
 

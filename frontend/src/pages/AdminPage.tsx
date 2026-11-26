@@ -5,7 +5,7 @@ import Poster from "../components/Poster";
 import { StarsDisplay } from "../components/Stars";
 import { Avatar } from "../components/WatchedBy";
 import { MEDIA_STYLE, formatDate, plural, timeAgo } from "../format";
-import type { AdminComment, AdminReview, AdminUser, ExternalTitle, Media, MediaInput, Metrics, VariantMetrics } from "../types";
+import type { AdminComment, AdminReport, AdminReview, AdminUser, ExternalTitle, Media, MediaInput, Metrics, VariantMetrics } from "../types";
 import { TAPE_COLORS, tabColor } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
@@ -706,14 +706,76 @@ function TmdbPanel({ onChange }: { onChange: () => void }) {
 }
 
 // ------------------------------------------------------------------ Moderação
+const REASON_LABEL: Record<string, string> = { spoiler: "spoiler", ofensa: "ofensa", spam: "spam", outro: "outro motivo" };
+
+/** As resenhas denunciadas, da mais denunciada para a menos, com o que cada decisão faz. */
+function Reports({ reports, onDecide }: { reports: AdminReport[]; onDecide: () => void }) {
+  if (reports.length === 0) return <HandNote className="mt-4">Nenhuma denúncia aberta. Tudo em ordem!</HandNote>;
+  const decide = async (id: number, action: "spoiler" | "not_spoiler" | "hide" | "dismiss") => {
+    await api.adminDecideReport(id, action);
+    onDecide();
+  };
+  return (
+    <div className="mt-4 space-y-3">
+      {reports.map((r) => (
+        <div key={r.entry_id} className="card p-4">
+          <p className="text-sm">
+            <span className="font-semibold">{r.user_name}</span> <span className="text-muted">sobre</span>{" "}
+            <Link to={`/media/${r.media_id}`} className="font-semibold text-accent">
+              {r.media_title}
+            </Link>
+            <span className="text-muted"> · {plural(r.reports, "denúncia", "denúncias")}: </span>
+            {Object.entries(r.reasons)
+              .map(([k, n]) => `${n} de ${REASON_LABEL[k] ?? k}`)
+              .join(", ")}
+          </p>
+          {r.spoiler && <p className="mt-1 text-xs font-semibold text-accent">Já aparece escondida como spoiler</p>}
+          <p className="mt-2 break-words whitespace-pre-line text-stone-200">{r.review}</p>
+          {r.notes.length > 0 && (
+            <ul className="mt-2 space-y-1 text-sm text-muted">
+              {r.notes.map((n, i) => (
+                <li key={i}>“{n}”</li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {r.spoiler ? (
+              <button className="btn-ghost px-3 py-1 text-sm" onClick={() => decide(r.entry_id, "not_spoiler")}>
+                Não é spoiler: mostrar
+              </button>
+            ) : (
+              <button className="btn-ghost px-3 py-1 text-sm" onClick={() => decide(r.entry_id, "spoiler")}>
+                Esconder como spoiler
+              </button>
+            )}
+            {r.spoiler && (
+              <button className="btn-ghost px-3 py-1 text-sm" onClick={() => decide(r.entry_id, "spoiler")}>
+                Confirmar o spoiler
+              </button>
+            )}
+            <button className="btn-danger px-3 py-1 text-sm" onClick={() => decide(r.entry_id, "hide")}>
+              Ocultar a resenha
+            </button>
+            <button className="btn-skip px-3 py-1 text-sm" onClick={() => decide(r.entry_id, "dismiss")}>
+              Descartar as denúncias
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ModerationTab() {
   const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [comments, setComments] = useState<AdminComment[]>([]);
-  const [what, setWhat] = useState<"reviews" | "comments">("reviews");
+  const [reports, setReports] = useState<AdminReport[]>([]);
+  const [what, setWhat] = useState<"reports" | "reviews" | "comments">("reports");
   const [filter, setFilter] = useState<"all" | "visible" | "hidden">("all");
   const load = () => {
     api.adminReviews().then(setReviews);
     api.adminComments().then(setComments);
+    api.adminReports().then(setReports);
   };
   useEffect(() => {
     load();
@@ -728,6 +790,7 @@ function ModerationTab() {
       <div className="flex flex-wrap gap-2" role="group" aria-label="O que moderar">
         {(
           [
+            ["reports", `Denúncias${reports.length ? ` (${reports.length})` : ""}`],
             ["reviews", "Resenhas"],
             ["comments", "Comentários nas resenhas"],
           ] as const
@@ -742,7 +805,8 @@ function ModerationTab() {
           </button>
         ))}
       </div>
-      <div className="mt-3 flex gap-2">
+      {what === "reports" && <Reports reports={reports} onDecide={load} />}
+      <div className={`mt-3 flex gap-2 ${what === "reports" ? "hidden" : ""}`}>
         {(["all", "visible", "hidden"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)} className={`chip cursor-pointer ${filter === f ? "border-accent text-accent" : ""}`}>
             {f === "all" ? "Todos" : f === "visible" ? "Visíveis" : "Ocultos"}

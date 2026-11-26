@@ -3115,6 +3115,64 @@
         }
       }
     },
+    "/community/{entry_id}/report": {
+      "post": {
+        "tags": [
+          "comunidade"
+        ],
+        "summary": "Report Review",
+        "description": "Denunciar uma resenha para a moderação: spoiler sem aviso, ofensa, spam ou outro motivo, com um detalhe se\nquiser. Cada pessoa denuncia uma vez; denunciar de novo troca o motivo. Com duas denúncias de spoiler, a resenha já\npassa a aparecer escondida, com \"Mostrar mesmo assim\", até a moderação decidir. Não dá para denunciar a própria.",
+        "operationId": "report_review_community__entry_id__report_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/community/comments/{comment_id}": {
       "delete": {
         "tags": [
@@ -4538,6 +4596,88 @@
         }
       }
     },
+    "/admin/reports": {
+      "get": {
+        "tags": [
+          "administração"
+        ],
+        "summary": "List Reports",
+        "description": "As resenhas com denúncias abertas, da mais denunciada para a menos, com os motivos e os detalhes.",
+        "operationId": "list_reports_admin_reports_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdminReportOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Reports Admin Reports Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/admin/reports/{entry_id}": {
+      "patch": {
+        "tags": [
+          "administração"
+        ],
+        "summary": "Decide Report",
+        "description": "Decidir as denúncias de uma resenha: esconder como spoiler, mostrar de novo (não é spoiler), ocultar a\nresenha ou descartar as denúncias. Em todos os casos, as denúncias abertas são encerradas.",
+        "operationId": "decide_report_admin_reports__entry_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportDecisionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/comments": {
       "get": {
         "tags": [
@@ -5523,6 +5663,80 @@
         ],
         "title": "AdminCommentOut"
       },
+      "AdminReportOut": {
+        "properties": {
+          "entry_id": {
+            "type": "integer",
+            "title": "Entry Id"
+          },
+          "media_id": {
+            "type": "integer",
+            "title": "Media Id"
+          },
+          "media_title": {
+            "type": "string",
+            "title": "Media Title"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name",
+            "description": "Quem escreveu a resenha"
+          },
+          "review": {
+            "type": "string",
+            "title": "Review"
+          },
+          "spoiler": {
+            "type": "boolean",
+            "title": "Spoiler"
+          },
+          "review_hidden": {
+            "type": "boolean",
+            "title": "Review Hidden"
+          },
+          "reports": {
+            "type": "integer",
+            "title": "Reports"
+          },
+          "reasons": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Reasons",
+            "description": "Quantas denúncias por motivo"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes",
+            "description": "Os detalhes que as pessoas escreveram"
+          },
+          "last_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entry_id",
+          "media_id",
+          "media_title",
+          "user_name",
+          "review",
+          "spoiler",
+          "review_hidden",
+          "reports",
+          "reasons",
+          "notes",
+          "last_at"
+        ],
+        "title": "AdminReportOut",
+        "description": "Uma resenha com denúncias abertas, para a moderação decidir."
+      },
       "AdminReviewOut": {
         "properties": {
           "id": {
@@ -6058,6 +6272,12 @@
             "title": "Comments",
             "description": "Comentários visíveis na resenha (RFF30)",
             "default": 0
+          },
+          "reported": {
+            "type": "boolean",
+            "title": "Reported",
+            "description": "Se quem vê já denunciou a resenha",
+            "default": false
           }
         },
         "type": "object",
@@ -8746,6 +8966,79 @@
         ],
         "title": "RegisterIn"
       },
+      "ReportDecisionIn": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "spoiler",
+              "not_spoiler",
+              "hide",
+              "dismiss"
+            ],
+            "title": "Action",
+            "description": "spoiler: esconde como spoiler; not_spoiler: mostra de novo; hide: oculta a resenha; dismiss: descarta as denúncias sem mudar nada"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "ReportDecisionIn"
+      },
+      "ReportIn": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "spoiler",
+              "ofensa",
+              "spam",
+              "outro"
+            ],
+            "title": "Reason",
+            "description": "spoiler (conta o que acontece sem aviso), ofensa, spam ou outro"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Um detalhe para a moderação, se quiser"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "ReportIn",
+        "description": "Denunciar uma resenha (RFF30)."
+      },
+      "ReportOut": {
+        "properties": {
+          "reported": {
+            "type": "boolean",
+            "title": "Reported",
+            "default": true
+          },
+          "spoiler": {
+            "type": "boolean",
+            "title": "Spoiler",
+            "description": "Se a resenha já aparece escondida como spoiler"
+          }
+        },
+        "type": "object",
+        "required": [
+          "spoiler"
+        ],
+        "title": "ReportOut"
+      },
       "ReviewModerationIn": {
         "properties": {
           "hidden": {
@@ -8829,6 +9122,12 @@
             "title": "Comments",
             "description": "Comentários visíveis na resenha (RFF30)",
             "default": 0
+          },
+          "reported": {
+            "type": "boolean",
+            "title": "Reported",
+            "description": "Se quem vê já denunciou a resenha",
+            "default": false
           },
           "spoiler": {
             "type": "boolean",

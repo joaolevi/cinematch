@@ -4,7 +4,7 @@ import { api } from "../api";
 import { useAuth } from "../auth";
 import { plural, timeAgo } from "../format";
 import { Avatar } from "./WatchedBy";
-import type { Comment } from "../types";
+import type { Comment, ReportReason } from "../types";
 
 /** O que a conversa precisa saber da resenha: na Comunidade e na página do título (RFF30). */
 export interface TalkEntry {
@@ -14,6 +14,66 @@ export interface TalkEntry {
   likes: number;
   liked: boolean;
   comments: number;
+  /** Se quem vê já denunciou a resenha */
+  reported?: boolean;
+}
+
+const REASONS: [ReportReason, string][] = [
+  ["spoiler", "Conta o que acontece sem aviso de spoiler"],
+  ["ofensa", "Ofensiva ou desrespeitosa"],
+  ["spam", "Propaganda ou spam"],
+  ["outro", "Outro motivo"],
+];
+
+/** Denunciar a resenha para a moderação: o motivo e, se quiser, um detalhe. */
+function Report({ entry, onDone, onCancel }: { entry: TalkEntry; onDone: () => void; onCancel: () => void }) {
+  const [reason, setReason] = useState<ReportReason>("spoiler");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <form
+      className="mt-3 rounded-xl border border-line bg-surface/60 p-4 text-sm"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        setError(null);
+        try {
+          await api.report(entry.id, reason, note.trim() || undefined);
+          onDone();
+        } catch (err) {
+          setError((err as Error).message);
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <fieldset>
+        <legend className="font-semibold">O que tem de errado com a resenha de {entry.user_name}?</legend>
+        <div className="mt-2 space-y-1.5">
+          {REASONS.map(([key, label]) => (
+            <label key={key} className="flex cursor-pointer items-center gap-2">
+              <input type="radio" name={`motivo-${entry.id}`} value={key} checked={reason === key} onChange={() => setReason(key)} className="accent-[var(--color-accent)]" />
+              {label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <label htmlFor={`detalhe-${entry.id}`} className="mt-3 block text-muted">
+        Quer contar mais? <span className="text-xs">(opcional, só a moderação vê)</span>
+      </label>
+      <input id={`detalhe-${entry.id}`} value={note} maxLength={300} onChange={(e) => setNote(e.target.value)} className="input mt-1 w-full py-1.5 text-sm" />
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button className="btn-primary px-4 py-1.5 text-sm" disabled={busy}>
+          {busy ? "Enviando..." : "Enviar denúncia"}
+        </button>
+        <button type="button" className="btn-ghost px-4 py-1.5 text-sm" onClick={onCancel}>
+          Cancelar
+        </button>
+      </div>
+      {error && <p className="mt-2 text-red-300">{error}</p>}
+    </form>
+  );
 }
 
 const icon = { viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
@@ -23,6 +83,15 @@ function Heart({ on }: { on: boolean }) {
   return (
     <svg {...icon} className="h-[18px] w-[18px]">
       <path d="M10 16.5S3 12.3 3 7.6A3.6 3.6 0 0 1 10 6a3.6 3.6 0 0 1 7 1.6c0 4.7-7 8.9-7 8.9z" fill={on ? "currentColor" : "none"} />
+    </svg>
+  );
+}
+
+/** A bandeirinha de denunciar: cheia depois de denunciar. */
+function Flag({ on }: { on: boolean }) {
+  return (
+    <svg {...icon} className="h-4 w-4">
+      <path d="M5 17.5V3.5M5 4h9l-2 3.2 2 3.3H5" fill={on ? "currentColor" : "none"} fillOpacity={0.35} />
     </svg>
   );
 }
@@ -151,6 +220,8 @@ export default function ReviewTalk({ entry }: { entry: TalkEntry }) {
   const [comments, setComments] = useState(entry.comments);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [reported, setReported] = useState(!!entry.reported);
 
   async function toggleLike() {
     setBusy(true);
@@ -197,7 +268,34 @@ export default function ReviewTalk({ entry }: { entry: TalkEntry }) {
           <Bubble on={open} />
           {comments > 0 && <span aria-hidden>{comments}</span>}
         </button>
+        {/* Denunciar fica no canto, discreto: a bandeirinha. Depois de denunciar, ela fica cheia */}
+        {!mine &&
+          (reported ? (
+            <span className="ml-auto flex items-center gap-1.5 text-xs" title="Você denunciou esta resenha">
+              <Flag on /> Denunciada
+            </span>
+          ) : (
+            <button
+              onClick={() => setReporting(!reporting)}
+              aria-expanded={reporting}
+              aria-label={`Denunciar a resenha de ${entry.user_name}`}
+              title="Denunciar ou avisar que tem spoiler"
+              className={`${action} ml-auto ${reporting ? "text-accent" : "hover:text-accent"}`}
+            >
+              <Flag on={false} />
+            </button>
+          ))}
       </div>
+      {reporting && (
+        <Report
+          entry={entry}
+          onCancel={() => setReporting(false)}
+          onDone={() => {
+            setReporting(false);
+            setReported(true);
+          }}
+        />
+      )}
       {open && <Comments entry={entry} onCount={setComments} />}
     </div>
   );

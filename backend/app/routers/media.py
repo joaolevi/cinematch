@@ -225,6 +225,9 @@ def media_detail(
     comments = counts_by_entry(db, ReviewComment.entry_id, ids, ReviewComment.hidden.is_(False))
     liked = set(db.scalars(select(ReviewLike.entry_id).where(ReviewLike.entry_id.in_(ids), ReviewLike.user_id == user.id)))
     follows = set(db.scalars(select(Follow.followed_id).where(Follow.follower_id == user.id)))
+    from .community import reported_by
+
+    reported = reported_by(db, ids, user.id)
     reviews = [
         ReviewOut(
             id=e.id,
@@ -239,6 +242,7 @@ def media_detail(
             likes=likes.get(e.id, 0),
             liked=e.id in liked,
             comments=comments.get(e.id, 0),
+            reported=e.id in reported,
         )
         for e in entries
     ]

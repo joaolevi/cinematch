@@ -60,6 +60,19 @@ function ReviewPost({ entry }: { entry: CommunityEntry }) {
   );
 }
 
+/** Miniatura para a linha do feed: a capa do disco quadrada e o pôster em 2:3, sem o vinil, que não cabe tão pequeno. */
+function Thumb({ media }: { media: CommunityEntry["media"] }) {
+  if (!media.poster_url) return <Poster media={media} compact rounded="rounded-sm" />;
+  return (
+    <img
+      src={media.poster_url}
+      alt=""
+      loading="lazy"
+      className={`w-full rounded-sm object-cover shadow-md ${media.type === "album" ? "aspect-square" : "aspect-[2/3]"}`}
+    />
+  );
+}
+
 /** Um registro sem resenha: uma linha só, como no feed de atividade. "Davi viu Matrix ★★★★★ · ontem" */
 function LogLine({ entry }: { entry: CommunityEntry }) {
   const link = `/media/${entry.media.id}`;
@@ -83,16 +96,16 @@ function LogLine({ entry }: { entry: CommunityEntry }) {
         )}
         <span> · {when(entry)}</span>
       </p>
-      <Link to={link} className="w-8 shrink-0" aria-hidden tabIndex={-1}>
-        <Poster media={entry.media} compact rounded="rounded-sm" />
+      <Link to={link} className="w-9 shrink-0" aria-hidden tabIndex={-1}>
+        <Thumb media={entry.media} />
       </Link>
     </article>
   );
 }
 
-/** Título das seções das laterais: discreto, em versalete, como no Letterboxd. */
+/** Título das seções das laterais: escrito à mão, a letra do Tastory, sem folha em volta. */
 function SideTitle({ children }: { children: string }) {
-  return <h2 className="border-b border-line/60 pb-2 text-xs font-semibold tracking-wider text-muted uppercase">{children}</h2>;
+  return <h2 className="border-b border-line/60 pb-1 font-hand text-2xl leading-8 font-bold text-accent">{children}</h2>;
 }
 
 /** Quem eu sigo, com o link para o perfil de cada pessoa (RFF09). */
@@ -161,17 +174,18 @@ function Suggestions({ people, onFollow }: { people: SuggestedPerson[]; onFollow
 function Reviewers({ people }: { people: Reviewer[] }) {
   if (people.length === 0) return null;
   return (
-    <section aria-label="Resenhas mais curtidas">
-      <SideTitle>Resenhas mais curtidas</SideTitle>
-      <ol className="mt-2">
+    // O único post-it da Comunidade: o ranking de quem escreve é o destaque da página, como um bilhete colado ao lado
+    <section aria-label="Resenhas mais curtidas" className="postit rotate-1 px-5 py-4">
+      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Resenhas mais curtidas</h2>
+      <ol className="mt-1">
         {people.map((person, i) => (
           <li key={person.id}>
-            <Link to={`/pessoas/${person.id}`} className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-2 hover:text-accent">
-              <span className="w-4 text-right text-xs font-bold text-muted tabular-nums">{i + 1}</span>
+            <Link to={`/pessoas/${person.id}`} className="flex items-center gap-3 rounded-lg py-1.5 hover:text-[#b9452f]">
+              <span className="w-4 text-right font-hand text-xl font-bold text-[#b9452f]">{i + 1}</span>
               <Avatar name={person.name} userId={person.id} size="h-9 w-9" />
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{person.name}</span>
-                <span className="block text-xs text-muted">
+                <span className="block text-xs text-stone-700">
                   {plural(person.likes, "curtida", "curtidas")}, {plural(person.reviews, "resenha", "resenhas")}
                 </span>
               </span>

@@ -47,7 +47,7 @@ export default function PeopleSearch() {
   const found = usePeople(q);
   return (
     <section aria-labelledby={`${id}-titulo`}>
-      <h2 id={`${id}-titulo`} className="border-b border-line/60 pb-2 text-xs font-semibold tracking-wider text-muted uppercase">
+      <h2 id={`${id}-titulo`} className="border-b border-line/60 pb-1 font-hand text-2xl leading-8 font-bold text-accent">
         Procurar pessoas
       </h2>
       <label htmlFor={`${id}-campo`} className="sr-only">

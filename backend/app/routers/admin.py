@@ -11,8 +11,10 @@ from .. import crud
 from ..auth import require_admin
 from ..config import settings
 from ..db import get_db
-from ..models import DiaryEntry, Media, RecEvent, ReviewComment, User
+from ..models import DiaryEntry, Media, RecEvent, ReviewComment, ReviewReport, User
 from ..schemas import (
+    AdminReportOut,
+    ReportDecisionIn,
     AdminCommentOut,
     AdminReviewOut,
     AlbumImportIn,
@@ -249,6 +251,51 @@ def moderate_review(entry_id: int, data: ReviewModerationIn, db: Session = Depen
         review_hidden=e.review_hidden,
         created_at=e.created_at,
     )
+
+
+@router.get("/reports", response_model=list[AdminReportOut])
+def list_reports(db: Session = Depends(get_db)):
+    """As resenhas com denúncias abertas, da mais denunciada para a menos, com os motivos e os detalhes."""
+    rows = db.scalars(
+        select(ReviewReport)
+        .where(ReviewReport.resolved.is_(False))
+        .options(selectinload(ReviewReport.entry).selectinload(DiaryEntry.user),
+                 selectinload(ReviewReport.entry).selectinload(DiaryEntry.media))
+    )
+    by_entry: dict[int, list[ReviewReport]] = {}
+    for r in rows:
+        by_entry.setdefault(r.entry_id, []).append(r)
+    out = []
+    for reports in by_entry.values():
+        e = reports[0].entry
+        reasons: dict[str, int] = {}
+        for r in reports:
+            reasons[r.reason] = reasons.get(r.reason, 0) + 1
+        out.append(AdminReportOut(
+            entry_id=e.id, media_id=e.media_id, media_title=e.media.title, user_name=e.user.name,
+            review=e.review or "", spoiler=bool(e.spoiler), review_hidden=e.review_hidden, reports=len(reports),
+            reasons=reasons, notes=[r.note for r in reports if r.note], last_at=max(r.created_at for r in reports),
+        ))
+    return sorted(out, key=lambda r: (-r.reports, r.last_at), reverse=False)
+
+
+@router.patch("/reports/{entry_id}", status_code=204)
+def decide_report(entry_id: int, data: ReportDecisionIn, db: Session = Depends(get_db)):
+    """Decidir as denúncias de uma resenha: esconder como spoiler, mostrar de novo (não é spoiler), ocultar a
+    resenha ou descartar as denúncias. Em todos os casos, as denúncias abertas são encerradas."""
+    e = db.get(DiaryEntry, entry_id)
+    if e is None or not e.review:
+        raise HTTPException(status_code=404, detail="Resenha não encontrada")
+    if data.action == "spoiler":
+        e.spoiler = True
+    elif data.action == "not_spoiler":
+        e.spoiler = False
+    elif data.action == "hide":
+        e.review_hidden = True
+    for r in db.scalars(select(ReviewReport).where(ReviewReport.entry_id == entry_id, ReviewReport.resolved.is_(False))):
+        r.resolved = True
+    db.commit()
+    return Response(status_code=204)
 
 
 def admin_comment(c: ReviewComment) -> AdminCommentOut:
