@@ -359,12 +359,11 @@ export default function HomePage() {
             <p className="text-muted">Ainda não tem registros por aqui.</p>
           ) : (
             <ul className="divide-y divide-line/60">
-              {community.map((entry, position) => (
+              {community.map((entry) => (
+                // O mesmo formato da Comunidade: pôster, título, quem viu com a nota e o começo da resenha
                 <li key={entry.id} className="flex gap-4 py-3">
-                  <Link to={`/media/${entry.media.id}`} className="group w-12 shrink-0" aria-label={entry.media.title}>
-                    <Polaroid position={position} small album={entry.media.type === "album"}>
-                      <Poster media={entry.media} compact rounded="rounded-[1px]" />
-                    </Polaroid>
+                  <Link to={`/media/${entry.media.id}`} className="w-12 shrink-0 self-start" aria-label={entry.media.title}>
+                    <Poster media={entry.media} compact rounded="rounded-md" />
                   </Link>
                   <div className="min-w-0 flex-1">
                     <Link to={`/media/${entry.media.id}`} className="font-display font-bold hover:text-accent">

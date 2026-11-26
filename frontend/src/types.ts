@@ -78,6 +78,16 @@ export interface Review {
   created_at: string;
 }
 
+/** Alguém encontrado pelo nome na busca de pessoas */
+export interface FoundPerson {
+  id: number;
+  name: string;
+  followers: number;
+  /** Vazio quando o diário é só para quem segue */
+  titles: number | null;
+  following: boolean;
+}
+
 /** O que a pessoa marcou num episódio ou numa faixa: visto (ou ouvido), nota e anotação */
 export interface PartMark {
   seen: boolean;

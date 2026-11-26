@@ -10,6 +10,7 @@ import { moodLabel, useMoods } from "../moods";
 import { MEDIA_GRID, TAB_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
+import { PersonResult, usePeople } from "../components/PeopleSearch";
 import BringFromOutside from "../components/BringFromOutside";
 
 const PAGE = 24;
@@ -26,6 +27,7 @@ export default function SearchPage() {
   const { user } = useAuth();
   const seen = useSeen(user?.id);
   const [q, setQ] = useState("");
+  const people = usePeople(q);
   const [type, setType] = useState<MediaType | "">("");
   const [params, setParams] = useSearchParams();
   const genre = params.get("genero") ?? "";
@@ -100,7 +102,7 @@ export default function SearchPage() {
         <input
           className="input search-input sm:flex-1"
           aria-label="Buscar por título, direção ou elenco"
-          placeholder="Título, direção ou elenco (ex.: Nolan, Cidade de Deus, Fernanda Montenegro)"
+          placeholder="Título, direção, elenco ou pessoa (ex.: Nolan, Cidade de Deus, Fernanda Montenegro)"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoFocus
@@ -160,6 +162,19 @@ export default function SearchPage() {
               </button>
             ))}
         </div>
+      )}
+      {/* Quem tem esse nome no Tastory aparece antes dos títulos, como no Letterboxd */}
+      {!!people?.length && (
+        <section className="mt-6" aria-label="Pessoas com esse nome">
+          <h2 className="text-xs font-semibold tracking-wider text-muted uppercase">Pessoas</h2>
+          <ul className="mt-2 grid gap-1 sm:grid-cols-2 lg:grid-cols-4">
+            {people.slice(0, 4).map((p) => (
+              <li key={p.id}>
+                <PersonResult person={p} />
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       {total == null ? (
         !error && <HandNote className="mt-6">Procurando no catálogo...</HandNote>

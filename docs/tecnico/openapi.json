@@ -3241,6 +3241,74 @@
         }
       }
     },
+    "/users/search": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Search People",
+        "description": "Procura pessoas pelo nome. Quem tem o nome começando pelo que foi digitado vem antes. Perfis privados, a conta de\ndemonstração e as contas simuladas ficam de fora, e quem só mostra o diário para quem segue aparece sem o número\nde títulos.",
+        "operationId": "search_people_users_search_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 60,
+              "description": "Parte do nome, sem diferenciar acentos e maiúsculas",
+              "title": "Q"
+            },
+            "description": "Parte do nome, sem diferenciar acentos e maiúsculas"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 30,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FoundPersonOut"
+                  },
+                  "title": "Response Search People Users Search Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/following": {
       "get": {
         "tags": [
@@ -6907,6 +6975,49 @@
           "action"
         ],
         "title": "FeedbackIn"
+      },
+      "FoundPersonOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "followers": {
+            "type": "integer",
+            "title": "Followers",
+            "description": "Quantas pessoas seguem"
+          },
+          "titles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Titles",
+            "description": "Títulos no diário; vazio quando o diário é só para quem segue"
+          },
+          "following": {
+            "type": "boolean",
+            "title": "Following",
+            "description": "Se quem buscou já segue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "followers",
+          "following"
+        ],
+        "title": "FoundPersonOut",
+        "description": "Uma pessoa encontrada pelo nome na busca de pessoas."
       },
       "FriendRatingOut": {
         "properties": {

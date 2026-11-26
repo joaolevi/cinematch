@@ -2,6 +2,7 @@
 (RFF09), quem vê os registros de cada uma (RFF10) e o "Para ver ou ouvir junto" (RFF28)."""
 
 import secrets
+import unicodedata
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import delete, func, or_, select
@@ -11,6 +12,7 @@ from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Follow, Media, User, UserAvatar
 from ..schemas import (
+    FoundPersonOut,
     CompatibilityOut, DiaryOut, MediaOut, PersonOut, ProfileItemOut, ProfileOut, RecommendationOut, SuggestedPersonOut,
 )
 from ..services.compatibility import compatibility, suggest_people
@@ -68,6 +70,58 @@ def avatar_image(user_id: int, token: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Foto não encontrada")
     return Response(content=avatar.image, media_type=avatar.content_type,
                     headers={"Cache-Control": "public, max-age=31536000, immutable"})
+
+
+def _plain(text: str) -> str:
+    """Sem acentos e em minúsculas: "Júlia" acha "julia"."""
+    return unicodedata.normalize("NFD", text).encode("ascii", "ignore").decode().lower()
+
+
+@router.get("/search", response_model=list[FoundPersonOut])
+def search_people(
+    q: str = Query(min_length=2, max_length=60, description="Parte do nome, sem diferenciar acentos e maiúsculas"),
+    limit: int = Query(default=10, ge=1, le=30),
+    db: Session = Depends(get_db),
+    me: User = Depends(get_current_user),
+):
+    """Procura pessoas pelo nome. Quem tem o nome começando pelo que foi digitado vem antes. Perfis privados, a conta de
+    demonstração e as contas simuladas ficam de fora, e quem só mostra o diário para quem segue aparece sem o número
+    de títulos."""
+    from ..seed import DEMO_EMAIL
+
+    needle = _plain(q.strip())
+    people = db.scalars(
+        select(User).where(
+            User.id != me.id, User.role == "user", User.is_synthetic.is_(False), User.email != DEMO_EMAIL,
+            User.visibility != "private",
+        )
+    )
+    found = [p for p in people if needle in _plain(p.name)]
+    # Primeiro quem tem o nome começando pelo que foi digitado; depois, um sobrenome; por último, no meio do nome
+    found.sort(key=lambda p: (
+        not _plain(p.name).startswith(needle),
+        not any(w.startswith(needle) for w in _plain(p.name).split()),
+        _plain(p.name),
+    ))
+    found = found[:limit]
+    if not found:
+        return []
+    ids = [p.id for p in found]
+    followers = dict(db.execute(
+        select(Follow.followed_id, func.count()).where(Follow.followed_id.in_(ids)).group_by(Follow.followed_id)
+    ).all())
+    titles = dict(db.execute(
+        select(DiaryEntry.user_id, func.count()).where(DiaryEntry.user_id.in_(ids), DiaryEntry.from_onboarding.is_(False))
+        .group_by(DiaryEntry.user_id)
+    ).all())
+    mine = set(db.scalars(select(Follow.followed_id).where(Follow.follower_id == me.id, Follow.followed_id.in_(ids))))
+    return [
+        FoundPersonOut(
+            id=p.id, name=p.name, followers=followers.get(p.id, 0), following=p.id in mine,
+            titles=titles.get(p.id, 0) if can_see_entries(db, me, p) else None,
+        )
+        for p in found
+    ]
 
 
 @router.get("/following", response_model=list[PersonOut])

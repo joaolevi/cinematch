@@ -483,6 +483,16 @@ class ActivityOut(BaseModel):
     person: PersonOut | None = Field(default=None, description="Quem passou a seguir, ou quem escreveu a resenha")
 
 
+class FoundPersonOut(BaseModel):
+    """Uma pessoa encontrada pelo nome na busca de pessoas."""
+
+    id: int
+    name: str
+    followers: int = Field(description="Quantas pessoas seguem")
+    titles: int | None = Field(default=None, description="Títulos no diário; vazio quando o diário é só para quem segue")
+    following: bool = Field(description="Se quem buscou já segue")
+
+
 class SuggestedPersonOut(BaseModel):
     """Alguém para seguir, pelo gosto parecido (RFF15)."""
 

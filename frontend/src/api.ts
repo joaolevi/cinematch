@@ -37,6 +37,7 @@ import type {
   Wish,
   Episode,
   EpisodeDetail,
+  FoundPerson,
   PartMark,
   Track,
   TrackDetail,
@@ -156,6 +157,7 @@ export const api = {
     request<TrackDetail>(`/media/${mediaId}/tracks/${disc}/${number}`),
   rateTrack: (mediaId: number, disc: number, number: number, data: Partial<PartMark>) =>
     request<PartMark>(`/media/${mediaId}/tracks/${disc}/${number}`, { method: "PUT", body: data }),
+  searchPeople: (q: string, limit = 8) => request<FoundPerson[]>("/users/search", { query: { q, limit } }),
   avatars: () => request<Record<string, string>>("/users/avatars"),
   setAvatar: (image: string) => request<void>("/me/avatar", { method: "PUT", body: { image } }),
   removeAvatar: () => request<void>("/me/avatar", { method: "DELETE" }),

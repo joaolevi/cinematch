@@ -60,17 +60,23 @@ function TrackRow({ album, track, onSaved }: { album: Media; track: Track; onSav
   );
 }
 
+const FIRST = 8;
+
 /** As faixas do álbum, do MusicBrainz: cada uma com ouvi e estrelas, e o título abre a página dela. */
 export default function Tracks({ album }: { album: Media }) {
   const [tracks, setTracks] = useState<Track[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [all, setAll] = useState(false);
 
   useEffect(() => {
     setTracks(null);
+    setAll(false);
     api.tracks(album.id).then(setTracks).catch((e) => setError((e as Error).message));
   }, [album.id]);
 
-  const discs = [...new Set((tracks ?? []).map((t) => t.disc))];
+  // Disco longo empurra o resto da página para baixo: aparecem as primeiras, e o botão mostra todas
+  const shown = all ? tracks ?? [] : (tracks ?? []).slice(0, FIRST);
+  const discs = [...new Set(shown.map((t) => t.disc))];
   const heard = tracks?.filter((t) => t.seen).length ?? 0;
   return (
     <section className="mt-12" aria-labelledby="faixas-titulo">
@@ -92,7 +98,7 @@ export default function Tracks({ album }: { album: Media }) {
           <div key={disc} className="card mt-4 px-4">
             {discs.length > 1 && <h3 className="border-b border-line/60 py-2.5 text-sm font-bold text-accent">Disco {disc}</h3>}
             <ol className="divide-y divide-line/60">
-              {tracks
+              {shown
                 .filter((t) => t.disc === disc)
                 .map((t) => (
                   <TrackRow
@@ -105,6 +111,11 @@ export default function Tracks({ album }: { album: Media }) {
             </ol>
           </div>
         ))}
+      {tracks && tracks.length > FIRST && (
+        <button className="btn-ghost mt-3 px-4 py-1.5 text-sm" aria-expanded={all} onClick={() => setAll(!all)}>
+          {all ? "Mostrar menos faixas" : `Ver todas as ${tracks.length} faixas`}
+        </button>
+      )}
     </section>
   );
 }
