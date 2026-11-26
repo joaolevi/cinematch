@@ -81,25 +81,6 @@ function SectionHeader({
   );
 }
 
-function Shelf(props: {
-  title: ReactNode;
-  label?: string;
-  note?: string;
-  to?: string;
-  linkLabel?: string;
-  actions?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <section>
-      <SectionHeader {...props} />
-      <Carousel label={props.label ?? (typeof props.title === "string" ? props.title : "fileira")}>
-        {props.children}
-      </Carousel>
-    </section>
-  );
-}
-
 const shelfItem = "w-36 shrink-0 snap-start pt-2 sm:w-40";
 
 type ShelfView = "top" | "trending" | "upcoming";
@@ -285,11 +266,13 @@ export default function HomePage() {
       {/* O que só o Tastory faz, a um clique: pedir em português, "Hoje à noite" e o gosto em uma frase */}
       <Shortcuts diary={diary} />
 
-      <Memories />
-
-      <ReceivedSuggestions />
-
       <ContinueWatching />
+
+      {/* O que veio de quem você segue: os convites e os bilhetinhos lado a lado. Se só um tiver algo, ocupa a linha */}
+      <div className="grid gap-12 lg:grid-cols-2 [&>*:only-child]:lg:col-span-2 [&>*]:min-w-0">
+        <Memories />
+        <ReceivedSuggestions />
+      </div>
 
       <DoubleFeatureOfTheDay />
 
@@ -298,25 +281,6 @@ export default function HomePage() {
 
       {diary && <RateReminder diary={diary} watchlist={watchlist} onSeen={setSeenTarget} />}
 
-      {watchlist.length > 0 && (
-        <Shelf
-          title={
-            <>
-              Da minha lista <ListName />
-            </>
-          }
-          label="Da minha lista Quero ver"
-          note="pra não esquecer"
-          to="/listas"
-          linkLabel="Ver lista"
-        >
-          {watchlist.slice(0, SHELF).map(({ media }) => (
-            <div key={media.id} className={shelfItem}>
-              <MediaCard media={media} sticker={visto(media.id)} compact />
-            </div>
-          ))}
-        </Shelf>
-      )}
 
       {(trending.length > 0 || hasTop) && (
         // Uma fileira com três visões: o Top 10 do Tastory (dos registros da comunidade), o que está em alta e o que vem aí
