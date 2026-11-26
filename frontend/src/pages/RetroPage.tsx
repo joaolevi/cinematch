@@ -11,6 +11,7 @@ import { drawRetroCard } from "../retroCard";
 import type { DiaryEntry } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
+import { CountUp } from "../motion";
 
 const INK = "text-[#2b211c]";
 const RED_INK = "text-[#b9452f]";
@@ -162,7 +163,7 @@ export default function RetroPage({ embedded = false }: { embedded?: boolean }) 
                   <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                     <div>
                       <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Em {periodName(period)}, eu fui:</p>
-                      <p className="rise mt-1 inline-block -rotate-3 rounded-lg border-4 border-[#b9452f] px-4 py-1 font-display text-3xl font-bold text-[#b9452f] sm:text-4xl">
+                      <p className="stamp-hit mt-1 inline-block -rotate-3 rounded-lg border-4 border-[#b9452f] px-4 py-1 font-display text-3xl font-bold text-[#b9452f] sm:text-4xl">
                         {retro.archetype.name}
                       </p>
                       <p className="mt-2 font-hand text-xl leading-7 font-semibold opacity-80">{retro.archetype.text}</p>
@@ -188,11 +189,13 @@ export default function RetroPage({ embedded = false }: { embedded?: boolean }) 
                         {stickers.map(([n, label, color], i) => (
                           <li
                             key={label}
-                            className="rise grid h-20 w-20 place-items-center rounded-full text-center leading-none font-bold text-stone-900 shadow-[0_3px_8px_rgb(0_0_0/0.25)]"
+                            className="sticker-drop grid h-20 w-20 place-items-center rounded-full text-center leading-none font-bold text-stone-900 shadow-[0_3px_8px_rgb(0_0_0/0.25)]"
                             style={{ background: color, rotate: `${[-8, 5, -3][i % 3]}deg`, "--i": i } as CSSProperties}
                           >
                             <span>
-                              <span className="block font-display text-2xl">{n}</span>
+                              <span className="block font-display text-2xl">
+                                <CountUp value={n} />
+                              </span>
                               <span className="font-hand text-sm">{label}</span>
                             </span>
                           </li>
@@ -243,13 +246,17 @@ export default function RetroPage({ embedded = false }: { embedded?: boolean }) 
                       <div className="mt-4 flex flex-wrap gap-3 xl:absolute xl:right-0 xl:bottom-0 xl:mt-0">
                         {retro.average != null && (
                           <p className="postit flex h-24 w-24 flex-col justify-center text-center" style={{ "--note": "#f6d27a", rotate: "4deg" } as CSSProperties}>
-                            <span className="font-hand text-3xl leading-none font-bold">{formatRating(retro.average)}</span>
+                            <span className="font-hand text-3xl leading-none font-bold">
+                              <CountUp value={formatRating(retro.average)} />
+                            </span>
                             <span className="font-hand text-sm leading-4 font-semibold">nota média</span>
                           </p>
                         )}
                         {retro.age != null && (
                           <p className="postit flex h-24 w-24 flex-col justify-center text-center" style={{ "--note": "#b7d1b9", rotate: "-5deg" } as CSSProperties}>
-                            <span className="font-hand text-3xl leading-none font-bold">{retro.age}</span>
+                            <span className="font-hand text-3xl leading-none font-bold">
+                              <CountUp value={retro.age} />
+                            </span>
                             <span className="font-hand text-sm leading-4 font-semibold">anos: a idade do meu gosto</span>
                           </p>
                         )}

@@ -16,6 +16,7 @@ import { genreTeam, matches, monthOf, notesOf, tasteCharts, tasteOf, type DiaryF
 import type { CommunityEntry, DiaryEntry, Media, Person, Profile, Recommendation } from "../types";
 import { MEDIA_GRID } from "../ui";
 import { usePageTitle } from "../usePageTitle";
+import { CountUp } from "../motion";
 
 
 function Row({ label, items }: { label: string; items: { media: Media; rating?: number | null }[] }) {
@@ -82,6 +83,22 @@ function RatingsSummary({ bars, entries }: { bars: { value: number }[]; entries:
 }
 
 /** Os últimos registros do diário, numa lista curta com o dia, como a lateral "Diário" do Letterboxd. */
+/** Gosto em dupla no perfil: o meu avatar e o da outra pessoa deslizam um até o outro e se sobrepõem. */
+function MatchAvatars({ other }: { other: { name: string; id: number } }) {
+  const { user } = useAuth();
+  if (!user) return null;
+  return (
+    <div aria-hidden className="mb-3 flex">
+      <span className="meet-left rounded-full ring-2 ring-[#f1e6d6]">
+        <Avatar name={user.name} userId={user.id} size="h-11 w-11 text-sm" />
+      </span>
+      <span className="meet-right -ml-3 rounded-full ring-2 ring-[#f1e6d6]">
+        <Avatar name={other.name} userId={other.id} size="h-11 w-11 text-sm" />
+      </span>
+    </div>
+  );
+}
+
 function RecentDiary({ entries, to }: { entries: DiaryEntry[]; to: string }) {
   const last = entries.slice(0, 6);
   if (last.length === 0) return null;
@@ -339,13 +356,17 @@ export default function ProfilePage() {
             {!profile.restricted && (
               <div className="flex flex-col px-4 first:pl-0 sm:px-5">
                 <dt className="text-[11px] font-semibold tracking-wider text-muted uppercase">Títulos</dt>
-                <dd className="order-first font-display text-2xl font-bold" title={parts.join(", ")}>{total}</dd>
+                <dd className="order-first font-display text-2xl font-bold" title={parts.join(", ")}>
+                  <CountUp value={total} />
+                </dd>
               </div>
             )}
             {!profile.restricted && counted.length > 0 && (
               <div className="flex flex-col px-4 sm:px-5">
                 <dt className="text-[11px] font-semibold tracking-wider text-muted uppercase">Este mês</dt>
-                <dd className="order-first font-display text-2xl font-bold">{notes[1].value}</dd>
+                <dd className="order-first font-display text-2xl font-bold">
+                  <CountUp value={notes[1].value} />
+                </dd>
               </div>
             )}
             <div className="flex flex-col px-4 sm:px-5">
@@ -568,7 +589,10 @@ export default function ProfilePage() {
               <section className="paper relative -rotate-[0.6deg] rounded-sm py-5 pr-5 pl-12">
                 {c.percent != null ? (
                   <>
-                    <p className="font-hand text-2xl leading-none font-bold text-[#b9452f]">Vocês combinam {c.percent}%</p>
+                    <MatchAvatars other={{ name: profile.name, id: profile.id }} />
+                    <p className="font-hand text-2xl leading-none font-bold text-[#b9452f]">
+                      Vocês combinam <CountUp value={c.percent} duration={1200} />%
+                    </p>
                     <p className="mt-2 font-semibold text-stone-800">{c.label}</p>
                     {c.genres.length > 0 && (
                       <p className="mt-2 text-sm text-stone-600">Vocês são do time {listaDeGeneros(c.genres)}.</p>

@@ -4,6 +4,7 @@ import { api } from "../api";
 import { localDate } from "../format";
 import type { Media, Person } from "../types";
 import { Avatar } from "./WatchedBy";
+import { PaperPlane } from "../motion";
 
 export type ShareMode = "bilhete" | "lembranca";
 type Mode = ShareMode;
@@ -87,6 +88,7 @@ export default function ShareButton({
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [plane, setPlane] = useState<{ x: number; y: number } | null>(null);
   const album = media?.type === "album";
 
   useEffect(() => {
@@ -104,8 +106,9 @@ export default function ShareButton({
     setTo(to.includes(id) ? to.filter((x) => x !== id) : to.length < 10 ? [...to, id] : to);
   }
 
-  async function send() {
+  async function send(e: React.MouseEvent<HTMLButtonElement>) {
     if (!media) return;
+    const box = e.currentTarget.getBoundingClientRect();
     setBusy(true);
     setError(null);
     try {
@@ -117,6 +120,8 @@ export default function ShareButton({
         await api.invite(media.id, to[0], day || undefined, note.trim() || undefined);
         setDone(`Convite mandado para ${names[0]}. Agora é esperar o “bora”!`);
       }
+      setPlane({ x: box.left + box.width / 2 - 18, y: box.top - 10 }); // o aviãozinho sai do botão
+      setTimeout(() => setPlane(null), 1600);
       setTo([]);
       setNote("");
       setDay("");
@@ -138,6 +143,7 @@ export default function ShareButton({
   ];
   return (
     <>
+      <PaperPlane from={plane} />
       {trigger ? (
         trigger(() => {
           setMode(initialMode);

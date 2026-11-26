@@ -26,6 +26,7 @@ import {
 import type { DiaryEntry } from "../types";
 import { DIARY_GRID, TAPE_COLORS, tabColor } from "../ui";
 import { usePageTitle } from "../usePageTitle";
+import { CountUp } from "../motion";
 
 type DiaryTab = "linha" | "gosto" | "retrospectiva";
 
@@ -78,7 +79,9 @@ function Summary({ entries }: { entries: DiaryEntry[] }) {
     <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
       {notes.slice(0, 3).map((note) => (
         <span key={note.label}>
-          <strong className="font-display text-lg text-cream">{note.value}</strong> {note.label}
+          <strong className="font-display text-lg text-cream">
+            <CountUp value={note.value} />
+          </strong> {note.label}
         </span>
       ))}
       <Link to={`/pessoas/${user?.id}`} className="font-semibold text-accent hover:underline">

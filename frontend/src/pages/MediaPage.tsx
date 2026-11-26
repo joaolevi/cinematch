@@ -472,7 +472,10 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
             {/* O que a pessoa viu vira polaroide; o que ela quer ver fica preso com fita */}
             {status.diary_entry_id ? (
               <Polaroid position={1} tape caption={statusCaption(status, album)} album={album}>
-                <Poster media={media} rounded="rounded-[2px]" />
+                {/* Acabou de marcar: a foto se revela, do claro e sem cor até o pôster, como uma instantânea */}
+                <div key={stamp} className={stamp ? "develop" : ""}>
+                  <Poster media={media} rounded="rounded-[2px]" />
+                </div>
               </Polaroid>
             ) : status.in_watchlist ? (
               <div className="relative">

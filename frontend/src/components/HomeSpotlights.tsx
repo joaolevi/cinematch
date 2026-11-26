@@ -4,6 +4,7 @@ import { api } from "../api";
 import { useAuth } from "../auth";
 import { MEDIA_STYLE } from "../format";
 import { diaryChanged } from "../seen";
+import { useInView } from "../motion";
 import { sessionNow } from "../session";
 import { tasteOf } from "../taste";
 import type { DiaryEntry, Pair } from "../types";
@@ -147,6 +148,7 @@ const KIND_LABEL: Record<string, string> = {
  */
 export function DoubleFeatureOfTheDay() {
   const [pair, setPair] = useState<Pair | null>(null);
+  const [pairRef, pairSeen] = useInView<HTMLDivElement>(); // o disco sai de trás do pôster quando a seção aparece
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -170,14 +172,14 @@ export function DoubleFeatureOfTheDay() {
       <div className="absolute inset-0 bg-gradient-to-r from-bg/90 via-bg/70 to-bg/40" />
       <div className="relative grid items-center gap-6 p-5 sm:p-7 md:grid-cols-[auto_minmax(0,1fr)]">
         {/* O par: o pôster e, ao lado, o disco, que desliza e gira ao passar o mouse */}
-        <div className="spin-on-hover group flex items-end">
+        <div ref={pairRef} className={`spin-on-hover group flex items-end ${pairSeen ? "sleeve-out" : ""}`}>
           <Link to={`/media/${video.id}`} aria-label={video.title} className="relative z-10 w-32 shrink-0 -rotate-3 transition group-hover:-rotate-6 sm:w-40">
             <Poster media={video} rounded="rounded-lg" />
           </Link>
           <Link
             to={`/media/${album.id}`}
             aria-label={album.title}
-            className="-ml-6 w-32 shrink-0 rotate-2 transition duration-500 group-hover:ml-2 group-hover:rotate-0 sm:-ml-8 sm:w-40"
+            className="sleeve -ml-6 w-32 shrink-0 rotate-2 transition duration-500 group-hover:ml-2 group-hover:rotate-0 sm:-ml-8 sm:w-40"
           >
             <Poster media={album} rounded="rounded-md" />
           </Link>

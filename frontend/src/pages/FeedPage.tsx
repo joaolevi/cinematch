@@ -25,6 +25,7 @@ import HandNote from "../components/HandNote";
 import WishBox from "../components/WishBox";
 import { Avatar } from "../components/WatchedBy";
 import ListName from "../components/ListName";
+import { jump, Popcorn } from "../motion";
 
 const PAGE = 30; // em fileiras, 30 sugestões formam fileiras de gênero com pelo menos 3 títulos
 const MIN_ROW = 3; // fileira com menos que isso não vale a pena: os títulos vão para "Mais sugestões"
@@ -222,6 +223,7 @@ export default function FeedPage() {
   const hasServices = (user?.services.length ?? 0) > 0;
   // O painel de pedir e filtrar pode ser escondido, e a escolha fica neste navegador. Sem escolha, ele começa aberto
   // no computador e recolhido no celular, para a primeira sugestão aparecer sem rolar
+  const [popcorn, setPopcorn] = useState(0); // cada vez que a Sessão pipoca liga, uma leva de pipocas
   const [showFilters, setShowFiltersState] = useState(() => {
     try {
       const saved = localStorage.getItem("tastory.paravoce.filtros");
@@ -525,20 +527,24 @@ export default function FeedPage() {
           {type !== "album" && (
             <button
               aria-pressed={tonight}
-              onClick={() => {
+              onClick={(e) => {
                 if (tonight) {
                   setMaxMinutes(0);
                   setOnlyMine(false);
                 } else {
                   setMaxMinutes(SESSION.minutes);
                   setOnlyMine(hasServices);
+                  // Ligou: umas pipocas pulam e o cartão dá um pulinho
+                  setPopcorn(popcorn + 1);
+                  jump(e.currentTarget);
                 }
               }}
               style={{ "--i": 1 } as React.CSSProperties}
-              className={`rise group relative cursor-pointer overflow-hidden rounded-2xl border bg-gradient-to-br p-4 text-left transition ${SESSION.sky} ${
+              className={`rise group relative cursor-pointer rounded-2xl border bg-gradient-to-br p-4 text-left transition ${SESSION.sky} ${
                 tonight ? "border-accent" : "border-line hover:border-accent/60"
               }`}
             >
+              <Popcorn key={popcorn} burst={popcorn} />
               {/* O céu de agora: o ícone da hora do dia e, à noite, umas estrelas */}
               <span aria-hidden className="float absolute top-3 right-4 text-3xl" style={{ "--tilt": "-12deg" } as React.CSSProperties}>
                 {SESSION.icon}
