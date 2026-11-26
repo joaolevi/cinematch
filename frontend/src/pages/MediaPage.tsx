@@ -15,8 +15,8 @@ import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
 import { diaryChanged, useDiaryVersion } from "../seen";
 import { StarsDisplay } from "../components/Stars";
-import WatchedBy from "../components/WatchedBy";
-import { colorFor, formatDate, MEDIA_STYLE, SEARCH_URL, SERVICE_LABEL, verbs } from "../format";
+import { Avatar } from "../components/WatchedBy";
+import { colorFor, formatDate, MEDIA_STYLE, SEARCH_URL, SERVICE_LABEL, timeAgo, verbs } from "../format";
 import type { Connection, Media, MediaDetail, Provider, Season, UserList } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
@@ -563,16 +563,33 @@ function MediaView({ mediaId }: { mediaId: number }) {
             <HandNote className="py-4">Ninguém que você segue escreveu sobre este título ainda.</HandNote>
           )}
           {shownReviews.map((r) => (
-            <article key={r.id} className="py-4">
-              <WatchedBy
-                name={r.user_name}
-                userId={r.user_id ?? undefined}
-                rating={r.rating}
-                consumedAt={r.consumed_at}
-                createdAt={r.created_at}
-              />
-              <SpoilerText text={r.review} spoiler={r.spoiler} className="mt-2 text-stone-200" />
-              <ReviewTalk entry={r} />
+            // Como as resenhas do Letterboxd: a foto à esquerda, "Resenha de" com o nome e a nota, o texto e a conversa
+            <article key={r.id} className="flex gap-4 py-5">
+              {r.user_id ? (
+                <Link to={`/pessoas/${r.user_id}`} aria-label={`Perfil de ${r.user_name}`} className="shrink-0">
+                  <Avatar name={r.user_name} userId={r.user_id} size="h-10 w-10" />
+                </Link>
+              ) : (
+                <Avatar name={r.user_name} size="h-10 w-10" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+                  <span>
+                    Resenha de{" "}
+                    {r.user_id ? (
+                      <Link to={`/pessoas/${r.user_id}`} className="font-bold text-cream hover:text-accent">
+                        {r.user_name}
+                      </Link>
+                    ) : (
+                      <strong className="text-cream">{r.user_name}</strong>
+                    )}
+                  </span>
+                  {r.rating != null && <StarsDisplay value={r.rating} size={14} />}
+                  <span>{r.consumed_at ? formatDate(r.consumed_at) : timeAgo(r.created_at)}</span>
+                </p>
+                <SpoilerText text={r.review} spoiler={r.spoiler} className="mt-2 leading-relaxed text-stone-200" />
+                <ReviewTalk entry={r} />
+              </div>
             </article>
           ))}
         </div>

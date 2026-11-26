@@ -338,8 +338,9 @@ export default function HomePage() {
               </p>
             )}
             {!!diary?.length && (
-              <ul className="mt-4 grid grid-cols-4 gap-3 sm:gap-5">
-                {diary.slice(0, 4).map((e, position) => (
+              // Duas fileiras de quatro: a folha acompanha a altura da Comunidade ao lado, sem sobrar papel em branco
+              <ul className="mt-4 grid grid-cols-4 gap-x-3 gap-y-5 sm:gap-x-5">
+                {diary.slice(0, 8).map((e, position) => (
                   <li key={e.id} className="group">
                     <Link to={`/media/${e.media.id}`} title={e.media.title}>
                       <Polaroid position={position} caption={e.consumed_at ? shortDate(e.consumed_at) : "♥"} album={e.media.type === "album"}>

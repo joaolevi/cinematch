@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth";
-import { MEDIA_STYLE } from "../format";
+import { formatMinutes, MEDIA_STYLE } from "../format";
 import { useSeen } from "../seen";
 import { StarsDisplay } from "./Stars";
 import type { Media } from "../types";
@@ -34,18 +34,35 @@ export default function MediaCard({
   const poster = (
     <Link to={`/media/${media.id}`} className="relative block" aria-label={media.title}>
       <Poster media={media} rounded={polaroid ? "rounded-[2px]" : "rounded-lg"} />
-      {/* Como no Letterboxd: o pôster fica limpo, e o tipo, o ano e a sua nota aparecem ao passar o mouse ou focar */}
+      {/* Como no Letterboxd, o pôster fica limpo. Ao passar o mouse ou focar, aparece o que não está embaixo dele: quem
+          fez, os gêneros, a duração e o que você marcou. O tipo e o ano só entram nas fileiras, onde embaixo fica só o título */}
       {!polaroid && (
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-0.5 rounded-b-lg bg-gradient-to-t from-black/90 via-black/60 to-transparent px-2.5 pt-10 pb-2 text-xs opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100"
+          // No disco, o texto fica sobre a capa (o quadrado de cima), e não sobre o vinil
+          className={`pointer-events-none absolute inset-x-0 flex flex-col justify-end gap-0.5 rounded-b-lg bg-gradient-to-t from-black/95 via-black/70 to-transparent px-2.5 pt-12 pb-2 text-xs opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100 ${
+            media.type === "album" ? "top-0 aspect-square" : "bottom-0"
+          }`}
         >
-          <span>
-            <span className="font-bold" style={{ color: MEDIA_STYLE[media.type].color }}>
-              {MEDIA_STYLE[media.type].label}
+          {compact && (
+            <span>
+              <span className="font-bold" style={{ color: MEDIA_STYLE[media.type].color }}>
+                {MEDIA_STYLE[media.type].label}
+              </span>
+              {media.year && <span className="text-stone-300"> · {media.year}</span>}
             </span>
-            {media.year && <span className="text-stone-300"> · {media.year}</span>}
-          </span>
+          )}
+          {media.creators.length > 0 && (
+            <span className="line-clamp-1 font-semibold text-cream">
+              {media.type === "movie" ? "De " : media.type === "series" ? "Criação: " : ""}
+              {media.creators.slice(0, 2).join(", ")}
+            </span>
+          )}
+          {(media.genres.length > 0 || media.duration_min) && (
+            <span className="line-clamp-1 text-stone-300">
+              {[...media.genres.slice(0, 2), media.duration_min ? formatMinutes(media.duration_min) : null].filter(Boolean).join(" · ")}
+            </span>
+          )}
           {mine &&
             (mine.status === "watching" ? (
               <span className="font-semibold text-accent">Assistindo{mine.season ? ` · T${mine.season}` : ""}</span>

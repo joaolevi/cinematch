@@ -12,12 +12,9 @@ import { Avatar } from "../components/WatchedBy";
 import { plural } from "../format";
 import { genreTeam, matches, notesOf, tasteCharts, tasteOf, type DiaryFilter } from "../taste";
 import type { DiaryEntry, Media, Person, Profile, Recommendation } from "../types";
-import { MEDIA_GRID, TAPE_COLORS } from "../ui";
+import { MEDIA_GRID } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 
-const INK = "text-[#2b211c]";
-const RED_INK = "text-[#b9452f]";
-const NOTE_TILT = [-3, 2, -1.5, 2.5, -2, 1.5];
 
 function Row({ label, items }: { label: string; items: { media: Media; rating?: number | null }[] }) {
   return (
@@ -112,51 +109,39 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-10">
-      {/* Cabeçalho: a folha do diário da pessoa, com quem é, a frase do gosto e os números em post-its */}
-      <section className="paper relative -rotate-[0.3deg] rounded-sm py-7 pr-6 pl-14 sm:pr-8 sm:pl-16">
-        <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[0] }} />
-        <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]">
-          <div className={INK}>
-            <div className="flex flex-wrap items-center gap-4">
-              <Avatar name={profile.name} userId={profile.id} size="h-16 w-16 text-2xl" />
-              <div className="min-w-0 flex-1 basis-48">
-                <h1 className="font-display text-3xl font-bold sm:text-4xl">{profile.name}</h1>
-                <p className="mt-1 text-sm text-stone-600">
-                  {profile.restricted
-                    ? "O diário é só para quem segue"
-                    : total > 0
-                      ? `No diário: ${parts.join(", ")}`
-                      : "Ainda não registrou nada no diário"}
-                </p>
-                <p className="mt-0.5 text-sm text-stone-600">
-                  {profile.followers ? (
-                    <button
-                      className="cursor-pointer underline underline-offset-2 hover:text-[#b9452f]"
-                      aria-expanded={people?.kind === "followers"}
-                      onClick={() => showPeople("followers")}
-                    >
-                      {plural(profile.followers, "pessoa segue", "pessoas seguem")} {subject}
-                    </button>
-                  ) : (
-                    `ninguém segue ${subject} ainda`
-                  )}{" "}
-                  ·{" "}
-                  {profile.follows ? (
-                    <button
-                      className="cursor-pointer underline underline-offset-2 hover:text-[#b9452f]"
-                      aria-expanded={people?.kind === "follows"}
-                      onClick={() => showPeople("follows")}
-                    >
-                      {subject} segue {plural(profile.follows, "pessoa", "pessoas")}
-                    </button>
-                  ) : (
-                    `${subject} não segue ninguém`
-                  )}
-                </p>
-              </div>
-              {!profile.is_me && (
+      {/* Cabeçalho limpo, como o perfil do Letterboxd: a foto, o nome e os números numa linha. A frase do gosto fica
+          embaixo, com o marca-texto, que é a cara do Tastory */}
+      <section className="border-b border-line/60 pb-8">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-5">
+          <Avatar name={profile.name} userId={profile.id} size="h-20 w-20 text-3xl sm:h-24 sm:w-24 sm:text-4xl" />
+          <div className="min-w-0 flex-1 basis-56">
+            <h1 className="font-display text-3xl font-bold sm:text-4xl">{profile.name}</h1>
+            {profile.badges.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-2" aria-label="Selos">
+                {profile.badges.map((b) => (
+                  <li
+                    key={b.month}
+                    title={`Desafio do tema "${b.title}", ${b.month.split("-").reverse().join("/")}`}
+                    className="chip px-2.5 py-0.5 text-xs"
+                  >
+                    <span aria-hidden>🏅</span> {b.badge}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {profile.is_me ? (
+                <>
+                  <Link to="/conta#perfil" className="btn-ghost px-3 py-1 text-sm">
+                    Editar meu perfil
+                  </Link>
+                  <Link to="/diario" className="btn-ghost px-3 py-1 text-sm">
+                    Abrir meu diário
+                  </Link>
+                </>
+              ) : (
                 <button
-                  className={`max-sm:w-full ${profile.following ? "btn-ghost" : "btn-primary"}`}
+                  className={`px-4 py-1.5 text-sm ${profile.following ? "btn-ghost" : "btn-primary"}`}
                   disabled={following}
                   onClick={async () => {
                     setFollowing(true);
@@ -176,90 +161,93 @@ export default function ProfilePage() {
                 </button>
               )}
             </div>
-
-            {profile.badges.length > 0 && (
-              <ul className="mt-4 flex flex-wrap gap-2" aria-label="Selos">
-                {profile.badges.map((b) => (
-                  <li
-                    key={b.month}
-                    title={`Desafio do tema "${b.title}", ${b.month.split("-").reverse().join("/")}`}
-                    className="chip px-3 py-1 text-sm"
-                  >
-                    <span aria-hidden>🏅</span> {b.badge}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {taste && (
-              <div className="mt-6">
-                <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>
-                  {who ? `O gosto de ${who} em uma frase:` : "Meu gosto em uma frase:"}
-                </p>
-                <p className="mt-1 max-w-3xl font-display text-2xl leading-tight font-bold sm:text-3xl">
-                  {who ? "Do time" : "Sou do time"} <mark className="marker">{taste.highlight}</mark>
-                  {taste.decade && (
-                    <>
-                      {" "}
-                      dos{" "}
-                      <mark className="marker" style={{ "--marker": "rgb(232 115 90 / 0.5)" } as CSSProperties}>
-                        {taste.decade}
-                      </mark>
-                    </>
-                  )}
-                  .
-                </p>
-                <ul className="mt-3 font-hand text-2xl leading-8 font-semibold opacity-85">
-                  {taste.facts.map((fact) => (
-                    <li key={fact}>→ {fact}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {profile.is_me && (
-              <p className="mt-4 text-sm text-stone-600">
-                {
-                  {
-                    all: "Este é o seu perfil, do jeito que as outras pessoas veem.",
-                    followers: "Este é o seu perfil. Só quem segue você vê o seu diário.",
-                    private: "Este é o seu perfil. Só você vê o seu diário.",
-                  }[user?.visibility ?? "all"]
-                }{" "}
-                <Link to="/conta#quem-ve" className="underline hover:text-[#b9452f]">
-                  Escolher quem vê
-                </Link>
-              </p>
-            )}
-            {profile.is_me && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Link to="/conta#perfil" className="btn-ghost px-3 py-1 text-sm">
-                  Trocar a foto e o nome
-                </Link>
-                <Link to="/diario" className="btn-ghost px-3 py-1 text-sm">
-                  Abrir o meu diário para registrar
-                </Link>
-              </div>
-            )}
           </div>
 
-          {!profile.restricted && counted.length > 0 && (
-            <ul className="grid grid-cols-4 gap-3 sm:gap-4 lg:w-[19rem] lg:grid-cols-2" aria-label="Números do diário">
-              {[notes[0], notes[1], notes[2], notes[5]].map((note, i) => (
-                <li
-                  key={note.label}
-                  className="postit flex aspect-square flex-col justify-center px-2 py-3 text-center sm:px-3"
-                  style={{ "--note": note.color, rotate: `${NOTE_TILT[i % NOTE_TILT.length]}deg` } as CSSProperties}
+          {/* Os números, como no Letterboxd: grandes, com o nome embaixo, separados por uma linha fina */}
+          <dl className="flex divide-x divide-line/60 text-center">
+            {!profile.restricted && (
+              <div className="flex flex-col px-4 first:pl-0 sm:px-5">
+                <dt className="text-[11px] font-semibold tracking-wider text-muted uppercase">Títulos</dt>
+                <dd className="order-first font-display text-2xl font-bold" title={parts.join(", ")}>{total}</dd>
+              </div>
+            )}
+            {!profile.restricted && counted.length > 0 && (
+              <div className="flex flex-col px-4 sm:px-5">
+                <dt className="text-[11px] font-semibold tracking-wider text-muted uppercase">Este mês</dt>
+                <dd className="order-first font-display text-2xl font-bold">{notes[1].value}</dd>
+              </div>
+            )}
+            <div className="flex flex-col px-4 sm:px-5">
+              <dt className="text-[11px] font-semibold tracking-wider text-muted uppercase">Seguindo</dt>
+              <dd className="order-first font-display text-2xl font-bold">
+                <button
+                  className="cursor-pointer hover:text-accent disabled:cursor-default disabled:hover:text-inherit"
+                  aria-expanded={people?.kind === "follows"}
+                  aria-label={`${subject === "você" ? "Você segue" : `${first} segue`} ${plural(profile.follows, "pessoa", "pessoas")}`}
+                  disabled={!profile.follows}
+                  onClick={() => showPeople("follows")}
                 >
-                  <span className="font-hand text-4xl leading-none font-bold sm:text-5xl">{note.value}</span>
-                  <span className="mt-1 font-hand text-base leading-4 font-semibold sm:text-lg sm:leading-5">
-                    {note.label}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+                  {profile.follows}
+                </button>
+              </dd>
+            </div>
+            <div className="flex flex-col px-4 last:pr-0 sm:px-5">
+              <dt className="text-[11px] font-semibold tracking-wider text-muted uppercase">Seguidores</dt>
+              <dd className="order-first font-display text-2xl font-bold">
+                <button
+                  className="cursor-pointer hover:text-accent disabled:cursor-default disabled:hover:text-inherit"
+                  aria-expanded={people?.kind === "followers"}
+                  aria-label={`${plural(profile.followers, "pessoa segue", "pessoas seguem")} ${subject}`}
+                  disabled={!profile.followers}
+                  onClick={() => showPeople("followers")}
+                >
+                  {profile.followers}
+                </button>
+              </dd>
+            </div>
+          </dl>
         </div>
+
+        {profile.restricted ? (
+          <p className="mt-6 text-sm text-muted">O diário é só para quem segue.</p>
+        ) : (
+          taste && (
+            <div className="mt-7">
+              <p className="font-hand text-xl leading-7 font-bold text-accent">
+                {who ? `O gosto de ${who} em uma frase:` : "Meu gosto em uma frase:"}
+              </p>
+              <p className="mt-1 max-w-3xl font-display text-2xl leading-tight font-bold sm:text-3xl">
+                {who ? "Do time" : "Sou do time"} <mark className="marker text-cream" style={{ "--marker": "rgb(242 179 61 / 0.45)" } as CSSProperties}>{taste.highlight}</mark>
+                {taste.decade && (
+                  <>
+                    {" "}
+                    dos{" "}
+                    <mark className="marker text-cream" style={{ "--marker": "rgb(232 115 90 / 0.45)" } as CSSProperties}>
+                      {taste.decade}
+                    </mark>
+                  </>
+                )}
+                .
+              </p>
+              <p className="mt-2 text-sm text-muted">{taste.facts.join(" · ")}</p>
+            </div>
+          )
+        )}
+
+        {profile.is_me && (
+          <p className="mt-5 text-xs text-muted">
+            {
+              {
+                all: "Este é o seu perfil, do jeito que as outras pessoas veem.",
+                followers: "Este é o seu perfil. Só quem segue você vê o seu diário.",
+                private: "Este é o seu perfil. Só você vê o seu diário.",
+              }[user?.visibility ?? "all"]
+            }{" "}
+            <Link to="/conta#quem-ve" className="underline hover:text-accent">
+              Escolher quem vê
+            </Link>
+          </p>
+        )}
       </section>
 
       {people && (
