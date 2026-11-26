@@ -235,6 +235,11 @@ body::before {
 .tape-chip[aria-pressed="true"]::before {
   content: "✓ " / ""; /* o leitor de tela já sabe pelo aria-pressed; o ✓ não entra no nome */
 }
+/* Sem escolher, um "+" diz que a etiqueta é para tocar, e não um rótulo */
+.tape-chip:not([aria-pressed="true"])::before {
+  content: "+ " / "";
+  opacity: 0.55;
+}
 /* O recorte da fita esconde o contorno de foco; o sublinhado mostra quem está com o foco */
 .tape-chip:focus-visible {
   outline: none;

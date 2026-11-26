@@ -20,6 +20,15 @@ type Step = 1 | 2 | 3 | 4 | 5 | 6;
 
 const decadeLabel = (decade: number) => (decade < 2000 ? `Anos ${decade % 100}` : `Anos ${decade}`);
 
+/** Quantas etiquetas a pessoa já escolheu nesta página, ou o convite para tocar nelas. */
+function Picked({ count, one, many }: { count: number; one: string; many: string }) {
+  return (
+    <p aria-live="polite" className={`mt-2 inline-block rounded-full px-3 py-0.5 text-sm font-semibold ${count ? "bg-accent/15 text-accent" : "text-muted"}`}>
+      {count ? `✓ ${count} ${count === 1 ? one : many}` : "Toque nas etiquetas para escolher"}
+    </p>
+  );
+}
+
 function genreMessage(selected: string[]): string {
   if (selected.length === 0) return "Escolha quantos quiser. Isso já nos dá uma boa pista.";
   if (selected.length === 1) return `Boa! ${selected[0]} é um ótimo começo.`;
@@ -251,6 +260,7 @@ export default function OnboardingPage() {
               {firstName ? `Oi, ${firstName}! O que você curte assistir?` : "O que você curte assistir?"}
             </h1>
             <p className="mt-1 text-muted">{genreMessage([...selectedGenres])}</p>
+            <Picked count={selectedGenres.size} one="gênero escolhido" many="gêneros escolhidos" />
           </div>
           {page(
             "Querido diário, eu curto:",
@@ -285,6 +295,7 @@ export default function OnboardingPage() {
           <div>
             <h1 className="text-3xl font-bold">Tem alguma época ou diretor que você ama?</h1>
             <p className="mt-1 text-muted">{interestMessage(interestCount)}</p>
+            <Picked count={interestCount} one="escolha" many="escolhas" />
           </div>
           {loading && <HandNote>Procurando opções a sua cara...</HandNote>}
           {(decades.length > 0 || creators.length > 0) &&
@@ -389,6 +400,7 @@ export default function OnboardingPage() {
                 ? "A gente liga a música aos seus filmes e séries: a trilha, quem compôs, quem canta e atua."
                 : genreMessage(chosenMusic())}
             </p>
+            <Picked count={chosenMusic().length} one="gênero escolhido" many="gêneros escolhidos" />
           </div>
           {page(
             "Querido diário, eu ouço:",
@@ -427,6 +439,7 @@ export default function OnboardingPage() {
           <div>
             <h1 className="text-3xl font-bold">Tem algum artista que você ama?</h1>
             <p className="mt-1 text-muted">{interestMessage(selectedArtists.size)}</p>
+            <Picked count={selectedArtists.size} one="artista escolhido" many="artistas escolhidos" />
           </div>
           {loading && <HandNote>Procurando artistas a sua cara...</HandNote>}
           {artists.length > 0 &&

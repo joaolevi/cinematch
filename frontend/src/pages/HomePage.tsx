@@ -39,24 +39,35 @@ function shortDate(iso: string): string {
   });
 }
 
+/** O número do dia de hoje, no fuso de quem usa: muda a aposta do dia à meia-noite. */
+function dayNumber(): number {
+  const now = new Date();
+  return Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())) / 86_400_000);
+}
+
 /** Cabeçalho de cada seção: título, uma anotação à mão e o link para ver tudo. */
 function SectionHeader({
   title,
   note,
   to,
   linkLabel,
+  actions,
 }: {
   title: ReactNode;
   note?: string;
   to?: string;
   linkLabel?: string;
+  actions?: ReactNode;
 }) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-      <h2 className="font-display text-2xl font-bold">
-        {title}
-        {note && <span className="block font-hand text-xl font-bold text-accent sm:ml-3 sm:inline">{note}</span>}
-      </h2>
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+        <h2 className="font-display text-2xl font-bold">
+          {title}
+          {note && <span className="block font-hand text-xl font-bold text-accent sm:ml-3 sm:inline">{note}</span>}
+        </h2>
+        {actions}
+      </div>
       {to && (
         <Link to={to} className="text-sm font-bold text-accent hover:underline">
           {linkLabel} →
@@ -72,6 +83,7 @@ function Shelf(props: {
   note?: string;
   to?: string;
   linkLabel?: string;
+  actions?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -101,6 +113,7 @@ export default function HomePage() {
   const [watchlist, setWatchlist] = useState<UserList["items"]>([]);
   const [theme, setTheme] = useState<UserList | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [showUpcoming, setShowUpcoming] = useState(false); // a fileira de baixo: em alta ou em breve
   // O desafio do mês muda a cada registro no diário
   useEffect(() => {
     api.challenge().then(setChallenge).catch(() => {});
@@ -208,7 +221,10 @@ export default function HomePage() {
   }
 
   // O que a pessoa registrou em outra tela sai da aposta do dia
-  const hero = recs?.find((r) => !seen?.has(r.media.id));
+  // A aposta do dia: uma das cinco melhores sugestões, que muda a cada dia. Assim o Início não repete o destaque do
+  // Para você, que é sempre a primeira
+  const unseen = (recs ?? []).filter((r) => !seen?.has(r.media.id)).slice(0, 5);
+  const hero = unseen.length ? unseen[dayNumber() % unseen.length] : undefined;
   const taste = diary ? tasteOf(diary) : null;
   const visto = (id: number) => (seen?.has(id) ? <span className="text-sm">Visto</span> : undefined);
 
@@ -230,7 +246,7 @@ export default function HomePage() {
             <OnScreen key={hero.media.id} rec={hero} onSeen={impressions.mark}>
               <Highlight
                 rec={hero}
-                label={strategy === "trending" ? "Em alta agora" : "Nossa aposta para você"}
+                label={strategy === "trending" ? "Em alta agora" : "A aposta do dia"}
                 act={act}
                 onSeen={() => setSeenTarget(hero.media)}
               />
@@ -245,7 +261,7 @@ export default function HomePage() {
       </div>
 
       {/* O desafio do mês vem logo depois da aposta: é o convite do mês, e não um rodapé da prateleira do tema */}
-      {theme && challenge && user && <ChallengeCard c={challenge} userId={user.id} />}
+      {theme && challenge && user && <ChallengeCard c={challenge} userId={user.id} all={theme.items.map((i) => i.media)} />}
 
       {diary && <RateReminder diary={diary} watchlist={watchlist} onSeen={setSeenTarget} />}
 
@@ -270,8 +286,34 @@ export default function HomePage() {
       )}
 
       {trending.length > 0 && (
-        <Shelf title="Em alta agora" note="o que todo mundo está vendo" to="/buscar" linkLabel="Buscar mais">
-          {trending.map((media) => (
+        <Shelf
+          title={showUpcoming ? "Em breve" : "Em alta agora"}
+          note={showUpcoming ? "pra anotar na agenda" : "o que todo mundo está vendo"}
+          to="/buscar"
+          linkLabel="Buscar mais"
+          actions={
+            upcoming.length >= 3 && (
+              <div role="group" aria-label="O que mostrar" className="inline-flex rounded-full border border-line bg-bg/40 p-0.5">
+                {([
+                  [false, "Em alta"],
+                  [true, "Em breve"],
+                ] as const).map(([value, text]) => (
+                  <button
+                    key={text}
+                    aria-pressed={showUpcoming === value}
+                    onClick={() => setShowUpcoming(value)}
+                    className={`cursor-pointer rounded-full px-3 py-0.5 text-sm transition ${
+                      showUpcoming === value ? "bg-accent font-bold text-bg" : "text-stone-300 hover:text-cream"
+                    }`}
+                  >
+                    {text}
+                  </button>
+                ))}
+              </div>
+            )
+          }
+        >
+          {(showUpcoming ? upcoming : trending).map((media) => (
             <div key={media.id} className={shelfItem}>
               <MediaCard media={media} sticker={visto(media.id)} compact />
             </div>
@@ -371,25 +413,6 @@ export default function HomePage() {
         </section>
       </div>
 
-      {theme && (
-        <Shelf title={`Tema do mês: ${theme.name}`} label="tema do mês" note={theme.description ?? undefined}>
-          {theme.items.map(({ media }) => (
-            <div key={media.id} className={shelfItem}>
-              <MediaCard media={media} compact />
-            </div>
-          ))}
-        </Shelf>
-      )}
-
-      {upcoming.length >= 3 && (
-        <Shelf title="Em breve" note="pra anotar na agenda">
-          {upcoming.map((media) => (
-            <div key={media.id} className={shelfItem}>
-              <MediaCard media={media} compact />
-            </div>
-          ))}
-        </Shelf>
-      )}
 
       {seenTarget && (
         <SeenModal

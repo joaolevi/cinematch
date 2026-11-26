@@ -365,12 +365,31 @@ function ServicesPicker() {
 }
 
 /** Minha conta: dados, quem vê, serviços, experimentos e excluir a conta (RFF06, RFF10, RFF17, RFF21). */
+type Tab = "perfil" | "privacidade" | "servicos" | "dados";
+const TABS: [Tab, string][] = [
+  ["perfil", "Perfil"],
+  ["privacidade", "Privacidade"],
+  ["servicos", "Serviços"],
+  ["dados", "Meus dados"],
+];
+// O endereço escolhe a aba: as abas e as partes que já tinham link (#quem-ve, #letterboxd...)
+const TAB_OF_HASH: Record<string, Tab> = {
+  perfil: "perfil",
+  privacidade: "privacidade",
+  "quem-ve": "privacidade",
+  servicos: "servicos",
+  dados: "dados",
+  letterboxd: "dados",
+};
+
 export default function AccountPage() {
   usePageTitle("Minha conta");
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { hash } = useLocation();
-  // Links como /conta#servicos levam direto à parte certa
+  const tab = TAB_OF_HASH[hash.slice(1)] ?? "perfil";
+  const openTab = (key: Tab) => navigate({ hash: key }, { replace: true });
+  // Links como /conta#servicos abrem a aba certa e levam direto à parte
   useEffect(() => {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" });
   }, [hash]);
@@ -422,11 +441,33 @@ export default function AccountPage() {
         </p>
       </div>
 
-      <Part title="Meu perfil" tape={2} id="perfil">
+      {/* Quatro abas, para a página não virar uma pilha de oito folhas */}
+      <div role="tablist" aria-label="Partes da conta" className="flex flex-wrap gap-2">
+        {TABS.map(([key, label]) => (
+          <button
+            key={key}
+            role="tab"
+            id={`aba-${key}`}
+            aria-selected={tab === key}
+            aria-controls="painel-da-conta"
+            onClick={() => openTab(key)}
+            className={`chip cursor-pointer px-4 py-1.5 text-sm ${tab === key ? "border-accent bg-accent/15 text-accent" : ""}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div id="painel-da-conta" role="tabpanel" aria-labelledby={`aba-${tab}`} className="space-y-8">
+
+      {tab === "perfil" && (
+        <Part title="Meu perfil" tape={2} id="perfil">
         <ProfileEditor />
       </Part>
+      )}
 
-      <Part title="Meus dados" tape={0}>
+      {tab === "dados" && (
+        <Part title="Meus dados" tape={0}>
         <p>
           Baixe tudo o que o Tastory guarda sobre você, num arquivo JSON: o diário com notas e resenhas, as listas, as
           preferências do começo, quem você segue e as sugestões que você viu e o que fez com elas. A senha não vai junto.
@@ -436,24 +477,32 @@ export default function AccountPage() {
         </button>
         {exportError && <p className="text-red-700">{exportError}</p>}
       </Part>
+      )}
 
-      <Part title="Trazer do Letterboxd" tape={2} id="letterboxd">
+      {tab === "dados" && (
+        <Part title="Trazer do Letterboxd" tape={2} id="letterboxd">
         <LetterboxdImport />
       </Part>
+      )}
 
-      <Part title="Quem vê meus registros" tape={1} id="quem-ve">
+      {tab === "privacidade" && (
+        <Part title="Quem vê meus registros" tape={1} id="quem-ve">
         <VisibilityPicker />
       </Part>
+      )}
 
-      <Part title="Meus serviços" tape={0} id="servicos">
+      {tab === "servicos" && (
+        <Part title="Meus serviços" tape={0} id="servicos">
         <p>
           Marque o que você assina. No Para você, "Só nos meus serviços" e "Hoje à noite" mostram só o que dá para ver
           agora, e cada sugestão avisa se está num serviço seu.
         </p>
         <ServicesPicker />
       </Part>
+      )}
 
-      <Part title="Experimentos" tape={2}>
+      {tab === "privacidade" && (
+        <Part title="Experimentos" tape={2}>
         <p>
           Comparamos duas formas de sugerir filmes e séries. Saiba mais em{" "}
           <Link to="/como-recomendamos" className="underline hover:text-[#b9452f]">
@@ -467,8 +516,10 @@ export default function AccountPage() {
         </p>
         <ExperimentsToggle />
       </Part>
+      )}
 
-      <Part title="Excluir minha conta" tape={1}>
+      {tab === "dados" && (
+        <Part title="Excluir minha conta" tape={1}>
         {user.role === "admin" ? (
           <p>Contas de administração não podem ser excluídas por aqui.</p>
         ) : (
@@ -495,6 +546,8 @@ export default function AccountPage() {
           </form>
         )}
       </Part>
+      )}
+      </div>
     </div>
   );
 }

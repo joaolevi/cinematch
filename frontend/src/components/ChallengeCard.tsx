@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MEDIA_STYLE, plural } from "../format";
-import type { Challenge } from "../types";
+import type { Challenge, Media } from "../types";
 import { TAPE_COLORS } from "../ui";
 import Polaroid from "./Polaroid";
 import Poster from "./Poster";
@@ -21,7 +22,8 @@ function deadline(month: string, today = new Date()): { label: string; daysLeft:
  * O desafio do tema do mês (RFF32) no Início: o tema, o progresso em selos e, ao lado, os próximos títulos do tema
  * que ainda não estão no diário, cada um com o caminho para a página dele.
  */
-export default function ChallengeCard({ c, userId }: { c: Challenge; userId: number }) {
+export default function ChallengeCard({ c, userId, all = [] }: { c: Challenge; userId: number; all?: Media[] }) {
+  const [showAll, setShowAll] = useState(false); // o tema inteiro, dentro do cartão
   const done = Math.min(c.done.length, c.goal);
   const { label, daysLeft } = deadline(c.month);
   const slots = Array.from({ length: c.goal }, (_, i) => c.done[i] ?? null);
@@ -108,7 +110,7 @@ export default function ChallengeCard({ c, userId }: { c: Challenge; userId: num
             </p>
             <ul className="mt-3 grid grid-cols-2 gap-x-5 gap-y-6 sm:grid-cols-4">
               {c.next.map((media, i) => (
-                <li key={media.id} className="flex flex-col">
+                <li key={media.id} className={`flex flex-col ${i >= 2 ? "max-sm:hidden" : ""}`}>
                   <Link to={`/media/${media.id}`} aria-label={media.title} className="block">
                     <Polaroid position={i} small album={media.type === "album"} straightenOnHover={false}>
                       <Poster media={media} compact rounded="rounded-[1px]" />
@@ -127,6 +129,32 @@ export default function ChallengeCard({ c, userId }: { c: Challenge; userId: num
           </div>
         )}
       </div>
+
+      {all.length > 0 && (
+        <div className="mt-6 border-t border-[#2b211c]/15 pt-4">
+          <button
+            className="text-sm font-semibold underline hover:text-[#b9452f]"
+            aria-expanded={showAll}
+            onClick={() => setShowAll(!showAll)}
+          >
+            {showAll ? "Esconder o tema" : `Ver o tema inteiro (${all.length} títulos)`}
+          </button>
+          {showAll && (
+            <ul className="mt-4 grid grid-cols-3 gap-x-4 gap-y-5 sm:grid-cols-5 lg:grid-cols-8">
+              {all.map((media, i) => (
+                <li key={media.id}>
+                  <Link to={`/media/${media.id}`} className="block">
+                    <Polaroid position={i} small album={media.type === "album"} straightenOnHover={false}>
+                      <Poster media={media} compact rounded="rounded-[1px]" />
+                    </Polaroid>
+                    <p className="mt-2 line-clamp-2 text-xs leading-tight font-semibold">{media.title}</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </section>
   );
 }
