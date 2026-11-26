@@ -18,7 +18,7 @@ from ..models import DiaryEntry, ItemNeighbor, Media, MediaBridge, RecEvent, Use
 
 ACCEPTANCE_WINDOW = timedelta(days=7)
 SATISFIED_FROM = 3.5
-from ..seed import DEMO_EMAIL
+from ..seed import DEMO_EMAIL, VITRINE_DOMAIN
 
 
 def _pairs(db: Session, action: str, variant: str | None, personalized: bool = False) -> set[tuple[int, int]]:
@@ -180,7 +180,7 @@ def acceptance_metrics(db: Session) -> dict:
                 select(func.count())
                 .select_from(DiaryEntry)
                 .join(User, User.id == DiaryEntry.user_id)
-                .where(User.is_synthetic.is_(False))
+                .where(User.is_synthetic.is_(False), User.email.not_like(f"%@{VITRINE_DOMAIN}"))
             )
             or 0
         ),
@@ -188,7 +188,10 @@ def acceptance_metrics(db: Session) -> dict:
             db.scalar(
                 select(func.count())
                 .select_from(User)
-                .where(User.is_synthetic.is_(False), User.role == "user", User.email != DEMO_EMAIL)
+                .where(
+                    User.is_synthetic.is_(False), User.role == "user", User.email != DEMO_EMAIL,
+                    User.email.not_like(f"%@{VITRINE_DOMAIN}"),
+                )
             )
             or 0
         ),

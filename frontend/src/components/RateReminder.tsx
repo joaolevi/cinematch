@@ -49,7 +49,8 @@ export default function RateReminder({
   const unrated = useMemo(
     () =>
       diary
-        .filter((e) => e.rating == null && snoozedUntil(`nota.${e.id}`) < now)
+        // A série que a pessoa ainda está assistindo ganha nota no "Terminei", não aqui
+        .filter((e) => e.rating == null && e.status !== "watching" && snoozedUntil(`nota.${e.id}`) < now)
         // O que foi visto de verdade vem antes do que foi marcado no questionário do começo
         .sort((a, b) => Number(a.from_onboarding) - Number(b.from_onboarding) || b.created_at.localeCompare(a.created_at))
         .slice(0, UNRATED),
