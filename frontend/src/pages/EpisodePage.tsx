@@ -37,7 +37,13 @@ export default function EpisodePage() {
         </Link>
       </div>
     );
-  if (!ep) return <HandNote>Abrindo o episódio...</HandNote>;
+  if (!ep)
+    return (
+      <div className="mx-auto max-w-4xl">
+        <h1 className="sr-only">Episódio</h1>
+        <HandNote>Abrindo o episódio...</HandNote>
+      </div>
+    );
 
   const title = ep.name ?? `Episódio ${ep.number}`;
   const image = ep.still_url ?? ep.series.backdrop_url;

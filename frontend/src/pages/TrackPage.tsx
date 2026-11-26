@@ -36,7 +36,13 @@ export default function TrackPage() {
         </Link>
       </div>
     );
-  if (!track) return <HandNote>Abrindo a faixa...</HandNote>;
+  if (!track)
+    return (
+      <div className="mx-auto max-w-4xl">
+        <h1 className="sr-only">Faixa</h1>
+        <HandNote>Abrindo a faixa...</HandNote>
+      </div>
+    );
 
   const artists = track.artists.length ? track.artists : track.album.creators;
   const query = encodeURIComponent(`${track.title} ${artists[0] ?? ""}`.trim());
