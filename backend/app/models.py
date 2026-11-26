@@ -50,6 +50,8 @@ class User(Base):
     visibility: Mapped[str] = mapped_column(String(10), default="all", server_default="all")
     # Serviços de streaming que a pessoa assina, como "netflix" (RFF21)
     services: Mapped[list[str]] = mapped_column(JSON, default=list, server_default=text("'[]'"))
+    # Os quatro favoritos do perfil, na ordem escolhida (ids de mídia), como o cartão de visita do Letterboxd
+    pinned: Mapped[list[int]] = mapped_column(JSON, default=list, server_default=text("'[]'"))
     # False = saiu dos experimentos (RFF17): recebe o recomendador completo e fica fora da comparação A/B
     in_experiments: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
 
@@ -175,6 +177,8 @@ class DiaryEntry(Base):
     rating: Mapped[float | None] = mapped_column(Float, nullable=True)  # 0.5 a 5.0
     review: Mapped[str | None] = mapped_column(Text, nullable=True)
     review_hidden: Mapped[bool] = mapped_column(Boolean, default=False)  # moderação
+    # A resenha conta o que acontece: aparece escondida, com "Mostrar mesmo assim"
+    spoiler: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     from_onboarding: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     status: Mapped[str] = mapped_column(String(10), default="seen", server_default="seen")  # seen | watching (RFF24)

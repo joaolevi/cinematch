@@ -5,6 +5,7 @@ import { useAuth } from "../auth";
 import Carousel from "../components/Carousel";
 import HandNote from "../components/HandNote";
 import MediaCard from "../components/MediaCard";
+import PinnedFavorites from "../components/PinnedFavorites";
 import { StarsDisplay } from "../components/Stars";
 import TasteChartsView from "../components/TasteCharts";
 import { Avatar } from "../components/WatchedBy";
@@ -282,6 +283,16 @@ export default function ProfilePage() {
             </ul>
           )}
         </section>
+      )}
+
+      {!profile.restricted && (
+        <PinnedFavorites
+          key={profile.id}
+          pinned={profile.pinned}
+          isMe={profile.is_me}
+          who={first}
+          entries={profile.is_me ? entries : null}
+        />
       )}
 
       {profile.restricted && (

@@ -149,6 +149,8 @@ class ReviewOut(BaseModel):
     likes: int = Field(default=0, description="Curtidas na resenha (RFF30)")
     liked: bool = Field(default=False, description="Se quem vê curtiu a resenha")
     comments: int = Field(default=0, description="Comentários visíveis na resenha (RFF30)")
+    spoiler: bool = Field(default=False, description="A resenha conta o que acontece; a tela mostra escondida")
+    following: bool = Field(default=False, description="Se quem vê segue quem escreveu")
 
 
 class MyStatus(BaseModel):
@@ -158,6 +160,7 @@ class MyStatus(BaseModel):
     status: Literal["seen", "watching"] | None = Field(default=None, description="Série: vista ou assistindo (RFF24)")
     season: int | None = Field(default=None, description="Série: a temporada em que a pessoa está (RFF24)")
     episodes: dict[str, int] = Field(default={}, description="Série: quantos episódios a pessoa marcou em cada temporada")
+    spoiler: bool = Field(default=False, description="Se a resenha da pessoa está marcada como spoiler")
     in_watchlist: bool = False
     dismissed: bool = False
     list_ids: list[int] = []
@@ -178,8 +181,17 @@ class SeasonOut(BaseModel):
     year: int | None = None
 
 
+class FriendRatingOut(BaseModel):
+    id: int
+    name: str
+    rating: float | None
+    status: Literal["seen", "watching"] = "seen"
+
+
 class MediaDetailOut(MediaOut):
     actors: list[str]
+    histogram: list[int] = Field(default=[], description="Quantas notas de cada valor, de 0,5 a 5 (10 posições)")
+    friends: list[FriendRatingOut] = Field(default=[], description="Quem eu sigo e registrou o título, com a nota")
     seasons: list[SeasonOut] = Field(default=[], description="Temporadas da série, sem os especiais (RFF24)")
     credit: CreditOut | None = None
     avg_rating: float | None
@@ -212,6 +224,7 @@ class DiaryIn(BaseModel):
     rating: float | None = None
     review: str | None = Field(default=None, max_length=2000)
     consumed_at: date | None = None
+    spoiler: bool = Field(default=False, description="A resenha conta o que acontece")
     status: Literal["seen", "watching"] = Field(
         default="seen", description='Série (RFF24): "watching" para quem ainda está assistindo; "seen" quando terminou'
     )
@@ -228,6 +241,7 @@ class DiaryUpdate(BaseModel):
     review: str | None = Field(default=None, max_length=2000)
     consumed_at: date | None = None
     excluded: bool | None = Field(default=None, description="true: o registro deixa de contar no gosto (RFF07)")
+    spoiler: bool | None = Field(default=None, description="A resenha conta o que acontece")
     status: Literal["seen", "watching"] | None = Field(default=None, description="Série (RFF24)")
     season: int | None = Field(default=None, ge=1, description="Série (RFF24)")
 
@@ -247,6 +261,7 @@ class DiaryOut(ORM):
     from_onboarding: bool
     created_at: datetime
     excluded: bool = Field(default=False, description="Não conta no gosto (RFF07)")
+    spoiler: bool = False
     status: Literal["seen", "watching"] = Field(default="seen", description="Série: vista ou assistindo (RFF24)")
     season: int | None = Field(default=None, description="Série: a temporada (RFF24)")
 
@@ -380,6 +395,7 @@ class CommunityEntryOut(BaseModel):
     created_at: datetime
     status: Literal["seen", "watching"] = Field(default="seen", description="Série: vista ou assistindo (RFF24)")
     season: int | None = None
+    spoiler: bool = False
     likes: int = Field(default=0, description="Curtidas na resenha (RFF30)")
     liked: bool = Field(default=False, description="Se quem vê curtiu a resenha")
     comments: int = Field(default=0, description="Comentários visíveis na resenha (RFF30)")
@@ -435,6 +451,7 @@ class ProfileOut(BaseModel):
     id: int
     name: str
     is_me: bool
+    pinned: list["MediaOut"] = Field(default=[], description="Os quatro favoritos que a pessoa escolheu, na ordem dela")
     counts: dict[str, int] = Field(description="Registros por mídia: movie, series e album")
     favorites: list[ProfileItemOut]
     recent: list[ProfileItemOut]
@@ -800,3 +817,7 @@ class EpisodeIn(BaseModel):
     @classmethod
     def validate_rating(cls, v: float | None) -> float | None:
         return _check_rating(v)
+
+
+class PinnedIn(BaseModel):
+    media_ids: list[int] = Field(max_length=4, description="Até 4 títulos do próprio diário, na ordem em que aparecem")

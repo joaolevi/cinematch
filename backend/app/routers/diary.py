@@ -51,6 +51,7 @@ def register_consumption(
         db, user, data.media_id, rating=data.rating, review=data.review, consumed_at=data.consumed_at,
         status=data.status, season=data.season,
     )
+    entry.spoiler = data.spoiler
     db.commit()
     db.refresh(entry)
     return entry
@@ -73,6 +74,8 @@ def update_entry(
         entry.consumed_at = fields["consumed_at"]
     if fields.get("excluded") is not None:
         entry.excluded = fields["excluded"]
+    if fields.get("spoiler") is not None:
+        entry.spoiler = fields["spoiler"]
     if fields.get("status") is not None or fields.get("season") is not None:
         _check_progress(entry.media, fields.get("status"), fields.get("season"))
         if fields.get("status") is not None:
