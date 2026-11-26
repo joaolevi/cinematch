@@ -1,14 +1,19 @@
 """A própria conta: exportar os dados, excluir a conta (RFF06), sair dos experimentos (RFF17), escolher quem vê os
-registros (RFF10), marcar os serviços que assina (RFF21) e ver o próprio histórico de atividades (RFF31)."""
+registros (RFF10), marcar os serviços que assina (RFF21), ver o próprio histórico de atividades (RFF31) e editar o
+nome, o e-mail, a senha e a foto de perfil."""
 
+import base64
+import binascii
+import re
+import secrets
 from datetime import datetime, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
-from ..auth import get_current_user, verify_password
+from ..auth import get_current_user, hash_password, verify_password
 from ..db import get_db
 from ..models import (
     DiaryEntry,
@@ -23,11 +28,12 @@ from ..models import (
     ListItem,
     UserInterest,
     UserList,
+    UserAvatar,
     UserPreference,
 )
 from ..config import settings
 from ..schemas import (
-    ActivityOut, ArrivalOut, DeleteAccountIn, ExperimentsIn, LetterboxdIn, LetterboxdOut, MediaOut, PersonOut, ServicesIn, UserOut,
+    AccountEditIn, ActivityOut, ArrivalOut, AvatarIn, DeleteAccountIn, PasswordChangeIn, ExperimentsIn, LetterboxdIn, LetterboxdOut, MediaOut, PersonOut, ServicesIn, UserOut,
     VisibilityIn,
 )
 from ..services.letterboxd import import_letterboxd
@@ -217,6 +223,70 @@ def export_my_data(db: Session = Depends(get_db), user: User = Depends(get_curre
             )
         ],
     }
+
+
+@router.patch("", response_model=UserOut)
+def edit_account(data: AccountEditIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Muda o nome e o e-mail da conta. Um e-mail que outra conta já usa dá 409."""
+    fields = data.model_dump(exclude_unset=True, exclude_none=True)
+    if "email" in fields:
+        email = str(fields["email"]).lower()
+        other = db.scalar(select(User.id).where(func.lower(User.email) == email, User.id != user.id))
+        if other is not None:
+            raise HTTPException(status_code=409, detail="Este e-mail já é de outra conta")
+        user.email = email
+    if "name" in fields:
+        user.name = fields["name"]
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.put("/password", status_code=204)
+def change_password(data: PasswordChangeIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Troca a senha, pedindo a atual. A sessão aberta continua valendo."""
+    if not verify_password(data.current_password, user.password_hash):
+        raise HTTPException(status_code=403, detail="A senha atual não confere")
+    user.password_hash = hash_password(data.new_password)
+    db.commit()
+    return Response(status_code=204)
+
+
+AVATAR_TYPES = {"jpeg": b"\xff\xd8\xff", "png": b"\x89PNG", "webp": b"RIFF"}
+MAX_AVATAR_BYTES = 300_000
+
+
+@router.put("/avatar", status_code=204)
+def set_avatar(data: AvatarIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Troca a foto de perfil. A tela reduz a imagem antes de mandar; aqui só conferimos o tipo e o tamanho."""
+    match = re.fullmatch(r"data:image/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)", data.image)
+    if not match:
+        raise HTTPException(status_code=422, detail="Mande a foto em JPEG, PNG ou WebP")
+    try:
+        image = base64.b64decode(match.group(2), validate=True)
+    except binascii.Error:
+        raise HTTPException(status_code=422, detail="A foto não pôde ser lida")
+    kind = match.group(1)
+    if len(image) > MAX_AVATAR_BYTES:
+        raise HTTPException(status_code=422, detail="A foto passou de 300 KB")
+    if not image.startswith(AVATAR_TYPES[kind]) or (kind == "webp" and image[8:12] != b"WEBP"):
+        raise HTTPException(status_code=422, detail="O arquivo não é a imagem que diz ser")
+    avatar = db.get(UserAvatar, user.id) or UserAvatar(user_id=user.id)
+    avatar.image, avatar.content_type, avatar.token = image, f"image/{kind}", secrets.token_hex(16)
+    avatar.updated_at = datetime.now(timezone.utc)
+    db.add(avatar)
+    db.commit()
+    return Response(status_code=204)
+
+
+@router.delete("/avatar", status_code=204)
+def remove_avatar(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Tira a foto de perfil: volta a inicial do nome."""
+    avatar = db.get(UserAvatar, user.id)
+    if avatar is not None:
+        db.delete(avatar)
+        db.commit()
+    return Response(status_code=204)
 
 
 @router.delete("", status_code=204)

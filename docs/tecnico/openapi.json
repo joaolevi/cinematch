@@ -154,6 +154,51 @@
             "HTTPBearer": []
           }
         ]
+      },
+      "patch": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Edit Account",
+        "description": "Muda o nome e o e-mail da conta. Um e-mail que outra conta já usa dá 409.",
+        "operationId": "edit_account_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountEditIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/me/preferences": {
@@ -414,6 +459,104 @@
                 "schema": {}
               }
             }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/me/password": {
+      "put": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Change Password",
+        "description": "Troca a senha, pedindo a atual. A sessão aberta continua valendo.",
+        "operationId": "change_password_me_password_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChangeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/me/avatar": {
+      "put": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Set Avatar",
+        "description": "Troca a foto de perfil. A tela reduz a imagem antes de mandar; aqui só conferimos o tipo e o tamanho.",
+        "operationId": "set_avatar_me_avatar_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Remove Avatar",
+        "description": "Tira a foto de perfil: volta a inicial do nome.",
+        "operationId": "remove_avatar_me_avatar_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           }
         },
         "security": [
@@ -2962,6 +3105,91 @@
         }
       }
     },
+    "/users/avatars": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Avatars",
+        "description": "As fotos de perfil que quem pede pode ver: id da pessoa -> o código da foto, que entra no endereço\n`/users/{id}/avatar/{codigo}`. Perfil privado de outra pessoa fica de fora. A tela pede uma vez e guarda.",
+        "operationId": "avatars_users_avatars_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Avatars Users Avatars Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/users/{user_id}/avatar/{token}": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Avatar Image",
+        "description": "A foto de perfil. Sem login, porque o navegador não manda o login numa imagem; quem não sabe o código, que muda a\ncada troca, recebe 404. O endereço muda com a foto, então pode ficar em cache por um ano.",
+        "operationId": "avatar_image_users__user_id__avatar__token__get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "image/jpeg": {}
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/following": {
       "get": {
         "tags": [
@@ -4503,6 +4731,38 @@
   },
   "components": {
     "schemas": {
+      "AccountEditIn": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "title": "AccountEditIn",
+        "description": "Mudar o nome e o e-mail da conta (Minha conta). Só os campos enviados mudam."
+      },
       "ActivityOut": {
         "properties": {
           "kind": {
@@ -4887,6 +5147,21 @@
         "title": "ArrivalOut",
         "description": "Um título do Quero ver que chegou a um serviço da pessoa (RFF29)."
       },
+      "AvatarIn": {
+        "properties": {
+          "image": {
+            "type": "string",
+            "maxLength": 420000,
+            "title": "Image",
+            "description": "A foto como data URL, \"data:image/jpeg;base64,...\", já reduzida pela tela. JPEG, PNG ou WebP, até 300 KB"
+          }
+        },
+        "type": "object",
+        "required": [
+          "image"
+        ],
+        "title": "AvatarIn"
+      },
       "BadgeOut": {
         "properties": {
           "badge": {
@@ -5006,6 +5281,26 @@
           "earned": {
             "type": "boolean",
             "title": "Earned"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "next": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "type": "array",
+            "title": "Next",
+            "description": "Até 4 títulos do tema que ainda não estão no diário, na ordem do tema",
+            "default": []
           }
         },
         "type": "object",
@@ -6898,6 +7193,25 @@
         ],
         "title": "PairOut",
         "description": "Sessão dupla (RFF27): um filme ou série para ver e um disco para ouvir depois."
+      },
+      "PasswordChangeIn": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "title": "Current Password"
+          },
+          "new_password": {
+            "type": "string",
+            "minLength": 6,
+            "title": "New Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordChangeIn"
       },
       "PersonOut": {
         "properties": {

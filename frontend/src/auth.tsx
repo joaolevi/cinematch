@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { ApiError, api, getToken, setToken } from "./api";
+import { forgetAvatars } from "./avatars";
 import { resetSeen } from "./seen";
 import type { User } from "./types";
 
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { access_token, user } = await api.login(email, password);
     resetSeen();
     setToken(access_token);
+    forgetAvatars(); // as fotos visíveis dependem de quem entrou
     setUser(user);
     return user;
   };
@@ -48,12 +50,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { access_token, user } = await api.register(name, email, password, inExperiments);
     resetSeen();
     setToken(access_token);
+    forgetAvatars(); // as fotos visíveis dependem de quem entrou
     setUser(user);
     return user;
   };
 
   const logout = () => {
     resetSeen();
+    forgetAvatars();
     setToken(null);
     setUser(null);
   };

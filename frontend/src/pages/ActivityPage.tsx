@@ -46,7 +46,7 @@ function Line({ a }: { a: Activity }) {
           <Poster media={a.media} compact rounded="rounded-[2px]" />
         </Link>
       ) : (
-        a.person && <Avatar name={a.person.name} size="h-10 w-10" />
+        a.person && <Avatar name={a.person.name} userId={a.person.id} size="h-10 w-10" />
       )}
       <div className="min-w-0 flex-1">
         <p className="text-sm">{what}</p>

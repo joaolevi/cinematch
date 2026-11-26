@@ -1,13 +1,15 @@
 """Perfil de uma pessoa, a compatibilidade de gosto com quem está vendo (RFF15), seguir pessoas e ver quem segue quem
 (RFF09), quem vê os registros de cada uma (RFF10) e o "Para ver ou ouvir junto" (RFF28)."""
 
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from ..auth import get_current_user
 from ..db import get_db
-from ..models import DiaryEntry, Follow, User
+from ..models import DiaryEntry, Follow, User, UserAvatar
 from ..schemas import (
     CompatibilityOut, DiaryOut, MediaOut, PersonOut, ProfileItemOut, ProfileOut, RecommendationOut, SuggestedPersonOut,
 )
@@ -47,6 +49,25 @@ def listed(me: User):
 
 def people_out(db: Session, query) -> list[PersonOut]:
     return [PersonOut(id=p.id, name=p.name) for p in db.scalars(query.order_by(User.name))]
+
+
+@router.get("/avatars", response_model=dict[str, str])
+def avatars(db: Session = Depends(get_db), me: User = Depends(get_current_user)):
+    """As fotos de perfil que quem pede pode ver: id da pessoa -> o código da foto, que entra no endereço
+    `/users/{id}/avatar/{codigo}`. Perfil privado de outra pessoa fica de fora. A tela pede uma vez e guarda."""
+    rows = db.execute(select(UserAvatar.user_id, UserAvatar.token, User.visibility).join(User, User.id == UserAvatar.user_id))
+    return {str(uid): token for uid, token, visibility in rows if visibility != "private" or uid == me.id}
+
+
+@router.get("/{user_id}/avatar/{token}", responses={200: {"content": {"image/jpeg": {}}}, 404: {}})
+def avatar_image(user_id: int, token: str, db: Session = Depends(get_db)):
+    """A foto de perfil. Sem login, porque o navegador não manda o login numa imagem; quem não sabe o código, que muda a
+    cada troca, recebe 404. O endereço muda com a foto, então pode ficar em cache por um ano."""
+    avatar = db.get(UserAvatar, user_id)
+    if avatar is None or not secrets.compare_digest(avatar.token, token):
+        raise HTTPException(status_code=404, detail="Foto não encontrada")
+    return Response(content=avatar.image, media_type=avatar.content_type,
+                    headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 @router.get("/following", response_model=list[PersonOut])

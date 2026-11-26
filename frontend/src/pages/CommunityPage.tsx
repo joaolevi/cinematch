@@ -193,7 +193,7 @@ function Following({ people }: { people: Person[] }) {
           {people.map((person) => (
             <li key={person.id} className="py-2">
               <Link to={`/pessoas/${person.id}`} className="flex items-center gap-3 font-semibold text-stone-800 hover:text-[#b9452f]">
-                <Avatar name={person.name} size="h-9 w-9" />
+                <Avatar name={person.name} userId={person.id} size="h-9 w-9" />
                 <span className="truncate">{person.name}</span>
               </Link>
             </li>
@@ -216,7 +216,7 @@ function Suggestions({ people, onFollow }: { people: SuggestedPerson[]; onFollow
         {people.map((person) => (
           <li key={person.id} className="flex items-center gap-3 py-2.5">
             <Link to={`/pessoas/${person.id}`} className="flex min-w-0 flex-1 items-center gap-3 text-stone-800 hover:text-[#b9452f]">
-              <Avatar name={person.name} size="h-10 w-10" />
+              <Avatar name={person.name} userId={person.id} size="h-10 w-10" />
               <div className="min-w-0">
                 <p className="truncate font-semibold">{person.name}</p>
                 <p className="text-xs text-stone-600">Vocês combinam {person.percent}%</p>
@@ -255,7 +255,7 @@ function Reviewers({ people }: { people: Reviewer[] }) {
         {people.map((person) => (
           <li key={person.id} className="py-3">
             <Link to={`/pessoas/${person.id}`} className="flex items-center gap-3 text-stone-800 hover:text-[#b9452f]">
-              <Avatar name={person.name} size="h-10 w-10" />
+              <Avatar name={person.name} userId={person.id} size="h-10 w-10" />
               <div className="min-w-0">
                 <p className="truncate font-semibold">{person.name}</p>
                 <p className="text-xs text-stone-600">

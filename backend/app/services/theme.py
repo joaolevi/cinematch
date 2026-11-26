@@ -20,6 +20,7 @@ from .catalog import search_text
 
 THEME_PATH = DATA_DIR / "tema_do_mes.json"
 DEFAULT_GOAL = 3
+NEXT_ITEMS = 4  # quantos títulos do tema o cartão do desafio sugere
 
 
 def all_themes(path: Path | None = None) -> list[dict]:
@@ -128,13 +129,19 @@ def challenge(db: Session, user_id: int, path: Path | None = None, today: date |
     if theme is None or not theme.get("mes"):
         return None
     done, goal = _progress(db, user_id, theme)
+    # O que fazer em seguida: os títulos do tema que a pessoa ainda não tem no diário (um título já registrado antes
+    # não conta de novo, então não adianta sugerir)
+    found, _ = _theme_media(db, theme)
+    in_diary = set(db.scalars(select(DiaryEntry.media_id).where(DiaryEntry.user_id == user_id)))
     return {
         "month": theme["mes"],
         "title": theme["titulo"],
+        "description": theme.get("descricao"),
         "goal": goal,
         "badge": (theme.get("desafio") or {}).get("selo", theme["titulo"]),
         "done": done,
         "earned": len(done) >= goal,
+        "next": [m for m in found if m.id not in in_diary][:NEXT_ITEMS],
     }
 
 

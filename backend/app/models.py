@@ -10,6 +10,7 @@ CONTRIBUTING.md); colunas novas obrigatórias levam server_default, para valer t
 from datetime import date, datetime, timezone
 
 from sqlalchemy import (
+    LargeBinary,
     JSON,
     Boolean,
     Date,
@@ -60,6 +61,8 @@ class User(Base):
     preferences: Mapped[list["UserPreference"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    # Foto de perfil (Minha conta): sai junto com a conta
+    avatar: Mapped["UserAvatar | None"] = relationship(cascade="all, delete-orphan", uselist=False)
 
 
 class UserPreference(Base):
@@ -128,6 +131,19 @@ class ItemNeighbor(Base):
     neighbor_id: Mapped[int] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"))
     source: Mapped[str] = mapped_column(String(20))
     score: Mapped[float] = mapped_column(Float)
+
+
+class UserAvatar(Base):
+    """A foto de perfil, já reduzida pela tela para 256 x 256. O `token` muda a cada troca: entra no endereço da foto,
+    para o navegador guardar em cache e para só quem pode ver a pessoa saber o endereço."""
+
+    __tablename__ = "user_avatars"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    image: Mapped[bytes] = mapped_column(LargeBinary)
+    content_type: Mapped[str] = mapped_column(String(20))
+    token: Mapped[str] = mapped_column(String(32))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class DiaryEntry(Base):

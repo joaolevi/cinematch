@@ -172,6 +172,8 @@ export interface Challenge {
   badge: string;
   done: Media[];
   earned: boolean;
+  description?: string | null;
+  next: Media[];
 }
 
 /** Sessão dupla (RFF27): um filme ou série para ver e um disco para ouvir depois */
