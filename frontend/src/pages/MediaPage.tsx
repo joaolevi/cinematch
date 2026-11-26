@@ -77,7 +77,17 @@ function ListenLinks({ media }: { media: Media }) {
 
 const PROVIDER_KIND: Record<Provider["kind"], string> = { flatrate: "Na assinatura", rent: "Para alugar", buy: "Para comprar" };
 
-/** Onde assistir no Brasil (RFF19): os serviços por tipo, com o crédito exigido da JustWatch. */
+/** O nome do serviço sem o plano nem o canal: "Netflix Standard with Ads" e "Paramount+ Amazon Channel" viram a marca. */
+function brandOf(name: string): string {
+  return name
+    .replace(/\s+(Standard|Basic|Premium)?\s*with Ads$/i, "")
+    .replace(/\s+Amazon Channel$/i, "")
+    .replace(/\s+Premium$/i, "")
+    .replace(/\s+Plus$/i, "+")
+    .trim();
+}
+
+/** Onde assistir no Brasil (RFF19): os serviços por tipo, um por marca, com o crédito exigido da JustWatch. */
 function WatchProviders({ providers }: { providers: Provider[] }) {
   const link = providers.find((p) => p.link)?.link;
   return (
@@ -85,17 +95,20 @@ function WatchProviders({ providers }: { providers: Provider[] }) {
       <p className="text-sm font-semibold">Onde assistir no Brasil</p>
       <div className="mt-2 space-y-2">
         {(Object.keys(PROVIDER_KIND) as Provider["kind"][]).map((kind) => {
-          const items = providers.filter((p) => p.kind === kind);
-          if (items.length === 0) return null;
+          const brands = new Map<string, Provider>();
+          for (const p of providers) if (p.kind === kind && !brands.has(brandOf(p.service))) brands.set(brandOf(p.service), p);
+          if (brands.size === 0) return null;
           return (
-            <div key={kind} className="flex flex-wrap items-center gap-2">
-              <span className="w-28 shrink-0 text-xs text-muted">{PROVIDER_KIND[kind]}</span>
-              {items.map((p) => (
-                <span key={p.service} className="chip flex items-center gap-1.5 py-0.5 pl-0.5">
-                  {p.logo && <img src={p.logo} alt="" className="h-6 w-6 rounded-md" loading="lazy" />}
-                  {p.service}
-                </span>
-              ))}
+            <div key={kind} className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+              <span className="shrink-0 text-xs text-muted sm:w-28">{PROVIDER_KIND[kind]}</span>
+              <div className="flex flex-wrap gap-2">
+                {[...brands].map(([brand, p]) => (
+                  <span key={brand} className="chip flex items-center gap-1.5 py-0.5 pl-0.5">
+                    {p.logo && <img src={p.logo} alt="" className="h-6 w-6 rounded-md" loading="lazy" />}
+                    {brand}
+                  </span>
+                ))}
+              </div>
             </div>
           );
         })}
@@ -310,7 +323,10 @@ function MediaView({ mediaId }: { mediaId: number }) {
               {media.duration_min ? (
                 <div className="flex gap-3">
                   <dt className="w-16 shrink-0 text-muted">Duração</dt>
-                  <dd>{media.duration_min >= 60 ? `${Math.floor(media.duration_min / 60)} h ${media.duration_min % 60} min` : `${media.duration_min} min`}</dd>
+                  <dd>
+                    {media.type === "series" && "Episódios de "}
+                    {media.duration_min >= 60 ? `${Math.floor(media.duration_min / 60)} h ${media.duration_min % 60} min` : `${media.duration_min} min`}
+                  </dd>
                 </div>
               ) : null}
               {media.moods && media.moods.length > 0 && (
@@ -347,7 +363,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
 
             <div className="mt-6 flex flex-wrap gap-2">
               <button className="btn-primary" onClick={() => setShowSeen(true)}>
-                {status.status === "watching" ? "✓ Terminei" : status.diary_entry_id ? "Editar registro" : `✓ ${words.seen}`}
+                {status.status === "watching" ? "Terminei" : status.diary_entry_id ? "Editar registro" : words.seen}
               </button>
               {media.type === "series" && !status.diary_entry_id && (
                 <button className="btn-ghost" onClick={() => startWatching(media.seasons[0]?.number ?? null)}>
@@ -451,7 +467,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
 
       <section className="mt-12 max-w-4xl">
         <h2 className="font-display text-xl font-bold">Resenhas</h2>
-        {media.reviews.length === 0 && <HandNote className="mt-2">Ninguém escreveu sobre este ainda. Que tal ser a primeira pessoa?</HandNote>}
+        {media.reviews.length === 0 && <HandNote className="mt-2">Ninguém escreveu sobre este {media.type === "album" ? "álbum" : "título"} ainda. Que tal ser a primeira pessoa?</HandNote>}
         <div className="mt-2 divide-y divide-line/60">
           {media.reviews.map((r) => (
             <article key={r.id} className="py-4">

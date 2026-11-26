@@ -24,7 +24,10 @@ export default function AboutPage() {
           <img src="/tmdb-logo.svg" alt="TMDB" className="h-4" />
         </a>
         <p className="mt-3 text-sm text-muted">Os dados e as imagens dos títulos vêm do TMDB.</p>
-        <p className="mt-1 text-sm text-muted">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+        <p className="mt-1 text-sm text-muted">
+          This product uses the TMDB API but is not endorsed or certified by TMDB. Em português: este produto usa a API do
+          TMDB, mas não é endossado nem certificado por ele.
+        </p>
         <p className="mt-3 text-sm text-muted">
           Onde assistir cada filme e série vem da{" "}
           <a href="https://www.justwatch.com" target="_blank" rel="noreferrer" className="underline hover:text-accent">JustWatch</a>, pelo TMDB.

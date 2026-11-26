@@ -57,9 +57,6 @@ export function Logo() {
   );
 }
 
-// Teste de 08/11: a moldura de papel. O cabeçalho e as margens viram uma folha, e a página escura fica dentro dela.
-// Para voltar ao cabeçalho escuro, basta trocar para false.
-const PAPER_FRAME = true;
 
 export default function Layout() {
   const { user } = useAuth();
@@ -73,15 +70,9 @@ export default function Layout() {
   }, [saved]);
 
   return (
-    <div className={`flex min-h-screen flex-col ${PAPER_FRAME ? "desk" : ""}`}>
+    <div className="desk flex min-h-screen flex-col">
       {/* O cabeçalho é um tom mais claro que a página, para o menu se destacar e as abas parecerem de fichário */}
-      <header
-        className={`sticky top-0 z-40 ${
-          PAPER_FRAME
-            ? "desk desk-bar"
-            : "border-b border-line bg-surface/95 shadow-[0_6px_20px_rgb(0_0_0/0.35)] backdrop-blur max-sm:border-b-0"
-        }`}
-      >
+      <header className="desk desk-bar sticky top-0 z-40">
         <div className="mx-auto flex flex-wrap items-end gap-x-6 gap-y-2 px-4 pt-3 sm:px-6 lg:px-10">
           <NavLink to="/" className="pb-[3px]">
             <Logo />
@@ -141,7 +132,7 @@ export default function Layout() {
         </div>
       </header>
       <div
-        className={`flex flex-1 flex-col ${PAPER_FRAME ? "desk-page mx-1.5 mb-1.5 sm:mx-2.5 sm:mb-2.5 lg:mx-3 lg:mb-3" : ""}`}
+        className="desk-page mx-1.5 mb-1.5 flex flex-1 flex-col sm:mx-2.5 sm:mb-2.5 lg:mx-3 lg:mb-3"
       >
         <main className="mx-auto w-full flex-1 px-4 py-8 sm:px-6 lg:px-10">
           <Outlet />

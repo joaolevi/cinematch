@@ -11,7 +11,7 @@ Avaliações planejadas, na ordem de implementação. O lugar de cada uma no pla
 | ID | Requisito | Situação | Depende de | Esforço | Incremento | Antes |
 |---|---|---|---|---|---|---|
 | <a id="exp01"></a>EXP01 | Comparar offline, nos filmes do MovieLens, o modelo atual, o mesmo com *embeddings* e o grafo de gosto; fica o que ganhar (ver [O modelo depois do MVP](ARQUITETURA.md#o-modelo-depois-do-mvp)) | **Feito em 10/11:** empate com dados colaborativos; só com conteúdo, o grafo vence. Scripts `compare_models.py` e `check_popularity.py` | — | M | 2a | novo |
-| <a id="exp04"></a>EXP04 | Confirmar no MovieLens 32M o resultado do EXP01, antes de construir o grafo de conteúdo (RNFF12) | Não feito. A base grande exige guardar só os vizinhos mais próximos de cada título, em vez da matriz inteira | EXP01 | P a M | 2a | novo |
+| <a id="exp04"></a>EXP04 | Confirmar no MovieLens 32M o resultado do EXP01, antes de construir o grafo de conteúdo (RNFF12) | **Feito em 25/11:** só com conteúdo, o grafo ainda vence o TF-IDF, com vantagem menor; com dados colaborativos, o híbrido fica à frente do grafo. Ver [Resultado do EXP04](#resultado-do-exp04). Scripts em `backend/scripts/exp04/` | EXP01 | P a M | 2a | novo |
 | <a id="exp02"></a>EXP02 | Comparar, num teste A/B, o motivo escrito por modelo fixo com o mesmo motivo reescrito por IA | Não feito. Depende de guardar o motivo de forma estruturada e de orçamento | RNFF02 | P a M | 3 | RFF33 |
 | <a id="exp03"></a>EXP03 | Medir, no teste A/B, a aceitação das sugestões cruzadas por tipo de ponte | Em andamento: desde 24/11, o painel do admin mostra a aceitação dos discos sugeridos por ponte, por tipo (trilha, compositor, mesma pessoa, cinebiografia, documentário, mesmo artista e ponte fraca), na mesma janela de 7 dias (`by_bridge` em `GET /admin/metrics`). A exibição não guarda o motivo, então o tipo é a ponte mais forte entre o disco e o que a pessoa curte hoje. Falta volume de exibições reais para concluir | RFF27 | P | 5 | novo |
 
@@ -42,6 +42,35 @@ pessoa (589 pessoas), com intervalo de confiança de 95% por bootstrap. Para rep
 - **Os *embeddings*,** com só título, gênero e tags como texto, empatam com o TF-IDF.
 
 A decisão tomada a partir deste resultado está em [O modelo depois do MVP](ARQUITETURA.md#o-modelo-depois-do-mvp) (D22).
+
+### Resultado do EXP04
+
+O EXP01 repetido no MovieLens 32M em 25/11/2026, com o mesmo protocolo do `compare_models.py`: parâmetros escolhidos no
+corte por data e resultado nos últimos 20% de cada pessoa. Para caber num notebook, o catálogo tem só os filmes com
+100 notas ou mais (12.191 títulos, 97,6% das notas), a avaliação usa 5.000 pessoas sorteadas (semente 42; 4.916
+puderam ser avaliadas), e o colaborativo e o grafo usam o treino das 200.948 pessoas. NDCG@20 e acerto em 20:
+
+| Variante | ml-latest-small | MovieLens 32M |
+|---|---|---|
+| Só os mais populares | 0,083 / 43% | 0,080 / 45% |
+| Só conteúdo, TF-IDF (grupo B) | 0,022 / 18% | 0,047 / 31% |
+| Grafo só com conteúdo | 0,058 / 43% | 0,072 / 47% |
+| Híbrido 0,5 (grupo A), 50 vizinhos por título | 0,107 / 59% | 0,140 / 62% |
+| Híbrido 0,2, 50 vizinhos por título | 0,125 / 60% | 0,139 / 61% |
+| Colaborativo puro, 50 vizinhos por título | 0,126 / 59% | 0,136 / 61% |
+| Grafo completo (parâmetros do EXP01) | 0,122 / 57% | 0,113 / 56% |
+
+No ml-latest-small, as linhas com 50 vizinhos e a do grafo só com conteúdo vêm da reprodução do EXP01 feita em 25/11, que
+repetiu exatamente os números já documentados. No 32M, o grupo A ficou +0,093 acima do B (IC 95%: +0,089 a +0,097).
+
+**Conclusões:**
+- **Só com conteúdo, o grafo ainda vence o TF-IDF**, por +0,025 (IC 95%: +0,022 a +0,028), contra +0,037 no ml-latest-small. Parte vem de sugerir títulos mais populares, mas na cauda longa, sem os 10% mais avaliados, o grafo também ganha (+0,017). Com só 50 vizinhos por título, ele perde metade da vantagem (0,059): o RNFF12 precisa guardar mais vizinhos ou os atributos.
+- **Com dados colaborativos, as variantes do híbrido empatam entre si** (de 0,136 a 0,144), e guardar só 50 vizinhos quase não custa nada. O grafo completo fica abaixo do híbrido (−0,026; IC 95%: −0,029 a −0,022), o que confirma a D22: os filmes mantêm o híbrido.
+
+**Limites:** uma semente só; catálogo menor que a base inteira; sem os dados do TMDB, então os números não se comparam
+com a tabela "Dados reais, dados inventados e modelos prontos"; as variantes com *embeddings* ficaram de fora. Para
+repetir: `cd backend && ../.venv/bin/python -I scripts/exp04/exp04.py <pasta-do-ml-32m>` e, para a cauda longa,
+`scripts/exp04/exp04_popularity.py`.
 
 ## Evidências
 

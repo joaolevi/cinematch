@@ -157,7 +157,9 @@ export default function SearchPage() {
             ))}
         </div>
       )}
-      {total == null ? null : total > 0 ? (
+      {total == null ? (
+        !error && <HandNote className="mt-6">Procurando no catálogo...</HandNote>
+      ) : total > 0 ? (
         <p className="mt-3 text-sm text-muted">{plural(total, "resultado", "resultados")}</p>
       ) : (
         <HandNote className="mt-6">Nada com esse nome por aqui. Que tal outra palavra?</HandNote>

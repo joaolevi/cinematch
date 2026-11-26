@@ -1053,6 +1053,28 @@
         }
       }
     },
+    "/media/showcase": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Media Showcase",
+        "description": "Exemplos para a página de apresentação, sem login: pares de filme ou série e disco ligados por trilha,\ncinebiografia, documentário ou compositor (RFF26, RFF27), e os álbuns mais ouvidos do catálogo.",
+        "operationId": "media_showcase_media_showcase_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShowcaseOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/media/{media_id}/similar": {
       "get": {
         "tags": [
@@ -3241,6 +3263,58 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{user_id}/diary": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Person Diary",
+        "description": "O diário de uma pessoa, para a história do gosto no perfil (RFF11): a frase, os números e os gráficos são\ncalculados na tela, como no próprio diário. Segue a mesma regra do perfil: perfil privado de outra pessoa dá 404, e\nquem só mostra para quem segue dá 403 para quem não segue. Resenhas escondidas pela moderação não saem.",
+        "operationId": "person_diary_users__user_id__diary_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DiaryOut"
+                  },
+                  "title": "Response Person Diary Users  User Id  Diary Get"
                 }
               }
             }
@@ -7383,6 +7457,58 @@
           "services"
         ],
         "title": "ServicesIn"
+      },
+      "ShowcaseOut": {
+        "properties": {
+          "pairs": {
+            "items": {
+              "$ref": "#/components/schemas/ShowcasePairOut"
+            },
+            "type": "array",
+            "title": "Pairs"
+          },
+          "albums": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "type": "array",
+            "title": "Albums"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pairs",
+          "albums"
+        ],
+        "title": "ShowcaseOut",
+        "description": "Exemplos para a apresentação, antes de entrar: pares de filme e disco e os álbuns mais ouvidos."
+      },
+      "ShowcasePairOut": {
+        "properties": {
+          "video": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "album": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Por que o disco acompanha o filme, como \"A trilha sonora de Interestelar\""
+          }
+        },
+        "type": "object",
+        "required": [
+          "video",
+          "album",
+          "kind",
+          "reason"
+        ],
+        "title": "ShowcasePairOut"
       },
       "StreamingOut": {
         "properties": {

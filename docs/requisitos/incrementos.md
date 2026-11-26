@@ -22,7 +22,7 @@ Base técnica, a métrica corrigida e o grafo de conteúdo, que já melhora as s
 | [RFF03](funcionais.md#rff03) | Pedir a nota na hora certa | Funcional | Feito | P | 5 | 4 | 2 | — |
 | [RFF04](funcionais.md#rff04) | Taxa de satisfação no painel | Funcional | Feito | P | 5 | 4 | 1 | — |
 | [EXP01](../tecnico/AVALIACAO.md#exp01) | Comparar modelos de recomendação offline | Experimento | Feito | M | 4 | 3 | 3 | — |
-| [EXP04](../tecnico/AVALIACAO.md#exp04) | Confirmar o EXP01 no MovieLens 32M | Experimento | Não iniciado | P a M | 3 | 2 | 2 | EXP01 |
+| [EXP04](../tecnico/AVALIACAO.md#exp04) | Confirmar o EXP01 no MovieLens 32M | Experimento | Feito | P a M | 3 | 2 | 2 | EXP01 |
 | [RNFF12](nao-funcionais.md#rnff12) | Grafo de conteúdo para séries, música e grupo B | Não funcional | Não iniciado | M | 5 | 4 | 4 | EXP04 |
 
 ## Incremento 2b: a história do seu gosto em três mídias
@@ -50,7 +50,7 @@ Preparar a abertura para pessoas de fora, o social mínimo e o controle sobre o 
 | [RFF08](funcionais.md#rff08) | Dar retorno sobre uma sugestão | Funcional | Feito | M | 3 | 2 | 4 | RFF07; o "mais leve" depende do RNFF09 |
 | [RFF09](funcionais.md#rff09) | Seguir pessoas | Funcional | Feito | M | 3 | 2 | 1 | RNFF01 |
 | [RFF10](funcionais.md#rff10) | Escolher quem vê meus registros | Funcional | Feito | P a M | 3 | 3 | 1 | RFF09 |
-| [RFF11](funcionais.md#rff11) | Perfil público com a história do gosto | Funcional | Parcial | M | 3 | 3 | 2 | RFF10 |
+| [RFF11](funcionais.md#rff11) | Perfil público com a história do gosto | Funcional | Feito | M | 3 | 3 | 2 | RFF10 |
 | [RFF12](funcionais.md#rff12) | Registrar o mesmo título mais de uma vez | Funcional | Não iniciado | M | 3 | 3 | 1 | RNFF01 |
 | [RFF13](funcionais.md#rff13) | Adicionar qualquer título sem o admin | Funcional | Feito | P | 3 | 3 | 1 | — |
 | [RFF14](funcionais.md#rff14) | Recuperar a senha e verificar o e-mail | Funcional | Não iniciado | M | 3 | 3 | 1 | RNFF01 |

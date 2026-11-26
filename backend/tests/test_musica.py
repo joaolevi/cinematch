@@ -111,3 +111,19 @@ def test_aceitacao_por_tipo_de_ponte(client, user_headers, admin_headers, db, al
     assert (by["soundtrack"]["shown"], by["soundtrack"]["accepted"]) == (1, 1)
     assert (by["composer"]["shown"], by["composer"]["accepted"]) == (1, 0)
     assert by["weak"]["shown"] == 1 and by["soundtrack"]["label"] == "Trilha sonora"
+
+
+# ---------------------------------------------------------------- apresentação: exemplos de filme e disco
+def test_vitrine_da_apresentacao_mostra_filme_e_disco(client, db, albums):  # noqa: F811
+    a, _ = albums
+    for disco in a.values():
+        disco.poster_url = f"https://capa/{disco.external_id}.jpg"  # só entra disco com capa
+    a["sem_filme"].popularity = 99
+    db.commit()
+    vitrine = client.get("/media/showcase").json()  # sem login: é a página de quem ainda não entrou
+    assert vitrine["pairs"]
+    assert all(p["video"]["type"] in ("movie", "series") and p["album"]["type"] == "album" for p in vitrine["pairs"])
+    assert all(p["kind"] != "composer" for p in vitrine["pairs"])  # a trilha do próprio filme vem antes do compositor
+    assert len({p["album"]["id"] for p in vitrine["pairs"]}) == len(vitrine["pairs"])
+    assert any(p["reason"].startswith("A trilha sonora de") for p in vitrine["pairs"])
+    assert vitrine["albums"][0]["title"] == "Sem Filme"  # os mais ouvidos, pela popularidade

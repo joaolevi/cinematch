@@ -48,19 +48,32 @@ function LetterboxdImport() {
         {LETTERBOXD_FILES.join(", ")}. O que já está no seu diário fica como está, e as resenhas seguem quem vê os seus
         registros.
       </p>
-      <label className="block">
-        <span className="font-semibold">Arquivos do Letterboxd</span>
-        <input
-          type="file"
-          accept=".csv,text/csv"
-          multiple
-          onChange={(e) => {
-            setFiles(Array.from(e.target.files ?? []));
-            setResult(null);
-          }}
-          className="mt-1 block w-full text-sm"
-        />
-      </label>
+      {/* O campo de arquivo do navegador fala inglês em alguns sistemas: ele fica escondido, e o botão é nosso */}
+      <div>
+        <p className="font-semibold">Arquivos do Letterboxd</p>
+        <div className="mt-1 flex flex-wrap items-center gap-3">
+          <input
+            id="letterboxd-arquivos"
+            type="file"
+            accept=".csv,text/csv"
+            multiple
+            onChange={(e) => {
+              setFiles(Array.from(e.target.files ?? []));
+              setResult(null);
+            }}
+            className="peer sr-only"
+          />
+          <label
+            htmlFor="letterboxd-arquivos"
+            className="btn-ghost cursor-pointer px-4 py-1.5 text-sm peer-focus-visible:outline-2 peer-focus-visible:outline-[#b9452f]"
+          >
+            Escolher arquivos CSV
+          </label>
+          <span className="text-sm">
+            {files.length ? files.map((f) => f.name).join(", ") : "Nenhum arquivo escolhido"}
+          </span>
+        </div>
+      </div>
       <button className="btn-primary" disabled={sending || files.length === 0}>
         {sending ? "Procurando os filmes..." : "Trazer do Letterboxd"}
       </button>
