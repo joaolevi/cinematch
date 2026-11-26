@@ -60,7 +60,8 @@ function Ranking({ title, entries, color }: { title: string; entries: DiaryEntry
 function caption(entry: DiaryEntry): string {
   // Série que a pessoa ainda está vendo (RFF24)
   if (entry.status === "watching") return entry.season ? `assistindo · T${entry.season}` : "assistindo";
-  if (!entry.consumed_at) return entry.from_onboarding ? "favorito ♥" : "sem data";
+  // No grupo "Sem data", repetir "sem data" em cada polaroide só faz barulho
+  if (!entry.consumed_at) return entry.from_onboarding ? "favorito ♥" : "";
   return new Date(`${entry.consumed_at}T12:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
 }
 
@@ -115,7 +116,7 @@ function TastePage({ entries }: { entries: DiaryEntry[] }) {
             </>
           )}
         </div>
-        <ul className="grid grid-cols-3 gap-3 sm:gap-4 lg:w-[27rem]">
+        <ul className="hidden grid-cols-3 gap-3 sm:grid sm:gap-4 lg:w-[27rem]" aria-label="Números do diário">
           {notes.map((note, i) => (
             <li
               key={note.label}
@@ -230,7 +231,7 @@ export default function DiaryPage() {
           {(
             [
               ["linha", "Linha do tempo"],
-              ["gosto", "Meu gosto"],
+              ["gosto", "Em números"],
             ] as const
           ).map(([key, label]) => (
             <button

@@ -253,10 +253,10 @@ export default function HomePage() {
         <Shelf
           title={
             <>
-              Da sua lista <ListName />
+              Da minha lista <ListName />
             </>
           }
-          label="Da sua lista Quero ver"
+          label="Da minha lista Quero ver"
           note="pra não esquecer"
           to="/listas"
           linkLabel="Ver lista"

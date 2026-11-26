@@ -194,6 +194,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [showSeen, setShowSeen] = useState(false);
+  const [fullOverview, setFullOverview] = useState(false); // no celular, a sinopse começa em 4 linhas
   const [stamp, setStamp] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -233,6 +234,8 @@ function MediaView({ mediaId }: { mediaId: number }) {
   const watchlist = lists.find((l) => l.is_watchlist);
   const customLists = lists.filter((l) => !l.is_watchlist);
   const status = media.my_status;
+  // Na música, os cards de "Para ver depois" costumam ter o mesmo motivo: ele vai uma vez só, no subtítulo
+  const sameReason = connections.length > 1 && connections.every((c) => c.reason === connections[0].reason);
   const album = media.type === "album";
   const words = verbs(media.type);
 
@@ -311,7 +314,14 @@ function MediaView({ mediaId }: { mediaId: number }) {
                 );
               })}
             </div>
-            <p className="mt-5 max-w-6xl leading-relaxed text-stone-300">{media.overview}</p>
+            <p className={`mt-5 max-w-6xl leading-relaxed text-stone-300 ${fullOverview ? "" : "max-sm:line-clamp-4"}`}>
+              {media.overview}
+            </p>
+            {!fullOverview && media.overview.length > 220 && (
+              <button className="mt-1 text-sm font-semibold text-accent underline sm:hidden" onClick={() => setFullOverview(true)}>
+                Ler a sinopse inteira
+              </button>
+            )}
 
             <dl className="mt-5 max-w-6xl space-y-1.5 text-sm">
               {media.creators.length > 0 && (
@@ -372,7 +382,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
               )}
               {watchlist && status.status !== "watching" && (
                 <button className={status.in_watchlist ? "btn-ghost" : "btn-want"} onClick={() => toggleList(watchlist, status.in_watchlist)}>
-                  {status.in_watchlist ? "Remover do Quero ver" : `+ ${words.want}`}
+                  {status.in_watchlist ? "Tirar do Quero ver" : words.want}
                 </button>
               )}
               {!status.diary_entry_id && !status.in_watchlist && (
@@ -432,16 +442,23 @@ function MediaView({ mediaId }: { mediaId: number }) {
         <section className="mt-12">
           <h2 className="font-display text-xl font-bold">{album ? "Para ver depois" : "Para ouvir depois"}</h2>
           <p className="mt-1 text-sm text-muted">
-            {album ? "Filmes e séries ligados a este álbum." : "Álbuns ligados a este título: a trilha, quem compôs, quem do elenco também canta e a música de quem o filme conta a história."}
+            {album
+              ? "Filmes e séries ligados a este álbum."
+              : media.type === "series"
+                ? "Álbuns ligados a esta série: a trilha, quem compôs e quem do elenco também canta."
+                : "Álbuns ligados a este filme: a trilha, quem compôs, quem do elenco canta e a música de quem ele conta a história."}
+            {sameReason && ` Todos por um motivo: ${connections[0].reason}.`}
           </p>
           <div className="mt-4">
             <Carousel label={album ? "para ver depois" : "para ouvir depois"}>
               {connections.map((c) => (
                 <div key={c.media.id} className="w-36 shrink-0 snap-start sm:w-40">
                   <MediaCard media={c.media}>
-                    <p className="mt-1 line-clamp-2 text-xs text-muted" title={c.reason}>
-                      {c.reason}
-                    </p>
+                    {!sameReason && (
+                      <p className="mt-1 line-clamp-2 text-xs text-muted" title={c.reason}>
+                        {c.reason}
+                      </p>
+                    )}
                   </MediaCard>
                 </div>
               ))}
@@ -467,7 +484,14 @@ function MediaView({ mediaId }: { mediaId: number }) {
 
       <section className="mt-12 max-w-4xl">
         <h2 className="font-display text-xl font-bold">Resenhas</h2>
-        {media.reviews.length === 0 && <HandNote className="mt-2">Ninguém escreveu sobre este {media.type === "album" ? "álbum" : "título"} ainda. Que tal ser a primeira pessoa?</HandNote>}
+        {media.reviews.length === 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <HandNote>Ninguém escreveu sobre este {media.type === "album" ? "álbum" : "título"} ainda. Que tal ser a primeira pessoa?</HandNote>
+            <button className="btn-ghost px-4 py-1.5 text-sm" onClick={() => setShowSeen(true)}>
+              Escrever uma resenha
+            </button>
+          </div>
+        )}
         <div className="mt-2 divide-y divide-line/60">
           {media.reviews.map((r) => (
             <article key={r.id} className="py-4">

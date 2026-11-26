@@ -20,12 +20,20 @@ function stateOf(weight: number): string | null {
   return null;
 }
 
-function Section({ title, note, children }: { title: string; note: string; children: ReactNode }) {
+const SHOWN = 5; // cada grupo mostra os que mais pesam; o resto fica atrás de "Ver todos"
+
+function Section({ title, note, children }: { title: string; note: string; children: ReactNode[] }) {
+  const [all, setAll] = useState(false);
   return (
     <section className="card p-5">
       <h2 className="font-display text-lg font-bold">{title}</h2>
       <p className="text-xs text-muted">{note}</p>
-      <ul className="mt-3 space-y-2">{children}</ul>
+      <ul className="mt-3 space-y-2">{all ? children : children.slice(0, SHOWN)}</ul>
+      {children.length > SHOWN && (
+        <button className="mt-3 text-xs font-semibold text-muted underline hover:text-accent" onClick={() => setAll(!all)}>
+          {all ? "Mostrar só os principais" : `Ver todos (${children.length})`}
+        </button>
+      )}
     </section>
   );
 }
@@ -71,7 +79,7 @@ function FacetRow({
       <span className="col-span-2 flex gap-1 sm:col-span-1" role="group" aria-label={`Ajustar ${facet.label}`}>
         {button(MORE, "Mais", `Pedir mais ${facet.label}`)}
         {button(LESS, "Menos", `Pedir menos ${facet.label}`)}
-        {button(OFF, "Tirar", `Não sugerir ${facet.label}`)}
+        {button(OFF, "Não sugerir", `Não sugerir ${facet.label}`)}
       </span>
     </li>
   );
@@ -128,7 +136,7 @@ export default function TastePage() {
         <p>
           É assim que o recomendador enxerga você, a partir do que você registrou: cada título curtido espalha o peso dele
           pelos gêneros, climas, épocas e pessoas. <strong>Mais</strong> e <strong>Menos</strong> mudam as sugestões na
-          hora; <strong>Tirar</strong> para de sugerir aquilo. Um registro marcado para não contar continua no diário, mas
+          hora; <strong>Não sugerir</strong> para de sugerir aquilo. Um registro marcado para não contar continua no diário, mas
           sai do cálculo.{" "}
           <Link to="/como-recomendamos" className="underline hover:text-[#b9452f]">
             Como recomendamos
@@ -172,9 +180,9 @@ export default function TastePage() {
           <section className="mt-10">
             <h2 className="font-display text-xl font-bold">Os títulos que mais pesam</h2>
             <p className="mt-1 text-sm text-muted">Se algum não representa o seu gosto, tire do cálculo.</p>
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {profile.titles.map((t) => (
-                <li key={t.media.id} className="card flex items-center gap-3 p-3">
+                <li key={t.media.id} className="card flex min-w-0 items-center gap-3 p-3">
                   <Link to={`/media/${t.media.id}`} className="w-12 shrink-0" aria-label={t.media.title}>
                     <Poster media={t.media} compact rounded="rounded-[2px]" />
                   </Link>

@@ -119,7 +119,7 @@ export default function ProfilePage() {
           <div className={INK}>
             <div className="flex flex-wrap items-center gap-4">
               <Avatar name={profile.name} userId={profile.id} size="h-16 w-16 text-2xl" />
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 basis-48">
                 <h1 className="font-display text-3xl font-bold sm:text-4xl">{profile.name}</h1>
                 <p className="mt-1 text-sm text-stone-600">
                   {profile.restricted
@@ -156,7 +156,7 @@ export default function ProfilePage() {
               </div>
               {!profile.is_me && (
                 <button
-                  className={profile.following ? "btn-ghost" : "btn-primary"}
+                  className={`max-sm:w-full ${profile.following ? "btn-ghost" : "btn-primary"}`}
                   disabled={following}
                   onClick={async () => {
                     setFollowing(true);

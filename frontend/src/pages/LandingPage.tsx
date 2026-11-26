@@ -122,7 +122,7 @@ export default function LandingPage() {
                 Sou do time do drama dos anos 2000.
               </p>
             </div>
-            <span className="absolute right-[2%] bottom-[14%] z-10 rotate-[-10deg] rounded-xl border-4 border-[#b9452f] px-4 py-1 font-display text-2xl font-bold text-[#b9452f] sm:text-3xl">
+            <span className="absolute right-[2%] bottom-[14%] z-10 hidden rotate-[-10deg] rounded-xl border-4 border-[#b9452f] px-4 py-1 font-display text-2xl font-bold text-[#b9452f] sm:block sm:text-3xl">
               Visto!
             </span>
           </PolaroidCollage>

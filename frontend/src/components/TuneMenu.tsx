@@ -69,7 +69,7 @@ export default function TuneMenu({
         onClick={() => setOpen((o) => !o)}
         className="cursor-pointer text-xs font-semibold text-muted underline decoration-dotted underline-offset-2 hover:text-accent"
       >
-        Ajustar
+        Ajustar sugestão
       </button>
       {open && (
         <div

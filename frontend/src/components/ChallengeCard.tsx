@@ -61,7 +61,7 @@ export default function ChallengeCard({ c, userId }: { c: Challenge; userId: num
 
           {/* Os selos do progresso: cada título registrado ocupa um lugar, com o pôster */}
           <div className="mt-4 flex items-center gap-3">
-            <ol
+            <div
               role="progressbar"
               aria-label="Progresso do desafio"
               aria-valuemin={0}
@@ -70,10 +70,10 @@ export default function ChallengeCard({ c, userId }: { c: Challenge; userId: num
               className="flex gap-2"
             >
               {slots.map((media, i) => (
-                <li
+                <span
                   key={media?.id ?? `vago-${i}`}
                   title={media ? media.title : "Falta registrar"}
-                  className={`relative h-16 w-12 overflow-hidden rounded-sm ${
+                  className={`relative block h-16 w-12 overflow-hidden rounded-sm ${
                     media ? "shadow-md" : "border-2 border-dashed border-stone-400"
                   }`}
                 >
@@ -89,9 +89,9 @@ export default function ChallengeCard({ c, userId }: { c: Challenge; userId: num
                       {i + 1}
                     </span>
                   )}
-                </li>
+                </span>
               ))}
-            </ol>
+            </div>
             <p className="text-sm text-stone-700">
               <b>
                 {done} de {c.goal}

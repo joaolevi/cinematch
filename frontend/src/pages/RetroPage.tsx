@@ -36,6 +36,7 @@ export default function RetroPage() {
 
   const years = useMemo(() => retroPeriods(entries ?? []), [entries]);
   const period = periodFrom(params, years);
+  const undated = (entries ?? []).filter((e) => !e.consumed_at && !e.from_onboarding).length;
   const retro = useMemo(() => (entries && period ? retroOf(entries, period) : null), [entries, period?.year, period?.month]);
   usePageTitle(period ? `Retrospectiva de ${periodName(period)}` : "Retrospectiva");
 
@@ -85,7 +86,7 @@ export default function RetroPage() {
       ) : (
         <>
           <nav aria-label="Período da retrospectiva" className="mt-6 space-y-3">
-            <div className="flex flex-wrap gap-2">
+            <div className={`flex flex-wrap gap-2 ${years.length < 2 ? "hidden" : ""}`}>
               {years.map(({ year }) => (
                 <button
                   key={year}
@@ -149,6 +150,9 @@ export default function RetroPage() {
                   )}
                   <ul className="mt-3 font-hand text-2xl leading-8 font-semibold opacity-85">
                     <li>→ {retro.counts}</li>
+                    {undated > 0 && (
+                      <li>→ {undated === 1 ? "1 registro sem data ficou de fora." : `${undated} registros sem data ficaram de fora.`}</li>
+                    )}
                     {retro.genres.length > 0 && <li>→ No que eu vi, fui do time {genreList(retro.genres)}.</li>}
                     {retro.musicGenres.length > 0 && <li>→ No que eu ouvi, fui do time {genreList(retro.musicGenres)}.</li>}
                     {retro.age != null && (
