@@ -18,6 +18,7 @@ from ..db import get_db
 from ..models import (
     DiaryEntry,
     Dismissed,
+    EpisodeEntry,
     Follow,
     Media,
     RecEvent,
@@ -185,6 +186,14 @@ def export_my_data(db: Session = Depends(get_db), user: User = Depends(get_curre
                 "from_onboarding": e.from_onboarding,
             }
             for e in entries
+        ],
+        "episodes": [
+            {"title": titles[e.media_id].title if e.media_id in titles else None, "season": e.season,
+             "episode": e.episode, "rating": e.rating, "note": e.note}
+            for e in db.scalars(
+                select(EpisodeEntry).where(EpisodeEntry.user_id == user.id)
+                .order_by(EpisodeEntry.media_id, EpisodeEntry.season, EpisodeEntry.episode)
+            )
         ],
         "lists": [
             {

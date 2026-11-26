@@ -35,6 +35,7 @@ import type {
   TasteProfile,
   Occasion,
   Wish,
+  Episode,
   Showcase,
   LetterboxdResult,
   Arrival,
@@ -138,6 +139,9 @@ export const api = {
   trending: (type?: MediaType, limit = 20) =>
     request<Media[]>("/media/trending", { query: { type, limit } }),
   showcase: () => request<Showcase>("/media/showcase"),
+  episodes: (mediaId: number, season: number) => request<Episode[]>(`/media/${mediaId}/seasons/${season}/episodes`),
+  rateEpisode: (mediaId: number, season: number, episode: number, data: { rating: number | null; note: string | null }) =>
+    request<Episode>(`/media/${mediaId}/seasons/${season}/episodes/${episode}`, { method: "PUT", body: data }),
   avatars: () => request<Record<string, string>>("/users/avatars"),
   setAvatar: (image: string) => request<void>("/me/avatar", { method: "PUT", body: { image } }),
   removeAvatar: () => request<void>("/me/avatar", { method: "DELETE" }),
