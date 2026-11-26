@@ -22,9 +22,9 @@ function describe(n: AppNotification): { text: React.ReactNode; to: string } {
     case "indicou":
       return { text: <>{who} deixou um bilhetinho pra você: {title}</>, to: media };
     case "convidou":
-      return { text: <>{who} chamou você pra criar uma lembrança: {title}</>, to: "/#lembrancas" };
+      return { text: <>{who} chamou você pra criar uma lembrança: {title}</>, to: media };
     case "aceitou":
-      return { text: <>{who} topou! Vocês vão {n.media?.type === "album" ? "ouvir" : "ver"} {title} juntos</>, to: "/#lembrancas" };
+      return { text: <>{who} topou! Vocês vão {n.media?.type === "album" ? "ouvir" : "ver"} {title} juntos</>, to: media };
     default:
       return {
         text: (

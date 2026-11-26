@@ -16,6 +16,7 @@ import ReviewTalk from "../components/ReviewTalk";
 import SpoilerText from "../components/SpoilerText";
 import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
+import FromFriends from "../components/FromFriends";
 import { diaryChanged, useDiaryVersion } from "../seen";
 import { StarsDisplay } from "../components/Stars";
 import { Avatar } from "../components/WatchedBy";
@@ -448,6 +449,14 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
   return (
     <div>
       <SeenStamp id={stamp} album={media.type === "album"} />
+      {/* Quem indicou ou chamou para ver junto: o primeiro que a pessoa vê ao chegar pela notificação */}
+      <FromFriends
+        mediaId={media.id}
+        album={media.type === "album"}
+        inWatchlist={status.in_watchlist}
+        seen={!!status.diary_entry_id}
+        onRegister={() => setShowSeen(true)}
+      />
       <div className="relative overflow-hidden rounded-2xl border border-line/60 bg-surface/40 p-6 md:p-8">
         {/* Como no Letterboxd: a cena larga do título no topo, sumindo no fundo; sem ela, o pôster desfocado */}
         {backdrop ? (

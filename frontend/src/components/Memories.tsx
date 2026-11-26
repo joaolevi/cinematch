@@ -9,7 +9,7 @@ import SocialHead from "./SocialHead";
 import { Avatar } from "./WatchedBy";
 
 /** "sábado, 28 de nov.", "hoje", "amanhã" ou "ontem". */
-function dayLabel(day: string): string {
+export function dayLabel(day: string): string {
   if (day === localDate()) return "hoje";
   if (day === localDate(-1)) return "amanhã";
   if (day === localDate(1)) return "ontem";
