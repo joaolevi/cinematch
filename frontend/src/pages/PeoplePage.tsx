@@ -63,7 +63,7 @@ export default function PeoplePage() {
     <div>
       <header className="mx-auto max-w-2xl text-center">
         <h1 className="text-3xl font-bold">Comunidade</h1>
-        <p className="mt-1 text-muted">Quem anda registrando, escrevendo e curtindo.</p>
+        <p className="font-hand text-2xl font-bold text-accent">quem anda registrando, escrevendo e curtindo</p>
         <CommunityNav />
       </header>
 

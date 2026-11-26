@@ -434,7 +434,8 @@ export default function AccountPage() {
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Minha conta</h1>
-        <p className="mt-1 text-muted">
+        <p className="font-hand text-2xl font-bold text-accent">do seu jeito</p>
+        <p className="mt-1 text-sm text-muted">
           {user.name} · {user.email}
         </p>
       </div>

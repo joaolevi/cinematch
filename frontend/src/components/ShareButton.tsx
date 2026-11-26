@@ -1,20 +1,85 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { localDate } from "../format";
 import type { Media, Person } from "../types";
 import { Avatar } from "./WatchedBy";
 
-type Mode = "bilhete" | "lembranca";
+export type ShareMode = "bilhete" | "lembranca";
+type Mode = ShareMode;
+
+/** Escolher o filme, a série ou o disco, quando a janela abre fora da página de um título (no Início, por exemplo). */
+function MediaPicker({ onPick }: { onPick: (m: Media) => void }) {
+  const [q, setQ] = useState("");
+  const [found, setFound] = useState<Media[] | null>(null);
+  useEffect(() => {
+    const text = q.trim();
+    if (text.length < 2) return setFound(null);
+    const t = setTimeout(() => api.search({ q: text, limit: 6 }).then((r) => setFound(r.items)).catch(() => setFound([])), 250);
+    return () => clearTimeout(t);
+  }, [q]);
+  return (
+    <div className="mt-4">
+      <label htmlFor="compartilhar-busca" className="text-sm text-muted">
+        O quê? Um filme, uma série ou um disco
+      </label>
+      <input
+        id="compartilhar-busca"
+        type="search"
+        autoFocus
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Procure pelo nome"
+        autoComplete="off"
+        className="input mt-1 w-full text-sm"
+      />
+      {found && (
+        <ul className="mt-2 max-h-64 overflow-y-auto rounded-xl border border-line" role="listbox" aria-label="Resultados">
+          {found.length === 0 && <li className="px-3 py-2 text-sm text-muted">Nada com esse nome.</li>}
+          {found.map((m) => (
+            <li key={m.id}>
+              <button type="button" onClick={() => onPick(m)} className="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left text-sm hover:bg-surface-2">
+                {m.poster_url ? (
+                  <img src={m.poster_url} alt="" className={`w-8 shrink-0 rounded-sm object-cover ${m.type === "album" ? "aspect-square" : "aspect-[2/3]"}`} />
+                ) : (
+                  <span className="h-12 w-8 shrink-0 rounded-sm bg-surface-2" />
+                )}
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">{m.title}</span>
+                  <span className="text-xs text-muted">
+                    {{ movie: "Filme", series: "Série", album: "Álbum" }[m.type]}
+                    {m.year ? ` · ${m.year}` : ""}
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 /**
  * Compartilhar um título com quem você segue, de dois jeitos:
  * - Deixar um bilhete: indicar, com um recado, para uma ou mais pessoas;
  * - Criar lembrança juntos: chamar uma pessoa para ver ou ouvir junto, com um dia combinado.
  */
-export default function ShareButton({ media }: { media: Media }) {
+export default function ShareButton({
+  media: fixed,
+  initialMode = "bilhete",
+  trigger,
+}: {
+  /** Sem título, a janela começa pedindo para escolher um */
+  media?: Media;
+  initialMode?: Mode;
+  /** Outro botão para abrir a janela, no lugar do "Compartilhar" */
+  trigger?: (open: () => void) => ReactNode;
+}) {
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<Mode>("bilhete");
+  const [mode, setMode] = useState<Mode>(initialMode);
+  const [picked, setPicked] = useState<Media | null>(null);
+  const media = fixed ?? picked;
   const [people, setPeople] = useState<Person[] | null>(null);
   const [to, setTo] = useState<number[]>([]);
   const [day, setDay] = useState("");
@@ -22,7 +87,7 @@ export default function ShareButton({ media }: { media: Media }) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const album = media.type === "album";
+  const album = media?.type === "album";
 
   useEffect(() => {
     if (open && people === null) api.following().then(setPeople).catch(() => setPeople([]));
@@ -40,6 +105,7 @@ export default function ShareButton({ media }: { media: Media }) {
   }
 
   async function send() {
+    if (!media) return;
     setBusy(true);
     setError(null);
     try {
@@ -57,6 +123,7 @@ export default function ShareButton({ media }: { media: Media }) {
       setTimeout(() => {
         setOpen(false);
         setDone(null);
+        if (!fixed) setPicked(null);
       }, 2000);
     } catch (e) {
       setError((e as Error).message);
@@ -71,6 +138,12 @@ export default function ShareButton({ media }: { media: Media }) {
   ];
   return (
     <>
+      {trigger ? (
+        trigger(() => {
+          setMode(initialMode);
+          setOpen(true);
+        })
+      ) : (
       <button className="btn-ghost" onClick={() => setOpen(true)}>
         <svg viewBox="0 0 20 20" aria-hidden className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
           <path d="M3.5 10l13-6-4.5 13-2.5-5.5z" />
@@ -78,11 +151,17 @@ export default function ShareButton({ media }: { media: Media }) {
         </svg>
         Compartilhar
       </button>
+      )}
       {open && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 p-4 pt-[10vh]" role="dialog" aria-modal="true" aria-labelledby="compartilhar-titulo" onClick={() => setOpen(false)}>
           <div className="rise w-full max-w-md rounded-2xl border border-line bg-surface p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <p id="compartilhar-titulo" className="font-display text-xl font-bold">
-              {media.title}
+            <p id="compartilhar-titulo" className="flex items-center gap-2 font-display text-xl font-bold">
+              {media ? media.title : mode === "bilhete" ? "Deixar um bilhetinho" : "Criar uma lembrança juntos"}
+              {media && !fixed && (
+                <button type="button" className="ml-auto text-xs font-normal text-muted underline hover:text-accent" onClick={() => setPicked(null)}>
+                  Trocar
+                </button>
+              )}
             </p>
             <div role="tablist" aria-label="Como compartilhar" className="mt-3 grid grid-cols-2 gap-2">
               {tabs.map(([key, label, hint]) => (
@@ -101,7 +180,9 @@ export default function ShareButton({ media }: { media: Media }) {
                 </button>
               ))}
             </div>
-            {done ? (
+            {!media && !done ? (
+              <MediaPicker onPick={setPicked} />
+            ) : done ? (
               <p className="mt-6 mb-2 text-center font-display text-xl font-bold" role="status">
                 {done}
               </p>

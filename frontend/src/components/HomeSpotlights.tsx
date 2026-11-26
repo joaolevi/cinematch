@@ -4,6 +4,7 @@ import { api } from "../api";
 import { useAuth } from "../auth";
 import { MEDIA_STYLE } from "../format";
 import { diaryChanged } from "../seen";
+import { sessionNow } from "../session";
 import { tasteOf } from "../taste";
 import type { DiaryEntry, Pair } from "../types";
 import ListName from "./ListName";
@@ -59,21 +60,27 @@ function AskCard() {
 function TonightCard() {
   const { user } = useAuth();
   const services = (user?.services.length ?? 0) > 0;
+  const session = sessionNow();
   return (
     <Link
       to="/para-voce?hoje=1"
       style={{ "--i": 1 } as CSSProperties}
-      className="rise group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-[#1a1f38] to-surface p-5 transition hover:border-accent/60"
+      className={`rise group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-gradient-to-br p-5 transition hover:border-accent/60 ${session.sky}`}
     >
       <span aria-hidden className="float absolute top-4 right-5 text-4xl" style={{ "--tilt": "-12deg" } as CSSProperties}>
-        🌙
+        {session.icon}
       </span>
-      <span aria-hidden className="absolute top-12 right-20 h-1 w-1 rounded-full bg-cream/70" />
-      <span aria-hidden className="absolute top-6 right-28 h-0.5 w-0.5 rounded-full bg-cream/60" />
-      <span aria-hidden className="absolute top-16 right-10 h-0.5 w-0.5 rounded-full bg-cream/50" />
-      <span className="font-hand text-2xl leading-7 font-bold text-accent">Sessão pipoca 🍿</span>
+      {session.stars && (
+        <>
+          <span aria-hidden className="absolute top-12 right-20 h-1 w-1 rounded-full bg-cream/70" />
+          <span aria-hidden className="absolute top-6 right-28 h-0.5 w-0.5 rounded-full bg-cream/60" />
+          <span aria-hidden className="absolute top-16 right-10 h-0.5 w-0.5 rounded-full bg-cream/50" />
+        </>
+      )}
+      <span className="font-hand text-2xl leading-7 font-bold text-accent">Sessão pipoca</span>
       <span className="mt-1 pr-16 text-sm text-stone-300">
-        {services ? "O que cabe na noite e já está nos seus serviços." : "O que cabe na noite, em até 2h30."}
+        Agora {session.when}: {session.text}
+        {services ? ", nos seus serviços." : "."}
       </span>
       <span className="mt-auto pt-4 text-sm font-bold text-cream group-hover:text-accent">Ver as sugestões →</span>
     </Link>

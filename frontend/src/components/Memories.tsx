@@ -5,6 +5,7 @@ import { localDate } from "../format";
 import { useDiaryVersion } from "../seen";
 import type { Invite } from "../types";
 import Poster from "./Poster";
+import SocialHead from "./SocialHead";
 import { Avatar } from "./WatchedBy";
 
 /** "sábado, 28 de nov.", "hoje", "amanhã" ou "ontem". */
@@ -50,7 +51,7 @@ function Ticket({ inv, i, onAnswer }: { inv: Invite; i: number; onAnswer: (id: n
   }
   return (
     <li
-      className="rise relative flex w-80 shrink-0 snap-start gap-4 overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-surface to-[#2a1d16] p-4"
+      className="rise relative flex h-56 w-80 shrink-0 snap-start gap-4 overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-surface to-[#2a1d16] p-4"
       style={{ "--i": i } as CSSProperties}
     >
       {/* O picote do ingresso */}
@@ -64,12 +65,12 @@ function Ticket({ inv, i, onAnswer }: { inv: Invite; i: number; onAnswer: (id: n
           <Avatar name={inv.sender.name} userId={inv.sender.id} size="h-7 w-7 text-xs ring-2 ring-surface" />
           <Avatar name={inv.receiver.name} userId={inv.receiver.id} size="h-7 w-7 text-xs ring-2 ring-surface" />
         </div>
-        <Link to={`/media/${inv.media.id}`} className="mt-1.5 line-clamp-2 font-display leading-tight font-bold hover:text-accent">
+        <Link to={`/media/${inv.media.id}`} className="mt-1.5 line-clamp-1 font-display leading-tight font-bold hover:text-accent" title={inv.media.title}>
           {inv.media.title}
         </Link>
-        <p className="mt-0.5 text-xs text-stone-300">{line}</p>
+        <p className="mt-0.5 line-clamp-2 text-xs text-stone-300">{line}</p>
         {inv.day && <p className="mt-1 font-hand text-lg leading-5 font-bold text-accent">📅 {dayLabel(inv.day)}</p>}
-        {inv.note && <p className="mt-1 line-clamp-2 text-xs text-muted italic">“{inv.note}”</p>}
+        {inv.note && <p className="mt-1 line-clamp-1 text-xs text-muted italic" title={inv.note}>“{inv.note}”</p>}
         {action && <div className="mt-3 flex flex-1 flex-col">{action}</div>}
       </div>
     </li>
@@ -86,8 +87,6 @@ export default function Memories() {
   useEffect(() => {
     api.invites().then((r) => setItems(r.items)).catch(() => {});
   }, [version]);
-  if (items.length === 0) return null;
-
   const today = localDate();
   const rank = (i: Invite) =>
     i.status === "pending" && !i.mine ? 0 : i.status === "accepted" && i.day && i.day < today && !i.registered ? 1 : i.status === "accepted" ? 2 : 3;
@@ -100,16 +99,18 @@ export default function Memories() {
 
   return (
     <section id="lembrancas" aria-labelledby="lembrancas-titulo" className="scroll-mt-24">
-      <h2 id="lembrancas-titulo" className="mb-4 font-display text-2xl font-bold">
-        Bora juntos?
-        <span className="block font-hand text-xl font-bold text-accent sm:ml-3 sm:inline">lembranças pra criar com quem você gosta</span>
-      </h2>
-      <ul className="flex snap-x gap-5 overflow-x-auto px-3 pb-2 [scrollbar-width:none] -mx-3">
-        {sorted.map((inv, i) => (
-          <Ticket key={inv.id} inv={inv} i={i} onAnswer={answer} />
-        ))}
-      </ul>
-      <p className="mt-2 text-xs text-muted">Para criar uma, abra um título e toque em Compartilhar.</p>
+      <SocialHead id="lembrancas-titulo" title="Bora juntos?" note="lembranças pra criar com quem você gosta" mode="lembranca" action="Criar lembrança" />
+      {sorted.length === 0 ? (
+        <p className="flex h-56 items-center justify-center rounded-2xl border border-dashed border-line px-6 text-center text-sm text-muted">
+          Chame alguém para ver ou ouvir junto, num dia combinado. Depois, vocês guardam a lembrança no diário.
+        </p>
+      ) : (
+        <ul className="-mx-3 flex snap-x gap-5 overflow-x-auto px-3 pb-2 [scrollbar-width:none]">
+          {sorted.map((inv, i) => (
+            <Ticket key={inv.id} inv={inv} i={i} onAnswer={answer} />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

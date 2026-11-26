@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { sessionNow } from "../session";
 import DoubleFeature from "../components/DoubleFeature";
 import Highlight, { Buttons, DismissButton, OnMyServices } from "../components/Highlight";
 import Carousel from "../components/Carousel";
@@ -123,7 +124,8 @@ function Mixes({ mixes }: { mixes: Mix[] }) {
   );
 }
 
-const TONIGHT_MINUTES = 150; // "Hoje à noite": cabe numa noite, até 2h30
+// A Sessão pipoca acompanha a hora do dia (session.ts): a duração muda de manhã, à tarde, à noite e de madrugada
+const SESSION = sessionNow();
 const MAX_COMPANIONS = 4; // quem pede e mais quatro pessoas (RFF28)
 
 /** "Levi", "Levi e Bia", "Levi, Bia e Caio" */
@@ -192,10 +194,10 @@ export default function FeedPage() {
   const [discovery, setDiscovery] = useState<Discovery>("taste");
   // Momento (RFF20): clima e duração máxima; vazio e 0 = qualquer um
   const [mood, setMood] = useState("");
-  // Do Início dá para chegar já com "Hoje à noite" ligado (?hoje=1) ou com um pedido feito (?pedido=...)
+  // Do Início dá para chegar já com a Sessão pipoca ligada (?hoje=1) ou com um pedido feito (?pedido=...)
   const [params] = useSearchParams();
   const fromTonight = params.get("hoje") === "1";
-  const [maxMinutes, setMaxMinutes] = useState(fromTonight ? TONIGHT_MINUTES : 0);
+  const [maxMinutes, setMaxMinutes] = useState(fromTonight ? SESSION.minutes : 0);
   const [occasion, setOccasion] = useState("");
   const [onlyMine, setOnlyMine] = useState(fromTonight && (user?.services.length ?? 0) > 0); // só nos meus serviços (RFF21)
   const moods = useMoods();
@@ -239,7 +241,7 @@ export default function FeedPage() {
   };
   const activeFilters =
     [discovery !== "taste", mood, maxMinutes, occasion, onlyMine, companions.length > 0].filter(Boolean).length;
-  const tonight = maxMinutes === TONIGHT_MINUTES && onlyMine === hasServices;
+  const tonight = maxMinutes === SESSION.minutes && onlyMine === hasServices;
   function clearFilters() {
     setDiscovery("taste");
     setMood("");
@@ -484,6 +486,7 @@ export default function FeedPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Para você, {user?.name.split(" ")[0]}</h1>
+          <p className="font-hand text-2xl font-bold text-accent">sempre com o porquê</p>
           {feed && (
             <p className="mt-1 text-sm text-muted">
               {together
@@ -527,24 +530,29 @@ export default function FeedPage() {
                   setMaxMinutes(0);
                   setOnlyMine(false);
                 } else {
-                  setMaxMinutes(TONIGHT_MINUTES);
+                  setMaxMinutes(SESSION.minutes);
                   setOnlyMine(hasServices);
                 }
               }}
               style={{ "--i": 1 } as React.CSSProperties}
-              className={`rise group relative cursor-pointer overflow-hidden rounded-2xl border p-4 text-left transition ${
-                tonight ? "border-accent bg-[#1d2340]" : "border-line bg-gradient-to-br from-[#1a1f38] to-surface hover:border-accent/60"
+              className={`rise group relative cursor-pointer overflow-hidden rounded-2xl border bg-gradient-to-br p-4 text-left transition ${SESSION.sky} ${
+                tonight ? "border-accent" : "border-line hover:border-accent/60"
               }`}
             >
-              {/* O céu da noite: a lua e umas estrelas que piscam */}
+              {/* O céu de agora: o ícone da hora do dia e, à noite, umas estrelas */}
               <span aria-hidden className="float absolute top-3 right-4 text-3xl" style={{ "--tilt": "-12deg" } as React.CSSProperties}>
-                🌙
+                {SESSION.icon}
               </span>
-              <span aria-hidden className="absolute top-8 right-16 h-1 w-1 rounded-full bg-cream/70" />
-              <span aria-hidden className="absolute top-4 right-24 h-0.5 w-0.5 rounded-full bg-cream/60" />
+              {SESSION.stars && (
+                <>
+                  <span aria-hidden className="absolute top-8 right-16 h-1 w-1 rounded-full bg-cream/70" />
+                  <span aria-hidden className="absolute top-4 right-24 h-0.5 w-0.5 rounded-full bg-cream/60" />
+                </>
+              )}
               <span className="block font-hand text-2xl leading-7 font-bold text-accent">Sessão pipoca</span>
               <span className="mt-1 block pr-10 text-sm text-stone-300">
-                {hasServices ? "Cabe na noite (até 2h30) e está nos seus serviços" : "Cabe na noite: até 2h30"}
+                Agora {SESSION.when}: {SESSION.text}
+                {hasServices && ", nos seus serviços"}
               </span>
               <span className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-bold ${tonight ? "bg-accent text-bg" : "bg-white/10 text-cream group-hover:bg-accent group-hover:text-bg"}`}>
                 {tonight ? "Ligado" : "Ligar"}

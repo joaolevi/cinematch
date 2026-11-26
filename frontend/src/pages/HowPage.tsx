@@ -122,7 +122,7 @@ export default function HowPage() {
         </p>
         <p>
           Se você marcar os serviços que assina, em Minha conta, cada sugestão avisa se está num deles, e "Só nos meus
-          serviços" mostra só o que dá para ver agora. "Sessão pipoca" junta isso com até 2h30. Em "Gosto em dupla", você
+          serviços" mostra só o que dá para ver agora. "Sessão pipoca" junta isso com a duração que cabe na hora do dia: até 1h30 de manhã, 2h à tarde, 2h30 à noite e 1h de madrugada. Em "Gosto em dupla", você
           escolhe quem você segue para ver junto: primeiro vem o que agrada a todo mundo. O Quero ver também se
           ordena pelo que combina agora: o gosto primeiro, e o que está nos seus serviços sobe um pouco. Onde assistir
           vem da JustWatch, pelo TMDB.
