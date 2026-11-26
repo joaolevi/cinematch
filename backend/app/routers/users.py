@@ -9,7 +9,7 @@ from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Follow, User
 from ..schemas import (
-    CompatibilityOut, MediaOut, PersonOut, ProfileItemOut, ProfileOut, RecommendationOut, SuggestedPersonOut,
+    CompatibilityOut, DiaryOut, MediaOut, PersonOut, ProfileItemOut, ProfileOut, RecommendationOut, SuggestedPersonOut,
 )
 from ..services.compatibility import compatibility, suggest_people
 from ..services.theme import badges
@@ -159,6 +159,35 @@ def profile(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_
         follows=follows,
         badges=badges(db, user.id),
     )
+
+
+MAX_DIARY = 1000
+
+
+@router.get("/{user_id}/diary", response_model=list[DiaryOut])
+def person_diary(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_current_user)):
+    """O diário de uma pessoa, para a história do gosto no perfil (RFF11): a frase, os números e os gráficos são
+    calculados na tela, como no próprio diário. Segue a mesma regra do perfil: perfil privado de outra pessoa dá 404, e
+    quem só mostra para quem segue dá 403 para quem não segue. Resenhas escondidas pela moderação não saem."""
+    user = visible_person(db, user_id, me)
+    if not can_see_entries(db, me, user):
+        raise HTTPException(status_code=403, detail="Só quem segue esta pessoa vê o diário dela")
+    entries = list(
+        db.scalars(
+            select(DiaryEntry)
+            .where(DiaryEntry.user_id == user.id)
+            .options(selectinload(DiaryEntry.media))
+            .order_by(DiaryEntry.consumed_at.desc().nulls_last(), DiaryEntry.created_at.desc())
+            .limit(MAX_DIARY)
+        )
+    )
+    out = []
+    for e in entries:
+        item = DiaryOut.model_validate(e)
+        if e.review_hidden and user.id != me.id:
+            item.review = None
+        out.append(item)
+    return out
 
 
 @router.get("/{user_id}/together", response_model=list[RecommendationOut])

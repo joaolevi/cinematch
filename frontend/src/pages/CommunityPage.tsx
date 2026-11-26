@@ -183,7 +183,7 @@ function Following({ people }: { people: Person[] }) {
   return (
     <aside className="paper relative self-start rounded-sm py-5 pr-5 pl-12 lg:-rotate-1">
       <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 rotate-2" style={{ background: TAPE_COLORS[2] }} />
-      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Quem eu sigo</h2>
+      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Pessoas que sigo</h2>
       {people.length === 0 ? (
         <p className="mt-1 text-sm text-stone-700">
           Ninguém ainda. Abra o perfil de alguém pelo nome num registro e toque em Seguir.

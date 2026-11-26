@@ -68,7 +68,7 @@ export default function UserMenu() {
               Meu gosto
             </Link>
             <Link role="menuitem" to="/meu-gosto" className={item}>
-              Corrigir meu gosto
+              O que o Tastory acha do meu gosto
             </Link>
             <Link role="menuitem" to={`/pessoas/${user.id}`} className={item}>
               Meu perfil

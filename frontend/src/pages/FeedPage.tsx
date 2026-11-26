@@ -68,6 +68,9 @@ export default function FeedPage() {
     [mood, maxMinutes, occasion, onlyMine],
   );
   const hasServices = (user?.services.length ?? 0) > 0;
+  const [showFilters, setShowFilters] = useState(false); // no celular, os filtros começam recolhidos
+  const activeFilters =
+    [discovery !== "taste", mood, maxMinutes, occasion, onlyMine, companions.length > 0].filter(Boolean).length;
   const tonight = maxMinutes === TONIGHT_MINUTES && onlyMine === hasServices;
   // Pedido em português (RFF25): um pedido novo troca todos os filtros; limpar volta tudo ao padrão
   function applyWish(wish: Wish | null) {
@@ -321,149 +324,160 @@ export default function FeedPage() {
 
       <WishBox onWish={applyWish} />
 
-      {type !== "album" && !together && (
-        <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Modo descoberta">
-          <span className="text-sm text-muted">Quanto sair do óbvio:</span>
+      {/* No celular, os filtros ficam recolhidos: a primeira sugestão aparece sem rolar. Com algum ligado, o botão diz quantos */}
+      <button
+        className="btn-ghost mt-3 px-3 py-1 text-sm sm:hidden"
+        aria-expanded={showFilters}
+        aria-controls="filtros-do-feed"
+        onClick={() => setShowFilters(!showFilters)}
+      >
+        {showFilters ? "Esconder os filtros" : activeFilters ? `Ajustar os filtros (${activeFilters} ligados)` : "Ajustar os filtros"}
+      </button>
+      <div id="filtros-do-feed" className={showFilters ? "" : "max-sm:hidden"}>
+        {type !== "album" && !together && (
+          <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Modo descoberta">
+            <span className="text-sm text-muted">Quanto sair do óbvio:</span>
+            {(
+              [
+                ["taste", "No meu gosto"],
+                ["beyond", "Um pouco além"],
+                ["outside", "Fora da sua bolha"],
+              ] as const
+            ).map(([mode, label]) => (
+              <button
+                key={mode}
+                aria-pressed={discovery === mode}
+                onClick={() => setDiscovery(mode)}
+                className={`chip cursor-pointer px-3 py-1 text-sm ${discovery === mode ? "border-accent text-accent" : ""}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="Para agora">
+          <span className="text-sm text-muted">Para agora:</span>
+          {type !== "album" && (
+            <button
+              aria-pressed={tonight}
+              title={hasServices ? "Até 2h30 e só nos seus serviços" : "Até 2h30. Marque seus serviços para ver só o que você tem"}
+              onClick={() => {
+                if (tonight) {
+                  setMaxMinutes(0);
+                  setOnlyMine(false);
+                } else {
+                  setMaxMinutes(TONIGHT_MINUTES);
+                  setOnlyMine(hasServices);
+                }
+              }}
+              className={`chip cursor-pointer px-3 py-1 text-sm ${tonight ? "border-accent text-accent" : ""}`}
+            >
+              🌙 Hoje à noite
+            </button>
+          )}
+          <label className="sr-only" htmlFor="clima">
+            Clima
+          </label>
+          <select
+            id="clima"
+            value={mood}
+            onChange={(e) => setMood(e.target.value)}
+            className={`chip cursor-pointer bg-surface px-3 py-1 text-sm ${mood ? "border-accent text-accent" : ""}`}
+          >
+            <option value="">Qualquer clima</option>
+            {moods.map((m) => (
+              <option key={m.key} value={m.key}>
+                {m.label}
+              </option>
+            ))}
+          </select>
           {(
             [
-              ["taste", "No meu gosto"],
-              ["beyond", "Um pouco além"],
-              ["outside", "Fora da sua bolha"],
+              [0, "Qualquer duração"],
+              [90, "Até 1h30"],
+              [120, "Até 2h"],
             ] as const
-          ).map(([mode, label]) => (
+          ).map(([minutes, label]) => (
             <button
-              key={mode}
-              aria-pressed={discovery === mode}
-              onClick={() => setDiscovery(mode)}
-              className={`chip cursor-pointer px-3 py-1 text-sm ${discovery === mode ? "border-accent text-accent" : ""}`}
+              key={minutes}
+              aria-pressed={maxMinutes === minutes}
+              onClick={() => setMaxMinutes(minutes)}
+              className={`chip cursor-pointer px-3 py-1 text-sm ${maxMinutes === minutes ? "border-accent text-accent" : ""}`}
             >
               {label}
             </button>
           ))}
-        </div>
-      )}
-
-      <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="Para agora">
-        <span className="text-sm text-muted">Para agora:</span>
-        {type !== "album" && (
-          <button
-            aria-pressed={tonight}
-            title={hasServices ? "Até 2h30 e só nos seus serviços" : "Até 2h30. Marque seus serviços para ver só o que você tem"}
-            onClick={() => {
-              if (tonight) {
-                setMaxMinutes(0);
-                setOnlyMine(false);
-              } else {
-                setMaxMinutes(TONIGHT_MINUTES);
-                setOnlyMine(hasServices);
-              }
-            }}
-            className={`chip cursor-pointer px-3 py-1 text-sm ${tonight ? "border-accent text-accent" : ""}`}
-          >
-            🌙 Hoje à noite
-          </button>
-        )}
-        <label className="sr-only" htmlFor="clima">
-          Clima
-        </label>
-        <select
-          id="clima"
-          value={mood}
-          onChange={(e) => setMood(e.target.value)}
-          className={`chip cursor-pointer bg-surface px-3 py-1 text-sm ${mood ? "border-accent text-accent" : ""}`}
-        >
-          <option value="">Qualquer clima</option>
-          {moods.map((m) => (
-            <option key={m.key} value={m.key}>
-              {m.label}
-            </option>
-          ))}
-        </select>
-        {(
-          [
-            [0, "Qualquer duração"],
-            [90, "Até 1h30"],
-            [120, "Até 2h"],
-          ] as const
-        ).map(([minutes, label]) => (
-          <button
-            key={minutes}
-            aria-pressed={maxMinutes === minutes}
-            onClick={() => setMaxMinutes(minutes)}
-            className={`chip cursor-pointer px-3 py-1 text-sm ${maxMinutes === minutes ? "border-accent text-accent" : ""}`}
-          >
-            {label}
-          </button>
-        ))}
-        {maxMinutes !== 0 && maxMinutes !== 90 && maxMinutes !== 120 && (
-          <button aria-pressed className="chip cursor-pointer border-accent px-3 py-1 text-sm text-accent" onClick={() => setMaxMinutes(0)}>
-            Até {formatMinutes(maxMinutes)} ✕
-          </button>
-        )}
-        <label className="sr-only" htmlFor="ocasiao">
-          Ocasião
-        </label>
-        <select
-          id="ocasiao"
-          value={occasion}
-          onChange={(e) => setOccasion(e.target.value)}
-          className={`chip cursor-pointer bg-surface px-3 py-1 text-sm ${occasion ? "border-accent text-accent" : ""}`}
-        >
-          <option value="">Qualquer ocasião</option>
-          {occasions.map((o) => (
-            <option key={o.key} value={o.key}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        {type !== "album" &&
-          (hasServices ? (
-            <button
-              aria-pressed={onlyMine}
-              onClick={() => setOnlyMine(!onlyMine)}
-              className={`chip cursor-pointer px-3 py-1 text-sm ${onlyMine ? "border-accent text-accent" : ""}`}
-            >
-              Só nos meus serviços
+          {maxMinutes !== 0 && maxMinutes !== 90 && maxMinutes !== 120 && (
+            <button aria-pressed className="chip cursor-pointer border-accent px-3 py-1 text-sm text-accent" onClick={() => setMaxMinutes(0)}>
+              Até {formatMinutes(maxMinutes)} ✕
             </button>
-          ) : (
-            <Link to="/conta#servicos" className="text-xs text-muted underline hover:text-accent">
-              Marcar os serviços que eu assino
-            </Link>
-          ))}
-        {maxMinutes > 0 && type !== "album" && (
-          <span className="text-xs text-muted">Nas séries, vale a duração do episódio.</span>
-        )}
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="Junto com">
-        <span className="text-sm text-muted">Junto com:</span>
-        {following.length === 0 ? (
-          <Link to="/comunidade" className="text-xs text-muted underline hover:text-accent">
-            Seguir alguém na Comunidade para ver junto
-          </Link>
-        ) : (
-          <>
-            {following.map((person) => {
-              const on = companions.includes(person.id);
-              return (
-                <button
-                  key={person.id}
-                  aria-pressed={on}
-                  disabled={!on && companions.length >= MAX_COMPANIONS}
-                  onClick={() => setCompanions(on ? companions.filter((id) => id !== person.id) : [...companions, person.id])}
-                  className={`chip cursor-pointer px-3 py-1 text-sm ${on ? "border-accent text-accent" : ""}`}
-                >
-                  {person.name.split(" ")[0]}
-                </button>
-              );
-            })}
-            {together && (
-              <button className="text-xs text-muted underline hover:text-accent" onClick={() => setCompanions([])}>
-                Ver só para mim
+          )}
+          <label className="sr-only" htmlFor="ocasiao">
+            Ocasião
+          </label>
+          <select
+            id="ocasiao"
+            value={occasion}
+            onChange={(e) => setOccasion(e.target.value)}
+            className={`chip cursor-pointer bg-surface px-3 py-1 text-sm ${occasion ? "border-accent text-accent" : ""}`}
+          >
+            <option value="">Qualquer ocasião</option>
+            {occasions.map((o) => (
+              <option key={o.key} value={o.key}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          {type !== "album" &&
+            (hasServices ? (
+              <button
+                aria-pressed={onlyMine}
+                onClick={() => setOnlyMine(!onlyMine)}
+                className={`chip cursor-pointer px-3 py-1 text-sm ${onlyMine ? "border-accent text-accent" : ""}`}
+              >
+                Só nos meus serviços
               </button>
-            )}
-          </>
-        )}
+            ) : (
+              <Link to="/conta#servicos" className="text-xs text-muted underline hover:text-accent">
+                Marcar os serviços que eu assino
+              </Link>
+            ))}
+          {maxMinutes > 0 && type !== "album" && (
+            <span className="text-xs text-muted">Nas séries, vale a duração do episódio.</span>
+          )}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="Junto com">
+          <span className="text-sm text-muted">Junto com:</span>
+          {following.length === 0 ? (
+            <Link to="/comunidade" className="text-xs text-muted underline hover:text-accent">
+              Seguir alguém na Comunidade para ver junto
+            </Link>
+          ) : (
+            <>
+              {following.map((person) => {
+                const on = companions.includes(person.id);
+                return (
+                  <button
+                    key={person.id}
+                    aria-pressed={on}
+                    disabled={!on && companions.length >= MAX_COMPANIONS}
+                    onClick={() => setCompanions(on ? companions.filter((id) => id !== person.id) : [...companions, person.id])}
+                    className={`chip cursor-pointer px-3 py-1 text-sm ${on ? "border-accent text-accent" : ""}`}
+                  >
+                    {person.name.split(" ")[0]}
+                  </button>
+                );
+              })}
+              {together && (
+                <button className="text-xs text-muted underline hover:text-accent" onClick={() => setCompanions([])}>
+                  Ver só para mim
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {user && feed?.strategy === "trending" && (

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { MEDIA_STYLE, verbs } from "../format";
+import { MEDIA_STYLE, formatMinutes, verbs } from "../format";
+import { moodLabel, useMoods } from "../moods";
 import type { FeedbackAction, Media, Recommendation } from "../types";
 import { TAPE_COLORS } from "../ui";
 import GenreChip from "./GenreChip";
@@ -95,6 +96,36 @@ export function OnMyServices({ rec, className = "" }: { rec: Recommendation; cla
   );
 }
 
+const CREATOR_LABEL: Record<Media["type"], string> = { movie: "Direção", series: "Criação", album: "Artista" };
+
+/** A ficha do título, à direita da aposta nas telas largas: quem fez, quanto dura e o clima. */
+function Ficha({ media }: { media: Media }) {
+  const moods = useMoods();
+  const lines: [string, string][] = [];
+  if (media.creators.length) lines.push([CREATOR_LABEL[media.type], media.creators.slice(0, 2).join(", ")]);
+  if (media.duration_min) lines.push([media.type === "series" ? "Episódios de" : "Duração", formatMinutes(media.duration_min)]);
+  if (media.moods?.length) lines.push(["Clima", media.moods.slice(0, 3).map((m) => moodLabel(moods, m)).join(", ")]);
+  if (media.year) lines.push(["Ano", String(media.year)]);
+  if (lines.length < 2) return null;
+  return (
+    <aside
+      aria-label={`Ficha de ${media.title}`}
+      className="paper relative hidden w-80 shrink-0 rotate-2 self-center rounded-sm py-5 pr-5 pl-12 text-[#2b211c] shadow-2xl xl:block"
+    >
+      <span aria-hidden className="tape -top-2.5 left-10 -rotate-6" style={{ background: TAPE_COLORS[2] }} />
+      <p className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Ficha</p>
+      <dl className="space-y-1 text-sm leading-6">
+        {lines.map(([label, value]) => (
+          <div key={label}>
+            <dt className="inline font-bold">{label}: </dt>
+            <dd className="inline">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </aside>
+  );
+}
+
 export default function Highlight({
   rec,
   label,
@@ -149,6 +180,7 @@ export default function Highlight({
           {media.overview && <p className="mt-2 line-clamp-3 max-w-2xl text-sm text-stone-300">{media.overview}</p>}
           <Buttons rec={rec} act={act} onSeen={onSeen} big />
         </div>
+        <Ficha media={media} />
       </div>
     </section>
   );

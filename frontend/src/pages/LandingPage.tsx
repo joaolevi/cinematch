@@ -56,7 +56,7 @@ export default function LandingPage() {
               A história do <mark className="marker">seu gosto</mark>, título por título.
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8">
-              O Tastory é um diário de filmes e séries que aprende com o que você registra. Você anota o que viu, e ele
+              O Tastory é um diário de filmes, séries e música que aprende com o que você registra. Você anota o que viu, e ele
               sugere o que ver depois, explicando o porquê.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -111,7 +111,7 @@ export default function LandingPage() {
           <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Bom saber:</p>
           <ul className="font-hand text-xl leading-8 font-semibold">
             <li>→ O que você marca como Já vi aparece na Comunidade, e você escolhe quem vê.</li>
-            <li>→ Por enquanto são filmes e séries. As músicas vêm depois.</li>
+            <li>→ Filmes, séries e discos no mesmo diário, com pontes entre eles: o filme e a trilha para ouvir depois.</li>
             <li>→ É de graça: é um projeto acadêmico.</li>
           </ul>
         </section>
@@ -123,7 +123,7 @@ export default function LandingPage() {
         </a>
         <p>
           Os dados e as imagens dos títulos vêm do TMDB. This product uses the TMDB API but is not endorsed or certified
-          by TMDB. As recomendações de filmes usam avaliações do MovieLens, da GroupLens Research, que não endossa este
+          by TMDB (este produto usa a API do TMDB, mas não é endossado nem certificado por ele). As recomendações de filmes usam avaliações do MovieLens, da GroupLens Research, que não endossa este
           projeto.
         </p>
         <p>Criado pela Equipe Gamma na disciplina de Gerência de Projeto 2026.2 da UFAL.</p>

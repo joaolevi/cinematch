@@ -196,6 +196,7 @@ export const api = {
   unfollow: (id: number) => request<void>(`/users/${id}/follow`, { method: "DELETE" }),
   reviewers: () => request<Reviewer[]>("/community/reviewers"),
   profile: (id: number) => request<Profile>(`/users/${id}`),
+  personDiary: (id: number) => request<DiaryEntry[]>(`/users/${id}/diary`),
   together: (id: number, limit = 12) => request<Recommendation[]>(`/users/${id}/together`, { query: { limit } }),
   togetherNow: (people: number[], moment: Moment = {}, limit = 20) =>
     request<Recommendation[]>("/recommendations/together", { query: { with: people.map(String), limit, ...moment } }),

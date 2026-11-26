@@ -157,31 +157,44 @@ function Split({ bars, onPick }: { bars: Bar[]; onPick: Pick }) {
   );
 }
 
-export default function TasteChartsView({ data, onPick }: { data: TasteCharts; onPick: Pick }) {
+/** Os gráficos do gosto. Com `who` (o primeiro nome), os títulos falam da outra pessoa, no perfil dela (RFF11). */
+export default function TasteChartsView({ data, onPick, who }: { data: TasteCharts; onPick: Pick; who?: string }) {
   const rated = data.ratings.reduce((sum, b) => sum + b.value, 0);
+  const diary = who ? "do diário" : "do meu diário";
   return (
     <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
       {data.genres.length > 0 && (
-        <ChartCard title="Os gêneros que eu mais vejo" subtitle="Quantos filmes e séries do meu diário têm cada gênero">
+        <ChartCard
+          title={who ? `Os gêneros que ${who} mais vê` : "Os gêneros que eu mais vejo"}
+          subtitle={`Quantos filmes e séries ${diary} têm cada gênero`}
+        >
           <BarList bars={data.genres} color="#f2b33d" total={data.total} onPick={onPick} />
         </ChartCard>
       )}
       {data.musicGenres.length > 0 && (
-        <ChartCard title="Os gêneros que eu mais ouço" subtitle="Quantos discos do meu diário têm cada gênero">
+        <ChartCard
+          title={who ? `Os gêneros que ${who} mais ouve` : "Os gêneros que eu mais ouço"}
+          subtitle={`Quantos discos ${diary} têm cada gênero`}
+        >
           <BarList bars={data.musicGenres} color="#7fa58b" total={data.total} onPick={onPick} />
         </ChartCard>
       )}
       {data.decades.length > 0 && (
-        <ChartCard title="Minhas décadas" subtitle="Quando saíram os títulos que eu registrei">
+        <ChartCard
+          title={who ? `As décadas de ${who}` : "Minhas décadas"}
+          subtitle={who ? "Quando saíram os títulos registrados" : "Quando saíram os títulos que eu registrei"}
+        >
           <BarList bars={data.decades} color="#e8735a" total={data.total} onPick={onPick} />
         </ChartCard>
       )}
       <ChartCard
-        title="Como eu dou notas"
+        title={who ? `Como ${who} dá notas` : "Como eu dou notas"}
         subtitle={
           rated
             ? `Quantos títulos receberam cada nota, de ${plural(rated, "nota dada", "notas dadas")}`
-            : "Quando eu der notas, elas aparecem aqui"
+            : who
+              ? "Ainda sem notas no diário"
+              : "Quando eu der notas, elas aparecem aqui"
         }
       >
         {rated > 0 ? (
@@ -190,11 +203,11 @@ export default function TasteChartsView({ data, onPick }: { data: TasteCharts; o
           <HandNote>Nenhuma nota ainda.</HandNote>
         )}
       </ChartCard>
-      <ChartCard title={data.types[2].value > 0 ? "Filmes, séries e álbuns" : "Filmes e séries"} subtitle="Como o meu diário se divide">
+      <ChartCard title={data.types[2].value > 0 ? "Filmes, séries e álbuns" : "Filmes e séries"} subtitle={who ? "Como o diário se divide" : "Como o meu diário se divide"}>
         <Split bars={data.types} onPick={onPick} />
       </ChartCard>
       {data.creators.length > 0 && (
-        <ChartCard title="Quem mais aparece" subtitle="Direção, criação e artistas com mais títulos no meu diário">
+        <ChartCard title="Quem mais aparece" subtitle={`Direção, criação e artistas com mais títulos ${diary}`}>
           <BarList bars={data.creators} color="#7fa58b" total={data.total} onPick={onPick} />
         </ChartCard>
       )}

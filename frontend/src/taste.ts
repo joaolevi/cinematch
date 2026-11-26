@@ -58,18 +58,20 @@ function countTypes(entries: DiaryEntry[]): Record<MediaKind, number> {
   return counts;
 }
 
-const TYPE_FACT: Record<MediaKind, (percent: number) => string> = {
-  movie: (p) => `Filmes em primeiro lugar: ${p}% do meu diário.`,
-  series: (p) => `Séries são a minha praia: ${p}% do meu diário.`,
-  album: (p) => `Música em primeiro lugar: ${p}% do meu diário são discos.`,
+// `who` é o primeiro nome de quem é o diário, no perfil de outra pessoa; sem ele, o texto fica na primeira pessoa
+const TYPE_FACT: Record<MediaKind, (percent: number, who?: string) => string> = {
+  movie: (p, who) => `Filmes em primeiro lugar: ${p}% ${who ? `do diário de ${who}` : "do meu diário"}.`,
+  series: (p, who) => (who ? `Séries em primeiro lugar: ${p}% do diário de ${who}.` : `Séries são a minha praia: ${p}% do meu diário.`),
+  album: (p, who) => `Música em primeiro lugar: ${p}% ${who ? `do diário de ${who}` : "do meu diário"} são discos.`,
 };
 
 /** A frase sobre como o diário se divide entre filmes, séries e álbuns. */
-function typeFact(entries: DiaryEntry[]): string {
+function typeFact(entries: DiaryEntry[], who?: string): string {
   const counts = countTypes(entries);
   const [top, n] = (Object.entries(counts) as [MediaKind, number][]).sort((a, b) => b[1] - a[1])[0];
-  if (n / entries.length >= 0.6) return TYPE_FACT[top](Math.round((n / entries.length) * 100));
-  if (counts.album > 0 && counts.movie + counts.series > 0) return "Vejo e ouço de tudo: filmes, séries e discos no mesmo diário.";
+  if (n / entries.length >= 0.6) return TYPE_FACT[top](Math.round((n / entries.length) * 100), who);
+  if (counts.album > 0 && counts.movie + counts.series > 0)
+    return `${who ? "Vê e ouve" : "Vejo e ouço"} de tudo: filmes, séries e discos no mesmo diário.`;
   return "Filmes e séries, na mesma medida.";
 }
 
@@ -107,7 +109,7 @@ export interface Taste {
 }
 
 /** Resume o gosto em uma frase, na primeira pessoa, como num diário. Usa só o que a pessoa curtiu. */
-export function tasteOf(entries: DiaryEntry[]): Taste | null {
+export function tasteOf(entries: DiaryEntry[], who?: string): Taste | null {
   if (entries.length < MIN_ENTRIES_FOR_TASTE) return null;
   const liked = entries.filter((e) => e.rating == null || e.rating >= 3);
   const base = liked.length >= MIN_ENTRIES_FOR_TASTE ? liked : entries;
@@ -125,13 +127,15 @@ export function tasteOf(entries: DiaryEntry[]): Taste | null {
   const avg = entries.filter((e) => e.rating != null).length >= MIN_ENTRIES_FOR_TASTE ? average(entries) : null;
   if (avg != null) {
     const note = formatRating(avg);
-    if (avg >= 4) facts.push(`Coração mole: minha nota média é ${note}.`);
-    else if (avg <= 2.75) facts.push(`Difícil de agradar: minha nota média é ${note}.`);
-    else facts.push(`Nota alta só quando merece: minha média é ${note}.`);
+    const media = who ? `a nota média de ${who} é` : "minha nota média é";
+    if (avg >= 4) facts.push(`Coração mole: ${media} ${note}.`);
+    else if (avg <= 2.75) facts.push(`Difícil de agradar: ${media} ${note}.`);
+    else facts.push(`Nota alta só quando merece: ${who ? `a média de ${who} é` : "minha média é"} ${note}.`);
   }
-  facts.push(typeFact(entries));
+  facts.push(typeFact(entries, who));
   const [topCreator] = countBy(base, (e) => e.media.creators);
-  if (topCreator && topCreator[1] >= 2) facts.push(`Quem mais aparece no meu diário: ${topCreator[0]}.`);
+  if (topCreator && topCreator[1] >= 2)
+    facts.push(`Quem mais aparece ${who ? `no diário de ${who}` : "no meu diário"}: ${topCreator[0]}.`);
 
   return { highlight, decade, facts };
 }
@@ -147,20 +151,25 @@ export interface Note {
 const NOTE_COLORS = ["#f6d27a", "#f3a48f", "#b7d1b9", "#f2b8c8", "#b9d0e4", "#d4c3ea"];
 
 /** Os números grandes do diário, escritos em post-its, na primeira pessoa. */
-export function notesOf(entries: DiaryEntry[], today = new Date()): Note[] {
+export function notesOf(entries: DiaryEntry[], today = new Date(), who?: string): Note[] {
   const month = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`; // no fuso de quem usa
   const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
   const avg = average(entries);
   const genres = new Set(entries.flatMap((e) => e.media.genres)).size;
   const notes = [
-    { value: String(entries.length), label: entries.length === 1 ? "título no meu diário" : "títulos no meu diário" },
+    {
+      value: String(entries.length),
+      label: `${entries.length === 1 ? "título" : "títulos"} ${who ? "no diário" : "no meu diário"}`,
+    },
     {
       value: String(entries.filter((e) => e.consumed_at?.startsWith(month)).length),
-      label: entries.some((e) => e.media.type === "album") ? `vi ou ouvi em ${monthName}` : `vi em ${monthName}`,
+      label: entries.some((e) => e.media.type === "album")
+        ? `${who ? "viu ou ouviu" : "vi ou ouvi"} em ${monthName}`
+        : `${who ? "viu" : "vi"} em ${monthName}`,
     },
-    { value: avg != null ? formatRating(avg) : "–", label: avg != null ? "minha nota média" : "ainda sem notas" },
+    { value: avg != null ? formatRating(avg) : "–", label: avg != null ? (who ? "nota média" : "minha nota média") : "ainda sem notas" },
     { value: String(entries.filter((e) => e.rating === 5).length), label: "ganharam 5 estrelas" },
-    { value: String(entries.filter((e) => e.review).length), label: "resenhas que escrevi" },
+    { value: String(entries.filter((e) => e.review).length), label: who ? "resenhas escritas" : "resenhas que escrevi" },
     { value: String(genres), label: genres === 1 ? "gênero explorado" : "gêneros explorados" },
   ];
   return notes.map((note, i) => ({ ...note, color: NOTE_COLORS[i % NOTE_COLORS.length] }));

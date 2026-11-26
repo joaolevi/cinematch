@@ -3258,6 +3258,58 @@
         }
       }
     },
+    "/users/{user_id}/diary": {
+      "get": {
+        "tags": [
+          "pessoas"
+        ],
+        "summary": "Person Diary",
+        "description": "O diário de uma pessoa, para a história do gosto no perfil (RFF11): a frase, os números e os gráficos são\ncalculados na tela, como no próprio diário. Segue a mesma regra do perfil: perfil privado de outra pessoa dá 404, e\nquem só mostra para quem segue dá 403 para quem não segue. Resenhas escondidas pela moderação não saem.",
+        "operationId": "person_diary_users__user_id__diary_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DiaryOut"
+                  },
+                  "title": "Response Person Diary Users  User Id  Diary Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/{user_id}/together": {
       "get": {
         "tags": [

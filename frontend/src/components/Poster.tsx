@@ -8,7 +8,33 @@ function hash(text: string): number {
   return Math.abs(h);
 }
 
-/** Pôster gerado a partir do título (o catálogo é mockado e não tem imagens). */
+// Sem imagem, ou enquanto ela carrega: uma ficha de papel pautado, como o resto do Tastory
+const PAPER = {
+  background: "repeating-linear-gradient(180deg, #f1e6d6 0, #f1e6d6 15px, #d6d3cd 15px, #d6d3cd 16px)",
+};
+
+/** A ficha de papel com o título, o tipo e, no álbum, o artista. */
+function PaperCard({ media, compact }: { media: Media; compact: boolean }) {
+  if (compact) {
+    return (
+      <span className="absolute inset-0 flex items-center justify-center font-display text-2xl font-bold text-[#2b211c]/70">
+        {media.title.charAt(0)}
+      </span>
+    );
+  }
+  return (
+    <>
+      <span aria-hidden className="absolute inset-y-0 left-4 w-px bg-[#e8735a]/60" />
+      <span className="relative font-hand text-lg leading-none font-bold text-[#b9452f]">{MEDIA_STYLE[media.type].label}</span>
+      <p className="relative mt-1 line-clamp-4 font-display text-base leading-tight font-bold text-[#2b211c]">{media.title}</p>
+      <p className="relative mt-1 line-clamp-1 text-xs text-stone-600">
+        {media.type === "album" ? media.creators[0] ?? media.year : media.year}
+      </p>
+    </>
+  );
+}
+
+/** Pôster ou capa do título; sem imagem, uma ficha de papel com o nome. */
 export default function Poster({
   media,
   className = "",
@@ -21,6 +47,7 @@ export default function Poster({
   rounded?: string;
 }) {
   const [broken, setBroken] = useState(false);
+  const [loaded, setLoaded] = useState(false); // a capa do álbum vem do Cover Art Archive e pode levar segundos
   const upcoming = !compact && isUpcoming(media.year) && (
     <span className="absolute top-2 left-2 z-10 rounded-md bg-amber px-1.5 py-0.5 text-[11px] font-bold text-bg">
       Em breve
@@ -51,23 +78,24 @@ export default function Poster({
           />
           <div className="absolute inset-[48.5%] rounded-full bg-[#0b0d10]" />
         </div>
-        {cover ? (
+        {/* A ficha fica por baixo da capa: aparece sem capa e enquanto ela carrega */}
+        <div
+          className={`absolute inset-x-0 top-0 flex aspect-square w-full flex-col justify-end overflow-hidden p-3 pl-7 shadow-[0_8px_20px_rgba(0,0,0,.55)] ${rounded}`}
+          style={PAPER}
+          aria-label={cover ? undefined : `Capa de ${media.title}`}
+          aria-hidden={cover ? true : undefined}
+        >
+          <PaperCard media={media} compact={compact} />
+        </div>
+        {cover && (
           <img
             src={cover}
             alt={media.title}
             loading="lazy"
+            onLoad={() => setLoaded(true)}
             onError={() => setBroken(true)}
-            className={`absolute inset-x-0 top-0 aspect-square w-full object-cover shadow-[0_8px_20px_rgba(0,0,0,.55)] ${rounded}`}
-            style={{ background: `linear-gradient(160deg, hsl(${h % 360} 40% 28%), #1a1512)` }}
+            className={`absolute inset-x-0 top-0 aspect-square w-full object-cover shadow-[0_8px_20px_rgba(0,0,0,.55)] transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"} ${rounded}`}
           />
-        ) : (
-          <div
-            className={`absolute inset-x-0 top-0 flex aspect-square w-full flex-col justify-end p-3 shadow-[0_8px_20px_rgba(0,0,0,.55)] ${rounded}`}
-            style={{ background: `linear-gradient(160deg, hsl(${h % 360} 55% 32%), #0b0d10)` }}
-            aria-label={`Capa de ${media.title}`}
-          >
-            {!compact && <p className="line-clamp-3 text-sm leading-tight font-bold text-white drop-shadow">{media.title}</p>}
-          </div>
         )}
         {upcoming}
       </div>
@@ -87,37 +115,14 @@ export default function Poster({
       </div>
     );
   }
-  const h = hash(media.title);
-  const hue = h % 360;
-  const hue2 = (hue + 40 + (h % 80)) % 360;
   return (
     <div
-      className={`relative flex aspect-[2/3] w-full flex-col justify-end overflow-hidden ${rounded} p-3 ${className}`}
-      style={{
-        background: `linear-gradient(160deg, hsl(${hue} 55% 32%), hsl(${hue2} 60% 14%) 70%, #0b0d10)`,
-      }}
+      className={`relative flex aspect-[2/3] w-full flex-col justify-end overflow-hidden ${rounded} p-3 pl-7 ${className}`}
+      style={PAPER}
       aria-label={`Pôster de ${media.title}`}
     >
       {upcoming}
-      {compact ? (
-        <span className="absolute inset-0 flex items-center justify-center text-xl font-extrabold text-white/70">
-          {media.title.charAt(0)}
-        </span>
-      ) : (
-        <>
-      <span className="absolute top-2 left-2 rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/80 uppercase">
-        {MEDIA_STYLE[media.type].label}
-      </span>
-      <span
-        className="pointer-events-none absolute -top-4 -right-3 text-[96px] leading-none font-extrabold text-white/10 select-none"
-        aria-hidden
-      >
-        {media.title.charAt(0)}
-      </span>
-      <p className="line-clamp-3 text-sm leading-tight font-bold text-white drop-shadow">{media.title}</p>
-      {media.year && <p className="text-xs text-white/70">{media.year}</p>}
-        </>
-      )}
+      <PaperCard media={media} compact={compact} />
     </div>
   );
 }

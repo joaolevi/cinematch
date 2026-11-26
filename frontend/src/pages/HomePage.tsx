@@ -30,10 +30,11 @@ function greeting(): string {
   return hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 }
 
+/** "22/11": cabe na legenda da polaroide pequena, até no celular. */
 function shortDate(iso: string): string {
   return new Date(iso.length === 10 ? `${iso}T12:00:00` : iso).toLocaleDateString("pt-BR", {
-    day: "numeric",
-    month: "short",
+    day: "2-digit",
+    month: "2-digit",
   });
 }
 
