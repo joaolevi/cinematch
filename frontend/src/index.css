@@ -454,6 +454,10 @@ h1 {
   outline-offset: 2px;
 }
 
+img[data-broken] {
+  visibility: hidden;
+}
+
 /* Campo dentro de uma caixa que já acende com o foco (focus-within): o contorno fica na caixa, não no campo */
 .field-bare:focus-visible {
   outline: none;

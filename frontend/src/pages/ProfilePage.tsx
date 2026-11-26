@@ -96,9 +96,9 @@ function RecentDiary({ entries, to }: { entries: DiaryEntry[]; to: string }) {
       <ul className="mt-2 space-y-1.5 text-sm">
         {last.map((e) => (
           <li key={e.id} className="flex items-baseline gap-3">
-            <span className="w-12 shrink-0 text-xs text-muted">
+            <span className="w-14 shrink-0 text-xs whitespace-nowrap text-muted">
               {e.consumed_at
-                ? new Date(`${e.consumed_at}T12:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "short" })
+                ? new Date(`${e.consumed_at}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })
                 : "–"}
             </span>
             <Link to={`/media/${e.media.id}`} className="min-w-0 flex-1 truncate font-semibold hover:text-accent">

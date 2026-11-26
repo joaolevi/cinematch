@@ -26,7 +26,7 @@ function PaperCard({ media, compact }: { media: Media; compact: boolean }) {
     <>
       <span aria-hidden className="absolute inset-y-0 left-4 w-px bg-[#e8735a]/60" />
       <span className="relative font-hand text-lg leading-none font-bold text-[#b9452f]">{MEDIA_STYLE[media.type].label}</span>
-      <p className="relative mt-1 line-clamp-4 font-display text-base leading-tight font-bold text-[#2b211c]">{media.title}</p>
+      <p className="relative mt-1 line-clamp-4 font-display text-base leading-tight font-bold text-[#2b211c] hyphens-auto [overflow-wrap:anywhere]">{media.title}</p>
       <p className="relative mt-1 line-clamp-1 text-xs text-stone-600">
         {media.type === "album" ? media.creators[0] ?? media.year : media.year}
       </p>
@@ -103,14 +103,21 @@ export default function Poster({
     );
   }
   if (media.poster_url && !broken) {
+    // A ficha de papel fica por baixo enquanto o pôster carrega: com a internet lenta, nunca aparece um buraco
     return (
-      <div className="relative">
+      <div className={`relative overflow-hidden ${rounded}`}>
+        {!loaded && (
+          <div aria-hidden className={`absolute inset-0 flex flex-col justify-end p-3 pl-7 ${rounded}`} style={PAPER}>
+            <PaperCard media={media} compact={compact} />
+          </div>
+        )}
         <img
           src={media.poster_url}
           alt={media.title}
           loading="lazy"
+          onLoad={() => setLoaded(true)}
           onError={() => setBroken(true)}
-          className={`aspect-[2/3] w-full ${rounded} object-cover ${className}`}
+          className={`relative aspect-[2/3] w-full ${rounded} object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"} ${className}`}
         />
         {upcoming}
       </div>

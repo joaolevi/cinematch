@@ -236,6 +236,8 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
   const [params, setParams] = useSearchParams();
   const [fullOverview, setFullOverview] = useState(false); // no celular, a sinopse começa em 4 linhas
   const [stamp, setStamp] = useState(0);
+  // A cena larga vem do TMDB; se não carregar, o topo fecha em vez de ficar um vazio escuro
+  const [brokenBackdrop, setBrokenBackdrop] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const latestLoad = useRef(0); // se duas cargas se cruzarem, vale a mais recente
@@ -441,17 +443,19 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
           </section>
   );
 
+  const backdrop = media.backdrop_url && media.backdrop_url !== brokenBackdrop ? media.backdrop_url : null;
+
   return (
     <div>
       <SeenStamp id={stamp} album={media.type === "album"} />
       <div className="relative overflow-hidden rounded-2xl border border-line/60 bg-surface/40 p-6 md:p-8">
         {/* Como no Letterboxd: a cena larga do título no topo, sumindo no fundo; sem ela, o pôster desfocado */}
-        {media.backdrop_url ? (
+        {backdrop ? (
           <div
             aria-hidden
             className="absolute inset-x-0 top-0 h-72 [mask-image:linear-gradient(to_bottom,black_35%,transparent)] sm:h-[26rem]"
           >
-            <img src={media.backdrop_url} alt="" className="h-full w-full object-cover opacity-60" />
+            <img src={backdrop} alt="" onError={() => setBrokenBackdrop(backdrop)} className="h-full w-full object-cover opacity-60" />
             <div className="absolute inset-0 bg-gradient-to-r from-bg/70 via-transparent to-bg/30" />
           </div>
         ) : (
@@ -463,7 +467,7 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
             />
           )
         )}
-        <div className={`relative grid gap-8 md:grid-cols-[240px_1fr] ${media.backdrop_url ? "pt-40 sm:pt-56" : ""}`}>
+        <div className={`relative grid gap-8 md:grid-cols-[240px_1fr] ${backdrop ? "pt-40 sm:pt-56" : ""}`}>
           <div className="group mx-auto w-48 md:w-full">
             {/* O que a pessoa viu vira polaroide; o que ela quer ver fica preso com fita */}
             {status.diary_entry_id ? (

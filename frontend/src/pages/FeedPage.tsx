@@ -766,7 +766,7 @@ export default function FeedPage() {
               </h2>
               <Carousel label={row.title}>
                 {row.items.map((rec) => (
-                  <div key={rec.media.id} className="flex w-44 shrink-0 snap-start pt-2 sm:w-48">
+                  <div key={rec.media.id} className="flex w-44 shrink-0 snap-start pt-2 sm:w-48 [&>*]:w-full">
                     {card(rec)}
                   </div>
                 ))}
