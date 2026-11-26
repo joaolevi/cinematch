@@ -484,3 +484,38 @@ h1 {
 @utility chip {
   @apply inline-flex items-center rounded-full border border-line px-3 py-1 text-xs font-semibold text-stone-300;
 }
+
+/* ------------------------------------------------------------------ movimento
+   Só para quem não pediu menos movimento ao sistema. O disco desliza um pouco e o selo gira ao passar o mouse; os blocos
+   de destaque entram subindo, um depois do outro (--i); o marca-texto se desenha; o pedido de exemplo é digitado. */
+@keyframes vinyl-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes marker-draw {
+  from { background-size: 0% 100%; }
+  to { background-size: 100% 100%; }
+}
+@keyframes caret-blink {
+  50% { opacity: 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  50% { transform: translateY(-6px) rotate(var(--tilt, 0deg)); }
+}
+.marker-draw {
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .vinyl-disc { transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .group:hover .vinyl-disc, .spin .vinyl-disc { transform: translateY(6%); }
+  .group:hover .vinyl-label, .spin .vinyl-label { animation: vinyl-spin 2.2s linear infinite; }
+  .rise { animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 90ms); }
+  .marker-draw { animation: marker-draw 0.9s 0.35s ease-out both; }
+  .caret::after { content: ""; display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -0.15em; background: currentColor; animation: caret-blink 1s steps(1) infinite; }
+  .float { animation: float 5s ease-in-out infinite; }
+}

@@ -6,7 +6,6 @@ import Polaroid from "../components/Polaroid";
 import PolaroidCollage from "../components/PolaroidCollage";
 import Poster from "../components/Poster";
 import type { Showcase } from "../types";
-import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 
 const RED_INK = "text-[#b9452f]";
@@ -69,6 +68,103 @@ function SeeThenHear({ pairs }: { pairs: Showcase["pairs"] }) {
 }
 
 /** Apresentação para quem ainda não tem conta: o que é o Tastory e como funciona. */
+const ASKED = "algo leve para a Sessão da Tarde";
+const UNDERSTOOD = ["Leve", "Em família", "Filmes"];
+
+/** O pedido sendo digitado e virando filtros, em loop, como acontece no Para você. */
+function AskDemo() {
+  const [letters, setLetters] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setLetters(ASKED.length + UNDERSTOOD.length * 6);
+      return;
+    }
+    const t = setInterval(() => setLetters((n) => (n > ASKED.length + 40 ? 0 : n + 1)), 70);
+    return () => clearInterval(t);
+  }, []);
+  const typed = ASKED.slice(0, letters);
+  const done = letters >= ASKED.length;
+  return (
+    <div aria-hidden className="rounded-xl border border-line bg-bg/70 p-4">
+      <div className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm">
+        <span className="text-accent">✦</span>
+        <span className="caret truncate text-cream">{typed}</span>
+      </div>
+      <div className="mt-3 flex min-h-7 flex-wrap gap-1.5 text-xs">
+        {done &&
+          UNDERSTOOD.map((label, i) => (
+            <span key={label} className="rise rounded-full bg-accent/15 px-2.5 py-1 font-semibold text-accent" style={{ "--i": i * 2 } as CSSProperties}>
+              {label}
+            </span>
+          ))}
+      </div>
+    </div>
+  );
+}
+
+/** Duas pessoas e a porcentagem que sobe até o quanto elas combinam. */
+function TogetherDemo() {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return setN(63);
+    const t = setInterval(() => setN((x) => (x >= 63 ? 63 : x + 1)), 25);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div aria-hidden className="flex items-center justify-center gap-4 rounded-xl border border-line bg-bg/70 p-4">
+      <div className="flex -space-x-3">
+        <span className="grid h-12 w-12 place-items-center rounded-full bg-[#8fb3c9] font-bold text-bg ring-2 ring-bg">A</span>
+        <span className="grid h-12 w-12 place-items-center rounded-full bg-[#e59bb0] font-bold text-bg ring-2 ring-bg">B</span>
+      </div>
+      <p className="font-hand text-3xl leading-none font-bold text-accent">
+        Vocês combinam <span className="tabular-nums">{n}%</span>
+      </p>
+    </div>
+  );
+}
+
+/** Um cartão da retrospectiva, flutuando, com a frase do gosto. */
+function CardDemo() {
+  return (
+    <div aria-hidden className="grid place-items-center rounded-xl border border-line bg-bg/70 p-4">
+      <div className="float paper w-56 rounded-sm py-3 pr-3 pl-9 text-[#2b211c]" style={{ "--tilt": "-3deg" } as CSSProperties}>
+        <p className={`font-hand text-sm font-bold ${RED_INK}`}>Minha retrospectiva de 2026</p>
+        <p className="font-display text-base leading-tight font-bold">
+          Sou do time <mark className="marker marker-draw">da MPB</mark> dos <mark className="marker marker-draw" style={{ "--marker": "rgb(232 115 90 / 0.5)" } as CSSProperties}>anos 70</mark>.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** O que só o Tastory faz, com uma demonstração viva de cada coisa. */
+function OnlyHere() {
+  const items = [
+    { title: "Peça do seu jeito", text: "Escreva o que quer, em português, e o pedido vira clima, ocasião e tempo.", demo: <AskDemo /> },
+    { title: "Vejam juntos", text: "Descubra o quanto você combina com quem segue e o que agrada aos dois.", demo: <TogetherDemo /> },
+    { title: "Seu ano num cartão", text: "A frase do seu gosto e os favoritos do ano, num cartão para guardar ou mandar.", demo: <CardDemo /> },
+  ];
+  return (
+    <section className="pt-10 pb-4" aria-labelledby="so-aqui">
+      <h2 id="so-aqui" className="font-display text-3xl font-bold">
+        O que só o Tastory faz
+      </h2>
+      <p className="font-hand text-xl font-bold text-accent">além de juntar filme, série e disco no mesmo diário</p>
+      <ul className="mt-6 grid gap-5 md:grid-cols-3">
+        {items.map((item, i) => (
+          <li key={item.title} className="rise card flex flex-col gap-4 p-5" style={{ "--i": i } as CSSProperties}>
+            {item.demo}
+            <div>
+              <h3 className="font-display text-xl font-bold">{item.title}</h3>
+              <p className="mt-1 text-sm text-stone-300">{item.text}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export default function LandingPage() {
   usePageTitle("A história do seu gosto");
   const [showcase, setShowcase] = useState<Showcase | null>(null);
@@ -150,10 +246,12 @@ export default function LandingPage() {
 
         <SeeThenHear pairs={showcase?.pairs ?? []} />
 
-        <section className="paper relative mt-10 max-w-4xl -rotate-[0.3deg] rounded-sm py-6 pr-6 pl-14">
-          <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[2] }} />
-          <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Bom saber:</p>
-          <ul className="font-hand text-xl leading-8 font-semibold">
+        <OnlyHere />
+
+        {/* Sem papel: a página já tem a folha do topo e os post-its; aqui, só as notas à mão */}
+        <section className="mt-10 max-w-4xl border-t border-line/60 pt-6">
+          <p className="font-hand text-2xl leading-8 font-bold text-accent">Bom saber:</p>
+          <ul className="font-hand text-xl leading-8 font-semibold text-stone-200">
             <li>→ O que você marca como Já vi aparece na Comunidade, e você escolhe quem vê.</li>
             <li>→ Filmes, séries e discos no mesmo diário, com pontes entre eles: o filme e a trilha para ouvir depois.</li>
             <li>→ É de graça: é um projeto acadêmico.</li>

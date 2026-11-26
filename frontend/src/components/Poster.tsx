@@ -61,7 +61,7 @@ export default function Poster({
       <div className={`relative aspect-[2/3] w-full ${className}`}>
         <div
           aria-hidden
-          className="absolute top-[37%] left-[6%] aspect-square w-[88%] rounded-full shadow-[0_6px_18px_rgba(0,0,0,.45),0_0_0_1.5px_rgba(255,255,255,.28)]"
+          className="vinyl-disc absolute top-[37%] left-[6%] aspect-square w-[88%] rounded-full shadow-[0_6px_18px_rgba(0,0,0,.45),0_0_0_1.5px_rgba(255,255,255,.28)]"
           style={{ background: "repeating-radial-gradient(circle at center, #2c2c2e 0 1.5px, #3d3d40 1.5px 3px)" }}
         >
           {/* Brilho do vinil: duas faixas de luz em cruz, como um disco sob a lâmpada */}
@@ -73,7 +73,8 @@ export default function Poster({
             }}
           />
           <div
-            className="absolute inset-[31%] rounded-full bg-cover bg-center ring-2 ring-black/50"
+            // O selo do disco gira ao passar o mouse; o brilho fica parado, como num toca-discos de verdade
+            className="vinyl-label absolute inset-[31%] rounded-full bg-cover bg-center ring-2 ring-black/50"
             style={cover ? { backgroundImage: `url(${cover})` } : { background: `hsl(${h % 360} 45% 45%)` }}
           />
           <div className="absolute inset-[48.5%] rounded-full bg-[#0b0d10]" />

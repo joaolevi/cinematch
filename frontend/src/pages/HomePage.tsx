@@ -10,6 +10,7 @@ import Poster from "../components/Poster";
 import ArrivalsNote from "../components/ArrivalsNote";
 import ChallengeCard from "../components/ChallengeCard";
 import ContinueWatching from "../components/ContinueWatching";
+import { DoubleFeatureOfTheDay, Shortcuts } from "../components/HomeSpotlights";
 import TopTen from "../components/TopTen";
 import RateReminder from "../components/RateReminder";
 import SeenModal from "../components/SeenModal";
@@ -279,7 +280,12 @@ export default function HomePage() {
         )}
       </div>
 
+      {/* O que só o Tastory faz, a um clique: pedir em português, "Hoje à noite" e o gosto em uma frase */}
+      <Shortcuts diary={diary} />
+
       <ContinueWatching />
+
+      <DoubleFeatureOfTheDay />
 
       {/* O desafio do mês vem logo depois da aposta: é o convite do mês, e não um rodapé da prateleira do tema */}
       {theme && challenge && user && <ChallengeCard c={challenge} userId={user.id} all={theme.items.map((i) => i.media)} />}

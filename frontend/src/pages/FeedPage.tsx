@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import DoubleFeature from "../components/DoubleFeature";
@@ -192,9 +192,12 @@ export default function FeedPage() {
   const [discovery, setDiscovery] = useState<Discovery>("taste");
   // Momento (RFF20): clima e duração máxima; vazio e 0 = qualquer um
   const [mood, setMood] = useState("");
-  const [maxMinutes, setMaxMinutes] = useState(0);
+  // Do Início dá para chegar já com "Hoje à noite" ligado (?hoje=1) ou com um pedido feito (?pedido=...)
+  const [params] = useSearchParams();
+  const fromTonight = params.get("hoje") === "1";
+  const [maxMinutes, setMaxMinutes] = useState(fromTonight ? TONIGHT_MINUTES : 0);
   const [occasion, setOccasion] = useState("");
-  const [onlyMine, setOnlyMine] = useState(false); // só nos meus serviços (RFF21)
+  const [onlyMine, setOnlyMine] = useState(fromTonight && (user?.services.length ?? 0) > 0); // só nos meus serviços (RFF21)
   const moods = useMoods();
   const [occasions, setOccasions] = useState<Occasion[]>([]);
   // Para ver ou ouvir junto (RFF28): quem eu sigo e quem escolhi para hoje
@@ -509,12 +512,93 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* Um painel só para pedir e filtrar: o pedido em português em cima e, embaixo, três grupos com título */}
+      {/* Os destaques do Tastory ficam à vista: pedir em português, "Hoje à noite" e ver junto com alguém. O resto dos
+          filtros fica no painel de baixo, que se esconde */}
+      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <section aria-label="Pedir do seu jeito" className="rise relative flex flex-col justify-center overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-surface via-surface/80 to-accent/10 p-5 sm:p-6">
+          <WishBox big onWish={applyWish} initial={params.get("pedido") ?? undefined} />
+        </section>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+          {type !== "album" && (
+            <button
+              aria-pressed={tonight}
+              onClick={() => {
+                if (tonight) {
+                  setMaxMinutes(0);
+                  setOnlyMine(false);
+                } else {
+                  setMaxMinutes(TONIGHT_MINUTES);
+                  setOnlyMine(hasServices);
+                }
+              }}
+              style={{ "--i": 1 } as React.CSSProperties}
+              className={`rise group relative cursor-pointer overflow-hidden rounded-2xl border p-4 text-left transition ${
+                tonight ? "border-accent bg-[#1d2340]" : "border-line bg-gradient-to-br from-[#1a1f38] to-surface hover:border-accent/60"
+              }`}
+            >
+              {/* O céu da noite: a lua e umas estrelas que piscam */}
+              <span aria-hidden className="float absolute top-3 right-4 text-3xl" style={{ "--tilt": "-12deg" } as React.CSSProperties}>
+                🌙
+              </span>
+              <span aria-hidden className="absolute top-8 right-16 h-1 w-1 rounded-full bg-cream/70" />
+              <span aria-hidden className="absolute top-4 right-24 h-0.5 w-0.5 rounded-full bg-cream/60" />
+              <span className="block font-hand text-2xl leading-7 font-bold text-accent">Hoje à noite</span>
+              <span className="mt-1 block pr-10 text-sm text-stone-300">
+                {hasServices ? "Cabe na noite (até 2h30) e está nos seus serviços" : "Cabe na noite: até 2h30"}
+              </span>
+              <span className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-bold ${tonight ? "bg-accent text-bg" : "bg-white/10 text-cream group-hover:bg-accent group-hover:text-bg"}`}>
+                {tonight ? "Ligado" : "Ligar"}
+              </span>
+            </button>
+          )}
+          <section
+            aria-label="Ver junto com"
+            style={{ "--i": 2 } as React.CSSProperties}
+            className={`rise rounded-2xl border p-4 ${together ? "border-accent bg-accent/10" : "border-line bg-surface/70"}`}
+          >
+            <p className="font-hand text-2xl leading-7 font-bold text-accent">Ver junto com</p>
+            <p className="mt-1 text-sm text-stone-300">
+              {together ? `Sugestões para você e ${chosen.map((p) => p.name.split(" ")[0]).join(" e ")}` : "Sugestões que agradam aos dois"}
+            </p>
+            {following.length === 0 ? (
+              <Link to="/comunidade/pessoas" className="mt-2 inline-block text-xs text-muted underline hover:text-accent">
+                Seguir alguém para ver junto
+              </Link>
+            ) : (
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                {following.slice(0, 6).map((person) => {
+                  const on = companions.includes(person.id);
+                  return (
+                    <button
+                      key={person.id}
+                      aria-pressed={on}
+                      aria-label={`${on ? "Tirar" : "Ver junto com"} ${person.name}`}
+                      title={person.name}
+                      disabled={!on && companions.length >= MAX_COMPANIONS}
+                      onClick={() => setCompanions(on ? companions.filter((id) => id !== person.id) : [...companions, person.id])}
+                      className={`cursor-pointer rounded-full p-0.5 transition hover:-translate-y-0.5 disabled:opacity-40 ${on ? "ring-2 ring-accent" : "ring-1 ring-line"}`}
+                    >
+                      <Avatar name={person.name} userId={person.id} size="h-9 w-9 text-sm" />
+                    </button>
+                  );
+                })}
+                {together && (
+                  <button className="ml-1 text-xs text-muted underline hover:text-accent" onClick={() => setCompanions([])}>
+                    Só para mim
+                  </button>
+                )}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+
+      {/* Os outros filtros: quanto sair do óbvio e o momento (clima, ocasião, duração, serviços) */}
       <section aria-label="Ajustar as sugestões" className={`mt-5 rounded-2xl border border-line bg-surface/70 ${showFilters ? "p-4 sm:p-5" : "px-4 py-2.5 sm:px-5"}`}>
         {/* A linha de cima esconde e mostra o painel. Escondido, ela diz quantos filtros estão ligados */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="font-hand text-xl leading-7 font-bold text-accent">
-            Pedir e filtrar
+            Mais filtros
             {!showFilters && activeFilters > 0 && (
               <span className="ml-2 font-sans text-sm font-semibold text-stone-300">
                 {activeFilters} {activeFilters === 1 ? "filtro ligado" : "filtros ligados"}
@@ -531,8 +615,7 @@ export default function FeedPage() {
           </button>
         </div>
         <div id="filtros-do-feed" className={showFilters ? "mt-3" : "hidden"}>
-        <WishBox onWish={applyWish} />
-        <div className="mt-4 grid gap-5 border-t border-line pt-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-0 lg:divide-x lg:divide-line">
+        <div className="grid gap-5 border-t border-line pt-4 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-0 lg:divide-x lg:divide-line">
           {type !== "album" && !together && (
             <FilterGroup title="Quanto sair do óbvio">
               <Segmented
@@ -549,24 +632,6 @@ export default function FeedPage() {
           )}
 
           <FilterGroup title="Para agora">
-            {type !== "album" && (
-              <button
-                aria-pressed={tonight}
-                title={hasServices ? "Até 2h30 e só nos seus serviços" : "Até 2h30. Marque seus serviços para ver só o que você tem"}
-                onClick={() => {
-                  if (tonight) {
-                    setMaxMinutes(0);
-                    setOnlyMine(false);
-                  } else {
-                    setMaxMinutes(TONIGHT_MINUTES);
-                    setOnlyMine(hasServices);
-                  }
-                }}
-                className={`chip cursor-pointer px-3 py-1 text-sm ${tonight ? "border-accent bg-accent/15 text-accent" : ""}`}
-              >
-                🌙 Hoje à noite
-              </button>
-            )}
             <label className="sr-only" htmlFor="clima">
               Clima
             </label>
@@ -633,36 +698,6 @@ export default function FeedPage() {
             )}
           </FilterGroup>
 
-          <FilterGroup title="Junto com">
-            {following.length === 0 ? (
-              <Link to="/comunidade" className="text-xs text-muted underline hover:text-accent">
-                Seguir alguém na Comunidade para ver junto
-              </Link>
-            ) : (
-              <>
-                {following.map((person) => {
-                  const on = companions.includes(person.id);
-                  return (
-                    <button
-                      key={person.id}
-                      aria-pressed={on}
-                      disabled={!on && companions.length >= MAX_COMPANIONS}
-                      onClick={() => setCompanions(on ? companions.filter((id) => id !== person.id) : [...companions, person.id])}
-                      className={`chip flex cursor-pointer items-center gap-1.5 py-0.5 pr-3 pl-0.5 text-sm ${on ? "border-accent bg-accent/15 text-accent" : ""}`}
-                    >
-                      <Avatar name={person.name} userId={person.id} size="h-6 w-6 text-xs" />
-                      {person.name.split(" ")[0]}
-                    </button>
-                  );
-                })}
-                {together && (
-                  <button className="text-xs text-muted underline hover:text-accent" onClick={() => setCompanions([])}>
-                    Ver só para mim
-                  </button>
-                )}
-              </>
-            )}
-          </FilterGroup>
         </div>
         </div>
         {activeFilters > 0 && (
