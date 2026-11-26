@@ -7,6 +7,7 @@ import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
 import ActionIcon from "../components/ActionIcon";
 import Episodes from "../components/Episodes";
+import { episodePath } from "./EpisodePage";
 import Tracks from "../components/Tracks";
 import RatingsPanel from "../components/RatingsPanel";
 import ReviewTalk from "../components/ReviewTalk";
@@ -16,7 +17,7 @@ import SeenStamp from "../components/SeenStamp";
 import { diaryChanged, useDiaryVersion } from "../seen";
 import { StarsDisplay } from "../components/Stars";
 import { Avatar } from "../components/WatchedBy";
-import { colorFor, formatDate, MEDIA_STYLE, SEARCH_URL, SERVICE_LABEL, timeAgo, verbs } from "../format";
+import { colorFor, formatDate, MEDIA_STYLE, plural, SEARCH_URL, SERVICE_LABEL, timeAgo, verbs } from "../format";
 import type { Connection, Media, MediaDetail, Provider, Season, UserList } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
@@ -132,15 +133,23 @@ export default function MediaPage() {
 }
 
 /** Série que a pessoa está assistindo (RFF24): em que temporada ela está, com troca rápida. */
+/**
+ * "Continuar assistindo", como na Netflix e na HBO: em que temporada a pessoa está, quantos episódios viu e o próximo
+ * episódio. A temporada troca nos botões T1, T2...; marcar um episódio também muda a temporada sozinho.
+ */
 function WatchingSeason({
+  mediaId,
   entryId,
   season,
   seasons,
+  counts,
   onChange,
 }: {
+  mediaId: number;
   entryId: number;
   season: number | null;
   seasons: Season[];
+  counts: Record<string, number>;
   onChange: () => void;
 }) {
   const [saving, setSaving] = useState(false);
@@ -153,35 +162,61 @@ function WatchingSeason({
       setSaving(false);
     }
   }
+  const current = seasons.find((t) => t.number === season);
+  const seen = season != null ? counts[String(season)] ?? 0 : 0;
+  const total = current?.episodes ?? null;
+  const next = season != null && (total == null || seen < total) ? seen + 1 : null;
   return (
-    <p className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-      <span className="font-bold text-accent">▶ Assistindo</span>
-      {seasons.length > 0 ? (
-        <>
-          <label htmlFor="temporada" className="text-muted">
-            na
-          </label>
-          <select
-            id="temporada"
-            disabled={saving}
-            value={season ?? ""}
-            onChange={(e) => pick(Number(e.target.value))}
-            className="chip cursor-pointer bg-surface px-3 py-1 text-sm"
+    <div className="mt-4 max-w-xl rounded-xl border border-accent/30 bg-accent/5 p-4">
+      <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
+        <span className="font-bold text-accent">▶ Você está assistindo</span>
+        {season != null && <span className="font-semibold">Temporada {season}</span>}
+      </p>
+      {season != null && total != null && (
+        <div className="mt-2">
+          <div
+            role="progressbar"
+            aria-label={`Episódios vistos da temporada ${season}`}
+            aria-valuemin={0}
+            aria-valuemax={total}
+            aria-valuenow={Math.min(seen, total)}
+            className="h-1.5 overflow-hidden rounded-full bg-line/60"
           >
-            {season == null && <option value="">escolha a temporada</option>}
-            {seasons.map((t) => (
-              <option key={t.number} value={t.number}>
-                Temporada {t.number}
-                {t.episodes ? ` (${t.episodes} episódios)` : ""}
-              </option>
-            ))}
-          </select>
-        </>
-      ) : (
-        season != null && <span className="text-muted">na temporada {season}</span>
+            <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, (seen / total) * 100)}%` }} />
+          </div>
+          <p className="mt-1.5 flex flex-wrap justify-between gap-2 text-xs text-muted">
+            <span>
+              {seen} de {plural(total, "episódio visto", "episódios vistos")}
+            </span>
+            {next != null && next <= total && (
+              <Link to={episodePath(mediaId, season, next)} className="font-semibold text-accent hover:underline">
+                Próximo: episódio {next} →
+              </Link>
+            )}
+          </p>
+        </div>
       )}
-      <span className="text-xs text-muted">Quando acabar, use “Terminei” para dar a nota.</span>
-    </p>
+      {seasons.length > 1 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="Em que temporada você está?">
+          <span className="text-xs text-muted">Em que temporada você está?</span>
+          {seasons.map((t) => (
+            <button
+              key={t.number}
+              disabled={saving}
+              aria-pressed={t.number === season}
+              aria-label={`Temporada ${t.number}`}
+              onClick={() => t.number !== season && pick(t.number)}
+              className={`h-8 min-w-8 cursor-pointer rounded-full border px-2 text-xs font-bold transition ${
+                t.number === season ? "border-accent bg-accent text-bg" : "border-line text-stone-300 hover:border-accent hover:text-accent"
+              }`}
+            >
+              T{t.number}
+            </button>
+          ))}
+        </div>
+      )}
+      <p className="mt-3 text-xs text-muted">Quando acabar a série, use “Terminei” para dar a nota.</p>
+    </div>
   );
 }
 
@@ -424,9 +459,11 @@ function MediaView({ mediaId }: { mediaId: number }) {
             )}
             {status.status === "watching" && status.diary_entry_id ? (
               <WatchingSeason
+                mediaId={media.id}
                 entryId={status.diary_entry_id}
                 season={status.season}
                 seasons={media.seasons}
+                counts={status.episodes ?? {}}
                 onChange={load}
               />
             ) : (

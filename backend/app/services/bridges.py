@@ -13,6 +13,7 @@ O grafo de conteúdo (RNFF12) fica para depois da entrega: trocar o motor em um 
 """
 
 import csv
+import math
 from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -26,7 +27,7 @@ from ..config import DATA_DIR
 from ..models import Media, MediaBridge, User, UserInterest, UserPreference
 from .catalog import search_text
 from .recommender import (
-    DISCOVERY, Recommendation, can_be_suggested, decade_label, excluded_ids, recommend, user_signals,
+    DISCOVERY, Recommendation, can_be_suggested, decade_label, excluded_ids, media_tokens, recommend, user_signals,
 )
 
 ALBUM_LIST_PATH = DATA_DIR / "albuns_demo.csv"
@@ -50,6 +51,11 @@ ALBUM_POPULARITY_BONUS = 0.05  # desempate entre álbuns com a mesma ponte
 ALBUM_EVERY = 4  # no feed misto, um álbum a cada 4 lugares
 FIRST_ALBUM_SLOT = 2  # o primeiro álbum aparece no 3º lugar
 VIDEO_TYPES = ("movie", "series")
+# Música pela música: quanto mais discos a pessoa curtiu, mais lugares das sugestões de música vêm deles (e não das
+# pontes com filmes e séries). Cada disco curtido vale MUSIC_SHARE_PER_ALBUM, até MUSIC_SHARE_MAX
+MUSIC_SHARE_PER_ALBUM = 0.15
+MUSIC_SHARE_MAX = 0.7
+MIN_MUSIC_SIMILARITY = 0.15  # abaixo disso, o disco não parece com nada que a pessoa ouve
 
 
 @dataclass
@@ -340,6 +346,78 @@ def outside_the_bubble(albums: list[Media], familiar: set[str], have: set[int], 
     return picked
 
 
+def _album_tokens(m: Media) -> str:
+    """Os atributos do disco para comparar com outro disco: gêneros, gêneros finos, artista, década e idioma."""
+    return media_tokens(m) + (f" l:{m.language}" if m.language else "")
+
+
+def _shared(a: Media, b: Media) -> str:
+    """O que dois discos têm em comum, para o motivo: o gênero mais específico em comum e a década."""
+    parts = []
+    tag = next((t for t in b.tags or [] if t in (a.tags or []) and t not in ("latin", "pop", "rock")), None)
+    genre = next((g for g in b.genres or [] if g in (a.genres or [])), None)
+    if tag:
+        parts.append(tag)
+    elif genre:
+        parts.append(_phrase(genre))
+    if a.year and b.year and a.year // 10 == b.year // 10:
+        parts.append(decade_label(a.year // 10 * 10))
+    return ", ".join(parts)
+
+
+def music_taste(albums: list[Media], liked: dict[int, Media], signals: dict[int, float]) -> list[Recommendation]:
+    """Discos parecidos com os discos que a pessoa curtiu, pelo conteúdo (TF-IDF e cosseno, como no recomendador de
+    filmes): gêneros finos do MusicBrainz, artista, década e idioma. O motivo diz com qual disco ele mais parece."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    heard = [m for m in liked.values() if m.type == "album" and signals.get(m.id, 0) > 0]
+    pool = [a for a in albums if a.id not in liked]
+    if not heard or not pool:
+        return []
+    vectorizer = TfidfVectorizer(token_pattern=r"[^ ]+", lowercase=False)
+    X = vectorizer.fit_transform([_album_tokens(m) for m in heard + pool])  # linhas normalizadas (L2)
+    H, P = X[: len(heard)], X[len(heard):]
+    weights = [signals[m.id] for m in heard]
+    sims = (P @ H.T).toarray()  # parecença de cada candidato com cada disco ouvido
+    recs = []
+    for i, album in enumerate(pool):
+        scores = sims[i] * weights
+        j = int(scores.argmax())
+        if sims[i][j] < MIN_MUSIC_SIMILARITY:
+            continue
+        # A nota junta o disco mais parecido com um pouco dos outros: quem parece com vários discos ouvidos sobe
+        score = float(scores.max() + 0.3 * (scores.sum() - scores.max()) / max(len(heard) - 1, 1))
+        source = heard[j]
+        shared = _shared(source, album)
+        reason = f"Parecido com {source.title}, que você curtiu" + (f": {shared}" if shared else "")
+        recs.append(Recommendation(album, score, reason, "content", ("title", str(source.id))))
+    recs.sort(key=lambda r: (-r.score, -r.media.popularity))
+    # No máximo dois por disco de origem no começo: o motivo não fica repetindo o mesmo disco
+    first, rest, per_source = [], [], Counter()
+    for r in recs:
+        per_source[r.because] += 1
+        (first if per_source[r.because] <= MAX_PER_REASON else rest).append(r)
+    return first + rest
+
+
+def interleave(first: list[Recommendation], second: list[Recommendation], share: float) -> list[Recommendation]:
+    """Junta duas listas na proporção `share` da primeira, sem repetir título: em cada trecho, a mesma parte."""
+    out: list[Recommendation] = []
+    seen: set[int] = set()
+    a, b = [r for r in first], [r for r in second]
+    placed = 0
+    while a or b:
+        # ceil: a primeira lista começa, e em cada trecho fica com a sua parte (o round do Python arredonda 0,5 para baixo)
+        take_first = bool(a) and (placed < math.ceil((len(out) + 1) * share) or not b)
+        rec = a.pop(0) if take_first else b.pop(0)
+        if rec.media.id in seen:
+            continue
+        seen.add(rec.media.id)
+        out.append(rec)
+        placed += take_first
+    return out
+
+
 def album_suggestions(
     db: Session,
     user_id: int,
@@ -401,7 +479,19 @@ def album_suggestions(
     have = {r.media.id for r in recs}
     popular = sorted((a for a in albums if a.id not in have), key=lambda a: -a.popularity)
     recs += [Recommendation(a, a.popularity / 100, "Em alta na música", "trending") for a in popular]
-    recs = diversify(recs)[:limit]
+    recs = diversify(recs)
+
+    # Música pela música: os discos parecidos com o que a pessoa ouve entram intercalados com as pontes. Quem só vê
+    # filmes recebe música pelas pontes; quem ouve muito recebe mais do próprio gosto musical, e menos trilha sonora
+    heard = sum(1 for m in by_id.values() if m.type == "album")
+    if heard:
+        own = [
+            Recommendation(r.media, r.score * adj.factor(r.media, adjust), r.reason, r.strategy, r.because)
+            for r in music_taste(albums, by_id, signals)
+        ]
+        share = min(MUSIC_SHARE_MAX, MUSIC_SHARE_PER_ALBUM * heard)
+        recs = interleave(diversify(own), recs, share)
+    recs = recs[:limit]
 
     _, share, prefix = DISCOVERY.get(discovery, DISCOVERY["taste"])
     if share:
