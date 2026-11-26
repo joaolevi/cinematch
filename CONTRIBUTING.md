@@ -16,6 +16,8 @@
    cd backend && python -m pytest -q
    ```
    Os testes de integração com o TMDB rodam só se você tiver a chave no `.env`. Sem chave, eles são pulados.
+   Mudou a interface? Rode também os testes dela, com o Vitest e a Testing Library (`frontend/src/__tests__/`):
+   `cd frontend && npm test`.
 5. `git push -u origin feat/nome-curto` e abra um **Pull Request** para a `homol`, com `Closes #N`
    na descrição.
 6. Peça revisão de pelo menos uma pessoa da equipe. Só faça merge com o **CI verde**.

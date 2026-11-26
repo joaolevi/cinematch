@@ -23,6 +23,20 @@ def _client() -> TmdbCatalogProvider:
     return TmdbCatalogProvider(settings.tmdb_api_key, settings.tmdb_language, settings.tmdb_region, pages=1)
 
 
+def merge_providers(media: Media, found: list[dict], now: datetime) -> list[dict]:
+    """Os serviços novos, com `since`: desde quando o título está naquele serviço (RFF29). O que já estava guarda a data
+    de antes. Na primeira busca de um título não dá para saber quando ele chegou, então `since` fica vazio, e ele não
+    vira aviso."""
+    known = media.providers_updated_at is not None
+    before = {(p.get("service"), p.get("kind")): p.get("since") for p in media.providers or []}
+    out = []
+    for p in found:
+        key = (p.get("service"), p.get("kind"))
+        since = before[key] if key in before else (now.isoformat() if known else None)
+        out.append({**p, "since": since})
+    return out
+
+
 def where_to_watch(db: Session, media: Media) -> list[dict]:
     """Os serviços guardados, se ainda estiverem frescos; senão, busca de novo. Sem chave, sem TMDB ou com erro,
     devolve o que tiver guardado: o detalhe nunca quebra por causa disso."""
@@ -37,8 +51,9 @@ def where_to_watch(db: Session, media: Media) -> list[dict]:
         return media.providers or []
     client = _client()
     try:
-        media.providers = client.watch_providers(media.type, tid)
-        media.providers_updated_at = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc)
+        media.providers = merge_providers(media, client.watch_providers(media.type, tid), now)
+        media.providers_updated_at = now
         db.commit()
     except TmdbError:
         db.rollback()
@@ -63,7 +78,7 @@ def fill_providers(db: Session, client: TmdbCatalogProvider, only_stale: bool = 
             skipped += 1
             continue
         try:
-            media.providers = client.watch_providers(media.type, tid)
+            media.providers = merge_providers(media, client.watch_providers(media.type, tid), now)
             media.providers_updated_at = now
             done += 1
         except TmdbError:

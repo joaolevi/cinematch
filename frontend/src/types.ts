@@ -71,8 +71,19 @@ export interface Review {
   created_at: string;
 }
 
+/** Temporada de uma série (RFF24) */
+export interface Season {
+  number: number;
+  name: string | null;
+  episodes: number | null;
+  year: number | null;
+}
+
+export type Progress = "seen" | "watching";
+
 export interface MediaDetail extends Media {
   actors: string[];
+  seasons: Season[];
   credit: Credit | null;
   avg_rating: number | null;
   ratings_count: number;
@@ -81,6 +92,8 @@ export interface MediaDetail extends Media {
     diary_entry_id: number | null;
     rating: number | null;
   consumed_at: string | null;
+    status: Progress | null;
+    season: number | null;
     in_watchlist: boolean;
     dismissed: boolean;
     list_ids: number[];
@@ -97,6 +110,8 @@ export interface DiaryEntry {
   from_onboarding: boolean;
   created_at: string;
   excluded?: boolean;
+  status?: Progress;
+  season?: number | null;
 }
 
 export interface UserList {
@@ -193,6 +208,13 @@ export interface Occasion {
   label: string;
 }
 
+/** Um título do Quero ver que chegou a um serviço da pessoa (RFF29) */
+export interface Arrival {
+  media: Media;
+  service: { key: string; label: string; logo: string | null };
+  since: string;
+}
+
 /** Resultado da importação do Letterboxd (RFF18) */
 export interface LetterboxdResult {
   registered: number;
@@ -284,6 +306,8 @@ export interface CommunityEntry {
   review: string | null;
   consumed_at: string | null;
   created_at: string;
+  status?: Progress;
+  season?: number | null;
   /** Curtidas e comentários na resenha (RFF30) */
   likes: number;
   liked: boolean;

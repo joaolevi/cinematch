@@ -151,6 +151,8 @@ class MyStatus(BaseModel):
     diary_entry_id: int | None = None
     rating: float | None = None
     consumed_at: date | None = None
+    status: Literal["seen", "watching"] | None = Field(default=None, description="Série: vista ou assistindo (RFF24)")
+    season: int | None = Field(default=None, description="Série: a temporada em que a pessoa está (RFF24)")
     in_watchlist: bool = False
     dismissed: bool = False
     list_ids: list[int] = []
@@ -164,8 +166,16 @@ class CreditOut(BaseModel):
     license: str = Field(description="A licença ou os termos de uso dos dados")
 
 
+class SeasonOut(BaseModel):
+    number: int
+    name: str | None = None
+    episodes: int | None = None
+    year: int | None = None
+
+
 class MediaDetailOut(MediaOut):
     actors: list[str]
+    seasons: list[SeasonOut] = Field(default=[], description="Temporadas da série, sem os especiais (RFF24)")
     credit: CreditOut | None = None
     avg_rating: float | None
     ratings_count: int
@@ -197,6 +207,10 @@ class DiaryIn(BaseModel):
     rating: float | None = None
     review: str | None = Field(default=None, max_length=2000)
     consumed_at: date | None = None
+    status: Literal["seen", "watching"] = Field(
+        default="seen", description='Série (RFF24): "watching" para quem ainda está assistindo; "seen" quando terminou'
+    )
+    season: int | None = Field(default=None, ge=1, description="Série (RFF24): a temporada em que a pessoa está")
 
     @field_validator("rating")
     @classmethod
@@ -209,6 +223,8 @@ class DiaryUpdate(BaseModel):
     review: str | None = Field(default=None, max_length=2000)
     consumed_at: date | None = None
     excluded: bool | None = Field(default=None, description="true: o registro deixa de contar no gosto (RFF07)")
+    status: Literal["seen", "watching"] | None = Field(default=None, description="Série (RFF24)")
+    season: int | None = Field(default=None, ge=1, description="Série (RFF24)")
 
     @field_validator("rating")
     @classmethod
@@ -226,6 +242,8 @@ class DiaryOut(ORM):
     from_onboarding: bool
     created_at: datetime
     excluded: bool = Field(default=False, description="Não conta no gosto (RFF07)")
+    status: Literal["seen", "watching"] = Field(default="seen", description="Série: vista ou assistindo (RFF24)")
+    season: int | None = Field(default=None, description="Série: a temporada (RFF24)")
 
 
 # ---------- Listas ----------
@@ -355,6 +373,8 @@ class CommunityEntryOut(BaseModel):
     review: str | None
     consumed_at: date | None
     created_at: datetime
+    status: Literal["seen", "watching"] = Field(default="seen", description="Série: vista ou assistindo (RFF24)")
+    season: int | None = None
     likes: int = Field(default=0, description="Curtidas na resenha (RFF30)")
     liked: bool = Field(default=False, description="Se quem vê curtiu a resenha")
     comments: int = Field(default=0, description="Comentários visíveis na resenha (RFF30)")
@@ -697,3 +717,11 @@ class LetterboxdOut(BaseModel):
     not_found: list[str] = Field(description="Até 50 filmes que não foram achados")
     not_found_total: int
     ignored_files: list[str] = Field(description="Arquivos que não são do export do Letterboxd ou que não usamos")
+
+
+class ArrivalOut(BaseModel):
+    """Um título do Quero ver que chegou a um serviço da pessoa (RFF29)."""
+
+    media: MediaOut
+    service: StreamingOut
+    since: datetime = Field(description="Quando o Tastory viu o título no serviço pela primeira vez")

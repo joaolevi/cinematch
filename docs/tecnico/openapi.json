@@ -320,6 +320,37 @@
         }
       }
     },
+    "/me/watchlist/arrivals": {
+      "get": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Arrivals",
+        "description": "Aviso do Quero ver (RFF29): títulos guardados que chegaram a um dos serviços da pessoa nos últimos 30 dias,\ndepois de ela guardar. A data vem da atualização de onde assistir (`make prod-servicos` ou a abertura do título):\na primeira busca de cada título não gera aviso, porque não dá para saber quando ele chegou.",
+        "operationId": "arrivals_me_watchlist_arrivals_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ArrivalOut"
+                  },
+                  "type": "array",
+                  "title": "Response Arrivals Me Watchlist Arrivals Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/me/import/letterboxd": {
       "post": {
         "tags": [
@@ -1282,6 +1313,7 @@
           "diário"
         ],
         "summary": "Register Consumption",
+        "description": "Registra que viu, com nota e resenha opcionais. Nas séries, `status=\"watching\"` e `season` acompanham quem ainda\nestá assistindo (RFF24); registrar de novo com `status=\"seen\"` marca que terminou.",
         "operationId": "register_consumption_diary_post",
         "requestBody": {
           "content": {
@@ -4757,6 +4789,30 @@
         ],
         "title": "AlbumImportOut"
       },
+      "ArrivalOut": {
+        "properties": {
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "service": {
+            "$ref": "#/components/schemas/StreamingOut"
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Since",
+            "description": "Quando o Tastory viu o título no serviço pela primeira vez"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media",
+          "service",
+          "since"
+        ],
+        "title": "ArrivalOut",
+        "description": "Um título do Quero ver que chegou a um serviço da pessoa (RFF29)."
+      },
       "BadgeOut": {
         "properties": {
           "badge": {
@@ -5001,6 +5057,27 @@
             "format": "date-time",
             "title": "Created At"
           },
+          "status": {
+            "type": "string",
+            "enum": [
+              "seen",
+              "watching"
+            ],
+            "title": "Status",
+            "description": "Série: vista ou assistindo (RFF24)",
+            "default": "seen"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season"
+          },
           "likes": {
             "type": "integer",
             "title": "Likes",
@@ -5208,6 +5285,29 @@
               }
             ],
             "title": "Consumed At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "seen",
+              "watching"
+            ],
+            "title": "Status",
+            "description": "Série (RFF24): \"watching\" para quem ainda está assistindo; \"seen\" quando terminou",
+            "default": "seen"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season",
+            "description": "Série (RFF24): a temporada em que a pessoa está"
           }
         },
         "type": "object",
@@ -5277,6 +5377,28 @@
             "title": "Excluded",
             "description": "Não conta no gosto (RFF07)",
             "default": false
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "seen",
+              "watching"
+            ],
+            "title": "Status",
+            "description": "Série: vista ou assistindo (RFF24)",
+            "default": "seen"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season",
+            "description": "Série: a temporada (RFF24)"
           }
         },
         "type": "object",
@@ -5340,6 +5462,35 @@
             ],
             "title": "Excluded",
             "description": "true: o registro deixa de contar no gosto (RFF07)"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "seen",
+                  "watching"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "Série (RFF24)"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season",
+            "description": "Série (RFF24)"
           }
         },
         "type": "object",
@@ -5946,6 +6097,15 @@
             },
             "type": "array",
             "title": "Actors"
+          },
+          "seasons": {
+            "items": {
+              "$ref": "#/components/schemas/SeasonOut"
+            },
+            "type": "array",
+            "title": "Seasons",
+            "description": "Temporadas da série, sem os especiais (RFF24)",
+            "default": []
           },
           "credit": {
             "anyOf": [
@@ -6568,6 +6728,34 @@
             ],
             "title": "Consumed At"
           },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "seen",
+                  "watching"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "Série: vista ou assistindo (RFF24)"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season",
+            "description": "Série: a temporada em que a pessoa está (RFF24)"
+          },
           "in_watchlist": {
             "type": "boolean",
             "title": "In Watchlist",
@@ -7107,6 +7295,52 @@
           "likes"
         ],
         "title": "ReviewerOut"
+      },
+      "SeasonOut": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "episodes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Episodes"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number"
+        ],
+        "title": "SeasonOut"
       },
       "ServiceOut": {
         "properties": {

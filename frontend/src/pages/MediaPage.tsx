@@ -11,7 +11,7 @@ import { diaryChanged, useDiaryVersion } from "../seen";
 import { StarsDisplay } from "../components/Stars";
 import WatchedBy from "../components/WatchedBy";
 import { colorFor, formatDate, formatRating, MEDIA_STYLE, plural, SERVICE_LABEL, verbs } from "../format";
-import type { Connection, Media, MediaDetail, Provider, UserList } from "../types";
+import type { Connection, Media, MediaDetail, Provider, Season, UserList } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import { moodLabel, useMoods } from "../moods";
@@ -34,6 +34,7 @@ function PeopleLinks({ names }: { names: string[] }) {
 
 /** Legenda da polaroide no detalhe, escrita à mão: "vi em 8 de nov." ou "já vi"; num álbum, "ouvi". */
 function statusCaption(status: MediaDetail["my_status"], album: boolean): string {
+  if (status.status === "watching") return status.season ? `assistindo a T${status.season}` : "assistindo";
   const verb = album ? "ouvi" : "vi";
   if (status.diary_entry_id && status.consumed_at) {
     const day = new Date(`${status.consumed_at}T12:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
@@ -118,6 +119,60 @@ export default function MediaPage() {
   return <MediaView key={id} mediaId={Number(id)} />;
 }
 
+/** Série que a pessoa está assistindo (RFF24): em que temporada ela está, com troca rápida. */
+function WatchingSeason({
+  entryId,
+  season,
+  seasons,
+  onChange,
+}: {
+  entryId: number;
+  season: number | null;
+  seasons: Season[];
+  onChange: () => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  async function pick(value: number) {
+    setSaving(true);
+    try {
+      await api.updateDiary(entryId, { season: value });
+      onChange();
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <p className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+      <span className="font-bold text-accent">▶ Assistindo</span>
+      {seasons.length > 0 ? (
+        <>
+          <label htmlFor="temporada" className="text-muted">
+            na
+          </label>
+          <select
+            id="temporada"
+            disabled={saving}
+            value={season ?? ""}
+            onChange={(e) => pick(Number(e.target.value))}
+            className="chip cursor-pointer bg-surface px-3 py-1 text-sm"
+          >
+            {season == null && <option value="">escolha a temporada</option>}
+            {seasons.map((t) => (
+              <option key={t.number} value={t.number}>
+                Temporada {t.number}
+                {t.episodes ? ` (${t.episodes} episódios)` : ""}
+              </option>
+            ))}
+          </select>
+        </>
+      ) : (
+        season != null && <span className="text-muted">na temporada {season}</span>
+      )}
+      <span className="text-xs text-muted">Quando acabar, use “Terminei” para dar a nota.</span>
+    </p>
+  );
+}
+
 function MediaView({ mediaId }: { mediaId: number }) {
   const [media, setMedia] = useState<MediaDetail | null>(null);
   const moods = useMoods();
@@ -178,6 +233,13 @@ function MediaView({ mediaId }: { mediaId: number }) {
       else await api.addToList(list.id, mediaId);
     }
     load();
+  }
+
+  // Séries (RFF24): começar a acompanhar, na primeira temporada quando sabemos quais são
+  async function startWatching(season: number | null) {
+    await api.watching(mediaId, season);
+    diaryChanged();
+    await load();
   }
 
   async function toggleDismiss() {
@@ -285,9 +347,14 @@ function MediaView({ mediaId }: { mediaId: number }) {
 
             <div className="mt-6 flex flex-wrap gap-2">
               <button className="btn-primary" onClick={() => setShowSeen(true)}>
-                {status.diary_entry_id ? "Editar registro" : `✓ ${words.seen}`}
+                {status.status === "watching" ? "✓ Terminei" : status.diary_entry_id ? "Editar registro" : `✓ ${words.seen}`}
               </button>
-              {watchlist && (
+              {media.type === "series" && !status.diary_entry_id && (
+                <button className="btn-ghost" onClick={() => startWatching(media.seasons[0]?.number ?? null)}>
+                  ▶ Estou assistindo
+                </button>
+              )}
+              {watchlist && status.status !== "watching" && (
                 <button className={status.in_watchlist ? "btn-ghost" : "btn-want"} onClick={() => toggleList(watchlist, status.in_watchlist)}>
                   {status.in_watchlist ? "Remover do Quero ver" : `+ ${words.want}`}
                 </button>
@@ -301,11 +368,21 @@ function MediaView({ mediaId }: { mediaId: number }) {
             {status.dismissed && (
               <p className="mt-3 text-sm text-muted">Combinado, não vamos mais sugerir este título.</p>
             )}
-            {status.diary_entry_id && (
-              <p className="mt-3 flex items-center gap-2 text-sm text-muted">
-                {status.consumed_at ? `${words.seenOn} ${formatDate(status.consumed_at)}` : words.seenAlready}
-                {status.rating != null && <StarsDisplay value={status.rating} />}
-              </p>
+            {status.status === "watching" && status.diary_entry_id ? (
+              <WatchingSeason
+                entryId={status.diary_entry_id}
+                season={status.season}
+                seasons={media.seasons}
+                onChange={load}
+              />
+            ) : (
+              status.diary_entry_id && (
+                <p className="mt-3 flex items-center gap-2 text-sm text-muted">
+                  {status.consumed_at ? `${words.seenOn} ${formatDate(status.consumed_at)}` : words.seenAlready}
+                  {status.season != null && media.type === "series" && ` · até a temporada ${status.season}`}
+                  {status.rating != null && <StarsDisplay value={status.rating} />}
+                </p>
+              )
             )}
 
             {album && <ListenLinks media={media} />}

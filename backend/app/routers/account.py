@@ -27,11 +27,11 @@ from ..models import (
 )
 from ..config import settings
 from ..schemas import (
-    ActivityOut, DeleteAccountIn, ExperimentsIn, LetterboxdIn, LetterboxdOut, MediaOut, PersonOut, ServicesIn, UserOut,
+    ActivityOut, ArrivalOut, DeleteAccountIn, ExperimentsIn, LetterboxdIn, LetterboxdOut, MediaOut, PersonOut, ServicesIn, UserOut,
     VisibilityIn,
 )
 from ..services.letterboxd import import_letterboxd
-from ..services.streaming import BY_KEY as SERVICES
+from ..services.streaming import BY_KEY as SERVICES, watchlist_arrivals
 from ..services.tmdb import TmdbCatalogProvider
 
 router = APIRouter(prefix="/me", tags=["conta"])
@@ -111,6 +111,14 @@ def my_activity(
             items.append(ActivityOut(kind="seguiu", at=_utc(at), person=PersonOut(id=person_id, name=name)))
     items.sort(key=lambda a: a.at, reverse=True)
     return items[offset : offset + limit]
+
+
+@router.get("/watchlist/arrivals", response_model=list[ArrivalOut])
+def arrivals(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Aviso do Quero ver (RFF29): títulos guardados que chegaram a um dos serviços da pessoa nos últimos 30 dias,
+    depois de ela guardar. A data vem da atualização de onde assistir (`make prod-servicos` ou a abertura do título):
+    a primeira busca de cada título não gera aviso, porque não dá para saber quando ele chegou."""
+    return watchlist_arrivals(db, user)
 
 
 def tmdb_provider() -> TmdbCatalogProvider | None:

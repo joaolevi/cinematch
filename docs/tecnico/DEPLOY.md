@@ -148,6 +148,13 @@ título, uns 2 minutos), para o filtro "Até 2h" e as pontes de idioma funcionar
 make prod-duracoes
 ```
 
+O mesmo comando busca as temporadas das séries (RFF24), para o "Estou assistindo".
+
+**Aviso do Quero ver (RFF29).** O aviso de que um título guardado chegou a um serviço da pessoa depende de atualizar onde
+assistir. Rode `make prod-servicos` uma vez por semana, por exemplo com o `cron` do servidor
+(`0 6 * * 1 cd /caminho/do/repositorio && make prod-servicos`). A primeira atualização de cada título não gera aviso, porque
+não dá para saber quando ele chegou.
+
 **Onde assistir (RFF21).** O "Só nos meus serviços" e o "Hoje à noite" usam onde cada filme e série está, que também
 vem do TMDB, com dados da JustWatch. Busque uma vez depois de publicar (uma consulta por título, uns 2 minutos); rodar
 de novo atualiza o que tiver mais de 7 dias:

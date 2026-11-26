@@ -235,6 +235,8 @@ def media_detail(
         diary_entry_id=mine.id if mine else None,
         rating=mine.rating if mine else None,
         consumed_at=mine.consumed_at if mine else None,
+        status=mine.status if mine else None,
+        season=mine.season if mine else None,
         in_watchlist=any(is_wl for _, is_wl in lists),
         dismissed=dismissed is not None,
         list_ids=[lid for lid, is_wl in lists if not is_wl],
@@ -242,6 +244,7 @@ def media_detail(
     return MediaDetailOut(
         **MediaOut.model_validate(media).model_dump(),
         actors=media.actors or [],
+        seasons=media.seasons or [] if media.type == "series" else [],
         credit=credit_for(media),
         avg_rating=round(float(avg), 2) if avg is not None else None,
         ratings_count=int(count or 0),
