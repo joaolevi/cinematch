@@ -1,11 +1,14 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api";
-import { formatDate, plural } from "../format";
-import type { Episode, Season } from "../types";
+import { formatDate, formatMinutes, plural } from "../format";
+import { episodePath } from "../pages/EpisodePage";
+import type { Episode, PartMark, Season } from "../types";
 import HandNote from "./HandNote";
+import { SeenToggle } from "./PartMarker";
 import { StarsInput } from "./Stars";
 
-/** Um episódio: o nome, as estrelas e a anotação, que só a própria pessoa vê. */
+/** Um episódio na lista: visto, o nome (que abre a página do episódio) e as estrelas. A anotação fica na página dele. */
 function EpisodeRow({
   mediaId,
   season,
@@ -17,18 +20,15 @@ function EpisodeRow({
   episode: Episode;
   onSaved: (e: Episode) => void;
 }) {
-  const [writing, setWriting] = useState(false);
-  const [note, setNote] = useState(episode.note ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function save(rating: number | null, text: string | null) {
+  async function save(data: Partial<PartMark>) {
     setBusy(true);
     setError(null);
     try {
-      const saved = await api.rateEpisode(mediaId, season, episode.number, { rating, note: text });
-      onSaved({ ...episode, rating: saved.rating, note: saved.note });
-      setWriting(false);
+      const saved = await api.rateEpisode(mediaId, season, episode.number, data);
+      onSaved({ ...episode, ...saved });
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -36,57 +36,34 @@ function EpisodeRow({
     }
   }
 
-  const marked = episode.rating != null || !!episode.note;
+  const name = episode.name ?? `Episódio ${episode.number}`;
+  const meta = [episode.air_date && formatDate(episode.air_date), episode.runtime && formatMinutes(episode.runtime)].filter(Boolean);
   return (
     <li className="py-3">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div className="min-w-0 flex-1 basis-56">
-          <p className="font-semibold">
-            <span className={`mr-2 font-hand text-lg ${marked ? "text-accent" : "text-muted"}`}>
-              {marked ? "✓" : ""} E{episode.number}
-            </span>
-            {episode.name ?? `Episódio ${episode.number}`}
-          </p>
-          {episode.air_date && <p className="text-xs text-muted">{formatDate(episode.air_date)}</p>}
+        <SeenToggle
+          seen={episode.seen}
+          album={false}
+          label={`o episódio ${episode.number}`}
+          busy={busy}
+          onToggle={() => save(episode.seen ? { seen: false } : { seen: true })}
+        />
+        <div className="min-w-0 flex-1 basis-48">
+          <Link to={episodePath(mediaId, season, episode.number)} className="font-semibold hover:text-accent hover:underline">
+            <span className="mr-2 text-muted">E{episode.number}</span>
+            {name}
+          </Link>
+          {(meta.length > 0 || episode.note) && (
+            <p className="text-xs text-muted">
+              {meta.join(" · ")}
+              {episode.note && <>{meta.length > 0 && " · "}com anotação</>}
+            </p>
+          )}
         </div>
         <div aria-label={`Nota do episódio ${episode.number}`} className={busy ? "opacity-60" : ""}>
-          <StarsInput value={episode.rating} onChange={(v) => save(v, episode.note)} size={20} bare />
+          <StarsInput value={episode.rating} onChange={(v) => save({ seen: true, rating: v, note: episode.note })} size={20} bare />
         </div>
-        <button className="text-xs font-semibold text-muted underline hover:text-accent" onClick={() => setWriting(!writing)}>
-          {episode.note ? "Editar a anotação" : "Anotar"}
-        </button>
-        {marked && (
-          <button className="text-xs text-muted underline hover:text-accent" disabled={busy} onClick={() => save(null, null)}>
-            Desmarcar
-          </button>
-        )}
       </div>
-      {episode.note && !writing && <p className="mt-1 text-sm whitespace-pre-line text-stone-300">“{episode.note}”</p>}
-      {writing && (
-        <form
-          className="mt-2 flex flex-wrap items-start gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            save(episode.rating, note);
-          }}
-        >
-          <label className="sr-only" htmlFor={`nota-${season}-${episode.number}`}>
-            Anotação do episódio {episode.number}
-          </label>
-          <textarea
-            id={`nota-${season}-${episode.number}`}
-            value={note}
-            maxLength={1000}
-            rows={2}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="O que você achou deste episódio? Só você vê."
-            className="input min-w-0 flex-1 resize-y py-1.5 text-sm"
-          />
-          <button className="btn-primary px-3 py-1.5 text-sm" disabled={busy}>
-            Salvar a anotação
-          </button>
-        </form>
-      )}
       {error && <p className="mt-1 text-sm text-red-300">{error}</p>}
     </li>
   );
@@ -107,6 +84,7 @@ function SeasonBlock({
   const [open, setOpen] = useState(false);
   const [episodes, setEpisodes] = useState<Episode[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [marking, setMarking] = useState(false);
 
   async function toggle() {
     const next = !open;
@@ -121,7 +99,7 @@ function SeasonBlock({
   }
 
   const total = season.episodes ?? episodes?.length ?? null;
-  const done = episodes ? episodes.filter((e) => e.rating != null || e.note).length : marked;
+  const done = episodes ? episodes.filter((e) => e.seen).length : marked;
   const rated = episodes?.filter((e) => e.rating != null) ?? [];
   const average = rated.length ? rated.reduce((sum, e) => sum + (e.rating ?? 0), 0) / rated.length : null;
   return (
@@ -136,7 +114,7 @@ function SeasonBlock({
           {season.year && <span className="ml-2 text-sm font-normal text-muted">{season.year}</span>}
         </span>
         <span className="text-sm text-muted">
-          {total ? `${done} de ${plural(total, "episódio", "episódios")}` : plural(done, "episódio marcado", "episódios marcados")}
+          {total ? `${done} de ${plural(total, "episódio visto", "episódios vistos")}` : plural(done, "episódio visto", "episódios vistos")}
           {average != null && ` · sua média ${average.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}`}
           <span aria-hidden className="ml-2">{open ? "▴" : "▾"}</span>
         </span>
@@ -146,6 +124,27 @@ function SeasonBlock({
           {error && <p className="py-3 text-sm text-red-300">{error}</p>}
           {!episodes && !error && <p className="py-3 text-sm text-muted">Abrindo os episódios...</p>}
           {episodes?.length === 0 && <HandNote className="py-3">Ainda não temos a lista desta temporada.</HandNote>}
+          {episodes && episodes.length > 0 && episodes.some((e) => !e.seen) && (
+            <div className="pt-3">
+              <button
+                className="btn-ghost px-3 py-1 text-sm"
+                disabled={marking}
+                onClick={async () => {
+                  setMarking(true);
+                  try {
+                    setEpisodes(await api.markSeason(mediaId, season.number));
+                    onChange();
+                  } catch (e) {
+                    setError((e as Error).message);
+                  } finally {
+                    setMarking(false);
+                  }
+                }}
+              >
+                {marking ? "Marcando..." : "Marcar a temporada inteira como vista"}
+              </button>
+            </div>
+          )}
           {episodes && (
             <ul className="divide-y divide-line/60">
               {episodes.map((e) => (
@@ -169,8 +168,9 @@ function SeasonBlock({
 }
 
 /**
- * Episódios da série (RFF24): cada temporada abre a lista, e cada episódio tem estrelas e uma anotação que só a pessoa
- * vê. A nota da série inteira continua no "Terminei"; o primeiro episódio marcado põe a série como assistindo.
+ * Episódios da série (RFF24): cada temporada abre a lista; cada episódio tem visto e estrelas, e o nome abre a página
+ * dele, com a sinopse e a anotação. A nota da série inteira continua no "Terminei"; o primeiro episódio marcado põe a
+ * série como assistindo.
  */
 export default function Episodes({
   mediaId,
@@ -188,7 +188,8 @@ export default function Episodes({
     <section className="mt-12">
       <h2 className="font-display text-xl font-bold">Episódios</h2>
       <p className="mt-1 text-sm text-muted">
-        Dê nota a cada episódio e anote o que achou. As anotações são só suas; a nota da série inteira fica no “Terminei”.
+        Marque o que já viu e dê nota a cada episódio. Clique no nome para ver a sinopse e anotar; a nota da série inteira
+        fica no “Terminei”.
       </p>
       <ul className="mt-4 space-y-3">
         {seasons.map((s) => (

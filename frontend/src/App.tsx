@@ -12,6 +12,8 @@ import HowPage from "./pages/HowPage";
 import LandingPage from "./pages/LandingPage";
 import ListsPage from "./pages/ListsPage";
 import LoginPage from "./pages/LoginPage";
+import EpisodePage from "./pages/EpisodePage";
+import TrackPage from "./pages/TrackPage";
 import MediaPage from "./pages/MediaPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import RetroPage from "./pages/RetroPage";
@@ -74,6 +76,8 @@ export default function App() {
             <Route path="onboarding" element={<OnboardingPage />} />
             <Route path="buscar" element={<SearchPage />} />
             <Route path="media/:id" element={<MediaPage />} />
+            <Route path="media/:id/temporada/:season/episodio/:episode" element={<EpisodePage />} />
+            <Route path="media/:id/faixa/:disc/:number" element={<TrackPage />} />
             <Route path="diario" element={<DiaryPage />} />
             <Route path="retrospectiva" element={<RetroPage />} />
             <Route path="conta" element={<AccountPage />} />

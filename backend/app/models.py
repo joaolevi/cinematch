@@ -138,8 +138,9 @@ class ItemNeighbor(Base):
 
 
 class EpisodeEntry(Base):
-    """A nota e a anotação de um episódio de série, só para a própria pessoa (RFF24). Fica fora do diário, que tem um
-    registro por título: assim dá para acompanhar episódio por episódio sem mudar a regra do diário (RN05)."""
+    """Um episódio de série visto, ou uma faixa de álbum ouvida, com nota e anotação (RFF24). Ter a linha é ter visto;
+    a anotação é só da própria pessoa. Nos álbuns, `season` é o disco e `episode` é a faixa. Fica fora do diário, que
+    tem um registro por título: assim dá para acompanhar parte por parte sem mudar a regra do diário (RN05)."""
 
     __tablename__ = "episode_entries"
     __table_args__ = (UniqueConstraint("user_id", "media_id", "season", "episode"),)

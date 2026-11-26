@@ -78,14 +78,54 @@ export interface Review {
   created_at: string;
 }
 
-/** Um episódio, com a nota e a anotação de quem vê (RFF24) */
-export interface Episode {
+/** O que a pessoa marcou num episódio ou numa faixa: visto (ou ouvido), nota e anotação */
+export interface PartMark {
+  seen: boolean;
+  rating: number | null;
+  note: string | null;
+}
+
+/** Um episódio, com o que quem vê marcou (RFF24) */
+export interface Episode extends PartMark {
   number: number;
   name: string | null;
   air_date: string | null;
   overview: string | null;
-  rating: number | null;
-  note: string | null;
+  still_url?: string | null;
+  runtime?: number | null;
+  directors?: string[];
+}
+
+/** A página do episódio: a série, os vizinhos e o que todo mundo achou */
+export interface EpisodeDetail extends Episode {
+  season: number;
+  series: Media;
+  previous: { season: number; number: number; name: string | null } | null;
+  next: { season: number; number: number; name: string | null } | null;
+  seen_by: number;
+  ratings: number;
+  average: number | null;
+}
+
+/** Uma faixa do álbum, com o que quem ouve marcou */
+export interface Track extends PartMark {
+  disc: number;
+  number: number;
+  title: string;
+  length_sec: number | null;
+  artists: string[];
+}
+
+export interface TrackDetail extends Track {
+  album: Media;
+  position: number;
+  total: number;
+  discs: number;
+  previous: { disc: number; number: number; title: string } | null;
+  next: { disc: number; number: number; title: string } | null;
+  seen_by: number;
+  ratings: number;
+  average: number | null;
 }
 
 /** Temporada de uma série (RFF24) */

@@ -65,9 +65,22 @@ export function colorFor(text: string): string {
 }
 
 /** "1h30", "2h", "45 min". */
+/** "3:05": a duração de uma faixa. */
+export function formatSeconds(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
 export function formatMinutes(minutes: number): string {
   if (minutes < 60) return `${minutes} min`;
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return m ? `${h}h${String(m).padStart(2, "0")}` : `${h}h`;
 }
+
+/** Busca do álbum em cada serviço, para quando o disco não tem link próprio. */
+export const SEARCH_URL: Record<string, (q: string) => string> = {
+  spotify: (q) => `https://open.spotify.com/search/${q}`,
+  deezer: (q) => `https://www.deezer.com/search/${q}`,
+  youtube_music: (q) => `https://music.youtube.com/search?q=${q}`,
+  apple_music: (q) => `https://music.apple.com/br/search?term=${q}`,
+};

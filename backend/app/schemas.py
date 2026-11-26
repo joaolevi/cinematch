@@ -800,19 +800,92 @@ class PasswordChangeIn(BaseModel):
 
 
 class EpisodeOut(BaseModel):
-    """Um episódio da temporada, com a nota e a anotação de quem vê (RFF24)."""
+    """Um episódio da temporada, com o que quem vê marcou: visto, nota e anotação (RFF24)."""
 
     number: int
     name: str | None = None
     air_date: date | None = None
     overview: str | None = None
+    still_url: str | None = Field(default=None, description="Uma cena do episódio, do TMDB")
+    runtime: int | None = Field(default=None, description="Duração em minutos")
+    directors: list[str] = []
+    seen: bool = False
+    rating: float | None = None
+    note: str | None = None
+
+
+class PartRef(BaseModel):
+    """O episódio de antes ou de depois. Na virada de temporada, o nome pode não vir."""
+
+    season: int
+    number: int
+    name: str | None = None
+
+
+class EpisodeDetailOut(EpisodeOut):
+    """A página do episódio: o episódio, a série, os vizinhos e o que todo mundo achou."""
+
+    season: int
+    series: "MediaOut"
+    previous: PartRef | None = None
+    next: PartRef | None = None
+    seen_by: int = Field(description="Quantas pessoas marcaram o episódio como visto")
+    ratings: int = Field(description="Quantas notas o episódio recebeu")
+    average: float | None = Field(default=None, description="Média das notas de todo mundo")
+
+
+class TrackOut(BaseModel):
+    """Uma faixa do álbum, com o que quem ouve marcou: ouvi, nota e anotação."""
+
+    disc: int
+    number: int
+    title: str
+    length_sec: int | None = Field(default=None, description="Duração em segundos")
+    artists: list[str] = []
+    seen: bool = Field(default=False, description="Ouvi esta faixa")
+    rating: float | None = None
+    note: str | None = None
+
+
+class TrackRef(BaseModel):
+    disc: int
+    number: int
+    title: str
+
+
+class TrackDetailOut(TrackOut):
+    """A página da faixa: a faixa, o álbum, as vizinhas e o que todo mundo achou."""
+
+    album: "MediaOut"
+    position: int = Field(description="Em que posição a faixa está no álbum, contando todos os discos")
+    total: int = Field(description="Quantas faixas o álbum tem")
+    discs: int = Field(description="Quantos discos o álbum tem")
+    previous: TrackRef | None = None
+    next: TrackRef | None = None
+    seen_by: int = Field(description="Quantas pessoas marcaram a faixa como ouvida")
+    ratings: int
+    average: float | None = None
+
+
+class PartSaved(BaseModel):
+    """O que ficou guardado de um episódio ou de uma faixa."""
+
+    number: int
+    seen: bool
     rating: float | None = None
     note: str | None = None
 
 
 class EpisodeIn(BaseModel):
-    rating: float | None = Field(default=None, description="De 0,5 a 5; sem nota e sem anotação, o episódio volta a não visto")
-    note: str | None = Field(default=None, max_length=1000, description="Anotação sobre o episódio, só para a própria pessoa")
+    """Vale para episódios e faixas."""
+
+    rating: float | None = Field(default=None, description="De 0,5 a 5")
+    note: str | None = Field(default=None, max_length=1000, description="Anotação, só para a própria pessoa")
+    seen: bool | None = Field(
+        default=None,
+        description="true marca como visto (ou ouvido) mesmo sem nota; false desmarca e apaga nota e anotação. "
+        "Sem este campo, sem nota e sem anotação, volta a não visto",
+    )
 
     @field_validator("rating")
     @classmethod

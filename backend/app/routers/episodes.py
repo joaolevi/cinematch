@@ -1,4 +1,4 @@
-"""Episódios das séries (RFF24): a lista de cada temporada e a nota e a anotação de cada episódio."""
+"""Episódios das séries (RFF24): a lista de cada temporada, a página de cada episódio e visto, nota e anotação."""
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
@@ -7,8 +7,8 @@ from .. import crud
 from ..auth import get_current_user
 from ..db import get_db
 from ..models import Media, User
-from ..schemas import EpisodeIn, EpisodeOut
-from ..services.episodes import episodes_of, save_episode, season_info
+from ..schemas import EpisodeDetailOut, EpisodeIn, EpisodeOut, PartSaved
+from ..services.episodes import episode_detail, episodes_of, mark_season, save_part, season_info
 
 router = APIRouter(prefix="/media", tags=["episódios"])
 
@@ -34,7 +34,34 @@ def season_episodes(
     return episodes_of(db, user, _season(db, media_id, season), season)
 
 
-@router.put("/{media_id}/seasons/{season}/episodes/{episode}", response_model=EpisodeOut)
+@router.get("/{media_id}/seasons/{season}/episodes/{episode}", response_model=EpisodeDetailOut)
+def episode_page(
+    media_id: int,
+    season: int = Path(ge=1),
+    episode: int = Path(ge=1, le=500),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """A página do episódio: nome, data, duração, cena e sinopse do TMDB; o que quem pede marcou; quantas pessoas viram
+    e a média das notas; e o episódio de antes e o de depois, inclusive entre temporadas."""
+    detail = episode_detail(db, user, _season(db, media_id, season), season, episode)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="Esta temporada não tem esse episódio")
+    return detail
+
+
+@router.post("/{media_id}/seasons/{season}/seen", response_model=list[EpisodeOut])
+def season_seen(
+    media_id: int,
+    season: int = Path(ge=1),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Marca como vistos todos os episódios da temporada, sem mexer na nota e na anotação de quem já tinha."""
+    return mark_season(db, user, _season(db, media_id, season), season)
+
+
+@router.put("/{media_id}/seasons/{season}/episodes/{episode}", response_model=PartSaved)
 def rate_episode(
     data: EpisodeIn,
     media_id: int,
@@ -43,7 +70,7 @@ def rate_episode(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """Dá nota a um episódio e/ou guarda uma anotação, que só a própria pessoa vê. Sem nota e sem anotação, o episódio
-    volta a não visto. O primeiro episódio marcado põe a série no diário como "assistindo"."""
+    """Marca o episódio como visto, com nota e anotação se quiser; a anotação só a própria pessoa vê. `seen: false`
+    desmarca. O primeiro episódio marcado põe a série no diário como "assistindo"."""
     media = _season(db, media_id, season)
-    return save_episode(db, user, media, season, episode, data.rating, data.note)
+    return save_part(db, user, media, season, episode, data.rating, data.note, data.seen)

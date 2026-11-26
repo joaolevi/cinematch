@@ -7,6 +7,7 @@ import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
 import ActionIcon from "../components/ActionIcon";
 import Episodes from "../components/Episodes";
+import Tracks from "../components/Tracks";
 import RatingsPanel from "../components/RatingsPanel";
 import ReviewTalk from "../components/ReviewTalk";
 import SpoilerText from "../components/SpoilerText";
@@ -15,7 +16,7 @@ import SeenStamp from "../components/SeenStamp";
 import { diaryChanged, useDiaryVersion } from "../seen";
 import { StarsDisplay } from "../components/Stars";
 import WatchedBy from "../components/WatchedBy";
-import { colorFor, formatDate, MEDIA_STYLE, SERVICE_LABEL, verbs } from "../format";
+import { colorFor, formatDate, MEDIA_STYLE, SEARCH_URL, SERVICE_LABEL, verbs } from "../format";
 import type { Connection, Media, MediaDetail, Provider, Season, UserList } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
@@ -48,13 +49,6 @@ function statusCaption(status: MediaDetail["my_status"], album: boolean): string
   return `já ${verb}`;
 }
 
-/** Busca do álbum em cada serviço, para quando o disco não tem link próprio. */
-const SEARCH_URL: Record<string, (q: string) => string> = {
-  spotify: (q) => `https://open.spotify.com/search/${q}`,
-  deezer: (q) => `https://www.deezer.com/search/${q}`,
-  youtube_music: (q) => `https://music.youtube.com/search?q=${q}`,
-  apple_music: (q) => `https://music.apple.com/br/search?term=${q}`,
-};
 
 /** Onde ouvir um álbum: o link do próprio disco quando existe; senão, a busca do disco no serviço. */
 function ListenLinks({ media }: { media: Media }) {
@@ -471,6 +465,8 @@ function MediaView({ mediaId }: { mediaId: number }) {
           </div>
         </div>
       </div>
+
+      {album && <Tracks album={media} />}
 
       {media.type === "series" && (
         <Episodes
