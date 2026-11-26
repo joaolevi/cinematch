@@ -184,7 +184,7 @@ def profile(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_
 
 
 def pinned_media(db: Session, user: User) -> list:
-    """Os quatro favoritos, na ordem escolhida. Um título que saiu do diário sai dos favoritos também."""
+    """Os cinco favoritos, na ordem escolhida. Um título que saiu do diário sai dos favoritos também."""
     ids = list(user.pinned or [])
     if not ids:
         return []

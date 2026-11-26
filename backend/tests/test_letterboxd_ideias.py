@@ -1,5 +1,5 @@
 """Ideias do Letterboxd: distribuição das notas e quem eu sigo na página do título, abas das resenhas (seguindo),
-aviso de spoiler e os quatro favoritos do perfil."""
+aviso de spoiler e os cinco favoritos do perfil."""
 
 from sqlalchemy import select
 
@@ -44,8 +44,8 @@ def test_resenha_com_spoiler_e_de_quem_eu_sigo(client, user_headers, db):
     assert client.patch(f"/diary/{r.json()['id']}", json={"spoiler": False}, headers=ana).json()["spoiler"] is False
 
 
-def test_quatro_favoritos_do_perfil(client, user_headers, db):
-    ids = [mid(db, t) for t in ("Matrix", "Interestelar", "Dark", "A Origem", "Duna")]
+def test_cinco_favoritos_do_perfil(client, user_headers, db):
+    ids = [mid(db, t) for t in ("Matrix", "Interestelar", "Dark", "A Origem", "Duna", "Cidade de Deus", "Breaking Bad")]
     for i in ids:
         client.post("/diary", json={"media_id": i, "rating": 5}, headers=user_headers)
     eu = me(client, user_headers)
@@ -53,7 +53,10 @@ def test_quatro_favoritos_do_perfil(client, user_headers, db):
     assert [m["title"] for m in r.json()] == ["Dark", "Matrix"]  # na ordem escolhida, sem repetir
     assert [m["title"] for m in client.get(f"/users/{eu}", headers=user_headers).json()["pinned"]] == ["Dark", "Matrix"]
 
-    assert client.put("/me/favorites", json={"media_ids": ids}, headers=user_headers).status_code == 422  # no máximo 4
+    r = client.put("/me/favorites", json={"media_ids": ids[:5]}, headers=user_headers)
+    assert r.status_code == 200 and len(r.json()) == 5  # cinco cabem
+    assert client.put("/me/favorites", json={"media_ids": ids[:6]}, headers=user_headers).status_code == 422  # no máximo 5
+    client.put("/me/favorites", json={"media_ids": [ids[2], ids[0]]}, headers=user_headers)
     fora = mid(db, "Toy Story")
     assert client.put("/me/favorites", json={"media_ids": [fora]}, headers=user_headers).status_code == 422  # fora do diário
 

@@ -2,7 +2,8 @@ import type { CSSProperties, ReactNode } from "react";
 import { POLAROID_TILT, TAB_COLORS, TAPE_COLORS } from "../ui";
 
 /**
- * Foto colada no diário: moldura clara, fita e legenda escrita à mão.
+ * Foto colada no diário: moldura clara e legenda escrita à mão. A fita (`tape`) fica só para as peças de destaque,
+ * como os favoritos do perfil e o status no detalhe: em todo pôster, ela vira enfeite demais.
  * Regra da identidade: polaroide só para o que é da pessoa (diário, top 10, listas, status no detalhe).
  * Disco não vira foto: com `album`, a capa é colada direto com fita, o vinil sai por baixo e a legenda vai num selo
  * redondo, como as etiquetas das lojas de discos.
@@ -11,7 +12,7 @@ export default function Polaroid({
   position = 0,
   caption,
   small = false,
-  tape = true,
+  tape = false,
   straightenOnHover = true,
   album = false,
   children,
@@ -39,7 +40,7 @@ export default function Polaroid({
           />
         )}
         {children}
-        {caption != null && (
+        {caption != null && caption !== "" && (
           // O selo cresce com o disco (um terço da largura). Fica no canto de baixo da capa, que é quadrada e ocupa os dois terços de cima
           <span
             className={`absolute top-[66.7%] right-0 z-[3] flex aspect-square -translate-y-[70%] translate-x-[18%] rotate-[-8deg] items-center justify-center rounded-full text-center font-hand leading-none font-bold text-stone-900 shadow-[0_2px_5px_rgb(0_0_0/0.45)] w-[32%] p-[3%] text-[clamp(0.6rem,10cqw,1rem)]`}

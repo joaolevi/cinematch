@@ -115,7 +115,6 @@ export default function ProfilePage() {
       {/* Cabeçalho: a folha do diário da pessoa, com quem é, a frase do gosto e os números em post-its */}
       <section className="paper relative -rotate-[0.3deg] rounded-sm py-7 pr-6 pl-14 sm:pr-8 sm:pl-16">
         <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[0] }} />
-        <span aria-hidden className="tape -top-2.5 right-16 rotate-3" style={{ background: TAPE_COLORS[2] }} />
         <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]">
           <div className={INK}>
             <div className="flex flex-wrap items-center gap-4">
@@ -245,8 +244,8 @@ export default function ProfilePage() {
           </div>
 
           {!profile.restricted && counted.length > 0 && (
-            <ul className="grid grid-cols-3 gap-3 sm:gap-4 lg:w-[27rem]" aria-label="Números do diário">
-              {notes.map((note, i) => (
+            <ul className="grid grid-cols-4 gap-3 sm:gap-4 lg:w-[19rem] lg:grid-cols-2" aria-label="Números do diário">
+              {[notes[0], notes[1], notes[2], notes[5]].map((note, i) => (
                 <li
                   key={note.label}
                   className="postit flex aspect-square flex-col justify-center px-2 py-3 text-center sm:px-3"
@@ -374,8 +373,8 @@ export default function ProfilePage() {
         </section>
       )}
 
-      {/* Com poucos registros, as duas fileiras seriam iguais: fica só a de cima */}
-      {profile.favorites.length > 0 && !sameItems(profile.favorites, profile.recent) && (
+      {/* Os mais bem avaliados só aparecem sem favoritos escolhidos: com eles, a fileira repetiria os mesmos pôsteres */}
+      {profile.pinned.length === 0 && profile.favorites.length > 0 && !sameItems(profile.favorites, profile.recent) && (
         <section>
           <h2 className="font-display text-xl font-bold">Mais bem avaliados</h2>
           <div className="mt-4">

@@ -474,7 +474,7 @@
           "conta"
         ],
         "summary": "Set Favorites",
-        "description": "Escolhe os quatro favoritos do perfil, na ordem. Só valem títulos do próprio diário; repetidos contam uma vez.",
+        "description": "Escolhe os cinco favoritos do perfil, na ordem. Só valem títulos do próprio diário; repetidos contam uma vez.",
         "operationId": "set_favorites_me_favorites_put",
         "requestBody": {
           "content": {
@@ -8263,9 +8263,9 @@
               "type": "integer"
             },
             "type": "array",
-            "maxItems": 4,
+            "maxItems": 5,
             "title": "Media Ids",
-            "description": "Até 4 títulos do próprio diário, na ordem em que aparecem"
+            "description": "Até 5 títulos do próprio diário, na ordem em que aparecem"
           }
         },
         "type": "object",
@@ -8415,7 +8415,7 @@
             },
             "type": "array",
             "title": "Pinned",
-            "description": "Os quatro favoritos que a pessoa escolheu, na ordem dela",
+            "description": "Os cinco favoritos que a pessoa escolheu, na ordem dela",
             "default": []
           },
           "counts": {

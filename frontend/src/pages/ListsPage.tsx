@@ -83,7 +83,7 @@ function WatchlistNowView({ version, renderCard }: { version: number; renderCard
               <p className="mt-1.5 line-clamp-2 text-xs text-muted" title={rec.reason}>
                 {rec.reason}
               </p>
-              <OnMyServices rec={rec} className="mt-1 text-xs" />
+              <OnMyServices rec={rec} className="mt-1 text-xs" logos={false} />
             </div>
           ))}
         </div>
@@ -132,11 +132,10 @@ export default function ListsPage() {
 
   const active = lists.find((l) => l.id === activeId) ?? null;
 
-  const card = (listId: number, media: Media, position: number) => (
+  const card = (listId: number, media: Media) => (
     <MediaCard
       key={media.id}
       media={media}
-      pinned={{ position }}
       sticker={seenLabel(seen?.get(media.id)) ? <span className="text-sm">{seenLabel(seen?.get(media.id))}</span> : undefined}
       overlay={
         <button
@@ -263,11 +262,11 @@ export default function ListsPage() {
               {active.is_watchlist && order === "now" && active.items.length > 1 ? (
                 <WatchlistNowView
                   version={version + active.items.length}
-                  renderCard={(media, position) => card(active.id, media, position)}
+                  renderCard={(media) => card(active.id, media)}
                 />
               ) : (
                 <div className={`mt-6 ${MEDIA_GRID}`}>
-                  {active.items.map(({ media }, position) => card(active.id, media, position))}
+                  {active.items.map(({ media }) => card(active.id, media))}
                 </div>
               )}
             </>

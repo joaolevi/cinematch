@@ -126,7 +126,6 @@ export default function RetroPage() {
               <section className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
                 <div className={`paper relative -rotate-[0.3deg] rounded-sm py-7 pr-6 pl-14 sm:pr-8 sm:pl-16 ${INK}`}>
                   <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[0] }} />
-                  <span aria-hidden className="tape -top-2.5 right-16 rotate-3" style={{ background: TAPE_COLORS[2] }} />
                   <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Em {periodName(period)}, eu fui:</p>
                   <p className="mt-1 inline-block -rotate-2 rounded-lg border-4 border-[#b9452f] px-4 py-1 font-display text-3xl font-bold text-[#b9452f] sm:text-4xl">
                     {retro.archetype.name}
