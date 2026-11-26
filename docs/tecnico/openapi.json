@@ -1053,6 +1053,28 @@
         }
       }
     },
+    "/media/showcase": {
+      "get": {
+        "tags": [
+          "mídias"
+        ],
+        "summary": "Media Showcase",
+        "description": "Exemplos para a página de apresentação, sem login: pares de filme ou série e disco ligados por trilha,\ncinebiografia, documentário ou compositor (RFF26, RFF27), e os álbuns mais ouvidos do catálogo.",
+        "operationId": "media_showcase_media_showcase_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShowcaseOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/media/{media_id}/similar": {
       "get": {
         "tags": [
@@ -7435,6 +7457,58 @@
           "services"
         ],
         "title": "ServicesIn"
+      },
+      "ShowcaseOut": {
+        "properties": {
+          "pairs": {
+            "items": {
+              "$ref": "#/components/schemas/ShowcasePairOut"
+            },
+            "type": "array",
+            "title": "Pairs"
+          },
+          "albums": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "type": "array",
+            "title": "Albums"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pairs",
+          "albums"
+        ],
+        "title": "ShowcaseOut",
+        "description": "Exemplos para a apresentação, antes de entrar: pares de filme e disco e os álbuns mais ouvidos."
+      },
+      "ShowcasePairOut": {
+        "properties": {
+          "video": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "album": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Por que o disco acompanha o filme, como \"A trilha sonora de Interestelar\""
+          }
+        },
+        "type": "object",
+        "required": [
+          "video",
+          "album",
+          "kind",
+          "reason"
+        ],
+        "title": "ShowcasePairOut"
       },
       "StreamingOut": {
         "properties": {

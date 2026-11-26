@@ -725,3 +725,17 @@ class ArrivalOut(BaseModel):
     media: MediaOut
     service: StreamingOut
     since: datetime = Field(description="Quando o Tastory viu o título no serviço pela primeira vez")
+
+
+class ShowcasePairOut(BaseModel):
+    video: MediaOut
+    album: MediaOut
+    kind: str
+    reason: str = Field(description='Por que o disco acompanha o filme, como "A trilha sonora de Interestelar"')
+
+
+class ShowcaseOut(BaseModel):
+    """Exemplos para a apresentação, antes de entrar: pares de filme e disco e os álbuns mais ouvidos."""
+
+    pairs: list[ShowcasePairOut]
+    albums: list[MediaOut]

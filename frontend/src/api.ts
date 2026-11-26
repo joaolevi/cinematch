@@ -35,6 +35,7 @@ import type {
   TasteProfile,
   Occasion,
   Wish,
+  Showcase,
   LetterboxdResult,
   Arrival,
   StreamingService,
@@ -136,6 +137,7 @@ export const api = {
   providers: (id: number) => request<Provider[]>(`/media/${id}/providers`),
   trending: (type?: MediaType, limit = 20) =>
     request<Media[]>("/media/trending", { query: { type, limit } }),
+  showcase: () => request<Showcase>("/media/showcase"),
   media: (id: number) => request<MediaDetail>(`/media/${id}`),
 
   // Diário

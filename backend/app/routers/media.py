@@ -14,8 +14,9 @@ from ..models import DiaryEntry, Dismissed, ListItem, Media, User, UserList
 from ..schemas import (
     ConnectionOut, MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MoodOut, MyStatus, OccasionOut, ProviderOut,
     ReviewOut, ServiceOut,
+    ShowcaseOut,
 )
-from ..services.bridges import connections
+from ..services.bridges import connections, showcase
 from ..services.catalog import search_text
 from ..services.moods import MOODS, OCCASIONS
 from ..services.streaming import SERVICES, catalog_counts
@@ -147,6 +148,13 @@ def trending(
     db: Session = Depends(get_db),
 ):
     return [r.media for r in trending_service(db, type, limit)]
+
+
+@router.get("/showcase", response_model=ShowcaseOut)
+def media_showcase(db: Session = Depends(get_db)):
+    """Exemplos para a página de apresentação, sem login: pares de filme ou série e disco ligados por trilha,
+    cinebiografia, documentário ou compositor (RFF26, RFF27), e os álbuns mais ouvidos do catálogo."""
+    return showcase(db)
 
 
 @router.get("/{media_id}/similar", response_model=list[MediaOut])

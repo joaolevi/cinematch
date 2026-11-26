@@ -1,7 +1,11 @@
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
+import { api } from "../api";
 import { Logo } from "../components/Layout";
+import Polaroid from "../components/Polaroid";
 import PolaroidCollage from "../components/PolaroidCollage";
+import Poster from "../components/Poster";
+import type { Showcase } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 
@@ -10,7 +14,7 @@ const RED_INK = "text-[#b9452f]";
 const STEPS = [
   {
     title: "Conte o que você curte",
-    text: "Gêneros, épocas, diretores e alguns títulos que você já viu. Leva um minuto.",
+    text: "Gêneros, épocas, diretores, artistas e alguns títulos que você já viu ou ouviu. Leva um minuto.",
     color: "#f6d27a",
   },
   {
@@ -20,7 +24,7 @@ const STEPS = [
   },
   {
     title: "Escreva no seu diário",
-    text: "Nota, data e resenha. Cada título vira uma polaroide colada no seu diário.",
+    text: "Nota, data e resenha. Cada filme vira uma polaroide, e cada disco, um vinil colado no diário.",
     color: "#b7d1b9",
   },
   {
@@ -30,9 +34,47 @@ const STEPS = [
   },
 ];
 
+/** Pares reais do catálogo: o filme e o disco que vem com ele, pela trilha ou pela história de quem canta. */
+function SeeThenHear({ pairs }: { pairs: Showcase["pairs"] }) {
+  if (pairs.length === 0) return null;
+  return (
+    <section className="pt-4 pb-8">
+      <h2 className="font-display text-3xl font-bold">Para ver e depois ouvir</h2>
+      <p className="font-hand text-2xl font-bold text-accent">filmes, séries e discos no mesmo diário</p>
+      <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
+        O Tastory liga o que você vê ao que você ouve: a trilha sonora do filme, o disco de quem a cinebiografia conta a
+        história, o compositor da trilha. Cada ligação vira uma sugestão, sempre com o motivo.
+      </p>
+      <ul className="mt-8 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        {pairs.map((pair, i) => (
+          <li key={pair.album.id}>
+            <div className="grid grid-cols-2 items-end gap-4">
+              <Polaroid position={i * 2} straightenOnHover={false}>
+                <Poster media={pair.video} rounded="rounded-[2px]" />
+              </Polaroid>
+              <Polaroid position={i * 2 + 1} album straightenOnHover={false}>
+                <Poster media={pair.album} rounded="rounded-[2px]" />
+              </Polaroid>
+            </div>
+            <p className="mt-3 font-hand text-2xl leading-7 font-bold text-accent">{pair.reason}</p>
+            <p className="text-sm text-muted">
+              {pair.album.title}
+              {pair.album.creators[0] && `, de ${pair.album.creators[0]}`}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 /** Apresentação para quem ainda não tem conta: o que é o Tastory e como funciona. */
 export default function LandingPage() {
   usePageTitle("A história do seu gosto");
+  const [showcase, setShowcase] = useState<Showcase | null>(null);
+  useEffect(() => {
+    api.showcase().then(setShowcase).catch(() => {});
+  }, []);
   return (
     <div className="min-h-screen">
       {/* Em cima, a folha de papel; embaixo, um corte em diagonal para o fundo escuro, como a página dentro do sistema */}
@@ -56,8 +98,8 @@ export default function LandingPage() {
               A história do <mark className="marker">seu gosto</mark>, título por título.
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8">
-              O Tastory é um diário de filmes, séries e música que aprende com o que você registra. Você anota o que viu, e ele
-              sugere o que ver depois, explicando o porquê.
+              O Tastory é um diário de filmes, séries e música que aprende com o que você registra. Você anota o que viu e
+              ouviu, e ele sugere o que ver e ouvir depois, explicando o porquê.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link to="/login?modo=cadastro" className="btn-primary px-6 py-2.5 text-base">
@@ -70,7 +112,7 @@ export default function LandingPage() {
           </div>
 
           {/* Uma página de diário de exemplo: polaroides, a frase do gosto e o carimbo */}
-          <PolaroidCollage>
+          <PolaroidCollage withAlbum>
             <div
               className="postit absolute bottom-0 left-[4%] z-10 hidden w-[44%] max-w-64 rotate-[-4deg] px-5 py-4 sm:block"
               style={{ "--note": "#f6d27a" } as CSSProperties}
@@ -106,6 +148,8 @@ export default function LandingPage() {
           </ol>
         </section>
 
+        <SeeThenHear pairs={showcase?.pairs ?? []} />
+
         <section className="paper relative mt-10 max-w-4xl -rotate-[0.3deg] rounded-sm py-6 pr-6 pl-14">
           <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[2] }} />
           <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Bom saber:</p>
@@ -124,7 +168,7 @@ export default function LandingPage() {
         <p>
           Os dados e as imagens dos títulos vêm do TMDB. This product uses the TMDB API but is not endorsed or certified
           by TMDB (este produto usa a API do TMDB, mas não é endossado nem certificado por ele). As recomendações de filmes usam avaliações do MovieLens, da GroupLens Research, que não endossa este
-          projeto.
+          projeto. Os álbuns vêm do MusicBrainz.
         </p>
         <p>Criado pela Equipe Gamma na disciplina de Gerência de Projeto 2026.2 da UFAL.</p>
       </footer>

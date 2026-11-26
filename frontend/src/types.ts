@@ -182,6 +182,12 @@ export interface Pair {
   reason: string;
 }
 
+/** Exemplos da apresentação, antes de entrar: pares de filme e disco e os álbuns mais ouvidos */
+export interface Showcase {
+  pairs: { video: Media; album: Media; kind: Pair["kind"]; reason: string }[];
+  albums: Media[];
+}
+
 /** EXP03: aceitação dos discos sugeridos por ponte, por tipo de ponte */
 export interface BridgeMetrics {
   kind: string;

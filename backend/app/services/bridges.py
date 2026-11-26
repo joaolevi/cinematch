@@ -25,7 +25,9 @@ from sqlalchemy.orm import Session
 from ..config import DATA_DIR
 from ..models import Media, MediaBridge, User, UserInterest, UserPreference
 from .catalog import search_text
-from .recommender import DISCOVERY, Recommendation, decade_label, excluded_ids, recommend, user_signals
+from .recommender import (
+    DISCOVERY, Recommendation, can_be_suggested, decade_label, excluded_ids, recommend, user_signals,
+)
 
 ALBUM_LIST_PATH = DATA_DIR / "albuns_demo.csv"
 BIOPIC_LIST_PATH = DATA_DIR / "cinebiografias.csv"
@@ -490,3 +492,51 @@ def double_features(
         if len(pairs) == limit:
             break
     return pairs
+
+
+SHOWCASE_KINDS = ("soundtrack", "biopic", "documentary", "composer")
+
+
+def showcase(db: Session, pairs: int = 3, albums: int = 4) -> dict:
+    """Exemplos reais para a página de apresentação: pares de filme ou série e disco ligados por ponte forte, com pôster
+    e capa, variando o tipo de ponte (primeiro uma de cada tipo, do filme mais popular), e os álbuns mais ouvidos."""
+    rows = db.execute(
+        select(MediaBridge.media_id, MediaBridge.other_id, MediaBridge.kind, MediaBridge.label).where(
+            MediaBridge.kind.in_(SHOWCASE_KINDS)
+        )
+    ).all()
+    ids = {i for r in rows for i in (r[0], r[1])}
+    media = {m.id: m for m in db.scalars(select(Media).where(Media.id.in_(ids)))} if ids else {}
+    found = []
+    for video_id, album_id, kind, label in rows:
+        video, album = media.get(video_id), media.get(album_id)
+        if not video or not album or video.type == "album" or album.type != "album" or not album.poster_url:
+            continue
+        if not can_be_suggested(video):
+            continue
+        found.append((video, album, Link(kind, 1.0, label)))
+    found.sort(key=lambda f: -f[0].popularity)
+    # Primeiro um par de cada tipo direto (a trilha do próprio filme, a cinebiografia, o documentário); depois os mais
+    # populares desses tipos; o compositor, que liga a outros filmes dele, só se faltar
+    direct = ("soundtrack", "biopic", "documentary")
+    chosen, used = [], set()
+    for kinds, one_each in ((direct, True), (direct, False), (SHOWCASE_KINDS, False)):
+        for video, album, link in found:
+            if len(chosen) >= pairs:
+                break
+            if link.kind not in kinds or video.id in used or album.id in used:
+                continue
+            if one_each and link.kind in {c[2].kind for c in chosen}:
+                continue
+            chosen.append((video, album, link))
+            used |= {video.id, album.id}
+    top_albums = list(
+        db.scalars(
+            select(Media).where(Media.type == "album", Media.poster_url.is_not(None)).order_by(Media.popularity.desc())
+            .limit(albums)
+        )
+    )
+    return {
+        "pairs": [{"video": v, "album": a, "kind": l.kind, "reason": pair_reason(v, l)} for v, a, l in chosen],
+        "albums": top_albums,
+    }

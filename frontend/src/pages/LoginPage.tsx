@@ -52,7 +52,7 @@ export default function LoginPage() {
         <p className="mb-8 font-display text-4xl leading-tight font-bold">
           hoje eu vi um filme e quero <span className="text-accent">guardar</span> o que senti.
         </p>
-        <PolaroidCollage count={4}>
+        <PolaroidCollage count={4} withAlbum>
           <span className="absolute right-[2%] bottom-[14%] z-10 rotate-[-10deg] rounded-xl border-4 border-accent px-4 py-1 font-display text-3xl font-bold text-accent">
             Visto!
           </span>
