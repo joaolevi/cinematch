@@ -4,7 +4,7 @@ import { useAuth } from "../auth";
 import { MEDIA_STYLE } from "../format";
 import { TAPE_COLORS } from "../ui";
 import { useFocusTrap } from "../useFocusTrap";
-import { diaryChanged, useSeen } from "../seen";
+import { diaryChanged, seenLabel, useSeen } from "../seen";
 import type { Media } from "../types";
 import CloseButton from "./CloseButton";
 import Poster from "./Poster";
@@ -13,7 +13,7 @@ import ListName from "./ListName";
 
 const RESULTS = 8;
 
-function Row({ media, seen, onPick }: { media: Media; seen: boolean; onPick: () => void }) {
+function Row({ media, seen, onPick }: { media: Media; seen: string | null; onPick: () => void }) {
   return (
     <li>
       <button
@@ -33,7 +33,7 @@ function Row({ media, seen, onPick }: { media: Media; seen: boolean; onPick: () 
         </div>
         {seen && (
           <span className="-rotate-3 rounded-md border-2 border-[#b9452f] px-1.5 py-0.5 font-display text-[11px] font-bold text-[#b9452f]">
-            Visto
+            {seen}
           </span>
         )}
       </button>
@@ -193,7 +193,7 @@ export default function QuickLog({ onClose, onSaved }: { onClose: () => void; on
         {results?.length === 0 && <p className="mt-4 font-hand text-xl font-semibold">Nada com esse nome por aqui.</p>}
         <ul className="mt-2 mb-1 max-h-[50vh] space-y-1 overflow-y-auto">
           {list.map((m) => (
-            <Row key={m.id} media={m} seen={!!seen?.has(m.id)} onPick={() => setPicked(m)} />
+            <Row key={m.id} media={m} seen={seenLabel(seen?.get(m.id))} onPick={() => setPicked(m)} />
           ))}
         </ul>
       </div>

@@ -4,7 +4,7 @@ import { api } from "../api";
 import { useAuth } from "../auth";
 import MediaCard from "../components/MediaCard";
 import { plural } from "../format";
-import { useSeen } from "../seen";
+import { seenLabel, useSeen } from "../seen";
 import type { Media, MediaSort, MediaType } from "../types";
 import { moodLabel, useMoods } from "../moods";
 import { MEDIA_GRID, TAB_COLORS } from "../ui";
@@ -172,7 +172,7 @@ export default function SearchPage() {
 
       <div className={`mt-6 ${MEDIA_GRID}`}>
         {items.map((m) => (
-          <MediaCard key={m.id} media={m} sticker={seen?.has(m.id) ? <span className="text-sm">Visto</span> : undefined} />
+          <MediaCard key={m.id} media={m} sticker={seenLabel(seen?.get(m.id)) ? <span className="text-sm">{seenLabel(seen?.get(m.id))}</span> : undefined} />
         ))}
       </div>
       {total != null && items.length < total && (

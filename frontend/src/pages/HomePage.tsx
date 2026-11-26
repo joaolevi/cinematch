@@ -16,7 +16,7 @@ import Toast from "../components/Toast";
 import WatchedBy from "../components/WatchedBy";
 import { isUpcoming } from "../format";
 import { OnScreen, useImpressions } from "../impressions";
-import { diaryChanged, useDiaryVersion, useSeen } from "../seen";
+import { diaryChanged, seenLabel, useDiaryVersion, useSeen } from "../seen";
 import { tasteOf } from "../taste";
 import type { Challenge, CommunityEntry, DiaryEntry, Feed, FeedbackAction, Media, Recommendation, UserList } from "../types";
 import { TAPE_COLORS } from "../ui";
@@ -226,7 +226,10 @@ export default function HomePage() {
   const unseen = (recs ?? []).filter((r) => !seen?.has(r.media.id)).slice(0, 5);
   const hero = unseen.length ? unseen[dayNumber() % unseen.length] : undefined;
   const taste = diary ? tasteOf(diary) : null;
-  const visto = (id: number) => (seen?.has(id) ? <span className="text-sm">Visto</span> : undefined);
+  const visto = (id: number) => {
+    const label = seenLabel(seen?.get(id));
+    return label ? <span className="text-sm">{label}</span> : undefined;
+  };
 
   return (
     <div className="space-y-14">

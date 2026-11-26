@@ -10,7 +10,7 @@ import type { Media, UserList, WatchlistNow } from "../types";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
 import ListName from "../components/ListName";
-import { useDiaryVersion, useSeen } from "../seen";
+import { seenLabel, useDiaryVersion, useSeen } from "../seen";
 
 /** O Quero ver ordenado pelo que combina agora (RFF22): gosto, momento e os serviços da pessoa. */
 function WatchlistNowView({ version, renderCard }: { version: number; renderCard: (media: Media, position: number) => ReactNode }) {
@@ -137,7 +137,7 @@ export default function ListsPage() {
       key={media.id}
       media={media}
       pinned={{ position }}
-      sticker={seen?.has(media.id) ? <span className="text-sm">Visto</span> : undefined}
+      sticker={seenLabel(seen?.get(media.id)) ? <span className="text-sm">{seenLabel(seen?.get(media.id))}</span> : undefined}
       overlay={
         <button
           aria-label={`Tirar ${media.title} da lista`}

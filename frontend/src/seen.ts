@@ -69,3 +69,10 @@ export function diaryChanged() {
 export function useDiaryVersion(): number {
   return useSyncExternalStore(subscribe, () => version);
 }
+
+/** O selo do título nas fileiras e na busca: "Visto" ou, na série que a pessoa ainda está vendo, "Assistindo" (RFF24). */
+export function seenLabel(entry: DiaryEntry | undefined): string | null {
+  if (!entry) return null;
+  if (entry.status === "watching") return entry.season ? `Assistindo · T${entry.season}` : "Assistindo";
+  return "Visto";
+}
