@@ -338,8 +338,9 @@ export default function HomePage() {
               </p>
             )}
             {!!diary?.length && (
-              <ul className="mt-4 grid grid-cols-4 gap-3 sm:gap-5">
-                {diary.slice(0, 4).map((e, position) => (
+              // Duas fileiras de quatro: a folha acompanha a altura da Comunidade ao lado, sem sobrar papel em branco
+              <ul className="mt-4 grid grid-cols-4 gap-x-3 gap-y-5 sm:gap-x-5">
+                {diary.slice(0, 8).map((e, position) => (
                   <li key={e.id} className="group">
                     <Link to={`/media/${e.media.id}`} title={e.media.title}>
                       <Polaroid position={position} caption={e.consumed_at ? shortDate(e.consumed_at) : "♥"} album={e.media.type === "album"}>
@@ -359,12 +360,11 @@ export default function HomePage() {
             <p className="text-muted">Ainda não tem registros por aqui.</p>
           ) : (
             <ul className="divide-y divide-line/60">
-              {community.map((entry, position) => (
+              {community.map((entry) => (
+                // O mesmo formato da Comunidade: pôster, título, quem viu com a nota e o começo da resenha
                 <li key={entry.id} className="flex gap-4 py-3">
-                  <Link to={`/media/${entry.media.id}`} className="group w-12 shrink-0" aria-label={entry.media.title}>
-                    <Polaroid position={position} small album={entry.media.type === "album"}>
-                      <Poster media={entry.media} compact rounded="rounded-[1px]" />
-                    </Polaroid>
+                  <Link to={`/media/${entry.media.id}`} className="w-12 shrink-0 self-start" aria-label={entry.media.title}>
+                    <Poster media={entry.media} compact rounded="rounded-md" />
                   </Link>
                   <div className="min-w-0 flex-1">
                     <Link to={`/media/${entry.media.id}`} className="font-display font-bold hover:text-accent">

@@ -76,6 +76,35 @@ export interface Review {
   review: string;
   consumed_at: string | null;
   created_at: string;
+  /** Se quem vê já denunciou a resenha */
+  reported?: boolean;
+}
+
+export type ReportReason = "spoiler" | "ofensa" | "spam" | "outro";
+
+/** Uma resenha com denúncias abertas, na moderação */
+export interface AdminReport {
+  entry_id: number;
+  media_id: number;
+  media_title: string;
+  user_name: string;
+  review: string;
+  spoiler: boolean;
+  review_hidden: boolean;
+  reports: number;
+  reasons: Partial<Record<ReportReason, number>>;
+  notes: string[];
+  last_at: string;
+}
+
+/** Alguém encontrado pelo nome na busca de pessoas */
+export interface FoundPerson {
+  id: number;
+  name: string;
+  followers: number;
+  /** Vazio quando o diário é só para quem segue */
+  titles: number | null;
+  following: boolean;
 }
 
 /** O que a pessoa marcou num episódio ou numa faixa: visto (ou ouvido), nota e anotação */
@@ -383,6 +412,8 @@ export interface CommunityEntry {
   likes: number;
   liked: boolean;
   comments: number;
+  /** Se quem vê já denunciou a resenha */
+  reported?: boolean;
 }
 
 export interface Comment {

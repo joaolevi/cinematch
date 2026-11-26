@@ -150,6 +150,7 @@ class ReviewOut(BaseModel):
     likes: int = Field(default=0, description="Curtidas na resenha (RFF30)")
     liked: bool = Field(default=False, description="Se quem vê curtiu a resenha")
     comments: int = Field(default=0, description="Comentários visíveis na resenha (RFF30)")
+    reported: bool = Field(default=False, description="Se quem vê já denunciou a resenha")
     spoiler: bool = Field(default=False, description="A resenha conta o que acontece; a tela mostra escondida")
     following: bool = Field(default=False, description="Se quem vê segue quem escreveu")
 
@@ -400,6 +401,7 @@ class CommunityEntryOut(BaseModel):
     likes: int = Field(default=0, description="Curtidas na resenha (RFF30)")
     liked: bool = Field(default=False, description="Se quem vê curtiu a resenha")
     comments: int = Field(default=0, description="Comentários visíveis na resenha (RFF30)")
+    reported: bool = Field(default=False, description="Se quem vê já denunciou a resenha")
 
 
 class CommentIn(BaseModel):
@@ -481,6 +483,16 @@ class ActivityOut(BaseModel):
     text: str | None = Field(default=None, description="A resenha do registro ou o comentário")
     list_name: str | None = None
     person: PersonOut | None = Field(default=None, description="Quem passou a seguir, ou quem escreveu a resenha")
+
+
+class FoundPersonOut(BaseModel):
+    """Uma pessoa encontrada pelo nome na busca de pessoas."""
+
+    id: int
+    name: str
+    followers: int = Field(description="Quantas pessoas seguem")
+    titles: int | None = Field(default=None, description="Títulos no diário; vazio quando o diário é só para quem segue")
+    following: bool = Field(description="Se quem buscou já segue")
 
 
 class SuggestedPersonOut(BaseModel):
@@ -576,6 +588,44 @@ class AdminCommentOut(BaseModel):
 
 class ReviewModerationIn(BaseModel):
     hidden: bool
+
+
+ReportReason = Literal["spoiler", "ofensa", "spam", "outro"]
+
+
+class ReportIn(BaseModel):
+    """Denunciar uma resenha (RFF30)."""
+
+    reason: ReportReason = Field(description="spoiler (conta o que acontece sem aviso), ofensa, spam ou outro")
+    note: str | None = Field(default=None, max_length=300, description="Um detalhe para a moderação, se quiser")
+
+
+class ReportOut(BaseModel):
+    reported: bool = True
+    spoiler: bool = Field(description="Se a resenha já aparece escondida como spoiler")
+
+
+class AdminReportOut(BaseModel):
+    """Uma resenha com denúncias abertas, para a moderação decidir."""
+
+    entry_id: int
+    media_id: int
+    media_title: str
+    user_name: str = Field(description="Quem escreveu a resenha")
+    review: str
+    spoiler: bool
+    review_hidden: bool
+    reports: int
+    reasons: dict[str, int] = Field(description="Quantas denúncias por motivo")
+    notes: list[str] = Field(description="Os detalhes que as pessoas escreveram")
+    last_at: datetime
+
+
+class ReportDecisionIn(BaseModel):
+    action: Literal["spoiler", "not_spoiler", "hide", "dismiss"] = Field(
+        description="spoiler: esconde como spoiler; not_spoiler: mostra de novo; hide: oculta a resenha; "
+        "dismiss: descarta as denúncias sem mudar nada"
+    )
 
 
 class SyncOut(BaseModel):

@@ -56,8 +56,17 @@ export default function HowPage() {
         </p>
       </Part>
 
-      <Part title="3. A música entra pelas pontes">
-        <p>Os álbuns aparecem quando têm uma ligação com algo que você curtiu:</p>
+      <Part title="3. A música: pelo que você ouve e pelas pontes">
+        <p>
+          <strong>Pelo que você ouve:</strong> discos parecidos com os que você curtiu, pelos gêneros (como MPB,
+          tropicália e bossa nova), pelo artista, pela década e pelo idioma: "Parecido com Clube da Esquina, que você
+          curtiu: mpb, anos 70". Quanto mais discos você registra, mais as sugestões de música vêm daqui: cada disco
+          curtido abre mais espaço, até 7 de cada 10 lugares.
+        </p>
+        <p>
+          <strong>Pelas pontes:</strong> o resto vem dos filmes e das séries que você curtiu. É assim que alguém que só
+          vê filmes começa a receber música:
+        </p>
         <ul className="list-disc space-y-1 pl-5">
           <li>
             <strong>Trilha sonora:</strong> "Trilha de Interestelar, que você curtiu".

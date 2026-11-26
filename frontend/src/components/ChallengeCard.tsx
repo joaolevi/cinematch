@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MEDIA_STYLE, plural } from "../format";
 import type { Challenge, Media } from "../types";
 import { TAPE_COLORS } from "../ui";
+import Carousel from "./Carousel";
 import Polaroid from "./Polaroid";
 import Poster from "./Poster";
 
@@ -19,11 +19,14 @@ function deadline(month: string, today = new Date()): { label: string; daysLeft:
 }
 
 /**
- * O desafio do tema do mês (RFF32) no Início: o tema, o progresso em selos e, ao lado, os próximos títulos do tema
- * que ainda não estão no diário, cada um com o caminho para a página dele.
+ * O desafio do tema do mês (RFF32) no Início: o tema, o progresso em selos e, ao lado, o tema inteiro num carrossel,
+ * começando pelo que ainda falta. Cada capa ou pôster abre a página do título.
  */
 export default function ChallengeCard({ c, userId, all = [] }: { c: Challenge; userId: number; all?: Media[] }) {
-  const [showAll, setShowAll] = useState(false); // o tema inteiro, dentro do cartão
+  // O tema inteiro, começando pelos próximos que ainda não estão no diário
+  const nextIds = new Set(c.next.map((m) => m.id));
+  const theme = [...c.next, ...all.filter((m) => !nextIds.has(m.id))];
+  const doneIds = new Set(c.done.map((m) => m.id));
   const done = Math.min(c.done.length, c.goal);
   const { label, daysLeft } = deadline(c.month);
   const slots = Array.from({ length: c.goal }, (_, i) => c.done[i] ?? null);
@@ -102,58 +105,44 @@ export default function ChallengeCard({ c, userId, all = [] }: { c: Challenge; u
           </div>
         </div>
 
-        {c.next.length > 0 && (
-          <div>
+        {theme.length > 0 && (
+          <div className="min-w-0">
             <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>
               {c.earned ? "Selo garantido! Mais do tema, se quiser:" : done > 0 ? "Para continuar:" : "Para começar agora:"}
             </p>
-            <ul className="mt-3 grid grid-cols-2 gap-x-5 gap-y-6 sm:grid-cols-4">
-              {c.next.map((media, i) => (
-                <li key={media.id} className={`flex flex-col ${i >= 2 ? "max-sm:hidden" : ""}`}>
-                  <Link to={`/media/${media.id}`} aria-label={media.title} className="block">
-                    <Polaroid position={i} small album={media.type === "album"} straightenOnHover={false}>
-                      <Poster media={media} compact rounded="rounded-[1px]" />
-                    </Polaroid>
+            {/* O tema inteiro num carrossel, começando pelo que ainda falta; o disco ou o pôster já abre a página */}
+            <div className="mt-3">
+              <Carousel label="títulos do tema do mês">
+                {theme.map((media, i) => (
+                  <Link
+                    key={media.id}
+                    to={`/media/${media.id}`}
+                    className="group w-32 shrink-0 snap-start pt-2 sm:w-36"
+                    aria-label={`${media.title}${doneIds.has(media.id) ? ", já registrado" : ""}`}
+                  >
+                    <div className="relative">
+                      <Polaroid position={i} small album={media.type === "album"}>
+                        <Poster media={media} compact rounded="rounded-[1px]" />
+                      </Polaroid>
+                      {doneIds.has(media.id) && (
+                        <span aria-hidden className="absolute top-1 right-1 rounded-full bg-[#4f7a5c] px-1.5 text-xs font-bold text-white">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-sm leading-tight font-semibold group-hover:text-[#b9452f] group-hover:underline">
+                      {media.title}
+                    </p>
+                    <p className="text-xs" style={{ color: MEDIA_STYLE[media.type].color }}>
+                      {MEDIA_STYLE[media.type].label}
+                    </p>
                   </Link>
-                  <p className="mt-2 line-clamp-2 text-sm leading-tight font-semibold">{media.title}</p>
-                  <p className="text-xs" style={{ color: MEDIA_STYLE[media.type].color }}>
-                    {MEDIA_STYLE[media.type].label}
-                  </p>
-                  <Link to={`/media/${media.id}`} className="btn-ghost mt-2 self-start px-3 py-1 text-xs">
-                    {media.type === "album" ? "Abrir o disco" : "Abrir o título"}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                ))}
+              </Carousel>
+            </div>
           </div>
         )}
       </div>
-
-      {all.length > 0 && (
-        <div className="mt-6 border-t border-[#2b211c]/15 pt-4">
-          <button
-            className="text-sm font-semibold underline hover:text-[#b9452f]"
-            aria-expanded={showAll}
-            onClick={() => setShowAll(!showAll)}
-          >
-            {showAll ? "Esconder o tema" : `Ver o tema inteiro (${all.length} títulos)`}
-          </button>
-          {showAll && (
-            <ul className="mt-4 grid grid-cols-3 gap-x-4 gap-y-5 sm:grid-cols-5 lg:grid-cols-8">
-              {all.map((media, i) => (
-                <li key={media.id}>
-                  <Link to={`/media/${media.id}`} className="block">
-                    <Polaroid position={i} small album={media.type === "album"} straightenOnHover={false}>
-                      <Poster media={media} compact rounded="rounded-[1px]" />
-                    </Polaroid>
-                    <p className="mt-2 line-clamp-2 text-xs leading-tight font-semibold">{media.title}</p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
     </section>
   );
 }

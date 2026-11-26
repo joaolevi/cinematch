@@ -6,9 +6,9 @@ import { StarsDisplay } from "../components/Stars";
 import { Avatar } from "../components/WatchedBy";
 import { formatDate, localDate, plural, timeAgo } from "../format";
 import type { CommunityEntry, Person, Reviewer, SuggestedPerson } from "../types";
-import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
+import PeopleSearch from "../components/PeopleSearch";
 import ReviewTalk from "../components/ReviewTalk";
 import SpoilerText from "../components/SpoilerText";
 
@@ -22,80 +22,112 @@ function when(entry: CommunityEntry): string {
   return `em ${formatDate(entry.consumed_at)}`;
 }
 
+function verb(entry: CommunityEntry): string {
+  if (entry.status === "watching") return entry.season ? `está assistindo a temporada ${entry.season} de` : "está assistindo";
+  return entry.media.type === "album" ? "ouviu" : entry.consumed_at ? "viu" : "registrou";
+}
+
 /**
- * Um post da Comunidade, como numa rede social: quem registrou e quando no topo, o título com o pôster e a nota, a
- * resenha e a conversa embaixo. Uma coluna só, para acompanhar de cima para baixo.
+ * Uma resenha, como nas resenhas populares do Letterboxd: o pôster pequeno à esquerda; o título e o ano; quem escreveu,
+ * com a nota e quando; o texto; e curtir e comentar. Sem caixa em volta: uma linha fina separa uma da outra.
  */
-function Post({ entry }: { entry: CommunityEntry }) {
+function ReviewPost({ entry }: { entry: CommunityEntry }) {
   const link = `/media/${entry.media.id}`;
-  const album = entry.media.type === "album";
-  const verb = entry.status === "watching" ? "está assistindo" : album ? "ouviu" : entry.consumed_at ? "viu" : "registrou";
   return (
-    <article className="card p-5">
-      <header className="flex items-center gap-3 text-sm">
-        <Link to={`/pessoas/${entry.user_id}`} aria-label={`Perfil de ${entry.user_name}`}>
-          <Avatar name={entry.user_name} userId={entry.user_id} size="h-10 w-10 text-base" />
-        </Link>
-        <p className="min-w-0 text-muted">
-          <Link to={`/pessoas/${entry.user_id}`} className="font-bold text-cream hover:text-accent hover:underline">
-            {entry.user_name}
+    <article className="flex gap-4 py-6 sm:gap-5">
+      <Link to={link} className="w-16 shrink-0 self-start sm:w-[4.5rem]" aria-label={entry.media.title}>
+        <Poster media={entry.media} compact rounded="rounded-md" />
+      </Link>
+      <div className="min-w-0 flex-1">
+        <h2 className="font-display text-xl leading-snug font-bold">
+          <Link to={link} className="hover:text-accent">
+            {entry.media.title}
           </Link>{" "}
-          {verb}
-          {entry.status === "watching" && entry.season ? ` a temporada ${entry.season}` : ""}
-          <span className="block text-xs">{when(entry)}</span>
-        </p>
-      </header>
-      <div className="mt-4 flex gap-4">
-        <Link to={link} className="w-20 shrink-0 sm:w-24" aria-label={entry.media.title}>
-          <Poster media={entry.media} compact rounded="rounded-md" />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h2 className="font-display text-lg leading-snug font-bold">
-            <Link to={link} className="hover:text-accent">
-              {entry.media.title}
-            </Link>{" "}
-            {entry.media.year && <span className="font-normal text-muted">{entry.media.year}</span>}
-          </h2>
-          {entry.rating != null && (
-            <div className="mt-1">
-              <StarsDisplay value={entry.rating} size={16} />
-            </div>
-          )}
-          {entry.review && <SpoilerText text={entry.review} spoiler={entry.spoiler} className="mt-2 leading-relaxed text-stone-200" />}
+          {entry.media.year && <span className="text-base font-normal text-muted">{entry.media.year}</span>}
+        </h2>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+          <Link to={`/pessoas/${entry.user_id}`} className="flex items-center gap-2 font-semibold text-stone-200 hover:text-accent">
+            <Avatar name={entry.user_name} userId={entry.user_id} size="h-6 w-6 text-xs" />
+            {entry.user_name}
+          </Link>
+          {entry.rating != null && <StarsDisplay value={entry.rating} size={14} />}
+          <span>{when(entry)}</span>
         </div>
+        <SpoilerText text={entry.review!} spoiler={entry.spoiler} className="mt-3 leading-relaxed text-stone-200" />
+        <ReviewTalk entry={entry} />
       </div>
-      {entry.review && (
-        <div className="mt-3 border-t border-line/60 pt-1">
-          <ReviewTalk entry={entry} />
-        </div>
-      )}
     </article>
   );
+}
+
+/** Miniatura para a linha do feed: a capa do disco quadrada e o pôster em 2:3, sem o vinil, que não cabe tão pequeno. */
+function Thumb({ media }: { media: CommunityEntry["media"] }) {
+  if (!media.poster_url) return <Poster media={media} compact rounded="rounded-sm" />;
+  return (
+    <img
+      src={media.poster_url}
+      alt=""
+      loading="lazy"
+      className={`w-full rounded-sm object-cover shadow-md ${media.type === "album" ? "aspect-square" : "aspect-[2/3]"}`}
+    />
+  );
+}
+
+/** Um registro sem resenha: uma linha só, como no feed de atividade. "Davi viu Matrix ★★★★★ · ontem" */
+function LogLine({ entry }: { entry: CommunityEntry }) {
+  const link = `/media/${entry.media.id}`;
+  return (
+    <article className="flex items-center gap-3 py-3 text-sm">
+      <Link to={`/pessoas/${entry.user_id}`} aria-label={`Perfil de ${entry.user_name}`}>
+        <Avatar name={entry.user_name} userId={entry.user_id} size="h-7 w-7 text-xs" />
+      </Link>
+      <p className="min-w-0 flex-1 text-muted">
+        <Link to={`/pessoas/${entry.user_id}`} className="font-semibold text-stone-200 hover:text-accent">
+          {entry.user_name}
+        </Link>{" "}
+        {verb(entry)}{" "}
+        <Link to={link} className="font-semibold text-stone-200 hover:text-accent">
+          {entry.media.title}
+        </Link>
+        {entry.rating != null && (
+          <span className="ml-2 inline-block align-[-2px]">
+            <StarsDisplay value={entry.rating} size={12} />
+          </span>
+        )}
+        <span> · {when(entry)}</span>
+      </p>
+      <Link to={link} className="w-9 shrink-0" aria-hidden tabIndex={-1}>
+        <Thumb media={entry.media} />
+      </Link>
+    </article>
+  );
+}
+
+/** Título das seções das laterais: escrito à mão, a letra do Tastory, sem folha em volta. */
+function SideTitle({ children }: { children: string }) {
+  return <h2 className="border-b border-line/60 pb-1 font-hand text-2xl leading-8 font-bold text-accent">{children}</h2>;
 }
 
 /** Quem eu sigo, com o link para o perfil de cada pessoa (RFF09). */
 function Following({ people }: { people: Person[] }) {
   return (
-    <aside aria-label="Pessoas que sigo" className="paper relative rounded-sm py-5 pr-5 pl-12 lg:-rotate-1">
-      <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 rotate-2" style={{ background: TAPE_COLORS[2] }} />
-      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Pessoas que sigo</h2>
+    <section aria-label="Pessoas que sigo">
+      <SideTitle>Pessoas que sigo</SideTitle>
       {people.length === 0 ? (
-        <p className="mt-1 text-sm text-stone-700">
-          Ninguém ainda. Abra o perfil de alguém pelo nome num registro e toque em Seguir.
-        </p>
+        <p className="mt-3 text-sm text-muted">Ninguém ainda. Procure alguém pelo nome ou abra o perfil de quem escreveu uma resenha.</p>
       ) : (
-        <ul className="flex flex-wrap gap-x-6 lg:block">
+        <ul className="mt-2">
           {people.map((person) => (
-            <li key={person.id} className="py-2">
-              <Link to={`/pessoas/${person.id}`} className="flex items-center gap-3 font-semibold text-stone-800 hover:text-[#b9452f]">
-                <Avatar name={person.name} userId={person.id} size="h-9 w-9" />
+            <li key={person.id}>
+              <Link to={`/pessoas/${person.id}`} className="flex items-center gap-3 rounded-lg px-2 py-1.5 font-semibold hover:bg-surface-2 hover:text-accent">
+                <Avatar name={person.name} userId={person.id} size="h-8 w-8" />
                 <span className="truncate">{person.name}</span>
               </Link>
             </li>
           ))}
         </ul>
       )}
-    </aside>
+    </section>
   );
 }
 
@@ -104,21 +136,20 @@ function Suggestions({ people, onFollow }: { people: SuggestedPerson[]; onFollow
   const [busy, setBusy] = useState<number | null>(null);
   if (people.length === 0) return null;
   return (
-    <aside aria-label="Gosto parecido com o seu" className="paper relative rounded-sm py-5 pr-5 pl-12 lg:rotate-[0.6deg]">
-      <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 -rotate-2" style={{ background: TAPE_COLORS[0] }} />
-      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Gosto parecido com o seu</h2>
-      <ul className="flex flex-wrap gap-x-6 lg:block">
+    <section aria-label="Gosto parecido com o seu">
+      <SideTitle>Gosto parecido com o seu</SideTitle>
+      <ul className="mt-2">
         {people.map((person) => (
-          <li key={person.id} className="flex items-center gap-3 py-2.5">
-            <Link to={`/pessoas/${person.id}`} className="flex min-w-0 flex-1 items-center gap-3 text-stone-800 hover:text-[#b9452f]">
-              <Avatar name={person.name} userId={person.id} size="h-10 w-10" />
-              <div className="min-w-0">
-                <p className="truncate font-semibold">{person.name}</p>
-                <p className="text-xs text-stone-600">Vocês combinam {person.percent}%</p>
-              </div>
+          <li key={person.id} className="flex items-center gap-3 px-2 py-2">
+            <Link to={`/pessoas/${person.id}`} className="flex min-w-0 flex-1 items-center gap-3 hover:text-accent">
+              <Avatar name={person.name} userId={person.id} size="h-9 w-9" />
+              <span className="min-w-0">
+                <span className="block truncate font-semibold">{person.name}</span>
+                <span className="block text-xs text-muted">Vocês combinam {person.percent}%</span>
+              </span>
             </Link>
             <button
-              className="shrink-0 cursor-pointer rounded-full border border-[#b9452f] px-3 py-1 text-xs font-bold text-[#b9452f] hover:bg-[#b9452f] hover:text-white"
+              className="btn-ghost shrink-0 px-3 py-1 text-xs"
               disabled={busy !== null}
               onClick={async () => {
                 setBusy(person.id);
@@ -135,33 +166,34 @@ function Suggestions({ people, onFollow }: { people: SuggestedPerson[]; onFollow
           </li>
         ))}
       </ul>
-    </aside>
+    </section>
   );
 }
 
+/** O rank de quem escreve, pelas curtidas recebidas (RFF30). */
 function Reviewers({ people }: { people: Reviewer[] }) {
   if (people.length === 0) return null;
   return (
-    // O rank de quem escreve, pelas curtidas recebidas (RFF30), fica num bilhete colado ao lado da timeline
-    <aside aria-label="Resenhas mais curtidas" className="paper relative order-first rounded-sm py-5 pr-5 pl-12 lg:order-none lg:rotate-1">
-      <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 -rotate-3" style={{ background: TAPE_COLORS[1] }} />
+    // O único post-it da Comunidade: o ranking de quem escreve é o destaque da página, como um bilhete colado ao lado
+    <section aria-label="Resenhas mais curtidas" className="postit rotate-1 px-5 py-4">
       <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Resenhas mais curtidas</h2>
-      <ul className="flex flex-wrap gap-x-6 lg:block">
-        {people.map((person) => (
-          <li key={person.id} className="py-3">
-            <Link to={`/pessoas/${person.id}`} className="flex items-center gap-3 text-stone-800 hover:text-[#b9452f]">
-              <Avatar name={person.name} userId={person.id} size="h-10 w-10" />
-              <div className="min-w-0">
-                <p className="truncate font-semibold">{person.name}</p>
-                <p className="text-xs text-stone-600">
+      <ol className="mt-1">
+        {people.map((person, i) => (
+          <li key={person.id}>
+            <Link to={`/pessoas/${person.id}`} className="flex items-center gap-3 rounded-lg py-1.5 hover:text-[#b9452f]">
+              <span className="w-4 text-right font-hand text-xl font-bold text-[#b9452f]">{i + 1}</span>
+              <Avatar name={person.name} userId={person.id} size="h-9 w-9" />
+              <span className="min-w-0">
+                <span className="block truncate font-semibold">{person.name}</span>
+                <span className="block text-xs text-stone-700">
                   {plural(person.likes, "curtida", "curtidas")}, {plural(person.reviews, "resenha", "resenhas")}
-                </p>
-              </div>
+                </span>
+              </span>
             </Link>
           </li>
         ))}
-      </ul>
-    </aside>
+      </ol>
+    </section>
   );
 }
 
@@ -223,87 +255,94 @@ export default function CommunityPage() {
     return () => observer.disconnect();
   }, [hasMore, failed, loading, loadMore]);
 
+  const followed = (p: SuggestedPerson) => {
+    setSuggested((all) => all.filter((x) => x.id !== p.id));
+    setPeople((all) => [...all, { id: p.id, name: p.name }].sort((a, b) => a.name.localeCompare(b.name)));
+  };
+
   return (
     <div>
-      <h1 className="text-3xl font-bold">Comunidade</h1>
-      <p className="mt-1 text-muted">
-        O que a galera anda vendo. O que você marca como Já vi também aparece aqui, e você escolhe quem vê, em{" "}
-        <Link to="/conta#quem-ve" className="underline hover:text-accent">
-          Minha conta
-        </Link>
-        .
-      </p>
-
-      <div className="mt-5 flex flex-wrap gap-2" aria-label="De quem ver os registros">
-        {(
-          [
-            [false, "Todo mundo"],
-            [true, "Quem eu sigo"],
-          ] as const
-        ).map(([only, label]) => (
-          <button
-            key={label}
-            onClick={() => showFollowing(only)}
-            aria-pressed={onlyFollowing === only}
-            className={`chip cursor-pointer px-4 py-1.5 text-sm ${onlyFollowing === only ? "border-accent text-accent" : ""}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {onlyFollowing && entries?.length === 0 && !hasMore && (
-        <p className="mt-8 text-muted">
-          {people.length === 0
-            ? "Você ainda não segue ninguém. Abra o perfil de alguém pelo nome num registro e toque em Seguir."
-            : "Quem você segue ainda não registrou nada."}
+      <header className="mx-auto max-w-2xl text-center">
+        <h1 className="text-3xl font-bold">Comunidade</h1>
+        <p className="mt-1 text-muted">O que a galera anda vendo e ouvindo.</p>
+        <p className="mt-0.5 text-sm text-muted">
+          Quem vê os seus registros, você escolhe em{" "}
+          <Link to="/conta#quem-ve" className="whitespace-nowrap underline hover:text-accent">
+            Minha conta
+          </Link>
+          .
         </p>
-      )}
-      {!onlyFollowing && entries?.length === 0 && !hasMore && (
-        <p className="mt-8 text-muted">
-          Ainda não tem nada por aqui. Marque "Já vi" no{" "}
-          <Link to="/para-voce" className="text-accent underline">feed</Link> e seja a primeira pessoa!
-        </p>
-      )}
+        <div className="mt-5 inline-flex rounded-full border border-line bg-bg/40 p-1" role="group" aria-label="De quem ver os registros">
+          {(
+            [
+              [false, "Todo mundo"],
+              [true, "Quem eu sigo"],
+            ] as const
+          ).map(([only, label]) => (
+            <button
+              key={label}
+              onClick={() => showFollowing(only)}
+              aria-pressed={onlyFollowing === only}
+              className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+                onlyFollowing === only ? "bg-accent text-bg" : "text-stone-300 hover:text-cream"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </header>
 
-      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,42rem)_300px] lg:gap-12 xl:gap-16">
-        <div>
-          {entries && entries.length > 0 && (
-            <h2 className="text-xs font-semibold tracking-wider text-muted uppercase">
-              Registros recentes
-            </h2>
+      {/* Três colunas nas telas largas: pessoas à esquerda, o feed no centro, sugestões à direita. Abaixo disso, o feed
+          vem primeiro e as laterais depois, menos a busca de pessoas, que fica no topo */}
+      <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 xl:grid-cols-[15rem_minmax(0,40rem)_15rem] xl:justify-center xl:gap-12">
+        <div className="mx-auto w-full max-w-2xl space-y-10 max-xl:order-2 xl:sticky xl:top-24 xl:self-start">
+          <div className="hidden xl:block">
+            <PeopleSearch />
+          </div>
+          <Following people={people} />
+        </div>
+
+        <section className="mx-auto w-full max-w-2xl xl:max-w-none" aria-label="Registros recentes">
+          <div className="mb-6 xl:hidden">
+            <PeopleSearch />
+          </div>
+          {onlyFollowing && entries?.length === 0 && !hasMore && (
+            <p className="text-center text-muted">
+              {people.length === 0
+                ? "Você ainda não segue ninguém. Procure alguém pelo nome ou veja as sugestões de gosto parecido."
+                : "Quem você segue ainda não registrou nada."}
+            </p>
           )}
-          {/* Uma coluna só, como numa rede social: fica mais fácil de acompanhar de cima para baixo */}
-          <div className="mt-4 space-y-4">
-            {entries?.map((e) => (
-              <Post key={e.id} entry={e} />
-            ))}
+          {!onlyFollowing && entries?.length === 0 && !hasMore && (
+            <p className="text-center text-muted">
+              Ainda não tem nada por aqui. Marque "Já vi" no{" "}
+              <Link to="/para-voce" className="text-accent underline">
+                Para você
+              </Link>{" "}
+              e seja a primeira pessoa!
+            </p>
+          )}
+          <div className="divide-y divide-line/60 border-t border-line/60">
+            {entries?.map((e) => (e.review ? <ReviewPost key={e.id} entry={e} /> : <LogLine key={e.id} entry={e} />))}
           </div>
           <div ref={bottom} />
-        </div>
-        {/* No celular, o feed vem primeiro, como numa rede social; quem seguir fica depois */}
-        <div className="flex flex-col gap-8">
-          <Following people={people} />
-          <Suggestions
-            people={suggested}
-            onFollow={(p) => {
-              setSuggested((all) => all.filter((x) => x.id !== p.id));
-              setPeople((all) => [...all, { id: p.id, name: p.name }].sort((a, b) => a.name.localeCompare(b.name)));
-            }}
-          />
+          {loading && <HandNote className="mt-8 text-center">Procurando o que a galera anda vendo...</HandNote>}
+          {failed && (
+            <div className="mt-8 text-center">
+              <p className="text-sm text-muted">Não conseguimos carregar a Comunidade agora.</p>
+              <button className="btn-ghost mt-3" onClick={loadMore}>
+                Tentar de novo
+              </button>
+            </div>
+          )}
+        </section>
+
+        <div className="mx-auto w-full max-w-2xl space-y-10 max-xl:order-3 xl:sticky xl:top-24 xl:self-start">
+          <Suggestions people={suggested} onFollow={followed} />
           <Reviewers people={reviewers} />
         </div>
       </div>
-
-      {loading && <HandNote className="mt-8 text-center">Procurando o que a galera anda vendo...</HandNote>}
-      {failed && (
-        <div className="mt-8 text-center">
-          <p className="text-sm text-muted">Não conseguimos carregar a Comunidade agora.</p>
-          <button className="btn-ghost mt-3" onClick={loadMore}>
-            Tentar de novo
-          </button>
-        </div>
-      )}
     </div>
   );
 }

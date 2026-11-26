@@ -123,17 +123,14 @@ function Ficha({ media }: { media: Media }) {
   if (media.year) lines.push(["Ano", String(media.year)]);
   if (lines.length < 2) return null;
   return (
-    <aside
-      aria-label={`Ficha de ${media.title}`}
-      className="paper relative hidden w-80 shrink-0 rotate-2 self-center rounded-sm py-5 pr-5 pl-12 text-[#2b211c] shadow-2xl xl:block"
-    >
-      <span aria-hidden className="tape -top-2.5 left-10 -rotate-6" style={{ background: TAPE_COLORS[2] }} />
-      <p className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Ficha</p>
-      <dl className="space-y-1 text-sm leading-6">
+    // A ficha fica na mesma superfície da aposta, separada por uma linha: o papel fica para o desafio e o diário
+    <aside aria-label={`Ficha de ${media.title}`} className="hidden w-72 shrink-0 self-center border-l border-line/60 pl-8 xl:block">
+      <p className="font-hand text-2xl leading-8 font-bold text-accent">Ficha</p>
+      <dl className="mt-1 space-y-2 text-sm">
         {lines.map(([label, value]) => (
           <div key={label}>
-            <dt className="inline font-bold">{label}: </dt>
-            <dd className="inline">{value}</dd>
+            <dt className="text-xs text-muted">{label}</dt>
+            <dd className="font-semibold text-stone-200">{value}</dd>
           </div>
         ))}
       </dl>
