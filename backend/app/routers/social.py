@@ -85,6 +85,17 @@ def notifications(limit: int = Query(default=30, ge=1, le=100), db: Session = De
     ])
 
 
+@router.post("/me/notifications/{notification_id}/read", status_code=204)
+def mark_one_read(notification_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Marca um aviso como lido, quando a pessoa abre o que ele mostra."""
+    n = db.get(Notification, notification_id)
+    if n is None or n.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Aviso não encontrado")
+    n.read = True
+    db.commit()
+    return Response(status_code=204)
+
+
 @router.post("/me/notifications/read", status_code=204)
 def mark_read(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Marca todos os avisos como lidos."""

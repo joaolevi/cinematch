@@ -5979,6 +5979,47 @@
         }
       }
     },
+    "/me/notifications/{notification_id}/read": {
+      "post": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Mark One Read",
+        "description": "Marca um aviso como lido, quando a pessoa abre o que ele mostra.",
+        "operationId": "mark_one_read_me_notifications__notification_id__read_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "notification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Notification Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/me/notifications/read": {
       "post": {
         "tags": [

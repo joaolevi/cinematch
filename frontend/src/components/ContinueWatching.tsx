@@ -103,7 +103,7 @@ export default function ContinueWatching() {
 
   if (items.length === 0) return null;
   const both = watching.length > 0 && listening.length > 0;
-  const title = both ? "Continuar assistindo e ouvindo" : listening.length ? "Continuar ouvindo" : "Continuar assistindo";
+  const title = both ? "Bora continuar?" : listening.length ? "Bora continuar ouvindo?" : "Bora continuar vendo?";
   return (
     <section>
       <h2 className="mb-4 font-display text-2xl font-bold">

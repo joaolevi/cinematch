@@ -102,3 +102,16 @@ def test_criar_lembranca_juntos(client, user_headers, db):
     assert {i["media"]["title"] for i in client.get("/me/invites", headers=ana).json()["items"]} == {"Dark"}
     ontem_de_semana_passada = (date.today() - timedelta(days=8)).isoformat()
     assert client.post(f"/media/{m}/invite", json={"to": ana_id, "day": ontem_de_semana_passada}, headers=user_headers).status_code == 422
+
+
+def test_marcar_um_aviso_como_lido(client, user_headers, db):
+    ana = register(client, "Ana", "ana@teste.com")
+    client.put(f"/users/{uid(db, 'Ana')}/follow", headers=user_headers)
+    client.put(f"/users/{uid(db, 'Fulano')}/follow", headers=ana)
+    n = avisos(client, user_headers)
+    assert n["unread"] == 1
+    item = n["items"][0]
+    assert client.post(f"/me/notifications/{item['id']}/read", headers=ana).status_code == 404  # o aviso é de outra pessoa
+    assert client.post(f"/me/notifications/{item['id']}/read", headers=user_headers).status_code == 204
+    n = avisos(client, user_headers)
+    assert n["unread"] == 0 and n["items"][0]["read"] is True

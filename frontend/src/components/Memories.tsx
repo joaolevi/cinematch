@@ -101,8 +101,8 @@ export default function Memories() {
   return (
     <section id="lembrancas" aria-labelledby="lembrancas-titulo" className="scroll-mt-24">
       <h2 id="lembrancas-titulo" className="mb-4 font-display text-2xl font-bold">
-        Lembranças juntos
-        <span className="block font-hand text-xl font-bold text-accent sm:ml-3 sm:inline">para ver e ouvir com quem você gosta</span>
+        Bora juntos?
+        <span className="block font-hand text-xl font-bold text-accent sm:ml-3 sm:inline">lembranças pra criar com quem você gosta</span>
       </h2>
       <ul className="flex snap-x gap-5 overflow-x-auto px-3 pb-2 [scrollbar-width:none] -mx-3">
         {sorted.map((inv, i) => (

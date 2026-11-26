@@ -104,7 +104,7 @@ const shelfItem = "w-36 shrink-0 snap-start pt-2 sm:w-40";
 
 type ShelfView = "top" | "trending" | "upcoming";
 const SHELF_VIEWS: Record<ShelfView, { button: string; title: string; note: string }> = {
-  top: { button: "Top 10", title: "Top 10 do Tastory", note: "o que a comunidade mais registrou" },
+  top: { button: "Queridinhos", title: "Queridinhos da semana", note: "o que a comunidade mais registrou" },
   trending: { button: "Em alta", title: "Em alta agora", note: "o que todo mundo está vendo" },
   upcoming: { button: "Em breve", title: "Em breve", note: "pra anotar na agenda" },
 };

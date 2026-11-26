@@ -29,9 +29,9 @@ function AskCard() {
       className="rise flex flex-col rounded-2xl border border-line bg-gradient-to-br from-surface to-accent/10 p-5"
     >
       <label htmlFor="pedido-inicio" className="font-hand text-2xl leading-7 font-bold text-accent">
-        Peça do seu jeito
+        Pede aí
       </label>
-      <p className="mt-1 text-sm text-stone-300">Escreva em português, e o Tastory entende o clima, a ocasião e o tempo.</p>
+      <p className="mt-1 text-sm text-stone-300">Escreve do seu jeito, em português, que o Tastory entende o clima, a ocasião e o tempo.</p>
       <div className="mt-auto flex items-center gap-2 rounded-xl border border-line bg-bg/60 p-1 pl-3 pt-1 transition focus-within:border-accent">
         <div className="relative min-w-0 flex-1">
           <input
@@ -71,7 +71,7 @@ function TonightCard() {
       <span aria-hidden className="absolute top-12 right-20 h-1 w-1 rounded-full bg-cream/70" />
       <span aria-hidden className="absolute top-6 right-28 h-0.5 w-0.5 rounded-full bg-cream/60" />
       <span aria-hidden className="absolute top-16 right-10 h-0.5 w-0.5 rounded-full bg-cream/50" />
-      <span className="font-hand text-2xl leading-7 font-bold text-accent">Hoje à noite</span>
+      <span className="font-hand text-2xl leading-7 font-bold text-accent">Sessão pipoca 🍿</span>
       <span className="mt-1 pr-16 text-sm text-stone-300">
         {services ? "O que cabe na noite e já está nos seus serviços." : "O que cabe na noite, em até 2h30."}
       </span>
@@ -176,7 +176,7 @@ export function DoubleFeatureOfTheDay() {
           </Link>
         </div>
         <div className="min-w-0">
-          <p className="font-hand text-2xl leading-7 font-bold text-accent">Sessão dupla do dia</p>
+          <p className="font-hand text-2xl leading-7 font-bold text-accent">Dobradinha do dia</p>
           <h2 id="sessao-dupla-dia" className="mt-1 font-display text-2xl leading-tight font-bold sm:text-3xl">
             <span className="text-base font-normal text-muted">Veja </span>
             <Link to={`/media/${video.id}`} className="hover:text-accent">
@@ -226,7 +226,7 @@ export function DoubleFeatureOfTheDay() {
               )}
             </button>
             <Link to="/para-voce" className="text-sm font-bold text-accent hover:underline">
-              Mais sessões duplas →
+              Mais dobradinhas →
             </Link>
           </div>
         </div>

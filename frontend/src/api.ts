@@ -184,6 +184,7 @@ export const api = {
     request<CommunityEntry[]>(`/users/${userId}/reviews`, { query: { sort, limit, offset } }),
   notifications: () => request<{ unread: number; items: AppNotification[] }>("/me/notifications"),
   readNotifications: () => request<void>("/me/notifications/read", { method: "POST" }),
+  readNotification: (id: number) => request<void>(`/me/notifications/${id}/read`, { method: "POST" }),
   suggest: (mediaId: number, to: number[], note?: string) =>
     request<{ sent: number }>(`/media/${mediaId}/suggest`, { method: "POST", body: { to, note } }),
   invite: (mediaId: number, to: number, day?: string, note?: string) =>

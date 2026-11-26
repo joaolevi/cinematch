@@ -492,7 +492,7 @@ export default function AccountPage() {
       {tab === "servicos" && (
         <Part title="Meus serviços" id="servicos">
         <p>
-          Marque o que você assina. No Para você, "Só nos meus serviços" e "Hoje à noite" mostram só o que dá para ver
+          Marque o que você assina. No Para você, "Só nos meus serviços" e "Sessão pipoca" mostram só o que dá para ver
           agora, e cada sugestão avisa se está num serviço seu.
         </p>
         <ServicesPicker />

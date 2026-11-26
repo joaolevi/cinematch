@@ -90,7 +90,7 @@ export default function HowPage() {
           depois" e "Para ver depois".
         </p>
         <p>
-          No Para você, a "Sessão dupla" junta um filme ou uma série que combina com você e um disco ligado a ele por
+          No Para você, a "Dobradinha" junta um filme ou uma série que combina com você e um disco ligado a ele por
           uma das pontes fortes, para ver e depois ouvir.
         </p>
       </Part>
@@ -122,7 +122,7 @@ export default function HowPage() {
         </p>
         <p>
           Se você marcar os serviços que assina, em Minha conta, cada sugestão avisa se está num deles, e "Só nos meus
-          serviços" mostra só o que dá para ver agora. "Hoje à noite" junta isso com até 2h30. Em "Junto com", você
+          serviços" mostra só o que dá para ver agora. "Sessão pipoca" junta isso com até 2h30. Em "Gosto em dupla", você
           escolhe quem você segue para ver junto: primeiro vem o que agrada a todo mundo. O Quero ver também se
           ordena pelo que combina agora: o gosto primeiro, e o que está nos seus serviços sobe um pouco. Onde assistir
           vem da JustWatch, pelo TMDB.

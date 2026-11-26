@@ -27,7 +27,7 @@ export default function DoubleFeature({ pairs, onSaved }: { pairs: Pair[]; onSav
   return (
     <section className="mt-10" aria-labelledby="sessao-dupla">
       <h2 id="sessao-dupla" className="font-display text-xl font-bold">
-        Sessão dupla
+        Dobradinha
       </h2>
       <p className="mt-1 text-sm text-muted">Para ver e depois ouvir: um filme ou uma série e um disco ligados pela música.</p>
       <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">

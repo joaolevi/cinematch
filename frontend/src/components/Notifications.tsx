@@ -20,11 +20,11 @@ function describe(n: AppNotification): { text: React.ReactNode; to: string } {
     case "comentou":
       return { text: <>{who} comentou a sua resenha de {title}</>, to: `${media}?aba=resenhas` };
     case "indicou":
-      return { text: <>{who} deixou um bilhete: {title}</>, to: media };
+      return { text: <>{who} deixou um bilhetinho pra você: {title}</>, to: media };
     case "convidou":
-      return { text: <>{who} quer criar uma lembrança com você: {title}</>, to: "/#lembrancas" };
+      return { text: <>{who} chamou você pra criar uma lembrança: {title}</>, to: "/#lembrancas" };
     case "aceitou":
-      return { text: <>{who} topou a lembrança: {title}</>, to: "/#lembrancas" };
+      return { text: <>{who} topou! Vocês vão {n.media?.type === "album" ? "ouvir" : "ver"} {title} juntos</>, to: "/#lembrancas" };
     default:
       return {
         text: (
@@ -41,7 +41,57 @@ const ICON: Record<AppNotification["kind"], string> = {
   seguiu: "👋", curtiu: "♥", comentou: "💬", indicou: "📝", registrou: "👀", convidou: "🍿", aceitou: "🎉",
 };
 
-/** O sino, com o número de avisos não lidos, e o painel com os avisos. Abrir o painel marca todos como lidos. */
+/** "hoje às 14:32", "ontem às 21:00" ou "24 de nov., 18:00", com o "há 2 horas" ao lado. */
+function when(iso: string): string {
+  const d = new Date(/(Z|[+-]\d{2}:\d{2})$/.test(iso) ? iso : `${iso}Z`);
+  const hour = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const day = d.toLocaleDateString("sv-SE"); // AAAA-MM-DD no fuso de quem vê
+  const day0 = (n: number) => {
+    const x = new Date();
+    x.setDate(x.getDate() - n);
+    return x.toLocaleDateString("sv-SE");
+  };
+  const label = day === day0(0) ? `hoje às ${hour}` : day === day0(1) ? `ontem às ${hour}` : `${d.toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}, ${hour}`;
+  return `${timeAgo(iso)} · ${label}`;
+}
+
+/** Uma linha do painel: a foto com o ícone, a frase, o recado e quando foi. Não lido: fundo claro e um ponto. */
+function Row({ n, onOpen }: { n: AppNotification; onOpen: (n: AppNotification) => void }) {
+  const { text, to } = describe(n);
+  return (
+    <li>
+      <Link
+        to={to}
+        onClick={() => onOpen(n)}
+        className={`flex items-start gap-3 px-4 py-3 text-sm transition hover:bg-surface-2 ${n.read ? "" : "bg-accent/[0.07]"}`}
+      >
+        <span className="relative h-9 w-9 shrink-0">
+          {n.actor ? <Avatar name={n.actor.name} userId={n.actor.id} size="h-9 w-9 text-sm" /> : <span className="block h-9 w-9" />}
+          <span aria-hidden className="absolute -right-1.5 -bottom-1 grid h-5 w-5 place-items-center rounded-full bg-surface text-[11px]">
+            {ICON[n.kind]}
+          </span>
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className={`block ${n.read ? "text-stone-400" : "text-stone-200"}`}>{text}</span>
+          {n.text && <span className="mt-0.5 line-clamp-2 block text-stone-400 italic">“{n.text}”</span>}
+          <span className={`mt-1 block text-xs ${n.read ? "text-stone-400" : "font-semibold text-accent"}`}>{when(n.created_at)}</span>
+        </span>
+        {n.media?.poster_url && (
+          <img src={n.media.poster_url} alt="" aria-hidden className={`w-8 shrink-0 rounded-sm object-cover ${n.media.type === "album" ? "aspect-square" : "aspect-[2/3]"}`} />
+        )}
+        <span className="w-2 shrink-0 self-center">
+          {!n.read && <span className="block h-2 w-2 rounded-full bg-accent" />}
+          <span className="sr-only">{n.read ? "lido" : "não lido"}</span>
+        </span>
+      </Link>
+    </li>
+  );
+}
+
+/**
+ * O sino, com o número de avisos não lidos, e o painel "O que rolou". Abrir o painel não marca nada: cada aviso fica
+ * lido ao ser aberto, e "Marcar todos como lidos" limpa de uma vez. Os novos vêm separados dos anteriores.
+ */
 export default function Notifications() {
   const [items, setItems] = useState<AppNotification[]>([]);
   const [unread, setUnread] = useState(0);
@@ -76,21 +126,27 @@ export default function Notifications() {
     };
   }, [open]);
 
-  async function toggle() {
-    const next = !open;
-    setOpen(next);
-    if (next && unread > 0) {
-      setUnread(0);
-      await api.readNotifications().catch(() => {});
-    }
+  function opened(n: AppNotification) {
+    if (n.read) return;
+    setItems(items.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+    setUnread((u) => Math.max(0, u - 1));
+    api.readNotification(n.id).catch(() => {});
   }
 
+  async function readAll() {
+    setItems(items.map((x) => ({ ...x, read: true })));
+    setUnread(0);
+    await api.readNotifications().catch(() => {});
+  }
+
+  const fresh = items.filter((n) => !n.read);
+  const old = items.filter((n) => n.read);
   return (
     <div ref={box} className="relative">
       <button
-        onClick={toggle}
+        onClick={() => setOpen(!open)}
         aria-expanded={open}
-        aria-label={unread ? `Avisos: ${unread} ${unread === 1 ? "novo" : "novos"}` : "Avisos"}
+        aria-label={unread ? `O que rolou: ${unread} ${unread === 1 ? "aviso novo" : "avisos novos"}` : "O que rolou"}
         className="relative grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-[#2b211c]/25 text-[#2b211c] transition hover:border-[#b9452f] hover:text-[#b9452f]"
       >
         <svg viewBox="0 0 20 20" aria-hidden className={`h-[18px] w-[18px] ${unread ? "bell-ring" : ""}`} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -103,40 +159,40 @@ export default function Notifications() {
         )}
       </button>
       {open && (
-        <div
-          role="dialog"
-          aria-label="Avisos"
-          className="rise absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl"
-        >
-          <p className="border-b border-line/60 px-4 py-3 font-hand text-xl font-bold text-accent">Avisos</p>
+        <div role="dialog" aria-label="O que rolou" className="rise absolute right-0 z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl">
+          <div className="flex items-center justify-between gap-2 border-b border-line/60 px-4 py-3">
+            <p className="font-hand text-xl font-bold text-accent">O que rolou</p>
+            {unread > 0 && (
+              <button className="cursor-pointer text-xs font-semibold text-stone-400 underline hover:text-accent" onClick={readAll}>
+                Marcar todos como lidos
+              </button>
+            )}
+          </div>
           {items.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-muted">Nada por aqui ainda. Quando alguém seguir você, curtir uma resenha ou indicar algo, aparece aqui.</p>
+            <p className="px-4 py-6 text-center text-sm text-stone-400">Nada por aqui ainda. Quando alguém seguir você, curtir uma resenha ou deixar um bilhetinho, aparece aqui.</p>
           ) : (
-            <ul className="max-h-[60vh] divide-y divide-line/60 overflow-y-auto">
-              {items.map((n) => {
-                const { text, to } = describe(n);
-                return (
-                  <li key={n.id}>
-                    <Link to={to} className={`flex gap-3 px-4 py-3 text-sm transition hover:bg-surface-2 ${n.read ? "" : "bg-accent/5"}`}>
-                      <span className="relative h-9 w-9 shrink-0 self-start">
-                        {n.actor ? <Avatar name={n.actor.name} userId={n.actor.id} size="h-9 w-9 text-sm" /> : <span className="block h-9 w-9" />}
-                        <span aria-hidden className="absolute -right-1.5 -bottom-1 grid h-5 w-5 place-items-center rounded-full bg-surface text-[11px]">
-                          {ICON[n.kind]}
-                        </span>
-                      </span>
-                      <span className="min-w-0 flex-1 text-stone-300">
-                        {text}
-                        {n.text && <span className="mt-0.5 line-clamp-2 block text-muted">“{n.text}”</span>}
-                        <span className="mt-0.5 block text-xs text-muted">{timeAgo(n.created_at)}</span>
-                      </span>
-                      {n.media?.poster_url && (
-                        <img src={n.media.poster_url} alt="" aria-hidden className={`w-8 shrink-0 self-start rounded-sm object-cover ${n.media.type === "album" ? "aspect-square" : "aspect-[2/3]"}`} />
-                      )}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="max-h-[65vh] overflow-y-auto">
+              {fresh.length > 0 && (
+                <>
+                  <p className="px-4 pt-3 pb-1 text-xs font-bold tracking-wider text-accent uppercase">Novos · {fresh.length}</p>
+                  <ul className="divide-y divide-line/60">
+                    {fresh.map((n) => (
+                      <Row key={n.id} n={n} onOpen={opened} />
+                    ))}
+                  </ul>
+                </>
+              )}
+              {old.length > 0 && (
+                <>
+                  <p className="px-4 pt-3 pb-1 text-xs font-bold tracking-wider text-stone-400 uppercase">Anteriores</p>
+                  <ul className="divide-y divide-line/60">
+                    {old.map((n) => (
+                      <Row key={n.id} n={n} onOpen={opened} />
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
           )}
         </div>
       )}

@@ -11,7 +11,7 @@ import MediaCard from "./MediaCard";
  */
 export default function TopTen({ top, sticker }: { top: Top; sticker: (m: Media) => ReactNode }) {
   return (
-    <Carousel label="Top 10 do Tastory">
+    <Carousel label="Queridinhos da semana">
       {top.items.map((item, i) => (
         // O selo da posição fica fora do cartão, no canto de cima à esquerda; o de visto ou ouvido continua à direita
         <div key={item.media.id} className="relative w-36 shrink-0 snap-start pt-3 pl-2 sm:w-40">

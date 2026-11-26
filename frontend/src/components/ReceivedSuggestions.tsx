@@ -20,7 +20,7 @@ export default function ReceivedSuggestions() {
   return (
     <section aria-labelledby="bilhetes">
       <h2 id="bilhetes" className="mb-4 font-display text-2xl font-bold">
-        Bilhetes para você
+        Bilhetinhos pra você
         <span className="block font-hand text-xl font-bold text-accent sm:ml-3 sm:inline">de quem você segue</span>
       </h2>
       <ul className="-ml-3 flex snap-x gap-5 overflow-x-auto pt-3 pb-2 pl-3 [scrollbar-width:none]">
@@ -40,7 +40,7 @@ export default function ReceivedSuggestions() {
                     <Link to={`/pessoas/${s.sender.id}`} className="font-bold text-cream hover:text-accent">
                       {s.sender.name.split(" ")[0]}
                     </Link>{" "}
-                    deixou um bilhete
+                    deixou um bilhetinho
                   </p>
                   <Link to={`/media/${s.media.id}`} className="mt-0.5 line-clamp-2 font-display font-bold leading-tight hover:text-accent">
                     {s.media.title}

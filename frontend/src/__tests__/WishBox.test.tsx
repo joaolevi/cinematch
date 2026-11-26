@@ -22,7 +22,7 @@ const NADA: Wish = { ...LEVE, type: null, mood: null, occasion: null, understood
 afterEach(cleanup);
 
 function ask(text: string) {
-  fireEvent.change(screen.getByLabelText("Peça do seu jeito:"), { target: { value: text } });
+  fireEvent.change(screen.getByLabelText("Pede aí:"), { target: { value: text } });
   fireEvent.click(screen.getByRole("button", { name: "Pedir" }));
 }
 
@@ -57,7 +57,7 @@ describe("Peça do seu jeito (RFF25)", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Limpar o pedido" }));
 
     expect(onWish).toHaveBeenLastCalledWith(null);
-    expect((screen.getByLabelText("Peça do seu jeito:") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("Pede aí:") as HTMLInputElement).value).toBe("");
   });
 
   it("não pede nada com o campo vazio", () => {

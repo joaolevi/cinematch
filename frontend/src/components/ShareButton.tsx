@@ -46,7 +46,7 @@ export default function ShareButton({ media }: { media: Media }) {
       const names = (people ?? []).filter((p) => to.includes(p.id)).map((p) => p.name.split(" ")[0]);
       if (mode === "bilhete") {
         const { sent } = await api.suggest(media.id, to, note.trim() || undefined);
-        setDone(sent ? `Bilhete deixado para ${names.join(" e ")}!` : "Quem você escolheu já registrou este título.");
+        setDone(sent ? `Bilhetinho deixado para ${names.join(" e ")}!` : "Quem você escolheu já registrou este título.");
       } else {
         await api.invite(media.id, to[0], day || undefined, note.trim() || undefined);
         setDone(`Convite mandado para ${names[0]}. Agora é esperar o “bora”!`);
@@ -66,7 +66,7 @@ export default function ShareButton({ media }: { media: Media }) {
   }
 
   const tabs: [Mode, string, string][] = [
-    ["bilhete", "Deixar um bilhete", `Indique ${album ? "este disco" : "este título"} com um recado`],
+    ["bilhete", "Deixar um bilhetinho", `Indique ${album ? "este disco" : "este título"} com um recado`],
     ["lembranca", "Criar lembrança juntos", `Chame alguém para ${album ? "ouvir" : "ver"} junto, num dia combinado`],
   ];
   return (
@@ -160,7 +160,7 @@ export default function ShareButton({ media }: { media: Media }) {
                     Cancelar
                   </button>
                   <button className="btn-primary" disabled={busy || to.length === 0} onClick={send}>
-                    {busy ? "Mandando..." : mode === "bilhete" ? (to.length > 1 ? `Deixar para ${to.length} pessoas` : "Deixar o bilhete") : "Mandar o convite"}
+                    {busy ? "Mandando..." : mode === "bilhete" ? (to.length > 1 ? `Deixar para ${to.length} pessoas` : "Deixar o bilhetinho") : "Mandar o convite"}
                   </button>
                 </div>
               </>

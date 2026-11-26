@@ -542,7 +542,7 @@ export default function FeedPage() {
               </span>
               <span aria-hidden className="absolute top-8 right-16 h-1 w-1 rounded-full bg-cream/70" />
               <span aria-hidden className="absolute top-4 right-24 h-0.5 w-0.5 rounded-full bg-cream/60" />
-              <span className="block font-hand text-2xl leading-7 font-bold text-accent">Hoje à noite</span>
+              <span className="block font-hand text-2xl leading-7 font-bold text-accent">Sessão pipoca</span>
               <span className="mt-1 block pr-10 text-sm text-stone-300">
                 {hasServices ? "Cabe na noite (até 2h30) e está nos seus serviços" : "Cabe na noite: até 2h30"}
               </span>
@@ -552,11 +552,11 @@ export default function FeedPage() {
             </button>
           )}
           <section
-            aria-label="Ver junto com"
+            aria-label="Gosto em dupla"
             style={{ "--i": 2 } as React.CSSProperties}
             className={`rise rounded-2xl border p-4 ${together ? "border-accent bg-accent/10" : "border-line bg-surface/70"}`}
           >
-            <p className="font-hand text-2xl leading-7 font-bold text-accent">Ver junto com</p>
+            <p className="font-hand text-2xl leading-7 font-bold text-accent">Gosto em dupla</p>
             <p className="mt-1 text-sm text-stone-300">
               {together ? `Sugestões para você e ${chosen.map((p) => p.name.split(" ")[0]).join(" e ")}` : "Sugestões que agradam aos dois"}
             </p>

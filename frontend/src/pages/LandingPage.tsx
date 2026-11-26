@@ -140,8 +140,8 @@ function CardDemo() {
 /** O que só o Tastory faz, com uma demonstração viva de cada coisa. */
 function OnlyHere() {
   const items = [
-    { title: "Peça do seu jeito", text: "Escreva o que quer, em português, e o pedido vira clima, ocasião e tempo.", demo: <AskDemo /> },
-    { title: "Vejam juntos", text: "Descubra o quanto você combina com quem segue e o que agrada aos dois.", demo: <TogetherDemo /> },
+    { title: "Pede aí", text: "Escreva o que quer, em português, e o pedido vira clima, ocasião e tempo.", demo: <AskDemo /> },
+    { title: "Gosto em dupla", text: "Descubra o quanto você combina com quem segue e o que agrada aos dois.", demo: <TogetherDemo /> },
     { title: "Seu ano num cartão", text: "A frase do seu gosto e os favoritos do ano, num cartão para guardar ou mandar.", demo: <CardDemo /> },
   ];
   return (

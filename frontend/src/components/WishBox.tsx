@@ -136,7 +136,7 @@ export default function WishBox({ onWish, big = false, initial }: { onWish: (wis
     return (
       <form onSubmit={ask} role="search" aria-label="Pedir do seu jeito">
         <label htmlFor="pedido" className="font-hand text-2xl leading-8 font-bold text-accent">
-          Peça do seu jeito
+          Pede aí
         </label>
         <div className="mt-2 flex items-center gap-2 rounded-2xl border border-line bg-bg/60 p-1.5 pl-4 transition focus-within:border-accent focus-within:shadow-[0_0_0_4px_rgb(242_179_61/0.15)]">
           <span aria-hidden className="text-lg text-accent">
@@ -188,7 +188,7 @@ export default function WishBox({ onWish, big = false, initial }: { onWish: (wis
   return (
     <form onSubmit={ask} className="flex flex-wrap items-center gap-2" role="search" aria-label="Pedir do seu jeito">
       <label htmlFor="pedido" className="basis-full text-sm text-muted sm:basis-auto">
-        Peça do seu jeito:
+        Pede aí:
       </label>
       <input
         id="pedido"
