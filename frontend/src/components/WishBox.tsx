@@ -33,7 +33,7 @@ export default function WishBox({ onWish }: { onWish: (wish: Wish | null) => voi
 
   const understood = wish && wish.understood.length > 0;
   return (
-    <form onSubmit={ask} className="mt-4 flex flex-wrap items-center gap-2" role="search" aria-label="Pedir do seu jeito">
+    <form onSubmit={ask} className="flex flex-wrap items-center gap-2" role="search" aria-label="Pedir do seu jeito">
       <label htmlFor="pedido" className="basis-full text-sm text-muted sm:basis-auto">
         Peça do seu jeito:
       </label>

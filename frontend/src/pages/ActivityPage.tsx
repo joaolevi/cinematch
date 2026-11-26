@@ -46,7 +46,7 @@ function Line({ a }: { a: Activity }) {
           <Poster media={a.media} compact rounded="rounded-[2px]" />
         </Link>
       ) : (
-        a.person && <Avatar name={a.person.name} size="h-10 w-10" />
+        a.person && <Avatar name={a.person.name} userId={a.person.id} size="h-10 w-10" />
       )}
       <div className="min-w-0 flex-1">
         <p className="text-sm">{what}</p>
@@ -90,7 +90,7 @@ export default function ActivityPage() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="mx-auto max-w-3xl">
       <h1 className="text-3xl font-bold">Minha atividade</h1>
       <p className="mt-1 text-muted">Tudo o que você fez no Tastory, do mais recente ao mais antigo. Só você vê esta página.</p>
       <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Tipo de atividade">

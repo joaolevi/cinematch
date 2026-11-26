@@ -140,7 +140,11 @@ export default function SearchPage() {
       </div>
       {/* Buscar por clima (RFF23): filmes, séries e álbuns juntos */}
       {moods.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Buscar por clima">
+        <div
+          className="mt-4 flex items-center gap-2 max-sm:-mx-4 max-sm:overflow-x-auto max-sm:px-4 max-sm:pb-1 sm:flex-wrap"
+          role="group"
+          aria-label="Buscar por clima"
+        >
           <span className="text-sm text-muted">Por clima:</span>
           {moods
             .filter((m) => m.count > 0)
@@ -174,7 +178,7 @@ export default function SearchPage() {
       {total != null && items.length < total && (
         <div className="mt-8 text-center">
           <button className="btn-ghost" onClick={() => setOffset(items.length)}>
-            Carregar mais
+            Ver mais títulos
           </button>
         </div>
       )}

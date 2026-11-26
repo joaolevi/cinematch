@@ -135,10 +135,12 @@ def test_desafio_do_mes_e_selo(client, user_headers, db, tmp_path, monkeypatch):
     monkeypatch.setattr(theme_service, "THEME_PATH", path)
     antes = client.get("/lists/featured/challenge", headers=user_headers).json()
     assert antes["goal"] == 2 and antes["done"] == [] and not antes["earned"] and antes["badge"] == "Nordeste no coração"
+    assert [m["title"] for m in antes["next"]] == ["Bacurau", "Central do Brasil", "Cidade de Deus"]
 
     curtir(client, user_headers, db, "Bacurau", "Matrix")
     meio = client.get("/lists/featured/challenge", headers=user_headers).json()
     assert [m["title"] for m in meio["done"]] == ["Bacurau"] and not meio["earned"]
+    assert [m["title"] for m in meio["next"]] == ["Central do Brasil", "Cidade de Deus"]  # o que já está no diário sai
     curtir(client, user_headers, db, "Central do Brasil")
     assert client.get("/lists/featured/challenge", headers=user_headers).json()["earned"]
 

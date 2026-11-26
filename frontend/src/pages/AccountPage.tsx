@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import ExperimentsToggle from "../components/ExperimentsToggle";
+import { Avatar } from "../components/WatchedBy";
+import { refreshAvatars } from "../avatars";
 import type { LetterboxdResult, StreamingService, Visibility } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
@@ -14,6 +16,153 @@ function Part({ title, children, tape = 0, id }: { title: string; children: Reac
       <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">{title}</h2>
       <div className="mt-1 space-y-2 text-sm leading-6">{children}</div>
     </section>
+  );
+}
+
+const FIELD = "mt-1 block w-full max-w-sm rounded-md border border-stone-400 bg-white/70 px-3 py-2 text-[#2b211c]";
+
+/** Reduz a foto a um quadrado de 256 px, cortando as sobras do centro, e devolve como JPEG. */
+async function squarePhoto(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const side = Math.min(bitmap.width, bitmap.height);
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 256;
+  canvas.getContext("2d")!.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 256, 256);
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
+
+/** O que as outras pessoas veem de mim: a foto, o nome e o e-mail da conta, e a senha. */
+function ProfileEditor() {
+  const { user, refresh } = useAuth();
+  const [name, setName] = useState(user?.name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [busy, setBusy] = useState<"foto" | "dados" | "senha" | null>(null);
+  const [message, setMessage] = useState<{ part: "foto" | "dados" | "senha"; text: string; error?: boolean } | null>(null);
+  if (!user) return null;
+
+  async function run(part: "foto" | "dados" | "senha", action: () => Promise<unknown>, done: string) {
+    setBusy(part);
+    setMessage(null);
+    try {
+      await action();
+      setMessage({ part, text: done });
+    } catch (e) {
+      setMessage({ part, text: (e as Error).message, error: true });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const note = (part: "foto" | "dados" | "senha") =>
+    message?.part === part && (
+      <p role="status" className={message.error ? "text-red-700" : "text-[#4f7a5c]"}>
+        {message.text}
+      </p>
+    );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-4">
+        <Avatar name={user.name} userId={user.id} size="h-20 w-20 text-3xl" />
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
+            <input
+              id="foto-de-perfil"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="peer sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file)
+                  run("foto", async () => {
+                    await api.setAvatar(await squarePhoto(file));
+                    await refreshAvatars();
+                  }, "Foto trocada.");
+              }}
+            />
+            <label
+              htmlFor="foto-de-perfil"
+              className="btn-primary cursor-pointer px-4 py-1.5 text-sm peer-focus-visible:outline-2 peer-focus-visible:outline-[#b9452f]"
+            >
+              {busy === "foto" ? "Enviando..." : "Escolher uma foto"}
+            </label>
+            <button
+              type="button"
+              className="btn-ghost px-4 py-1.5 text-sm"
+              disabled={busy !== null}
+              onClick={() =>
+                run("foto", async () => {
+                  await api.removeAvatar();
+                  await refreshAvatars();
+                }, "Foto retirada: volta a inicial do nome.")
+              }
+            >
+              Tirar a foto
+            </button>
+          </div>
+          <p className="text-xs text-stone-600">
+            A foto aparece no seu perfil, na Comunidade e nas resenhas.{" "}
+            <Link to={`/pessoas/${user.id}`} className="underline hover:text-[#b9452f]">
+              Ver meu perfil como os outros veem
+            </Link>
+          </p>
+          {note("foto")}
+        </div>
+      </div>
+
+      <form
+        className="space-y-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          run("dados", async () => {
+            await api.editAccount({ name: name.trim(), email: email.trim() });
+            await refresh();
+          }, "Nome e e-mail salvos.");
+        }}
+      >
+        <label className="block">
+          <span className="font-semibold">Nome</span>
+          <input required minLength={2} maxLength={120} value={name} onChange={(e) => setName(e.target.value)} className={FIELD} />
+        </label>
+        <label className="block">
+          <span className="font-semibold">E-mail</span>
+          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={FIELD} />
+        </label>
+        <button className="btn-primary" disabled={busy !== null || (name.trim() === user.name && email.trim() === user.email)}>
+          {busy === "dados" ? "Salvando..." : "Salvar nome e e-mail"}
+        </button>
+        {note("dados")}
+      </form>
+
+      <form
+        className="space-y-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          run("senha", async () => {
+            await api.changePassword(current, next);
+            setCurrent("");
+            setNext("");
+          }, "Senha trocada.");
+        }}
+      >
+        <label className="block">
+          <span className="font-semibold">Senha atual</span>
+          <input required type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={FIELD} />
+        </label>
+        <label className="block">
+          <span className="font-semibold">Nova senha</span>
+          <input required minLength={6} type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={FIELD} />
+          <span className="text-xs text-stone-600">Pelo menos 6 caracteres.</span>
+        </label>
+        <button className="btn-primary" disabled={busy !== null || !current || next.length < 6}>
+          {busy === "senha" ? "Trocando..." : "Trocar a senha"}
+        </button>
+        {note("senha")}
+      </form>
+    </div>
   );
 }
 
@@ -272,6 +421,10 @@ export default function AccountPage() {
           {user.name} · {user.email}
         </p>
       </div>
+
+      <Part title="Meu perfil" tape={2} id="perfil">
+        <ProfileEditor />
+      </Part>
 
       <Part title="Meus dados" tape={0}>
         <p>

@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
+import { useAvatarUrl } from "../avatars";
 import { colorFor, formatDate, localDate, timeAgo } from "../format";
 import { StarsDisplay } from "./Stars";
 
-export function Avatar({ name, size }: { name: string; size: string }) {
+/** A foto da pessoa ou, sem foto, a inicial do nome num círculo colorido. */
+export function Avatar({ name, size, userId }: { name: string; size: string; userId?: number }) {
+  const url = useAvatarUrl(userId);
+  if (url) return <img src={url} alt="" aria-hidden className={`shrink-0 rounded-full object-cover ${size}`} />;
   return (
     <span
       aria-hidden
@@ -37,7 +41,7 @@ export default function WatchedBy({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-      <Avatar name={name} size="h-6 w-6 text-xs" />
+      <Avatar name={name} userId={userId} size="h-6 w-6 text-xs" />
       {rating != null && <StarsDisplay value={rating} size={14} />}
       <span>
         {consumedAt ? "Visto" : "Registrado"} por{" "}

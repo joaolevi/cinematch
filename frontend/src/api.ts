@@ -43,7 +43,7 @@ import type {
   WatchlistNow,
 } from "./types";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 const TOKEN_KEY = "tastory.token";
 
 export function getToken(): string | null {
@@ -138,6 +138,12 @@ export const api = {
   trending: (type?: MediaType, limit = 20) =>
     request<Media[]>("/media/trending", { query: { type, limit } }),
   showcase: () => request<Showcase>("/media/showcase"),
+  avatars: () => request<Record<string, string>>("/users/avatars"),
+  setAvatar: (image: string) => request<void>("/me/avatar", { method: "PUT", body: { image } }),
+  removeAvatar: () => request<void>("/me/avatar", { method: "DELETE" }),
+  editAccount: (data: { name?: string; email?: string }) => request<User>("/me", { method: "PATCH", body: data }),
+  changePassword: (current_password: string, new_password: string) =>
+    request<void>("/me/password", { method: "PUT", body: { current_password, new_password } }),
   media: (id: number) => request<MediaDetail>(`/media/${id}`),
 
   // Diário

@@ -118,8 +118,8 @@ export default function ProfilePage() {
         <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]">
           <div className={INK}>
             <div className="flex flex-wrap items-center gap-4">
-              <Avatar name={profile.name} size="h-16 w-16 text-2xl" />
-              <div className="min-w-0 flex-1">
+              <Avatar name={profile.name} userId={profile.id} size="h-16 w-16 text-2xl" />
+              <div className="min-w-0 flex-1 basis-48">
                 <h1 className="font-display text-3xl font-bold sm:text-4xl">{profile.name}</h1>
                 <p className="mt-1 text-sm text-stone-600">
                   {profile.restricted
@@ -156,7 +156,7 @@ export default function ProfilePage() {
               </div>
               {!profile.is_me && (
                 <button
-                  className={profile.following ? "btn-ghost" : "btn-primary"}
+                  className={`max-sm:w-full ${profile.following ? "btn-ghost" : "btn-primary"}`}
                   disabled={following}
                   onClick={async () => {
                     setFollowing(true);
@@ -231,6 +231,16 @@ export default function ProfilePage() {
                 </Link>
               </p>
             )}
+            {profile.is_me && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link to="/conta#perfil" className="btn-ghost px-3 py-1 text-sm">
+                  Trocar a foto e o nome
+                </Link>
+                <Link to="/diario" className="btn-ghost px-3 py-1 text-sm">
+                  Abrir o meu diário para registrar
+                </Link>
+              </div>
+            )}
           </div>
 
           {!profile.restricted && counted.length > 0 && (
@@ -264,7 +274,7 @@ export default function ProfilePage() {
               {people.list.map((p) => (
                 <li key={p.id}>
                   <Link to={`/pessoas/${p.id}`} className="flex items-center gap-2 text-sm font-semibold hover:text-accent">
-                    <Avatar name={p.name} size="h-8 w-8" />
+                    <Avatar name={p.name} userId={p.id} size="h-8 w-8" />
                     {p.name}
                   </Link>
                 </li>

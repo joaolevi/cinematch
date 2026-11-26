@@ -8,6 +8,7 @@ import MediaCard from "../components/MediaCard";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
 import ArrivalsNote from "../components/ArrivalsNote";
+import ChallengeCard from "../components/ChallengeCard";
 import RateReminder from "../components/RateReminder";
 import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
@@ -84,45 +85,6 @@ function Shelf(props: {
 }
 
 const shelfItem = "w-36 shrink-0 snap-start pt-2 sm:w-40";
-
-/** O desafio do tema do mês (RFF32): quantos títulos do tema registrar no mês e o selo de quem chega lá. */
-function ChallengeNote({ c, userId }: { c: Challenge; userId: number }) {
-  const done = Math.min(c.done.length, c.goal);
-  return (
-    <div className="card mt-3 max-w-3xl p-4">
-      {c.earned ? (
-        <p className="text-sm">
-          <span aria-hidden>🏅</span> Você ganhou o selo <b>"{c.badge}"</b>.{" "}
-          <Link to={`/pessoas/${userId}`} className="underline hover:text-accent">
-            Ver no meu perfil
-          </Link>
-        </p>
-      ) : (
-        <p className="text-sm">
-          <b>Desafio do mês:</b> registre {c.goal} títulos do tema até o fim do mês e ganhe o selo <b>"{c.badge}"</b>.
-        </p>
-      )}
-      <div className="mt-2 flex items-center gap-3">
-        <div
-          role="progressbar"
-          aria-label="Progresso do desafio"
-          aria-valuemin={0}
-          aria-valuemax={c.goal}
-          aria-valuenow={done}
-          className="h-2 flex-1 overflow-hidden rounded-full bg-line"
-        >
-          <div className="h-full rounded-full bg-accent" style={{ width: `${(100 * done) / c.goal}%` }} />
-        </div>
-        <span className="text-xs text-muted tabular-nums">
-          {done} de {c.goal}
-        </span>
-      </div>
-      {c.done.length > 0 && (
-        <p className="mt-1 text-xs text-muted">Já registrados: {c.done.map((m) => m.title).join(", ")}</p>
-      )}
-    </div>
-  );
-}
 
 /** Página inicial: um resumo de tudo, como a home do Letterboxd ou do Spotify. */
 export default function HomePage() {
@@ -282,16 +244,19 @@ export default function HomePage() {
         )}
       </div>
 
+      {/* O desafio do mês vem logo depois da aposta: é o convite do mês, e não um rodapé da prateleira do tema */}
+      {theme && challenge && user && <ChallengeCard c={challenge} userId={user.id} />}
+
       {diary && <RateReminder diary={diary} watchlist={watchlist} onSeen={setSeenTarget} />}
 
       {watchlist.length > 0 && (
         <Shelf
           title={
             <>
-              Da sua lista <ListName />
+              Da minha lista <ListName />
             </>
           }
-          label="Da sua lista Quero ver"
+          label="Da minha lista Quero ver"
           note="pra não esquecer"
           to="/listas"
           linkLabel="Ver lista"
@@ -415,7 +380,6 @@ export default function HomePage() {
           ))}
         </Shelf>
       )}
-      {theme && challenge && user && <ChallengeNote c={challenge} userId={user.id} />}
 
       {upcoming.length >= 3 && (
         <Shelf title="Em breve" note="pra anotar na agenda">

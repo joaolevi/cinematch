@@ -422,6 +422,8 @@ class ChallengeOut(BaseModel):
     badge: str
     done: list[MediaOut] = Field(description="Os títulos do tema que a pessoa registrou no mês")
     earned: bool
+    description: str | None = None
+    next: list[MediaOut] = Field(default=[], description="Até 4 títulos do tema que ainda não estão no diário, na ordem do tema")
 
 
 class ProfileOut(BaseModel):
@@ -739,3 +741,36 @@ class ShowcaseOut(BaseModel):
 
     pairs: list[ShowcasePairOut]
     albums: list[MediaOut]
+
+
+class AvatarIn(BaseModel):
+    image: str = Field(
+        max_length=420_000,
+        description='A foto como data URL, "data:image/jpeg;base64,...", já reduzida pela tela. JPEG, PNG ou WebP, até 300 KB',
+    )
+
+
+class AccountEditIn(BaseModel):
+    """Mudar o nome e o e-mail da conta (Minha conta). Só os campos enviados mudam."""
+
+    name: str | None = Field(default=None, min_length=2, max_length=120)
+    email: EmailStr | None = None
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str | None) -> str | None:
+        if v is not None and len(v.strip()) < 2:
+            raise ValueError("o nome deve ter pelo menos 2 caracteres")
+        return v.strip() if v else v
+
+
+class PasswordChangeIn(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=6)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if len(v.encode()) > MAX_PASSWORD_BYTES:
+            raise ValueError(f"a senha deve ter no máximo {MAX_PASSWORD_BYTES} bytes")
+        return v

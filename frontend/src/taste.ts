@@ -114,12 +114,12 @@ export function tasteOf(entries: DiaryEntry[], who?: string): Taste | null {
   const liked = entries.filter((e) => e.rating == null || e.rating >= 3);
   const base = liked.length >= MIN_ENTRIES_FOR_TASTE ? liked : entries;
 
-  const [topGenre] = countBy(base, (e) => e.media.genres.slice(0, 2));
+  const [topGenre] = countBy(base, (e) => e.media.genres); // como os gráficos, para a frase e as barras concordarem
   if (!topGenre) return null;
   const highlight = genreTeam(topGenre[0]);
 
   // A década sai dos títulos do gênero principal, para a frase não juntar a MPB dos discos com a década dos filmes
-  const dated = base.filter((e) => e.media.year && e.media.genres.slice(0, 2).includes(topGenre[0]));
+  const dated = base.filter((e) => e.media.year && e.media.genres.includes(topGenre[0]));
   const [topDecade] = countBy(dated, (e) => [String(decadeOf(e.media.year ?? 0))]);
   const decade = topDecade && topDecade[1] / dated.length >= 0.4 ? decadeName(Number(topDecade[0])) : null;
 
@@ -151,6 +151,12 @@ export interface Note {
 const NOTE_COLORS = ["#f6d27a", "#f3a48f", "#b7d1b9", "#f2b8c8", "#b9d0e4", "#d4c3ea"];
 
 /** Os números grandes do diário, escritos em post-its, na primeira pessoa. */
+/** "2026-11" da data em que o título foi registrado, no fuso de quem usa. */
+function localMonthOf(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export function notesOf(entries: DiaryEntry[], today = new Date(), who?: string): Note[] {
   const month = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`; // no fuso de quem usa
   const monthName = today.toLocaleDateString("pt-BR", { month: "long" });
@@ -162,7 +168,7 @@ export function notesOf(entries: DiaryEntry[], today = new Date(), who?: string)
       label: `${entries.length === 1 ? "título" : "títulos"} ${who ? "no diário" : "no meu diário"}`,
     },
     {
-      value: String(entries.filter((e) => e.consumed_at?.startsWith(month)).length),
+      value: String(entries.filter((e) => (e.consumed_at ?? localMonthOf(e.created_at)).startsWith(month)).length),
       label: entries.some((e) => e.media.type === "album")
         ? `${who ? "viu ou ouviu" : "vi ou ouvi"} em ${monthName}`
         : `${who ? "viu" : "vi"} em ${monthName}`,

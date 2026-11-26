@@ -406,7 +406,7 @@ function UsersTab() {
                 <tr key={u.id} className="border-b border-line/60">
                   <td className="py-3 pr-4">
                     <div className="flex items-center gap-3">
-                      <Avatar name={u.name} size="h-8 w-8" />
+                      <Avatar name={u.name} userId={u.id} size="h-8 w-8" />
                       <div className="min-w-0">
                         <p className="font-semibold">
                           {u.name}

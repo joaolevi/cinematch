@@ -19,14 +19,15 @@ export function Buttons({
   onSeen: () => void;
   big?: boolean;
 }) {
-  const size = big ? "px-5" : "flex-1 px-3";
+  // Nos cards, os dois botões ficam sempre lado a lado, mesmo com "Quero ouvir" e "Já ouvi", que são mais longos
+  const size = big ? "px-5 whitespace-nowrap" : "min-w-0 px-2 text-center leading-tight";
   const words = verbs(rec.media.type);
   return (
-    <div className={`flex flex-wrap gap-1.5 ${big ? "mt-5 gap-2" : "mt-auto pt-2.5"}`}>
-      <button className={`btn-want whitespace-nowrap ${size}`} onClick={() => act(rec.media, "want")}>
+    <div className={big ? "mt-5 flex flex-wrap gap-2" : "mt-auto grid grid-cols-2 gap-1.5 pt-2.5"}>
+      <button className={`btn-want ${size}`} onClick={() => act(rec.media, "want")}>
         {words.want}
       </button>
-      <button className={`btn-seen whitespace-nowrap ${size}`} onClick={onSeen}>
+      <button className={`btn-seen ${size}`} onClick={onSeen}>
         {words.seen}
       </button>
       {big && (
