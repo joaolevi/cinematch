@@ -91,11 +91,17 @@ export default function Layout() {
             <TabLink to="/listas" position={3}>
               Listas
             </TabLink>
-            <TabLink to="/comunidade" position={4}>
+            {/* O perfil é a ponte entre o pessoal e o social: o que as outras pessoas veem do meu diário */}
+            {user && (
+              <TabLink to={`/pessoas/${user.id}`} end position={4}>
+                Meu perfil
+              </TabLink>
+            )}
+            <TabLink to="/comunidade" position={5}>
               Comunidade
             </TabLink>
             {user?.role === "admin" && (
-              <TabLink to="/admin" position={5}>
+              <TabLink to="/admin" position={6}>
                 Administração
               </TabLink>
             )}

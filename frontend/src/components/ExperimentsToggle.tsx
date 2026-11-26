@@ -15,7 +15,9 @@ export default function ExperimentsToggle() {
         {inside ? (
           <>
             Sua conta está no grupo <strong>{user.ab_group}</strong>
-            {user.ab_group === "A" ? ", que recebe as duas partes." : ", que recebe só a parte do parecido."}
+            {user.ab_group === "A"
+              ? ", que recebe o recomendador completo: o seu gosto somado ao de quem é parecido com você."
+              : ", que recebe sugestões só pelo que você curte, sem o gosto de outras pessoas."}
           </>
         ) : (
           "Sua conta está fora dos experimentos: você recebe as sugestões completas, e as suas reações não entram na comparação."
