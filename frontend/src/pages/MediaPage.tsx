@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import Carousel from "../components/Carousel";
 import MediaCard from "../components/MediaCard";
@@ -134,7 +134,6 @@ export default function MediaPage() {
   return <MediaView key={id} mediaId={Number(id)} reviewsOnly={reviewsOnly} />;
 }
 
-const REVIEWS_ON_PAGE = 3; // na página do título; as outras ficam em /media/{id}/resenhas
 
 /** Série que a pessoa está assistindo (RFF24): em que temporada ela está, com troca rápida. */
 /**
@@ -233,6 +232,7 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
   const [providers, setProviders] = useState<Provider[]>([]);
   const [showSeen, setShowSeen] = useState(false);
   const [reviewTab, setReviewTab] = useState<"populares" | "recentes" | "seguindo">("populares");
+  const [params, setParams] = useSearchParams();
   const [fullOverview, setFullOverview] = useState(false); // no celular, a sinopse começa em 4 linhas
   const [stamp, setStamp] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -353,9 +353,22 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
     />
   );
 
-  // As resenhas: na página do título, as três primeiras; em /resenhas, todas (como o Letterboxd separa as resenhas)
-  const reviewsSection = (limit?: number) => (
-        <section className={limit ? "mt-12 max-w-4xl" : "max-w-4xl"}>
+  type Tab = "episodios" | "faixas" | "resenhas" | "ligados" | "parecidos";
+  const tabs = (
+    [
+      media.type === "series" && media.seasons.length > 0 && ["episodios", "Episódios", media.seasons.length],
+      album && ["faixas", "Faixas", null],
+      ["resenhas", "Resenhas", media.reviews.length],
+      connections.length > 0 && ["ligados", album ? "Para ver depois" : "Para ouvir depois", connections.length],
+      similar.length > 0 && ["parecidos", album ? "Parecidos" : media.type === "series" ? "Parecidas" : "Parecidos", null],
+    ] as (false | [Tab, string, number | null])[]
+  ).filter((t): t is [Tab, string, number | null] => !!t);
+  const asked = (reviewsOnly ? "resenhas" : params.get("aba")) as Tab | null;
+  const tab: Tab = tabs.find(([key]) => key === asked)?.[0] ?? tabs[0][0];
+
+  // As resenhas, todas, na aba Resenhas
+  const reviewsSection = () => (
+        <section className="max-w-4xl">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-xl font-bold">Resenhas</h2>
             {media.reviews.length > 1 && (
@@ -393,7 +406,7 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
             {reviewTab === "seguindo" && shownReviews.length === 0 && (
               <HandNote className="py-4">Ninguém que você segue escreveu sobre este título ainda.</HandNote>
             )}
-            {(limit ? shownReviews.slice(0, limit) : shownReviews).map((r) => (
+            {shownReviews.map((r) => (
               // Como as resenhas do Letterboxd: a foto à esquerda, "Resenha de" com o nome e a nota, o texto e a conversa
               <article key={r.id} className="flex gap-4 py-5">
                 {r.user_id ? (
@@ -424,36 +437,8 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
               </article>
             ))}
           </div>
-          {limit != null && shownReviews.length > limit && (
-            <Link to={`/media/${media.id}/resenhas`} className="mt-4 inline-block text-sm font-bold text-accent hover:underline">
-              Ver todas as {media.reviews.length} resenhas →
-            </Link>
-          )}
-        </section>
+          </section>
   );
-
-  if (reviewsOnly) {
-    return (
-      <div className="mx-auto max-w-4xl">
-        <Link to={`/media/${media.id}`} className="text-sm font-semibold text-accent hover:underline">
-          ← {media.title}
-        </Link>
-        <header className="mt-4 mb-8 flex items-center gap-4">
-          <span className="w-16 shrink-0">
-            <Poster media={media} compact rounded="rounded-md" />
-          </span>
-          <div>
-            <p className="font-hand text-xl font-bold text-accent">Todas as resenhas</p>
-            <h1 className="text-3xl font-bold">
-              {media.title} {media.year && <span className="text-xl font-normal text-muted">{media.year}</span>}
-            </h1>
-          </div>
-        </header>
-        {reviewsSection()}
-        {seenModal}
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -653,65 +638,84 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
         </div>
       </div>
 
-      {album && <Tracks album={media} />}
-
-      {media.type === "series" && (
-        <Episodes
-          mediaId={media.id}
-          seasons={media.seasons}
-          counts={status.episodes ?? {}}
-          onChange={() => {
-            diaryChanged();
-            load();
-          }}
-        />
-      )}
-
-      {connections.length > 0 && (
-        <section className="mt-12">
-          <h2 className="font-display text-xl font-bold">{album ? "Para ver depois" : "Para ouvir depois"}</h2>
-          <p className="mt-1 text-sm text-muted">
-            {album
-              ? "Filmes e séries ligados a este álbum."
-              : media.type === "series"
-                ? "Álbuns ligados a esta série: a trilha, quem compôs e quem do elenco também canta."
-                : "Álbuns ligados a este filme: a trilha, quem compôs, quem do elenco canta e a música de quem ele conta a história."}
-            {sameReason && ` Todos por um motivo: ${connections[0].reason}.`}
-          </p>
-          <div className="mt-4">
-            <Carousel label={album ? "para ver depois" : "para ouvir depois"}>
-              {connections.map((c) => (
-                <div key={c.media.id} className="w-36 shrink-0 snap-start sm:w-40">
-                  <MediaCard media={c.media}>
-                    {!sameReason && (
-                      <p className="mt-1 line-clamp-2 text-xs text-muted" title={c.reason}>
-                        {c.reason}
-                      </p>
-                    )}
-                  </MediaCard>
-                </div>
-              ))}
-            </Carousel>
-          </div>
-        </section>
-      )}
-
-      {similar.length > 0 && (
-        <section className="mt-12">
-          <h2 className="font-display text-xl font-bold">{album ? "Álbuns parecidos" : "Títulos parecidos"}</h2>
-          <div className="mt-4">
-            <Carousel label="títulos parecidos">
-              {similar.map((m) => (
-                <div key={m.id} className="w-36 shrink-0 snap-start sm:w-40">
-                  <MediaCard media={m} />
-                </div>
-              ))}
-            </Carousel>
-          </div>
-        </section>
-      )}
-
-      {reviewsSection(REVIEWS_ON_PAGE)}
+      {/* As partes da página em abas, como no Letterboxd: o topo continua com o essencial, e o resto não vira uma
+          rolagem sem fim. A aba aberta fica no endereço (?aba=...), para dar para mandar o link */}
+      <div role="tablist" aria-label={`Sobre ${media.title}`} className="mt-10 flex gap-6 overflow-x-auto border-b border-line/60">
+        {tabs.map(([key, label, count]) => (
+          <button
+            key={key}
+            role="tab"
+            id={`aba-${key}`}
+            aria-selected={tab === key}
+            aria-controls="painel-do-titulo"
+            onClick={() => setParams(key === tabs[0][0] ? {} : { aba: key }, { replace: true })}
+            className={`-mb-px shrink-0 cursor-pointer border-b-2 px-1 pb-3 text-sm font-semibold transition ${
+              tab === key ? "border-accent text-accent" : "border-transparent text-stone-300 hover:text-cream"
+            }`}
+          >
+            {label}
+            {count != null && count > 0 && <span className="ml-1.5 text-xs font-normal text-muted">{count}</span>}
+          </button>
+        ))}
+      </div>
+      {/* Dentro das abas, o título de cada parte fica só para o leitor de tela: a aba já diz o que é */}
+      <div id="painel-do-titulo" role="tabpanel" aria-labelledby={`aba-${tab}`} className="mt-6 [&_h2]:sr-only [&>section]:mt-0">
+        {tab === "faixas" && <Tracks album={media} />}
+        {tab === "episodios" && (
+          <Episodes
+            mediaId={media.id}
+            seasons={media.seasons}
+            counts={status.episodes ?? {}}
+            onChange={() => {
+              diaryChanged();
+              load();
+            }}
+          />
+        )}
+        {tab === "ligados" && (
+          <section className="mt-12">
+            <h2 className="font-display text-xl font-bold">{album ? "Para ver depois" : "Para ouvir depois"}</h2>
+            <p className="mt-1 text-sm text-muted">
+              {album
+                ? "Filmes e séries ligados a este álbum."
+                : media.type === "series"
+                  ? "Álbuns ligados a esta série: a trilha, quem compôs e quem do elenco também canta."
+                  : "Álbuns ligados a este filme: a trilha, quem compôs, quem do elenco canta e a música de quem ele conta a história."}
+              {sameReason && ` Todos por um motivo: ${connections[0].reason}.`}
+            </p>
+            <div className="mt-4">
+              <Carousel label={album ? "para ver depois" : "para ouvir depois"}>
+                {connections.map((c) => (
+                  <div key={c.media.id} className="w-36 shrink-0 snap-start sm:w-40">
+                    <MediaCard media={c.media}>
+                      {!sameReason && (
+                        <p className="mt-1 line-clamp-2 text-xs text-muted" title={c.reason}>
+                          {c.reason}
+                        </p>
+                      )}
+                    </MediaCard>
+                  </div>
+                ))}
+              </Carousel>
+            </div>
+          </section>
+        )}
+        {tab === "parecidos" && (
+          <section className="mt-12">
+            <h2 className="font-display text-xl font-bold">{album ? "Álbuns parecidos" : "Títulos parecidos"}</h2>
+            <div className="mt-4">
+              <Carousel label="títulos parecidos">
+                {similar.map((m) => (
+                  <div key={m.id} className="w-36 shrink-0 snap-start sm:w-40">
+                    <MediaCard media={m} />
+                  </div>
+                ))}
+              </Carousel>
+            </div>
+          </section>
+        )}
+        {tab === "resenhas" && reviewsSection()}
+      </div>
 
       {/* De onde vêm os dados e com que licença (RNFF02) */}
       {media.credit && (
