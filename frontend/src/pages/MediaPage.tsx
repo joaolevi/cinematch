@@ -6,13 +6,15 @@ import MediaCard from "../components/MediaCard";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
 import Episodes from "../components/Episodes";
+import RatingsPanel from "../components/RatingsPanel";
 import ReviewTalk from "../components/ReviewTalk";
+import SpoilerText from "../components/SpoilerText";
 import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
 import { diaryChanged, useDiaryVersion } from "../seen";
 import { StarsDisplay } from "../components/Stars";
 import WatchedBy from "../components/WatchedBy";
-import { colorFor, formatDate, formatRating, MEDIA_STYLE, plural, SERVICE_LABEL, verbs } from "../format";
+import { colorFor, formatDate, MEDIA_STYLE, SERVICE_LABEL, verbs } from "../format";
 import type { Connection, Media, MediaDetail, Provider, Season, UserList } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
@@ -196,6 +198,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [showSeen, setShowSeen] = useState(false);
+  const [reviewTab, setReviewTab] = useState<"populares" | "recentes" | "seguindo">("populares");
   const [fullOverview, setFullOverview] = useState(false); // no celular, a sinopse começa em 4 linhas
   const [stamp, setStamp] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -236,6 +239,13 @@ function MediaView({ mediaId }: { mediaId: number }) {
   const watchlist = lists.find((l) => l.is_watchlist);
   const customLists = lists.filter((l) => !l.is_watchlist);
   const status = media.my_status;
+  // Resenhas como no Letterboxd: as mais curtidas primeiro, as recentes ou só as de quem eu sigo
+  const shownReviews =
+    reviewTab === "populares"
+      ? [...media.reviews].sort((a, b) => b.likes - a.likes || b.created_at.localeCompare(a.created_at))
+      : reviewTab === "seguindo"
+        ? media.reviews.filter((r) => r.following)
+        : media.reviews;
   // Na música, os cards de "Para ver depois" costumam ter o mesmo motivo: ele vai uma vez só, no subtítulo
   const sameReason = connections.length > 1 && connections.every((c) => c.reason === connections[0].reason);
   const album = media.type === "album";
@@ -364,14 +374,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
               )}
             </dl>
 
-            <div className="mt-5 flex items-center gap-3 text-sm">
-              {media.avg_rating != null && <StarsDisplay value={media.avg_rating} />}
-              <span className="text-muted">
-                {media.avg_rating != null
-                  ? `${formatRating(media.avg_rating)} de média em ${plural(media.ratings_count, "nota", "notas")}`
-                  : "Ainda sem notas"}
-              </span>
-            </div>
+            <RatingsPanel media={media} />
 
             <div className="mt-6 flex flex-wrap gap-2">
               <button className="btn-primary" onClick={() => setShowSeen(true)}>
@@ -497,7 +500,31 @@ function MediaView({ mediaId }: { mediaId: number }) {
       )}
 
       <section className="mt-12 max-w-4xl">
-        <h2 className="font-display text-xl font-bold">Resenhas</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-xl font-bold">Resenhas</h2>
+          {media.reviews.length > 1 && (
+            <div role="group" aria-label="Ordem das resenhas" className="inline-flex rounded-full border border-line bg-bg/40 p-0.5">
+              {(
+                [
+                  ["populares", "Populares"],
+                  ["recentes", "Recentes"],
+                  ["seguindo", "De quem eu sigo"],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  aria-pressed={reviewTab === key}
+                  onClick={() => setReviewTab(key)}
+                  className={`cursor-pointer rounded-full px-3 py-0.5 text-sm transition ${
+                    reviewTab === key ? "bg-accent font-bold text-bg" : "text-stone-300 hover:text-cream"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         {media.reviews.length === 0 && (
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <HandNote>Ninguém escreveu sobre este {media.type === "album" ? "álbum" : "título"} ainda. Que tal ser a primeira pessoa?</HandNote>
@@ -507,7 +534,10 @@ function MediaView({ mediaId }: { mediaId: number }) {
           </div>
         )}
         <div className="mt-2 divide-y divide-line/60">
-          {media.reviews.map((r) => (
+          {reviewTab === "seguindo" && shownReviews.length === 0 && (
+            <HandNote className="py-4">Ninguém que você segue escreveu sobre este título ainda.</HandNote>
+          )}
+          {shownReviews.map((r) => (
             <article key={r.id} className="py-4">
               <WatchedBy
                 name={r.user_name}
@@ -516,7 +546,7 @@ function MediaView({ mediaId }: { mediaId: number }) {
                 consumedAt={r.consumed_at}
                 createdAt={r.created_at}
               />
-              <p className="mt-2 break-words whitespace-pre-line text-stone-200">{r.review}</p>
+              <SpoilerText text={r.review} spoiler={r.spoiler} className="mt-2 text-stone-200" />
               <ReviewTalk entry={r} />
             </article>
           ))}
@@ -543,6 +573,8 @@ function MediaView({ mediaId }: { mediaId: number }) {
           media={media}
           initialRating={status.rating}
           initialDate={status.consumed_at}
+          initialSpoiler={status.spoiler ?? false}
+          withSpoiler
           onClose={() => setShowSeen(false)}
           onDelete={
             status.diary_entry_id
@@ -554,15 +586,21 @@ function MediaView({ mediaId }: { mediaId: number }) {
                 }
               : undefined
           }
-          onConfirm={async (rating, review, date) => {
+          onConfirm={async (rating, review, date, spoiler) => {
             if (status.diary_entry_id) {
               await api.updateDiary(status.diary_entry_id, {
                 rating,
                 consumed_at: date,
+                spoiler,
                 ...(review ? { review } : {}),
               });
             } else {
               await api.feedback(mediaId, "seen", rating, review, date);
+              // O "Já vi" pela sugestão não leva o spoiler: ele é marcado no registro que acabou de nascer
+              if (spoiler) {
+                const created = (await api.media(mediaId)).my_status.diary_entry_id;
+                if (created) await api.updateDiary(created, { spoiler: true });
+              }
               setStamp(Date.now());
             }
             diaryChanged();

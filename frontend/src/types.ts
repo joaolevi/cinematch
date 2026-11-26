@@ -64,6 +64,8 @@ export interface Connection {
 
 export interface Review {
   id: number;
+  spoiler?: boolean;
+  following?: boolean;
   user_id?: number | null;
   likes: number;
   liked: boolean;
@@ -97,6 +99,8 @@ export type Progress = "seen" | "watching";
 
 export interface MediaDetail extends Media {
   actors: string[];
+  histogram: number[];
+  friends: { id: number; name: string; rating: number | null; status: Progress }[];
   seasons: Season[];
   credit: Credit | null;
   avg_rating: number | null;
@@ -109,6 +113,7 @@ export interface MediaDetail extends Media {
     status: Progress | null;
     season: number | null;
     episodes?: Record<string, number>;
+    spoiler?: boolean;
     in_watchlist: boolean;
     dismissed: boolean;
     list_ids: number[];
@@ -127,6 +132,7 @@ export interface DiaryEntry {
   excluded?: boolean;
   status?: Progress;
   season?: number | null;
+  spoiler?: boolean;
 }
 
 export interface UserList {
@@ -331,6 +337,7 @@ export interface CommunityEntry {
   created_at: string;
   status?: Progress;
   season?: number | null;
+  spoiler?: boolean;
   /** Curtidas e comentários na resenha (RFF30) */
   likes: number;
   liked: boolean;
@@ -363,6 +370,7 @@ export interface Profile {
   id: number;
   name: string;
   is_me: boolean;
+  pinned: Media[];
   counts: { movie: number; series: number; album: number };
   favorites: { media: Media; rating: number | null }[];
   recent: { media: Media; rating: number | null }[];

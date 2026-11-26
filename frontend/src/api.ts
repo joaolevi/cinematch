@@ -139,6 +139,7 @@ export const api = {
   trending: (type?: MediaType, limit = 20) =>
     request<Media[]>("/media/trending", { query: { type, limit } }),
   showcase: () => request<Showcase>("/media/showcase"),
+  setFavorites: (media_ids: number[]) => request<Media[]>("/me/favorites", { method: "PUT", body: { media_ids } }),
   episodes: (mediaId: number, season: number) => request<Episode[]>(`/media/${mediaId}/seasons/${season}/episodes`),
   rateEpisode: (mediaId: number, season: number, episode: number, data: { rating: number | null; note: string | null }) =>
     request<Episode>(`/media/${mediaId}/seasons/${season}/episodes/${episode}`, { method: "PUT", body: data }),
@@ -161,7 +162,7 @@ export const api = {
     request<DiaryEntry>("/diary", { method: "POST", body: { media_id, status: "watching", season } }),
   updateDiary: (
     id: number,
-    data: { rating?: number | null; review?: string | null; consumed_at?: string | null; excluded?: boolean; season?: number },
+    data: { rating?: number | null; review?: string | null; consumed_at?: string | null; excluded?: boolean; season?: number; spoiler?: boolean },
   ) =>
     request<DiaryEntry>(`/diary/${id}`, { method: "PATCH", body: data }),
   deleteDiary: (id: number) => request<void>(`/diary/${id}`, { method: "DELETE" }),

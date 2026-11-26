@@ -366,9 +366,11 @@ export default function DiaryPage() {
           initialRating={editing.rating}
           initialReview={editing.review ?? ""}
           initialDate={editing.consumed_at}
+          initialSpoiler={editing.spoiler ?? false}
+          withSpoiler
           onClose={() => setEditing(null)}
-          onConfirm={async (rating, review, date) => {
-            await api.updateDiary(editing.id, { rating, review, consumed_at: date });
+          onConfirm={async (rating, review, date, spoiler) => {
+            await api.updateDiary(editing.id, { rating, review, consumed_at: date, spoiler });
             setEditing(null);
             diaryChanged();
           }}

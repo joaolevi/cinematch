@@ -10,6 +10,7 @@ import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
 import ReviewTalk from "../components/ReviewTalk";
+import SpoilerText from "../components/SpoilerText";
 
 const PAGE = 20;
 
@@ -45,7 +46,7 @@ function Post({ entry, position }: { entry: CommunityEntry; position: number }) 
         </div>
         {entry.review && (
           <>
-            <p className="mt-2 break-words whitespace-pre-line text-stone-200">{entry.review}</p>
+            <SpoilerText text={entry.review} spoiler={entry.spoiler} className="mt-2 text-stone-200" />
             <ReviewTalk entry={entry} />
           </>
         )}

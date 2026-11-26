@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..auth import get_current_user
 from ..db import get_db
-from ..models import DiaryEntry, Follow, User, UserAvatar
+from ..models import DiaryEntry, Follow, Media, User, UserAvatar
 from ..schemas import (
     CompatibilityOut, DiaryOut, MediaOut, PersonOut, ProfileItemOut, ProfileOut, RecommendationOut, SuggestedPersonOut,
 )
@@ -179,7 +179,18 @@ def profile(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_
         followers=followers,
         follows=follows,
         badges=badges(db, user.id),
+        pinned=pinned_media(db, user),
     )
+
+
+def pinned_media(db: Session, user: User) -> list:
+    """Os quatro favoritos, na ordem escolhida. Um título que saiu do diário sai dos favoritos também."""
+    ids = list(user.pinned or [])
+    if not ids:
+        return []
+    in_diary = set(db.scalars(select(DiaryEntry.media_id).where(DiaryEntry.user_id == user.id, DiaryEntry.media_id.in_(ids))))
+    by_id = {m.id: m for m in db.scalars(select(Media).where(Media.id.in_(ids)))}
+    return [MediaOut.model_validate(by_id[i]) for i in ids if i in by_id and i in in_diary]
 
 
 MAX_DIARY = 1000

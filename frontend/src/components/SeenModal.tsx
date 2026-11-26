@@ -17,6 +17,8 @@ export default function SeenModal({
   initialRating = null,
   initialReview = "",
   initialDate = null,
+  initialSpoiler = false,
+  withSpoiler = false,
   onClose,
   onConfirm,
   onDelete,
@@ -25,14 +27,18 @@ export default function SeenModal({
   initialRating?: number | null;
   initialReview?: string;
   initialDate?: string | null;
+  initialSpoiler?: boolean;
+  /** Mostra "Tem spoiler" quando há resenha: nas telas que guardam essa marca */
+  withSpoiler?: boolean;
   onClose: () => void;
-  onConfirm: (rating: number | null, review: string, consumedAt: string | null) => Promise<void> | void;
+  onConfirm: (rating: number | null, review: string, consumedAt: string | null, spoiler: boolean) => Promise<void> | void;
   /** Só na edição: tira o título do diário */
   onDelete?: () => Promise<void> | void;
 }) {
   const [rating, setRating] = useState<number | null>(initialRating);
   const [review, setReview] = useState(initialReview);
   const [date, setDate] = useState(initialDate ?? "");
+  const [spoiler, setSpoiler] = useState(initialSpoiler);
   const [saving, setSaving] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useFocusTrap(box);
@@ -108,6 +114,12 @@ export default function SeenModal({
           maxLength={2000}
           onChange={(e) => setReview(e.target.value)}
         />
+        {withSpoiler && review.trim() && (
+          <label className="mt-2 flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={spoiler} onChange={(e) => setSpoiler(e.target.checked)} className="h-4 w-4 accent-[#b9452f]" />
+            Minha resenha conta o que acontece (tem spoiler)
+          </label>
+        )}
 
         <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
           {onDelete && (
@@ -127,7 +139,7 @@ export default function SeenModal({
             onClick={async () => {
               setSaving(true);
               try {
-                await onConfirm(rating, review, date || null);
+                await onConfirm(rating, review, date || null, spoiler && !!review.trim());
               } finally {
                 setSaving(false);
               }

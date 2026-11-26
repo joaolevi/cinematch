@@ -468,6 +468,57 @@
         ]
       }
     },
+    "/me/favorites": {
+      "put": {
+        "tags": [
+          "conta"
+        ],
+        "summary": "Set Favorites",
+        "description": "Escolhe os quatro favoritos do perfil, na ordem. Só valem títulos do próprio diário; repetidos contam uma vez.",
+        "operationId": "set_favorites_me_favorites_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinnedIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MediaOut"
+                  },
+                  "type": "array",
+                  "title": "Response Set Favorites Me Favorites Put"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/me/password": {
       "put": {
         "tags": [
@@ -5588,6 +5639,11 @@
             ],
             "title": "Season"
           },
+          "spoiler": {
+            "type": "boolean",
+            "title": "Spoiler",
+            "default": false
+          },
           "likes": {
             "type": "integer",
             "title": "Likes",
@@ -5796,6 +5852,12 @@
             ],
             "title": "Consumed At"
           },
+          "spoiler": {
+            "type": "boolean",
+            "title": "Spoiler",
+            "description": "A resenha conta o que acontece",
+            "default": false
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -5888,6 +5950,11 @@
             "description": "Não conta no gosto (RFF07)",
             "default": false
           },
+          "spoiler": {
+            "type": "boolean",
+            "title": "Spoiler",
+            "default": false
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -5972,6 +6039,18 @@
             ],
             "title": "Excluded",
             "description": "true: o registro deixa de contar no gosto (RFF07)"
+          },
+          "spoiler": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spoiler",
+            "description": "A resenha conta o que acontece"
           },
           "status": {
             "anyOf": [
@@ -6289,6 +6368,45 @@
           "action"
         ],
         "title": "FeedbackIn"
+      },
+      "FriendRatingOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "seen",
+              "watching"
+            ],
+            "title": "Status",
+            "default": "seen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "rating"
+        ],
+        "title": "FriendRatingOut"
       },
       "HTTPValidationError": {
         "properties": {
@@ -6708,6 +6826,24 @@
             },
             "type": "array",
             "title": "Actors"
+          },
+          "histogram": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Histogram",
+            "description": "Quantas notas de cada valor, de 0,5 a 5 (10 posições)",
+            "default": []
+          },
+          "friends": {
+            "items": {
+              "$ref": "#/components/schemas/FriendRatingOut"
+            },
+            "type": "array",
+            "title": "Friends",
+            "description": "Quem eu sigo e registrou o título, com a nota",
+            "default": []
           },
           "seasons": {
             "items": {
@@ -7376,6 +7512,12 @@
             "description": "Série: quantos episódios a pessoa marcou em cada temporada",
             "default": {}
           },
+          "spoiler": {
+            "type": "boolean",
+            "title": "Spoiler",
+            "description": "Se a resenha da pessoa está marcada como spoiler",
+            "default": false
+          },
           "in_watchlist": {
             "type": "boolean",
             "title": "In Watchlist",
@@ -7481,6 +7623,24 @@
           "name"
         ],
         "title": "PersonOut"
+      },
+      "PinnedIn": {
+        "properties": {
+          "media_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "title": "Media Ids",
+            "description": "Até 4 títulos do próprio diário, na ordem em que aparecem"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media_ids"
+        ],
+        "title": "PinnedIn"
       },
       "PreferencesIn": {
         "properties": {
@@ -7616,6 +7776,15 @@
           "is_me": {
             "type": "boolean",
             "title": "Is Me"
+          },
+          "pinned": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "type": "array",
+            "title": "Pinned",
+            "description": "Os quatro favoritos que a pessoa escolheu, na ordem dela",
+            "default": []
           },
           "counts": {
             "additionalProperties": {
@@ -7917,6 +8086,18 @@
             "title": "Comments",
             "description": "Comentários visíveis na resenha (RFF30)",
             "default": 0
+          },
+          "spoiler": {
+            "type": "boolean",
+            "title": "Spoiler",
+            "description": "A resenha conta o que acontece; a tela mostra escondida",
+            "default": false
+          },
+          "following": {
+            "type": "boolean",
+            "title": "Following",
+            "description": "Se quem vê segue quem escreveu",
+            "default": false
           }
         },
         "type": "object",

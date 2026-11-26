@@ -78,6 +78,7 @@ def community(
                 created_at=e.created_at,
                 status=e.status or "seen",
                 season=e.season,
+                spoiler=bool(e.spoiler),
                 likes=likes.get(e.id, 0) if has_review(e) else 0,
                 liked=e.id in liked and has_review(e),
                 comments=comments.get(e.id, 0) if has_review(e) else 0,

@@ -10,11 +10,12 @@ from sqlalchemy.orm import Session
 from .. import crud
 from ..auth import get_current_user
 from ..db import get_db
-from ..models import DiaryEntry, Dismissed, ListItem, Media, ReviewComment, ReviewLike, User, UserList
+from ..models import DiaryEntry, Dismissed, Follow, ListItem, Media, ReviewComment, ReviewLike, User, UserList
 from ..schemas import (
     ConnectionOut, MediaDetailOut, MediaFacetsOut, MediaOut, MediaPage, MediaType, MoodOut, MyStatus, OccasionOut, ProviderOut,
     ReviewOut, ServiceOut,
     ShowcaseOut,
+    FriendRatingOut,
 )
 from ..services.bridges import connections, showcase
 from .community import counts_by_entry
@@ -216,16 +217,19 @@ def media_detail(
             visible_owner(user.id),  # só as resenhas de quem deixa ver (RFF10)
         )
         .order_by(DiaryEntry.created_at.desc())
-        .limit(20)
+        .limit(50)
     ).all()
     # Curtir e comentar a resenha também na página do título, como na Comunidade (RFF30)
     ids = [e.id for e in entries]
     likes = counts_by_entry(db, ReviewLike.entry_id, ids)
     comments = counts_by_entry(db, ReviewComment.entry_id, ids, ReviewComment.hidden.is_(False))
     liked = set(db.scalars(select(ReviewLike.entry_id).where(ReviewLike.entry_id.in_(ids), ReviewLike.user_id == user.id)))
+    follows = set(db.scalars(select(Follow.followed_id).where(Follow.follower_id == user.id)))
     reviews = [
         ReviewOut(
             id=e.id,
+            spoiler=bool(e.spoiler),
+            following=e.user_id in follows,
             user_id=e.user_id,
             user_name=e.user.name,
             rating=e.rating,
@@ -257,13 +261,29 @@ def media_detail(
         status=mine.status if mine else None,
         season=mine.season if mine else None,
         episodes=counts_by_season(db, user.id, media_id) if media.type == "series" else {},
+        spoiler=bool(mine.spoiler) if mine else False,
         in_watchlist=any(is_wl for _, is_wl in lists),
         dismissed=dismissed is not None,
         list_ids=[lid for lid, is_wl in lists if not is_wl],
     )
+    # A distribuição das notas, como a do Letterboxd: 10 colunas, de 0,5 a 5
+    histogram = [0] * 10
+    for (rating,) in db.execute(select(DiaryEntry.rating).where(DiaryEntry.media_id == media_id, DiaryEntry.rating.is_not(None))):
+        histogram[min(9, max(0, round(rating * 2) - 1))] += 1
+    # Quem eu sigo e registrou o título, com a nota: a prova social que mais pesa (respeitando quem vê o quê)
+    friend_rows = db.execute(
+        select(User.id, User.name, DiaryEntry.rating, DiaryEntry.status)
+        .join(DiaryEntry, DiaryEntry.user_id == User.id)
+        .where(DiaryEntry.media_id == media_id, User.id.in_(follows), visible_owner(user.id))
+        .order_by(DiaryEntry.rating.desc().nulls_last())
+        .limit(12)
+    ).all()
+    friends = [FriendRatingOut(id=i, name=n, rating=r, status=st or "seen") for i, n, r, st in friend_rows]
     return MediaDetailOut(
         **MediaOut.model_validate(media).model_dump(),
         actors=media.actors or [],
+        histogram=histogram,
+        friends=friends,
         seasons=media.seasons or [] if media.type == "series" else [],
         credit=credit_for(media),
         avg_rating=round(float(avg), 2) if avg is not None else None,
