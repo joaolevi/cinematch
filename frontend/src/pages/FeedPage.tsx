@@ -212,7 +212,25 @@ export default function FeedPage() {
     [mood, maxMinutes, occasion, onlyMine],
   );
   const hasServices = (user?.services.length ?? 0) > 0;
-  const [showFilters, setShowFilters] = useState(false); // no celular, os filtros começam recolhidos
+  // O painel de pedir e filtrar pode ser escondido, e a escolha fica neste navegador. Sem escolha, ele começa aberto
+  // no computador e recolhido no celular, para a primeira sugestão aparecer sem rolar
+  const [showFilters, setShowFiltersState] = useState(() => {
+    try {
+      const saved = localStorage.getItem("tastory.paravoce.filtros");
+      if (saved) return saved === "abertos";
+    } catch {
+      /* sem armazenamento: vale o padrão */
+    }
+    return typeof window !== "undefined" && window.innerWidth >= 640;
+  });
+  const setShowFilters = (open: boolean) => {
+    setShowFiltersState(open);
+    try {
+      localStorage.setItem("tastory.paravoce.filtros", open ? "abertos" : "escondidos");
+    } catch {
+      /* sem armazenamento: vale só nesta visita */
+    }
+  };
   const activeFilters =
     [discovery !== "taste", mood, maxMinutes, occasion, onlyMine, companions.length > 0].filter(Boolean).length;
   const tonight = maxMinutes === TONIGHT_MINUTES && onlyMine === hasServices;
@@ -489,22 +507,29 @@ export default function FeedPage() {
       </div>
 
       {/* Um painel só para pedir e filtrar: o pedido em português em cima e, embaixo, três grupos com título */}
-      <section aria-label="Ajustar as sugestões" className="mt-5 rounded-2xl border border-line bg-surface/70 p-4 sm:p-5">
+      <section aria-label="Ajustar as sugestões" className={`mt-5 rounded-2xl border border-line bg-surface/70 ${showFilters ? "p-4 sm:p-5" : "px-4 py-2.5 sm:px-5"}`}>
+        {/* A linha de cima esconde e mostra o painel. Escondido, ela diz quantos filtros estão ligados */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-hand text-xl leading-7 font-bold text-accent">
+            Pedir e filtrar
+            {!showFilters && activeFilters > 0 && (
+              <span className="ml-2 font-sans text-sm font-semibold text-stone-300">
+                {activeFilters} {activeFilters === 1 ? "filtro ligado" : "filtros ligados"}
+              </span>
+            )}
+          </p>
+          <button
+            className="btn-ghost px-3 py-1 text-sm"
+            aria-expanded={showFilters}
+            aria-controls="filtros-do-feed"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            {showFilters ? "Esconder" : "Mostrar"}
+          </button>
+        </div>
+        <div id="filtros-do-feed" className={showFilters ? "mt-3" : "hidden"}>
         <WishBox onWish={applyWish} />
-
-        {/* No celular, os grupos ficam recolhidos: a primeira sugestão aparece sem rolar. Com algum ligado, o botão diz quantos */}
-        <button
-          className="btn-ghost mt-3 px-3 py-1 text-sm sm:hidden"
-          aria-expanded={showFilters}
-          aria-controls="filtros-do-feed"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          {showFilters ? "Esconder os filtros" : activeFilters ? `Ajustar os filtros (${activeFilters} ligados)` : "Ajustar os filtros"}
-        </button>
-        <div
-          id="filtros-do-feed"
-          className={`mt-4 grid gap-5 border-t border-line pt-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-0 lg:divide-x lg:divide-line ${showFilters ? "" : "max-sm:hidden"}`}
-        >
+        <div className="mt-4 grid gap-5 border-t border-line pt-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-0 lg:divide-x lg:divide-line">
           {type !== "album" && !together && (
             <FilterGroup title="Quanto sair do óbvio">
               <Segmented
@@ -636,8 +661,9 @@ export default function FeedPage() {
             )}
           </FilterGroup>
         </div>
+        </div>
         {activeFilters > 0 && (
-          <button className="mt-3 text-xs text-muted underline hover:text-accent" onClick={clearFilters}>
+          <button className="mt-2 text-xs text-muted underline hover:text-accent" onClick={clearFilters}>
             Limpar os filtros
           </button>
         )}

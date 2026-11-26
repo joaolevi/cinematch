@@ -51,3 +51,16 @@ def test_vitrine_pode_rodar_de_novo_sem_duplicar(db):
     primeira = contagens(db)
     build_vitrine(db)
     assert contagens(db) == primeira
+
+
+def test_vitrine_poe_avatar_sem_trocar_o_de_quem_ja_tem(db):
+    from app.models import UserAvatar
+
+    demo = db.scalar(select(User).where(User.email == DEMO_EMAIL))
+    db.add(UserAvatar(user_id=demo.id, image=b"minha", content_type="image/jpeg", token="t"))
+    db.commit()
+    build_vitrine(db)
+    assert db.get(UserAvatar, demo.id).image == b"minha"  # a foto da pessoa fica
+    marina = db.scalar(select(User).where(User.email == f"marina@{VITRINE_DOMAIN}"))
+    avatar = db.get(UserAvatar, marina.id)
+    assert avatar.content_type == "image/png" and avatar.image[:4] == b"\x89PNG"

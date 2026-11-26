@@ -334,7 +334,7 @@ export default function HomePage() {
             }
           />
           {view === "top" && top ? (
-            <TopTen top={top} />
+            <TopTen top={top} sticker={(m) => visto(m.id)} />
           ) : (
             <Carousel label={SHELF_VIEWS[view].title}>
               {(view === "upcoming" ? upcoming : trending).map((media) => (
@@ -402,6 +402,7 @@ export default function HomePage() {
                         rating={entry.rating}
                         consumedAt={entry.consumed_at}
                         createdAt={entry.created_at}
+                        album={entry.media.type === "album"}
                       />
                     </div>
                     {entry.review && <p className="mt-1 line-clamp-2 text-sm text-stone-300">{entry.review}</p>}

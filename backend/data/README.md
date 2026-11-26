@@ -46,3 +46,9 @@ cd backend && ../.venv/bin/python -m scripts.import_albums   # uns 10 minutos: o
 
 Os dados do MusicBrainz e do ListenBrainz são CC0. As capas não ficam no repositório: o catálogo guarda só o endereço
 delas no Cover Art Archive.
+
+## Avatares de exemplo
+
+`avatares/*.png`: as fotos das pessoas da vitrine (`app/vitrine.py`) e da conta de demonstração. São ilustrações do
+estilo [Notionists](https://www.dicebear.com/styles/notionists/), de Zoish, em domínio público (CC0 1.0), geradas uma
+vez pelo DiceBear e guardadas aqui, para o seed funcionar sem internet. Não são fotos de pessoas reais.

@@ -31,7 +31,10 @@ export default function WatchedBy({
   consumedAt,
   createdAt,
   userId,
+  album = false,
 }: {
+  /** Disco: "Ouvido por", e não "Visto por" */
+  album?: boolean;
   name: string;
   /** Com o id, o nome leva ao perfil da pessoa */
   userId?: number;
@@ -44,7 +47,7 @@ export default function WatchedBy({
       <Avatar name={name} userId={userId} size="h-6 w-6 text-xs" />
       {rating != null && <StarsDisplay value={rating} size={14} />}
       <span>
-        {consumedAt ? "Visto" : "Registrado"} por{" "}
+        {consumedAt ? (album ? "Ouvido" : "Visto") : "Registrado"} por{" "}
         {userId ? (
           <Link to={`/pessoas/${userId}`} className="font-bold text-stone-200 hover:text-accent hover:underline">
             {name}

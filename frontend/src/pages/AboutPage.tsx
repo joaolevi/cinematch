@@ -45,6 +45,13 @@ export default function AboutPage() {
         <p className="mt-3 text-sm text-muted">
           Cada título mostra, no fim da página dele, de onde vieram os dados e com que licença.
         </p>
+        <p className="mt-3 text-sm text-muted">
+          As fotos das pessoas de exemplo são ilustrações do estilo{" "}
+          <a href="https://www.dicebear.com/styles/notionists/" target="_blank" rel="noreferrer" className="underline hover:text-accent">
+            Notionists
+          </a>
+          , de Zoish, em domínio público (CC0), geradas pelo DiceBear.
+        </p>
       </section>
 
       <section>

@@ -69,7 +69,7 @@ export default function MediaCard({
             ) : mine.rating != null ? (
               <StarsDisplay value={mine.rating} size={12} />
             ) : (
-              <span className="font-semibold text-accent">Visto</span>
+              <span className="font-semibold text-accent">{media.type === "album" ? "Ouvido" : "Visto"}</span>
             ))}
         </span>
       )}

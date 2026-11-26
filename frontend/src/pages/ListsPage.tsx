@@ -117,7 +117,8 @@ function ListCover({ items }: { items: Media[] }) {
         <span
           key={m.id}
           className="absolute top-0 h-28 w-[4.7rem] overflow-hidden rounded-md bg-surface shadow-[3px_0_10px_rgba(0,0,0,.55)] ring-1 ring-black/40"
-          style={{ left: `${i * 1.85}rem`, zIndex: 10 - i }}
+          // 4 deslocamentos de 1,6rem + um pôster de 4,7rem cabem nos 11,5rem da capa, sem cortar o último
+          style={{ left: `${i * 1.6}rem`, zIndex: 10 - i }}
         >
           {m.poster_url ? (
             <img src={m.poster_url} alt="" loading="lazy" className="h-full w-full object-cover" />
@@ -197,7 +198,7 @@ export default function ListsPage() {
 
       {/* Cada lista tem uma capa com os pôsteres em leque, como as listas do Letterboxd; a escolhida fica marcada */}
       <div className="mt-6 flex flex-wrap items-end gap-x-6 gap-y-3 border-b border-line pb-4">
-        <div role="tablist" aria-label="Minhas listas" className="flex gap-3 overflow-x-auto pb-1">
+        <div role="tablist" aria-label="Minhas listas" className="-m-1 flex gap-3 overflow-x-auto p-1">
           {lists.map((l) => (
             <button
               key={l.id}
