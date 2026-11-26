@@ -42,7 +42,7 @@ function AskCard() {
             onChange={(e) => setText(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            className="w-full bg-transparent py-1.5 text-sm text-cream outline-none"
+            className="w-full bg-transparent py-1.5 text-sm text-cream field-bare outline-none"
           />
           {!text && (
             <span aria-hidden className={`pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-nowrap text-sm text-muted ${focused ? "" : "caret"}`}>

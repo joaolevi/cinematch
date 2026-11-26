@@ -518,7 +518,7 @@ export default function FeedPage() {
       {/* Os destaques do Tastory ficam à vista: pedir em português, "Hoje à noite" e ver junto com alguém. O resto dos
           filtros fica no painel de baixo, que se esconde */}
       <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <section aria-label="Pedir do seu jeito" className="rise relative flex flex-col justify-center overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-surface via-surface/80 to-accent/10 p-5 sm:p-6">
+        <section aria-label="Pedir do seu jeito" className="rise relative overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-surface via-surface/80 to-accent/10 p-5 sm:p-6">
           <WishBox big onWish={applyWish} initial={params.get("pedido") ?? undefined} />
         </section>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">

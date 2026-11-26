@@ -454,6 +454,11 @@ h1 {
   outline-offset: 2px;
 }
 
+/* Campo dentro de uma caixa que já acende com o foco (focus-within): o contorno fica na caixa, não no campo */
+.field-bare:focus-visible {
+  outline: none;
+}
+
 @utility btn {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
 }
