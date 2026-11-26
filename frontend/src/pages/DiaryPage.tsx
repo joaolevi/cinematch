@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
+import { useAuth } from "../auth";
 import MediaCard from "../components/MediaCard";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
@@ -17,7 +18,6 @@ import {
   notesOf,
   PERIODS,
   tasteCharts,
-  tasteOf,
   type DiaryFilter,
   type Period,
 } from "../taste";
@@ -28,7 +28,6 @@ import { usePageTitle } from "../usePageTitle";
 const RANKING_SIZE = 10;
 const LOVED_FROM = 3.5;
 const HATED_BELOW = 3; // quem só dá notas altas não vê títulos bons na lista dos que odiou
-const NOTE_TILT = [-3, 2, -1.5, 2.5, -2, 1.5];
 const INK = "text-[#2b211c]";
 const RED_INK = "text-[#b9452f]";
 
@@ -74,64 +73,21 @@ function monthLabel(entry: DiaryEntry): string {
   return label.charAt(0).toUpperCase() + label.slice(1); // "Novembro de 2026"
 }
 
-/** Topo do diário: uma folha pautada com a frase do gosto e os números em post-its. */
-function TastePage({ entries }: { entries: DiaryEntry[] }) {
-  const taste = useMemo(() => tasteOf(entries), [entries]);
+/** Uma linha com os números do diário, embaixo do título. A frase do gosto e os post-its ficam no perfil. */
+function Summary({ entries }: { entries: DiaryEntry[] }) {
+  const { user } = useAuth();
   const notes = useMemo(() => notesOf(entries), [entries]);
   return (
-    <section className="paper relative mt-8 -rotate-[0.3deg] rounded-sm py-7 pr-6 pl-14 sm:pr-8 sm:pl-16">
-      <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[0] }} />
-      <span aria-hidden className="tape -top-2.5 right-16 rotate-3" style={{ background: TAPE_COLORS[2] }} />
-      <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]">
-        <div className={INK}>
-          {taste ? (
-            <>
-              <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Meu gosto em uma frase:</p>
-              <p className="mt-1 max-w-3xl font-display text-3xl leading-tight font-bold sm:text-4xl">
-                Sou do time <mark className="marker">{taste.highlight}</mark>
-                {taste.decade && (
-                  <>
-                    {" "}
-                    dos{" "}
-                    <mark className="marker" style={{ "--marker": "rgb(232 115 90 / 0.5)" } as CSSProperties}>
-                      {taste.decade}
-                    </mark>
-                  </>
-                )}
-                .
-              </p>
-              <ul className="mt-3 font-hand text-2xl leading-8 font-semibold opacity-85">
-                {taste.facts.map((fact) => (
-                  <li key={fact}>→ {fact}</li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <>
-              <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Querido diário,</p>
-              <p className="mt-1 font-display text-3xl leading-tight font-bold">Estou só começando.</p>
-              <p className="mt-3 font-hand text-2xl leading-8 font-semibold opacity-85">
-                Com {MIN_ENTRIES_FOR_TASTE} títulos, eu descubro aqui o meu gosto em uma frase.
-              </p>
-            </>
-          )}
-        </div>
-        <ul className="hidden grid-cols-3 gap-3 sm:grid sm:gap-4 lg:w-[27rem]" aria-label="Números do diário">
-          {notes.map((note, i) => (
-            <li
-              key={note.label}
-              className="postit flex aspect-square flex-col justify-center px-2 py-3 text-center sm:px-3"
-              style={{ "--note": note.color, rotate: `${NOTE_TILT[i % NOTE_TILT.length]}deg` } as CSSProperties}
-            >
-              <span className="font-hand text-4xl leading-none font-bold sm:text-5xl">{note.value}</span>
-              <span className="mt-1 font-hand text-base leading-4 font-semibold sm:text-lg sm:leading-5">
-                {note.label}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+    <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
+      {notes.slice(0, 3).map((note) => (
+        <span key={note.label}>
+          <strong className="font-display text-lg text-cream">{note.value}</strong> {note.label}
+        </span>
+      ))}
+      <Link to={`/pessoas/${user?.id}`} className="font-semibold text-accent hover:underline">
+        Ver meu perfil →
+      </Link>
+    </p>
   );
 }
 
@@ -219,7 +175,7 @@ export default function DiaryPage() {
           </p>
         </section>
       )}
-      {!!entries?.length && <TastePage entries={entries} />}
+      {!!entries?.length && <Summary entries={entries} />}
 
       {!!entries?.length && (
         <div

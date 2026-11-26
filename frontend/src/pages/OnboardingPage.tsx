@@ -236,7 +236,6 @@ export default function OnboardingPage() {
   const page = (note: string, children: React.ReactNode) => (
     <section className="paper relative -rotate-[0.25deg] rounded-sm py-6 pr-6 pl-14 sm:pl-16">
       <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[0] }} />
-      <span aria-hidden className="tape -top-2.5 right-16 rotate-3" style={{ background: TAPE_COLORS[2] }} />
       <p className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">{note}</p>
       <div className="mt-2">{children}</div>
     </section>

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { DiaryEntry, Media, UserList } from "../types";
-import { TAPE_COLORS } from "../ui";
 import { diaryChanged } from "../seen";
 import Poster from "./Poster";
 import QuickRate from "./QuickRate";
@@ -76,9 +75,9 @@ export default function RateReminder({
   };
 
   return (
-    <section className="paper relative -rotate-[0.2deg] rounded-sm py-5 pr-5 pl-14 text-[#2b211c] sm:pl-16">
-      <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[1] }} />
-      <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Antes que eu esqueça...</h2>
+    // Um lembrete, não um destaque: fica num cartão escuro e discreto, sem folha nem fita
+    <section className="card px-5 py-4">
+      <h2 className="font-hand text-xl leading-7 font-bold text-accent">Antes que eu esqueça...</h2>
       <ul className="mt-2 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {items.map(({ key, entry }) => {
           if (entry) {
@@ -86,13 +85,13 @@ export default function RateReminder({
             return (
               <li key={key} className="flex gap-3">
                 <Link to={`/media/${entry.media.id}`} className="w-14 shrink-0" aria-label={entry.media.title}>
-                  <Poster media={entry.media} compact rounded="rounded-[2px]" />
+                  <Poster media={entry.media} compact rounded="rounded-md" />
                 </Link>
                 <div className="min-w-0">
                   <p className="font-semibold">
                     Que nota você dá para <span className="font-bold">{entry.media.title}</span>?
                   </p>
-                  <p className="text-xs text-stone-600">
+                  <p className="text-xs text-muted">
                     {entry.from_onboarding
                       ? "Você marcou no começo que curtiu."
                       : `Você ${album ? "ouviu" : "viu"} e não deu nota.`}
@@ -110,7 +109,7 @@ export default function RateReminder({
                       }
                     />
                   </div>
-                  <button className="mt-1 cursor-pointer text-xs font-bold text-[#b9452f] hover:underline" onClick={() => hide(key, SNOOZE_DAYS.rate)}>
+                  <button className="mt-1 cursor-pointer text-xs font-bold text-muted hover:text-accent hover:underline" onClick={() => hide(key, SNOOZE_DAYS.rate)}>
                     Agora não
                   </button>
                 </div>
@@ -123,18 +122,18 @@ export default function RateReminder({
           return (
             <li key={key} className="flex gap-3">
               <Link to={`/media/${media.id}`} className="w-14 shrink-0" aria-label={media.title}>
-                <Poster media={media} compact rounded="rounded-[2px]" />
+                <Poster media={media} compact rounded="rounded-md" />
               </Link>
               <div className="min-w-0">
                 <p className="font-semibold">
                   Já {album ? "ouviu" : "viu"} <span className="font-bold">{media.title}</span>?
                 </p>
-                <p className="text-xs text-stone-600">Está na sua lista Quero ver há {days} dias.</p>
+                <p className="text-xs text-muted">Está na sua lista Quero ver há {days} dias.</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <button className="btn-primary px-3 py-1 text-sm" onClick={() => onSeen(media)}>
                     {album ? "Já ouvi" : "Já vi"}
                   </button>
-                  <button className="btn-ghost px-3 py-1 text-sm text-[#2b211c]" onClick={() => hide(key, SNOOZE_DAYS.seen)}>
+                  <button className="btn-ghost px-3 py-1 text-sm" onClick={() => hide(key, SNOOZE_DAYS.seen)}>
                     Ainda não
                   </button>
                 </div>

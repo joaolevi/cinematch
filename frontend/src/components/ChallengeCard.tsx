@@ -33,7 +33,6 @@ export default function ChallengeCard({ c, userId, all = [] }: { c: Challenge; u
       className={`paper relative -rotate-[0.2deg] rounded-sm py-7 pr-6 pl-14 sm:pr-8 sm:pl-16 ${INK}`}
     >
       <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[1] }} />
-      <span aria-hidden className="tape -top-2.5 right-16 rotate-3" style={{ background: TAPE_COLORS[0] }} />
       <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <div>
           <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Desafio do mês</p>
