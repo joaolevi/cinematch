@@ -7,7 +7,7 @@ import { plural } from "../format";
 import { seenLabel, useSeen } from "../seen";
 import type { Media, MediaSort, MediaType } from "../types";
 import { moodLabel, useMoods } from "../moods";
-import { MEDIA_GRID, TAB_COLORS } from "../ui";
+import { MEDIA_GRID } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
 import { PersonResult, usePeople } from "../components/PeopleSearch";
@@ -98,11 +98,11 @@ export default function SearchPage() {
           </button>
         )}
       </div>
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-3">
         <input
-          className="input search-input sm:flex-1"
+          className="input search-input col-span-2 sm:flex-1"
           aria-label="Buscar por título, direção ou elenco"
-          placeholder="Título, direção, elenco ou pessoa (ex.: Nolan, Cidade de Deus, Fernanda Montenegro)"
+          placeholder="Título, direção, elenco ou pessoa"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoFocus
@@ -132,7 +132,20 @@ export default function SearchPage() {
             </option>
           ))}
         </select>
-        <select className="input select sm:w-48" aria-label="Ordenar" value={sort} onChange={(e) => setSort(e.target.value as MediaSort)}>
+        {/* O clima vira mais uma lista de opções, como os outros filtros: as 17 etiquetas ocupavam duas linhas inteiras */}
+        {moods.length > 0 && (
+          <select className="input select sm:w-44" aria-label="Clima" value={mood} onChange={(e) => setFilter("clima", e.target.value)}>
+            <option value="">Qualquer clima</option>
+            {moods
+              .filter((m) => m.count > 0 || m.key === mood)
+              .map((m) => (
+                <option key={m.key} value={m.key}>
+                  {m.label}
+                </option>
+              ))}
+          </select>
+        )}
+        <select className="input select col-span-2 sm:w-48" aria-label="Ordenar" value={sort} onChange={(e) => setSort(e.target.value as MediaSort)}>
           {SORTS.map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}
@@ -141,28 +154,6 @@ export default function SearchPage() {
         </select>
       </div>
       {/* Buscar por clima (RFF23): filmes, séries e álbuns juntos */}
-      {moods.length > 0 && (
-        <div
-          className="mt-4 flex items-center gap-2 max-sm:-mx-4 max-sm:overflow-x-auto max-sm:px-4 max-sm:pb-1 sm:flex-wrap"
-          role="group"
-          aria-label="Buscar por clima"
-        >
-          <span className="text-sm text-muted">Por clima:</span>
-          {moods
-            .filter((m) => m.count > 0)
-            .map((m, i) => (
-              <button
-                key={m.key}
-                aria-pressed={mood === m.key}
-                onClick={() => setFilter("clima", mood === m.key ? "" : m.key)}
-                className={`chip cursor-pointer px-3 py-1 text-sm ${mood === m.key ? "border-accent text-accent" : ""}`}
-                style={mood === m.key ? undefined : { borderColor: `${TAB_COLORS[i % TAB_COLORS.length]}55` }}
-              >
-                {m.label}
-              </button>
-            ))}
-        </div>
-      )}
       {/* Quem tem esse nome no Tastory aparece antes dos títulos, como no Letterboxd */}
       {!!people?.length && (
         <section className="mt-6" aria-label="Pessoas com esse nome">

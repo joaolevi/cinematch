@@ -16,6 +16,9 @@ import { formatMinutes } from "../format";
 import { useMoods } from "../moods";
 import type { AdjustKind, Discovery, Feed, FeedbackAction, Media, MediaType, Mix, Occasion, Pair, Person, Recommendation, Wish } from "../types";
 import { MEDIA_GRID } from "../ui";
+
+// Os cartões das sugestões têm botões embaixo: no celular, ficam em 2 colunas
+const FEED_GRID = MEDIA_GRID.replace("grid-cols-3 gap-x-3", "grid-cols-2 gap-x-4");
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
 import WishBox from "../components/WishBox";
@@ -729,7 +732,7 @@ export default function FeedPage() {
           ))}
         </div>
       ) : (
-        <div className={`mt-8 ${MEDIA_GRID}`}>{rest.map(card)}</div>
+        <div className={`mt-8 ${FEED_GRID}`}>{rest.map(card)}</div>
       )}
 
       {feed && feed.items.length === 0 && !loading && (

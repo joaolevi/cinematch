@@ -23,10 +23,11 @@ import {
   type Period,
 } from "../taste";
 import type { DiaryEntry } from "../types";
-import { MEDIA_GRID, TAPE_COLORS, tabColor } from "../ui";
+import { DIARY_GRID, TAPE_COLORS, tabColor } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 
 const RANKING_SIZE = 10;
+const FOLDED_START = 8; // quantos títulos de um grupo sem data aparecem antes de "Ver os N títulos"
 const LOVED_FROM = 3.5;
 const HATED_BELOW = 3; // quem só dá notas altas não vê títulos bons na lista dos que odiou
 const INK = "text-[#2b211c]";
@@ -91,6 +92,7 @@ export default function DiaryPage() {
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>("always");
   const [filter, setFilter] = useState<DiaryFilter | null>(null);
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set()); // os grupos sem data que a pessoa abriu
   // Polaroides (o caderno) ou tabela (como o diário do Letterboxd). A escolha fica neste navegador
   const [view, setViewState] = useState<"fotos" | "tabela">(() => {
     try {
@@ -293,13 +295,18 @@ export default function DiaryPage() {
         </div>
         {view === "tabela" && <DiaryTable groups={groups} onEdit={setEditing} />}
         <div className={`mt-4 space-y-10 ${view === "tabela" ? "hidden" : ""}`}>
-          {groups.map(([label, list]) => (
+          {groups.map(([label, list]) => {
+            // Os grupos sem data (os favoritos do começo e o que foi registrado sem dia) não contam uma história no
+            // tempo e costumam ser grandes: ficam recolhidos, com o botão para abrir
+            const foldable = label === "Meus primeiros favoritos" || label === "Sem data";
+            const folded = foldable && !openGroups.has(label) && list.length > FOLDED_START;
+            return (
             <section key={label}>
               <h2 className="inline-block rounded-t-xl border border-b-0 border-line/60 bg-surface px-4 py-1.5 text-sm font-bold text-accent">
-                {label}
+                {label} <span className="ml-1 text-xs font-normal text-muted">{list.length}</span>
               </h2>
-              <div className={`${MEDIA_GRID} border-t border-line/60 pt-6`}>
-                {list.map((e, position) => (
+              <div className={`${DIARY_GRID} border-t border-line/60 pt-6`}>
+                {(folded ? list.slice(0, FOLDED_START) : list).map((e, position) => (
                   <MediaCard
                     key={e.id}
                     media={e.media}
@@ -342,8 +349,14 @@ export default function DiaryPage() {
                   </MediaCard>
                 ))}
               </div>
+              {folded && (
+                <button className="btn-ghost mt-4 px-4 py-1.5 text-sm" onClick={() => setOpenGroups(new Set(openGroups).add(label))}>
+                  Ver os {list.length} títulos
+                </button>
+              )}
             </section>
-          ))}
+            );
+          })}
         </div>
       </div>
 

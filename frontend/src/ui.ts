@@ -2,7 +2,11 @@ import type React from "react";
 
 /** Grade de pôsteres usada no feed, na busca e no diário. Ocupa a largura toda e ganha colunas em telas largas. */
 export const MEDIA_GRID =
-  "grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 min-[1800px]:grid-cols-8 min-[2200px]:grid-cols-9 min-[2600px]:grid-cols-10";
+  "grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-8 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 min-[1800px]:grid-cols-8 min-[2200px]:grid-cols-9 min-[2600px]:grid-cols-10";
+
+/** A grade do diário, mais densa que a das sugestões: as polaroides não têm botões embaixo, e cabem 8 por linha. */
+export const DIARY_GRID =
+  "grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 sm:gap-x-5 sm:gap-y-7 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 min-[1800px]:grid-cols-9 min-[2200px]:grid-cols-10";
 
 /** Inclinação e fita de cada polaroide do diário, para não ficarem todas iguais. */
 export const POLAROID_TILT = [-2, 1.5, -1, 2, -1.5, 1, -0.5];
