@@ -4823,12 +4823,79 @@
       }
     },
     "/media/{media_id}/seasons/{season}/episodes/{episode}": {
+      "get": {
+        "tags": [
+          "episódios"
+        ],
+        "summary": "Episode Page",
+        "description": "A página do episódio: nome, data, duração, cena e sinopse do TMDB; o que quem pede marcou; quantas pessoas viram\ne a média das notas; e o episódio de antes e o de depois, inclusive entre temporadas.",
+        "operationId": "episode_page_media__media_id__seasons__season__episodes__episode__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Season"
+            }
+          },
+          {
+            "name": "episode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Episode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EpisodeDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "episódios"
         ],
         "summary": "Rate Episode",
-        "description": "Dá nota a um episódio e/ou guarda uma anotação, que só a própria pessoa vê. Sem nota e sem anotação, o episódio\nvolta a não visto. O primeiro episódio marcado põe a série no diário como \"assistindo\".",
+        "description": "Marca o episódio como visto, com nota e anotação se quiser; a anotação só a própria pessoa vê. `seen: false`\ndesmarca. O primeiro episódio marcado põe a série no diário como \"assistindo\".",
         "operationId": "rate_episode_media__media_id__seasons__season__episodes__episode__put",
         "security": [
           {
@@ -4883,7 +4950,269 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EpisodeOut"
+                  "$ref": "#/components/schemas/PartSaved"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{media_id}/seasons/{season}/seen": {
+      "post": {
+        "tags": [
+          "episódios"
+        ],
+        "summary": "Season Seen",
+        "description": "Marca como vistos todos os episódios da temporada, sem mexer na nota e na anotação de quem já tinha.",
+        "operationId": "season_seen_media__media_id__seasons__season__seen_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Season"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EpisodeOut"
+                  },
+                  "title": "Response Season Seen Media  Media Id  Seasons  Season  Seen Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{media_id}/tracks": {
+      "get": {
+        "tags": [
+          "faixas"
+        ],
+        "summary": "Album Tracks",
+        "description": "As faixas do álbum, do MusicBrainz, com o que quem pede marcou. Lista vazia quando ainda não dá para saber.",
+        "operationId": "album_tracks_media__media_id__tracks_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrackOut"
+                  },
+                  "title": "Response Album Tracks Media  Media Id  Tracks Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{media_id}/tracks/{disc}/{number}": {
+      "get": {
+        "tags": [
+          "faixas"
+        ],
+        "summary": "Track Page",
+        "description": "A página da faixa: título, duração e artistas; o que quem pede marcou; quantas pessoas ouviram e a média das\nnotas; e a faixa de antes e a de depois.",
+        "operationId": "track_page_media__media_id__tracks__disc___number__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          },
+          {
+            "name": "disc",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Disc"
+            }
+          },
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "faixas"
+        ],
+        "summary": "Rate Track",
+        "description": "Marca a faixa como ouvida, com nota e anotação se quiser; a anotação só a própria pessoa vê. `seen: false`\ndesmarca. Não mexe no diário: o álbum entra no diário pelo \"Já ouvi\".",
+        "operationId": "rate_track_media__media_id__tracks__disc___number__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          },
+          {
+            "name": "disc",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Disc"
+            }
+          },
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EpisodeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartSaved"
                 }
               }
             }
@@ -6085,6 +6414,166 @@
         "type": "object",
         "title": "DiaryUpdate"
       },
+      "EpisodeDetailOut": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "air_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Air Date"
+          },
+          "overview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overview"
+          },
+          "still_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Still Url",
+            "description": "Uma cena do episódio, do TMDB"
+          },
+          "runtime": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runtime",
+            "description": "Duração em minutos"
+          },
+          "directors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Directors",
+            "default": []
+          },
+          "seen": {
+            "type": "boolean",
+            "title": "Seen",
+            "default": false
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "season": {
+            "type": "integer",
+            "title": "Season"
+          },
+          "series": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "next": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "seen_by": {
+            "type": "integer",
+            "title": "Seen By",
+            "description": "Quantas pessoas marcaram o episódio como visto"
+          },
+          "ratings": {
+            "type": "integer",
+            "title": "Ratings",
+            "description": "Quantas notas o episódio recebeu"
+          },
+          "average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average",
+            "description": "Média das notas de todo mundo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number",
+          "season",
+          "series",
+          "seen_by",
+          "ratings"
+        ],
+        "title": "EpisodeDetailOut",
+        "description": "A página do episódio: o episódio, a série, os vizinhos e o que todo mundo achou."
+      },
       "EpisodeIn": {
         "properties": {
           "rating": {
@@ -6097,7 +6586,7 @@
               }
             ],
             "title": "Rating",
-            "description": "De 0,5 a 5; sem nota e sem anotação, o episódio volta a não visto"
+            "description": "De 0,5 a 5"
           },
           "note": {
             "anyOf": [
@@ -6110,11 +6599,24 @@
               }
             ],
             "title": "Note",
-            "description": "Anotação sobre o episódio, só para a própria pessoa"
+            "description": "Anotação, só para a própria pessoa"
+          },
+          "seen": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seen",
+            "description": "true marca como visto (ou ouvido) mesmo sem nota; false desmarca e apaga nota e anotação. Sem este campo, sem nota e sem anotação, volta a não visto"
           }
         },
         "type": "object",
-        "title": "EpisodeIn"
+        "title": "EpisodeIn",
+        "description": "Vale para episódios e faixas."
       },
       "EpisodeOut": {
         "properties": {
@@ -6156,6 +6658,43 @@
             ],
             "title": "Overview"
           },
+          "still_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Still Url",
+            "description": "Uma cena do episódio, do TMDB"
+          },
+          "runtime": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runtime",
+            "description": "Duração em minutos"
+          },
+          "directors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Directors",
+            "default": []
+          },
+          "seen": {
+            "type": "boolean",
+            "title": "Seen",
+            "default": false
+          },
           "rating": {
             "anyOf": [
               {
@@ -6184,7 +6723,7 @@
           "number"
         ],
         "title": "EpisodeOut",
-        "description": "Um episódio da temporada, com a nota e a anotação de quem vê (RFF24)."
+        "description": "Um episódio da temporada, com o que quem vê marcou: visto, nota e anotação (RFF24)."
       },
       "ExperimentsIn": {
         "properties": {
@@ -7609,6 +8148,77 @@
         "title": "PairOut",
         "description": "Sessão dupla (RFF27): um filme ou série para ver e um disco para ouvir depois."
       },
+      "PartRef": {
+        "properties": {
+          "season": {
+            "type": "integer",
+            "title": "Season"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "season",
+          "number"
+        ],
+        "title": "PartRef",
+        "description": "O episódio de antes ou de depois. Na virada de temporada, o nome pode não vir."
+      },
+      "PartSaved": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "seen": {
+            "type": "boolean",
+            "title": "Seen"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number",
+          "seen"
+        ],
+        "title": "PartSaved",
+        "description": "O que ficou guardado de um episódio ou de uma faixa."
+      },
       "PasswordChangeIn": {
         "properties": {
           "current_password": {
@@ -8634,6 +9244,237 @@
           "user"
         ],
         "title": "TokenOut"
+      },
+      "TrackDetailOut": {
+        "properties": {
+          "disc": {
+            "type": "integer",
+            "title": "Disc"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "length_sec": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Length Sec",
+            "description": "Duração em segundos"
+          },
+          "artists": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Artists",
+            "default": []
+          },
+          "seen": {
+            "type": "boolean",
+            "title": "Seen",
+            "description": "Ouvi esta faixa",
+            "default": false
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "album": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "position": {
+            "type": "integer",
+            "title": "Position",
+            "description": "Em que posição a faixa está no álbum, contando todos os discos"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Quantas faixas o álbum tem"
+          },
+          "discs": {
+            "type": "integer",
+            "title": "Discs",
+            "description": "Quantos discos o álbum tem"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "next": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "seen_by": {
+            "type": "integer",
+            "title": "Seen By",
+            "description": "Quantas pessoas marcaram a faixa como ouvida"
+          },
+          "ratings": {
+            "type": "integer",
+            "title": "Ratings"
+          },
+          "average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average"
+          }
+        },
+        "type": "object",
+        "required": [
+          "disc",
+          "number",
+          "title",
+          "album",
+          "position",
+          "total",
+          "discs",
+          "seen_by",
+          "ratings"
+        ],
+        "title": "TrackDetailOut",
+        "description": "A página da faixa: a faixa, o álbum, as vizinhas e o que todo mundo achou."
+      },
+      "TrackOut": {
+        "properties": {
+          "disc": {
+            "type": "integer",
+            "title": "Disc"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "length_sec": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Length Sec",
+            "description": "Duração em segundos"
+          },
+          "artists": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Artists",
+            "default": []
+          },
+          "seen": {
+            "type": "boolean",
+            "title": "Seen",
+            "description": "Ouvi esta faixa",
+            "default": false
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "disc",
+          "number",
+          "title"
+        ],
+        "title": "TrackOut",
+        "description": "Uma faixa do álbum, com o que quem ouve marcou: ouvi, nota e anotação."
+      },
+      "TrackRef": {
+        "properties": {
+          "disc": {
+            "type": "integer",
+            "title": "Disc"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "disc",
+          "number",
+          "title"
+        ],
+        "title": "TrackRef"
       },
       "UnderstoodPart": {
         "properties": {

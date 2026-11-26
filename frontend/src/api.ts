@@ -36,6 +36,10 @@ import type {
   Occasion,
   Wish,
   Episode,
+  EpisodeDetail,
+  PartMark,
+  Track,
+  TrackDetail,
   Showcase,
   LetterboxdResult,
   Arrival,
@@ -141,8 +145,17 @@ export const api = {
   showcase: () => request<Showcase>("/media/showcase"),
   setFavorites: (media_ids: number[]) => request<Media[]>("/me/favorites", { method: "PUT", body: { media_ids } }),
   episodes: (mediaId: number, season: number) => request<Episode[]>(`/media/${mediaId}/seasons/${season}/episodes`),
-  rateEpisode: (mediaId: number, season: number, episode: number, data: { rating: number | null; note: string | null }) =>
-    request<Episode>(`/media/${mediaId}/seasons/${season}/episodes/${episode}`, { method: "PUT", body: data }),
+  episode: (mediaId: number, season: number, episode: number) =>
+    request<EpisodeDetail>(`/media/${mediaId}/seasons/${season}/episodes/${episode}`),
+  rateEpisode: (mediaId: number, season: number, episode: number, data: Partial<PartMark>) =>
+    request<PartMark>(`/media/${mediaId}/seasons/${season}/episodes/${episode}`, { method: "PUT", body: data }),
+  markSeason: (mediaId: number, season: number) =>
+    request<Episode[]>(`/media/${mediaId}/seasons/${season}/seen`, { method: "POST" }),
+  tracks: (mediaId: number) => request<Track[]>(`/media/${mediaId}/tracks`),
+  track: (mediaId: number, disc: number, number: number) =>
+    request<TrackDetail>(`/media/${mediaId}/tracks/${disc}/${number}`),
+  rateTrack: (mediaId: number, disc: number, number: number, data: Partial<PartMark>) =>
+    request<PartMark>(`/media/${mediaId}/tracks/${disc}/${number}`, { method: "PUT", body: data }),
   avatars: () => request<Record<string, string>>("/users/avatars"),
   setAvatar: (image: string) => request<void>("/me/avatar", { method: "PUT", body: { image } }),
   removeAvatar: () => request<void>("/me/avatar", { method: "DELETE" }),

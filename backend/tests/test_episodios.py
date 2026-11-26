@@ -22,8 +22,7 @@ def test_episodios_da_temporada_com_nota_e_anotacao(client, user_headers, db):
 
     r = client.put(f"/media/{dark.id}/seasons/1/episodes/2", json={"rating": 4.5, "note": " Que reviravolta "},
                    headers=user_headers)
-    assert r.status_code == 200 and r.json() == {"number": 2, "rating": 4.5, "note": "Que reviravolta",
-                                                  "name": None, "air_date": None, "overview": None}
+    assert r.status_code == 200 and r.json() == {"number": 2, "seen": True, "rating": 4.5, "note": "Que reviravolta"}
     ep2 = client.get(f"/media/{dark.id}/seasons/1/episodes", headers=user_headers).json()[1]
     assert (ep2["rating"], ep2["note"]) == (4.5, "Que reviravolta")
 

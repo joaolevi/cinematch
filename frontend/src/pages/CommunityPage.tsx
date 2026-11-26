@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
-import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
-import WatchedBy, { Avatar } from "../components/WatchedBy";
-import { plural } from "../format";
+import { StarsDisplay } from "../components/Stars";
+import { Avatar } from "../components/WatchedBy";
+import { formatDate, localDate, plural, timeAgo } from "../format";
 import type { CommunityEntry, Person, Reviewer, SuggestedPerson } from "../types";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
@@ -14,43 +14,61 @@ import SpoilerText from "../components/SpoilerText";
 
 const PAGE = 20;
 
-function Post({ entry, position }: { entry: CommunityEntry; position: number }) {
+/** Quando foi: "hoje", "ontem", "em 3/11/2026" ou, sem data, há quanto tempo foi registrado. */
+function when(entry: CommunityEntry): string {
+  if (!entry.consumed_at) return timeAgo(entry.created_at);
+  if (entry.consumed_at === localDate()) return "hoje";
+  if (entry.consumed_at === localDate(1)) return "ontem";
+  return `em ${formatDate(entry.consumed_at)}`;
+}
+
+/**
+ * Um post da Comunidade, como numa rede social: quem registrou e quando no topo, o título com o pôster e a nota, a
+ * resenha e a conversa embaixo. Uma coluna só, para acompanhar de cima para baixo.
+ */
+function Post({ entry }: { entry: CommunityEntry }) {
   const link = `/media/${entry.media.id}`;
+  const album = entry.media.type === "album";
+  const verb = entry.status === "watching" ? "está assistindo" : album ? "ouviu" : entry.consumed_at ? "viu" : "registrou";
   return (
-    <article className="flex gap-4 border-b border-line/60 py-5">
-      <Link to={link} className="group w-16 shrink-0 sm:w-20" aria-label={entry.media.title}>
-        <Polaroid position={position} small album={entry.media.type === "album"}>
-          <Poster media={entry.media} compact rounded="rounded-[1px]" />
-        </Polaroid>
-      </Link>
-      <div className="min-w-0 flex-1">
-        <h2 className="font-display text-lg leading-snug font-bold">
-          <Link to={link} className="hover:text-accent">
-            {entry.media.title}
+    <article className="card p-5">
+      <header className="flex items-center gap-3 text-sm">
+        <Link to={`/pessoas/${entry.user_id}`} aria-label={`Perfil de ${entry.user_name}`}>
+          <Avatar name={entry.user_name} userId={entry.user_id} size="h-10 w-10 text-base" />
+        </Link>
+        <p className="min-w-0 text-muted">
+          <Link to={`/pessoas/${entry.user_id}`} className="font-bold text-cream hover:text-accent hover:underline">
+            {entry.user_name}
           </Link>{" "}
-          {entry.media.year && <span className="font-normal text-muted">{entry.media.year}</span>}
-        </h2>
-        <div className="mt-1.5">
-          <WatchedBy
-            name={entry.user_name}
-            userId={entry.user_id}
-            rating={entry.rating}
-            consumedAt={entry.consumed_at}
-            createdAt={entry.created_at}
-          />
-          {entry.status === "watching" && (
-            <p className="mt-1 text-xs text-muted">
-              ▶ Ainda assistindo{entry.season ? `, na temporada ${entry.season}` : ""}
-            </p>
+          {verb}
+          {entry.status === "watching" && entry.season ? ` a temporada ${entry.season}` : ""}
+          <span className="block text-xs">{when(entry)}</span>
+        </p>
+      </header>
+      <div className="mt-4 flex gap-4">
+        <Link to={link} className="w-20 shrink-0 sm:w-24" aria-label={entry.media.title}>
+          <Poster media={entry.media} compact rounded="rounded-md" />
+        </Link>
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display text-lg leading-snug font-bold">
+            <Link to={link} className="hover:text-accent">
+              {entry.media.title}
+            </Link>{" "}
+            {entry.media.year && <span className="font-normal text-muted">{entry.media.year}</span>}
+          </h2>
+          {entry.rating != null && (
+            <div className="mt-1">
+              <StarsDisplay value={entry.rating} size={16} />
+            </div>
           )}
+          {entry.review && <SpoilerText text={entry.review} spoiler={entry.spoiler} className="mt-2 leading-relaxed text-stone-200" />}
         </div>
-        {entry.review && (
-          <>
-            <SpoilerText text={entry.review} spoiler={entry.spoiler} className="mt-2 text-stone-200" />
-            <ReviewTalk entry={entry} />
-          </>
-        )}
       </div>
+      {entry.review && (
+        <div className="mt-3 border-t border-line/60 pt-1">
+          <ReviewTalk entry={entry} />
+        </div>
+      )}
     </article>
   );
 }
@@ -58,7 +76,7 @@ function Post({ entry, position }: { entry: CommunityEntry; position: number }) 
 /** Quem eu sigo, com o link para o perfil de cada pessoa (RFF09). */
 function Following({ people }: { people: Person[] }) {
   return (
-    <aside className="paper relative self-start rounded-sm py-5 pr-5 pl-12 lg:-rotate-1">
+    <aside aria-label="Pessoas que sigo" className="paper relative rounded-sm py-5 pr-5 pl-12 lg:-rotate-1">
       <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 rotate-2" style={{ background: TAPE_COLORS[2] }} />
       <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Pessoas que sigo</h2>
       {people.length === 0 ? (
@@ -86,7 +104,7 @@ function Suggestions({ people, onFollow }: { people: SuggestedPerson[]; onFollow
   const [busy, setBusy] = useState<number | null>(null);
   if (people.length === 0) return null;
   return (
-    <aside className="paper relative self-start rounded-sm py-5 pr-5 pl-12 lg:rotate-[0.6deg]">
+    <aside aria-label="Gosto parecido com o seu" className="paper relative rounded-sm py-5 pr-5 pl-12 lg:rotate-[0.6deg]">
       <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 -rotate-2" style={{ background: TAPE_COLORS[0] }} />
       <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Gosto parecido com o seu</h2>
       <ul className="flex flex-wrap gap-x-6 lg:block">
@@ -125,7 +143,7 @@ function Reviewers({ people }: { people: Reviewer[] }) {
   if (people.length === 0) return null;
   return (
     // O rank de quem escreve, pelas curtidas recebidas (RFF30), fica num bilhete colado ao lado da timeline
-    <aside className="paper relative order-first self-start rounded-sm py-5 pr-5 pl-12 lg:order-none lg:rotate-1">
+    <aside aria-label="Resenhas mais curtidas" className="paper relative order-first rounded-sm py-5 pr-5 pl-12 lg:order-none lg:rotate-1">
       <span aria-hidden className="tape -top-2.5 left-1/2 -translate-x-1/2 -rotate-3" style={{ background: TAPE_COLORS[1] }} />
       <h2 className="font-hand text-2xl leading-8 font-bold text-[#b9452f]">Resenhas mais curtidas</h2>
       <ul className="flex flex-wrap gap-x-6 lg:block">
@@ -248,22 +266,23 @@ export default function CommunityPage() {
         </p>
       )}
 
-      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-12">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,42rem)_300px] lg:gap-12 xl:gap-16">
         <div>
           {entries && entries.length > 0 && (
-            <h2 className="border-b border-line/60 pb-2 text-xs font-semibold tracking-wider text-muted uppercase">
+            <h2 className="text-xs font-semibold tracking-wider text-muted uppercase">
               Registros recentes
             </h2>
           )}
-          {/* Em telas largas, a timeline vira duas colunas, para usar a largura toda sem linhas longas demais */}
-          <div className="grid xl:grid-cols-2 xl:gap-x-12">
-            {entries?.map((e, position) => (
-              <Post key={e.id} entry={e} position={position} />
+          {/* Uma coluna só, como numa rede social: fica mais fácil de acompanhar de cima para baixo */}
+          <div className="mt-4 space-y-4">
+            {entries?.map((e) => (
+              <Post key={e.id} entry={e} />
             ))}
           </div>
           <div ref={bottom} />
         </div>
-        <div className="order-first flex flex-col gap-8 lg:order-none">
+        {/* No celular, o feed vem primeiro, como numa rede social; quem seguir fica depois */}
+        <div className="flex flex-col gap-8">
           <Following people={people} />
           <Suggestions
             people={suggested}
