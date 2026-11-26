@@ -147,7 +147,9 @@ function BigNumbers({ entries }: { entries: DiaryEntry[] }) {
       {numbers.map(([value, label, hint]) => (
         <div key={label} className="flex flex-col px-4" title={hint}>
           <dt className="text-xs font-semibold tracking-wider text-muted uppercase">{label}</dt>
-          <dd className="order-first font-display text-4xl font-bold">{value}</dd>
+          <dd className="order-first font-display text-4xl font-bold">
+            <CountUp value={value} />
+          </dd>
         </div>
       ))}
     </dl>
@@ -379,7 +381,7 @@ export default function ProfilePage() {
                   disabled={!profile.follows}
                   onClick={() => showPeople("follows")}
                 >
-                  {profile.follows}
+                  <CountUp value={profile.follows} />
                 </button>
               </dd>
             </div>
@@ -393,7 +395,7 @@ export default function ProfilePage() {
                   disabled={!profile.followers}
                   onClick={() => showPeople("followers")}
                 >
-                  {profile.followers}
+                  <CountUp value={profile.followers} />
                 </button>
               </dd>
             </div>

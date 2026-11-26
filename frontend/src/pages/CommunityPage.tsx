@@ -9,6 +9,7 @@ import CommunityNav from "../components/CommunityNav";
 import HandNote from "../components/HandNote";
 import { LogLine, ReviewPost } from "../components/ReviewPost";
 import PeopleSearch from "../components/PeopleSearch";
+import { CountUp } from "../motion";
 
 const PAGE = 20;
 
@@ -54,7 +55,12 @@ function Suggestions({ people, onFollow }: { people: SuggestedPerson[]; onFollow
               <Avatar name={person.name} userId={person.id} size="h-9 w-9" />
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{person.name}</span>
-                <span className="block text-xs text-muted">Vocês combinam {person.percent}%</span>
+                <span className="block text-xs text-muted">
+                  Vocês combinam{" "}
+                  <span className="whitespace-nowrap">
+                    <CountUp value={person.percent} />%
+                  </span>
+                </span>
               </span>
             </Link>
             <button

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
@@ -44,7 +44,7 @@ function Ranking({ title, entries, color }: { title: string; entries: DiaryEntry
       <h2 className={`font-display text-xl font-bold ${color}`}>{title}</h2>
       <ol className="mt-5 flex gap-5 overflow-x-auto px-1 pt-2 pb-3 md:grid md:grid-cols-5 md:overflow-visible xl:grid-cols-10">
         {entries.map((e, position) => (
-          <li key={e.id} className="group w-28 shrink-0 md:w-auto">
+          <li key={e.id} className="sticker-drop group w-28 shrink-0 md:w-auto" style={{ "--i": position } as CSSProperties}>
             <Link to={`/media/${e.media.id}`} className="block" title={e.media.title}>
               <Polaroid position={position} caption={`nº ${position + 1}`} album={e.media.type === "album"}>
                 <Poster media={e.media} compact rounded="rounded-[2px]" />

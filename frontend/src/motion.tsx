@@ -35,9 +35,11 @@ export function useInView<T extends Element>(): [(node: T | null) => void, boole
  */
 export function CountUp({ value, duration = 900 }: { value: string | number; duration?: number }) {
   const text = String(value);
-  const target = Number(text.replace(",", "."));
-  const decimals = text.includes(",") ? text.split(",")[1].length : 0;
-  const numeric = text.trim() !== "" && Number.isFinite(target);
+  const parts = /^(\d+(?:,\d+)?)(\D*)$/.exec(text.trim());
+  const target = parts ? Number(parts[1].replace(",", ".")) : NaN;
+  const suffix = parts?.[2] ?? "";
+  const decimals = parts?.[1].includes(",") ? parts[1].split(",")[1].length : 0;
+  const numeric = parts != null;
   const [ref, seen] = useInView<HTMLSpanElement>();
   const [shown, setShown] = useState(numeric && !calm() ? 0 : target);
 
@@ -61,6 +63,7 @@ export function CountUp({ value, duration = 900 }: { value: string | number; dur
     <span ref={ref}>
       <span aria-hidden className="tabular-nums">
         {label}
+        {suffix}
       </span>
       <span className="sr-only">{text}</span>
     </span>

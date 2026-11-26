@@ -9,6 +9,7 @@ import type { AdminComment, AdminReport, AdminReview, AdminUser, ExternalTitle, 
 import { TAPE_COLORS, tabColor } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
+import { CountUp } from "../motion";
 
 type Tab = "metrics" | "users" | "catalog" | "moderation";
 
@@ -76,11 +77,13 @@ function VariantCard({ m, label, note }: { m: VariantMetrics; label: string; not
     <div className="card p-5">
       <p className="text-xs font-semibold tracking-wider text-muted uppercase">{label}</p>
       <p className="font-hand text-lg leading-5 text-accent">{note}</p>
-      <p className="mt-3 text-4xl font-extrabold text-accent">{pct(m.acceptance_rate)}</p>
+      <p className="mt-3 text-4xl font-extrabold text-accent">
+        <CountUp value={pct(m.acceptance_rate)} />
+      </p>
       <p className="text-sm text-stone-300">{inWords(m.acceptance_rate)}</p>
       {/* O que aconteceu com as sugestões exibidas, em uma barra só */}
       {/* A barra usa a taxa de aceitação: Quero ver e Já vi no mesmo título contam uma vez só */}
-      <div className="mt-4 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-bg" aria-hidden>
+      <div className="bar-grow mt-4 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-bg" aria-hidden>
         <div className="bg-accent" style={{ width: `${m.acceptance_rate * 100}%` }} title={`Aceitas: ${pct(m.acceptance_rate)}`} />
         <div className="bg-[#76655b]" style={{ width: share(m.dismiss) }} title={`Não me interesso: ${m.dismiss}`} />
       </div>
@@ -317,7 +320,9 @@ function UsersTab() {
             className="postit flex aspect-[4/3] flex-col justify-center px-3 text-center"
             style={{ "--note": note.color, rotate: `${[-2, 1.5, -1, 2, -1.5, 1, -2, 1.5][i]}deg` } as CSSProperties}
           >
-            <span className="font-hand text-4xl leading-none font-bold">{note.value}</span>
+            <span className="font-hand text-4xl leading-none font-bold">
+              <CountUp value={note.value} />
+            </span>
             <span className="mt-1 font-hand text-lg leading-5 font-semibold">{note.label}</span>
           </li>
         ))}
