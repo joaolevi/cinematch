@@ -19,6 +19,7 @@ from ..schemas import (
     FoundPersonOut,
     CompatibilityOut, DiaryOut, MediaOut, PersonOut, ProfileItemOut, ProfileOut, RecommendationOut, SuggestedPersonOut,
 )
+from ..services.notifications import notify
 from ..services.compatibility import compatibility, suggest_people
 from ..services.theme import badges
 from ..services.together import together
@@ -234,6 +235,7 @@ def follow(user_id: int, db: Session = Depends(get_db), me: User = Depends(get_c
     exists = db.scalar(select(Follow.id).where(Follow.follower_id == me.id, Follow.followed_id == user.id))
     if exists is None:
         db.add(Follow(follower_id=me.id, followed_id=user.id))
+        notify(db, user.id, "seguiu", me.id)
         db.commit()
     return Response(status_code=204)
 

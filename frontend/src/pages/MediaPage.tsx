@@ -10,11 +10,13 @@ import Episodes from "../components/Episodes";
 import { episodePath } from "./EpisodePage";
 import Tracks from "../components/Tracks";
 import TrailerButton from "../components/TrailerButton";
+import ShareButton from "../components/ShareButton";
 import RatingsPanel from "../components/RatingsPanel";
 import ReviewTalk from "../components/ReviewTalk";
 import SpoilerText from "../components/SpoilerText";
 import SeenModal from "../components/SeenModal";
 import SeenStamp from "../components/SeenStamp";
+import FromFriends from "../components/FromFriends";
 import { diaryChanged, useDiaryVersion } from "../seen";
 import { StarsDisplay } from "../components/Stars";
 import { Avatar } from "../components/WatchedBy";
@@ -235,6 +237,8 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
   const [params, setParams] = useSearchParams();
   const [fullOverview, setFullOverview] = useState(false); // no celular, a sinopse começa em 4 linhas
   const [stamp, setStamp] = useState(0);
+  // A cena larga vem do TMDB; se não carregar, o topo fecha em vez de ficar um vazio escuro
+  const [brokenBackdrop, setBrokenBackdrop] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const latestLoad = useRef(0); // se duas cargas se cruzarem, vale a mais recente
@@ -440,17 +444,27 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
           </section>
   );
 
+  const backdrop = media.backdrop_url && media.backdrop_url !== brokenBackdrop ? media.backdrop_url : null;
+
   return (
     <div>
       <SeenStamp id={stamp} album={media.type === "album"} />
+      {/* Quem indicou ou chamou para ver junto: o primeiro que a pessoa vê ao chegar pela notificação */}
+      <FromFriends
+        mediaId={media.id}
+        album={media.type === "album"}
+        inWatchlist={status.in_watchlist}
+        seen={!!status.diary_entry_id}
+        onRegister={() => setShowSeen(true)}
+      />
       <div className="relative overflow-hidden rounded-2xl border border-line/60 bg-surface/40 p-6 md:p-8">
         {/* Como no Letterboxd: a cena larga do título no topo, sumindo no fundo; sem ela, o pôster desfocado */}
-        {media.backdrop_url ? (
+        {backdrop ? (
           <div
             aria-hidden
             className="absolute inset-x-0 top-0 h-72 [mask-image:linear-gradient(to_bottom,black_35%,transparent)] sm:h-[26rem]"
           >
-            <img src={media.backdrop_url} alt="" className="h-full w-full object-cover opacity-60" />
+            <img src={backdrop} alt="" onError={() => setBrokenBackdrop(backdrop)} className="h-full w-full object-cover opacity-60" />
             <div className="absolute inset-0 bg-gradient-to-r from-bg/70 via-transparent to-bg/30" />
           </div>
         ) : (
@@ -462,12 +476,15 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
             />
           )
         )}
-        <div className={`relative grid gap-8 md:grid-cols-[240px_1fr] ${media.backdrop_url ? "pt-40 sm:pt-56" : ""}`}>
+        <div className={`relative grid gap-8 md:grid-cols-[240px_1fr] ${backdrop ? "pt-40 sm:pt-56" : ""}`}>
           <div className="group mx-auto w-48 md:w-full">
             {/* O que a pessoa viu vira polaroide; o que ela quer ver fica preso com fita */}
             {status.diary_entry_id ? (
               <Polaroid position={1} tape caption={statusCaption(status, album)} album={album}>
-                <Poster media={media} rounded="rounded-[2px]" />
+                {/* Acabou de marcar: a foto se revela, do claro e sem cor até o pôster, como uma instantânea */}
+                <div key={stamp} className={stamp ? "develop" : ""}>
+                  <Poster media={media} rounded="rounded-[2px]" />
+                </div>
               </Polaroid>
             ) : status.in_watchlist ? (
               <div className="relative">
@@ -576,6 +593,7 @@ function MediaView({ mediaId, reviewsOnly = false }: { mediaId: number; reviewsO
                 </button>
               )}
               <TrailerButton media={media} />
+              <ShareButton media={media} />
               {!status.diary_entry_id && !status.in_watchlist && (
                 <button className="btn-skip" onClick={toggleDismiss}>
                   {status.dismissed ? (

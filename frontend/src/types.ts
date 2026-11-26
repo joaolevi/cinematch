@@ -150,6 +150,42 @@ export interface Member {
   recent: Media[];
 }
 
+/** Um aviso: alguém seguiu, curtiu, comentou, indicou ou registrou algo do seu Quero ver */
+export interface AppNotification {
+  id: number;
+  kind: "seguiu" | "curtiu" | "comentou" | "indicou" | "registrou" | "convidou" | "aceitou";
+  actor: Person | null;
+  media: Media | null;
+  entry_id: number | null;
+  text: string | null;
+  read: boolean;
+  created_at: string;
+}
+
+/** Criar lembrança juntos: um convite para ver ou ouvir com alguém */
+export interface Invite {
+  id: number;
+  media: Media;
+  sender: Person;
+  receiver: Person;
+  day: string | null;
+  note: string | null;
+  status: "pending" | "accepted" | "declined";
+  created_at: string;
+  mine: boolean;
+  registered: boolean;
+}
+
+/** Uma indicação recebida */
+export interface ReceivedSuggestion {
+  id: number;
+  media: Media;
+  sender: Person;
+  note: string | null;
+  created_at: string;
+  in_watchlist: boolean;
+}
+
 /** Alguém encontrado pelo nome na busca de pessoas */
 export interface FoundPerson {
   id: number;
@@ -324,7 +360,7 @@ export interface Challenge {
 export interface Pair {
   video: Recommendation;
   album: Media;
-  kind: "soundtrack" | "composer" | "same_person" | "biopic" | "documentary";
+  kind: "soundtrack" | "composer" | "same_person" | "biopic" | "documentary" | "taste";
   reason: string;
 }
 

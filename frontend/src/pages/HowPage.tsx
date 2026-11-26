@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../auth";
-import ExperimentsToggle from "../components/ExperimentsToggle";
 import { TAPE_COLORS } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 
@@ -17,7 +15,6 @@ function Part({ title, children }: { title: string; children: ReactNode }) {
 /** Como recomendamos (RFF17): o recomendador explicado em português simples. */
 export default function HowPage() {
   usePageTitle("Como recomendamos");
-  const { user } = useAuth();
   return (
     <div className="paper relative mx-auto max-w-2xl -rotate-[0.3deg] space-y-8 rounded-sm py-8 pr-8 pl-16">
       <span aria-hidden className="tape -top-2.5 left-14 -rotate-6" style={{ background: TAPE_COLORS[1] }} />
@@ -93,7 +90,7 @@ export default function HowPage() {
           depois" e "Para ver depois".
         </p>
         <p>
-          No Para você, a "Sessão dupla" junta um filme ou uma série que combina com você e um disco ligado a ele por
+          No Para você, a "Dobradinha" junta um filme ou uma série que combina com você e um disco ligado a ele por
           uma das pontes fortes, para ver e depois ouvir.
         </p>
       </Part>
@@ -125,7 +122,7 @@ export default function HowPage() {
         </p>
         <p>
           Se você marcar os serviços que assina, em Minha conta, cada sugestão avisa se está num deles, e "Só nos meus
-          serviços" mostra só o que dá para ver agora. "Hoje à noite" junta isso com até 2h30. Em "Junto com", você
+          serviços" mostra só o que dá para ver agora. "Sessão pipoca" junta isso com a duração que cabe na hora do dia: até 1h30 de manhã, 2h à tarde, 2h30 à noite e 1h de madrugada. Em "Gosto em dupla", você
           escolhe quem você segue para ver junto: primeiro vem o que agrada a todo mundo. O Quero ver também se
           ordena pelo que combina agora: o gosto primeiro, e o que está nos seus serviços sobe um pouco. Onde assistir
           vem da JustWatch, pelo TMDB.
@@ -140,14 +137,13 @@ export default function HowPage() {
         </p>
       </Part>
 
-      <Part title="7. Um experimento em andamento">
+      <Part title="7. Como medimos">
         <p>
-          Para saber se o "quem curte o mesmo que você" ajuda de verdade, metade das contas recebe as sugestões de filmes e
-          séries só pela parte do "parecido com o que você curtiu". Medimos quantas sugestões viram "Quero ver" ou "Já vi"
-          em cada metade. Se preferir, você pode sair: passa a receber as sugestões completas, e as suas reações deixam
-          de entrar na comparação.
+          Antes de escolher o recomendador, comparamos as versões com avaliações reais do MovieLens: o híbrido, que junta
+          "parecido com o que você curtiu" e "quem curte o mesmo que você", acertou mais que a versão só de conteúdo. Até
+          26/11 também houve um teste com as contas do Tastory, metade com cada versão. Na entrega final, todo mundo passou
+          a receber o híbrido, a versão completa. Continuamos medindo quantas sugestões viram "Quero ver" ou "Já vi".
         </p>
-        {user && <ExperimentsToggle />}
       </Part>
 
       <Part title="8. De onde vêm os dados">

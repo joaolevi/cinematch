@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BrowserRouter, Link, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth";
 import Layout, { Logo } from "./components/Layout";
 import AboutPage from "./pages/AboutPage";
@@ -16,7 +16,6 @@ import EpisodePage from "./pages/EpisodePage";
 import TrackPage from "./pages/TrackPage";
 import MediaPage from "./pages/MediaPage";
 import OnboardingPage from "./pages/OnboardingPage";
-import RetroPage from "./pages/RetroPage";
 import AccountPage from "./pages/AccountPage";
 import TastePage from "./pages/TastePage";
 import PeoplePage from "./pages/PeoplePage";
@@ -61,6 +60,13 @@ function Anyone() {
   );
 }
 
+function RetroRedirect() {
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  params.set("aba", "retrospectiva");
+  return <Navigate to={`/diario?${params}`} replace />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -81,7 +87,8 @@ export default function App() {
             <Route path="media/:id/temporada/:season/episodio/:episode" element={<EpisodePage />} />
             <Route path="media/:id/faixa/:disc/:number" element={<TrackPage />} />
             <Route path="diario" element={<DiaryPage />} />
-            <Route path="retrospectiva" element={<RetroPage />} />
+            {/* A retrospectiva virou uma aba do Diário; o endereço antigo leva para lá, com o período */}
+            <Route path="retrospectiva" element={<RetroRedirect />} />
             <Route path="conta" element={<AccountPage />} />
             <Route path="meu-gosto" element={<TastePage />} />
             <Route path="listas" element={<ListsPage />} />

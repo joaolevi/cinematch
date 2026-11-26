@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import type { Pair } from "../types";
 import Poster from "./Poster";
+import { useInView } from "../motion";
 
 /** Sessão dupla (RFF27): um filme ou série para ver e um disco para ouvir depois, lado a lado, com a ponte que os liga. */
 export default function DoubleFeature({ pairs, onSaved }: { pairs: Pair[]; onSaved: (pair: Pair) => void }) {
   const [busy, setBusy] = useState<number | null>(null);
+  const [ref, seen] = useInView<HTMLDivElement>(); // o disco desce da capa quando os cartões aparecem
   const [error, setError] = useState<string | null>(null);
   if (pairs.length === 0) return null;
 
@@ -27,10 +29,10 @@ export default function DoubleFeature({ pairs, onSaved }: { pairs: Pair[]; onSav
   return (
     <section className="mt-10" aria-labelledby="sessao-dupla">
       <h2 id="sessao-dupla" className="font-display text-xl font-bold">
-        Sessão dupla
+        Dobradinha
       </h2>
       <p className="mt-1 text-sm text-muted">Para ver e depois ouvir: um filme ou uma série e um disco ligados pela música.</p>
-      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div ref={ref} className={`mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3 ${seen ? "sleeve-out" : ""}`}>
         {pairs.map((pair) => (
           <article key={`${pair.video.media.id}-${pair.album.id}`} className="card flex flex-col p-4">
             <div className="grid grid-cols-2 gap-3">

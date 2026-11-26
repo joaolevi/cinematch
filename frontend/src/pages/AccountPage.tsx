@@ -2,7 +2,6 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
-import ExperimentsToggle from "../components/ExperimentsToggle";
 import { Avatar } from "../components/WatchedBy";
 import { refreshAvatars } from "../avatars";
 import type { LetterboxdResult, StreamingService, Visibility } from "../types";
@@ -363,7 +362,7 @@ function ServicesPicker() {
   );
 }
 
-/** Minha conta: dados, quem vê, serviços, experimentos e excluir a conta (RFF06, RFF10, RFF17, RFF21). */
+/** Minha conta: dados, quem vê, serviços e excluir a conta (RFF06, RFF10, RFF21). */
 type Tab = "perfil" | "privacidade" | "servicos" | "dados";
 const TABS: [Tab, string][] = [
   ["perfil", "Perfil"],
@@ -435,7 +434,8 @@ export default function AccountPage() {
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Minha conta</h1>
-        <p className="mt-1 text-muted">
+        <p className="font-hand text-2xl font-bold text-accent">do seu jeito</p>
+        <p className="mt-1 text-sm text-muted">
           {user.name} · {user.email}
         </p>
       </div>
@@ -493,27 +493,10 @@ export default function AccountPage() {
       {tab === "servicos" && (
         <Part title="Meus serviços" id="servicos">
         <p>
-          Marque o que você assina. No Para você, "Só nos meus serviços" e "Hoje à noite" mostram só o que dá para ver
+          Marque o que você assina. No Para você, "Só nos meus serviços" e "Sessão pipoca" mostram só o que dá para ver
           agora, e cada sugestão avisa se está num serviço seu.
         </p>
         <ServicesPicker />
-      </Part>
-      )}
-
-      {tab === "privacidade" && (
-        <Part title="Experimentos">
-        <p>
-          Comparamos duas formas de sugerir filmes e séries. Saiba mais em{" "}
-          <Link to="/como-recomendamos" className="underline hover:text-accent">
-            Como recomendamos
-          </Link>
-          . Participar é uma escolha sua, como explica a{" "}
-          <Link to="/privacidade" className="underline hover:text-accent">
-            política de privacidade
-          </Link>
-          .
-        </p>
-        <ExperimentsToggle />
       </Part>
       )}
 

@@ -17,8 +17,6 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // Consentimento para os experimentos (RNFF08): começa desmarcado, a pessoa escolhe
-  const [experiments, setExperiments] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -28,7 +26,7 @@ export default function LoginPage() {
     setBusy(true);
     try {
       if (mode === "login") await login(email, password);
-      else await register(name, email, password, experiments);
+      else await register(name, email, password, false); // sem A/B na entrega final (D29)
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -134,19 +132,6 @@ export default function LoginPage() {
                     <li>→ A senha precisa ter pelo menos 6 caracteres.</li>
                     <li>→ O que você marcar como Já vi aparece na Comunidade. Em Minha conta, você escolhe quem vê.</li>
                   </ul>
-                  <label className="flex cursor-pointer items-start gap-2 text-sm leading-5">
-                    <input
-                      type="checkbox"
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#b9452f]"
-                      style={{ colorScheme: "light" }} // na folha clara, a caixa vazia aparece vazia
-                      checked={experiments}
-                      onChange={(e) => setExperiments(e.target.checked)}
-                    />
-                    <span>
-                      Quero participar dos experimentos de recomendação. Comparamos duas formas de sugerir, e dá para
-                      sair quando quiser.
-                    </span>
-                  </label>
                   <p className="text-xs leading-5 opacity-80">
                     Ao criar a conta, você concorda com a{" "}
                     <Link to="/privacidade" target="_blank" className="underline hover:text-[#b9452f]">

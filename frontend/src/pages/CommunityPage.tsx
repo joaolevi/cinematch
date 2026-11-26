@@ -9,6 +9,7 @@ import CommunityNav from "../components/CommunityNav";
 import HandNote from "../components/HandNote";
 import { LogLine, ReviewPost } from "../components/ReviewPost";
 import PeopleSearch from "../components/PeopleSearch";
+import { CountUp } from "../motion";
 
 const PAGE = 20;
 
@@ -54,7 +55,12 @@ function Suggestions({ people, onFollow }: { people: SuggestedPerson[]; onFollow
               <Avatar name={person.name} userId={person.id} size="h-9 w-9" />
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{person.name}</span>
-                <span className="block text-xs text-muted">Vocês combinam {person.percent}%</span>
+                <span className="block text-xs text-muted">
+                  Vocês combinam{" "}
+                  <span className="whitespace-nowrap">
+                    <CountUp value={person.percent} />%
+                  </span>
+                </span>
               </span>
             </Link>
             <button
@@ -173,7 +179,7 @@ export default function CommunityPage() {
     <div>
       <header className="mx-auto max-w-2xl text-center">
         <h1 className="text-3xl font-bold">Comunidade</h1>
-        <p className="mt-1 text-muted">O que a galera anda vendo e ouvindo.</p>
+        <p className="font-hand text-2xl font-bold text-accent">o que a galera anda vendo e ouvindo</p>
         <p className="mt-0.5 text-sm text-muted">
           Quem vê os seus registros, você escolhe em{" "}
           <Link to="/conta#quem-ve" className="whitespace-nowrap underline hover:text-accent">

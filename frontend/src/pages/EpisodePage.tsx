@@ -27,8 +27,23 @@ export default function EpisodePage() {
 
   usePageTitle(ep ? `${ep.series.title} · T${ep.season}E${ep.number}` : undefined);
 
-  if (error) return <HandNote>{error}</HandNote>;
-  if (!ep) return <HandNote>Abrindo o episódio...</HandNote>;
+  if (error)
+    return (
+      <div className="mx-auto max-w-4xl">
+        <h1 className="text-2xl font-bold">Não deu para abrir o episódio</h1>
+        <HandNote className="mt-2">{error}</HandNote>
+        <Link to={`/media/${id}`} className="mt-4 inline-block text-sm font-bold text-accent hover:underline">
+          ← Voltar para a série
+        </Link>
+      </div>
+    );
+  if (!ep)
+    return (
+      <div className="mx-auto max-w-4xl">
+        <h1 className="sr-only">Episódio</h1>
+        <HandNote>Abrindo o episódio...</HandNote>
+      </div>
+    );
 
   const title = ep.name ?? `Episódio ${ep.number}`;
   const image = ep.still_url ?? ep.series.backdrop_url;

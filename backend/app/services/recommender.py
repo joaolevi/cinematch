@@ -7,7 +7,8 @@ Fluxo (Diagrama de Atividades):
                    e reforça com preferências de usuários semelhantes (colaborativo).
   3. Remove descartados e já registrados e devolve o feed com o motivo de cada sugestão.
 
-Variante A/B: grupo A = híbrido (conteúdo + colaborativo); grupo B = só conteúdo.
+Até 26/11/2026 houve um teste A/B (grupo A = híbrido; grupo B = só conteúdo). Na entrega final, todos recebem o
+híbrido (D29).
 """
 
 from __future__ import annotations
@@ -294,7 +295,7 @@ def recommend(
     content = np.asarray((X @ profile.T).todense()).ravel() / norm  # cosseno em [-1, 1]
 
     # --- Colaborativo item-item: "quem curtiu X também curtiu Y"
-    use_collab = user.variant != "B" and bool(sig_rows)  # quem saiu dos experimentos recebe o completo
+    use_collab = bool(sig_rows)  # desde o fim do A/B (D29), todo mundo recebe o completo
     collab = np.zeros(len(catalog))
     item_sim = None
     external = False

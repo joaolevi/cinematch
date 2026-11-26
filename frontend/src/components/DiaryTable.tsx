@@ -81,9 +81,13 @@ export default function DiaryTable({ groups, onEdit }: { groups: [string, DiaryE
                   <td className="py-2 pr-3">{e.rating != null ? <StarsDisplay value={e.rating} size={13} /> : <span className="text-xs text-muted">sem nota</span>}</td>
                   <td className="hidden py-2 pr-3 md:table-cell">
                     {e.review ? (
-                      <span title={e.review} className="text-muted">
-                        <span aria-hidden>✎</span>
-                        <span className="sr-only">Tem resenha: {e.review}</span>
+                      // Um balão com a palavra, e o começo da resenha ao passar o mouse: o lápis fica só para editar
+                      <span title={e.review} className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-xs text-stone-300">
+                        <svg viewBox="0 0 20 20" aria-hidden className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinejoin="round">
+                          <path d="M3.5 5.5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-3.5 3v-3a2 2 0 0 1-2-2z" />
+                        </svg>
+                        resenha
+                        <span className="sr-only">: {e.review}</span>
                       </span>
                     ) : null}
                   </td>

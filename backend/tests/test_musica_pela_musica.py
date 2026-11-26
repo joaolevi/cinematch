@@ -67,3 +67,20 @@ def test_intercalar_na_proporcao_sem_repetir(db):
 
     out = interleave([rec(1), rec(2), rec(3)], [rec(10), rec(2), rec(11)], 0.5)
     assert [r.media.id for r in out] == [1, 10, 2, 11, 3]  # o 2 repetido entra uma vez só
+
+
+def test_sessao_dupla_varia_o_tipo_de_ponte(db, albums):  # noqa: F811
+    from app.services.bridges import double_features
+
+    discos = mpb(db)
+    user = db.scalar(select(User).where(User.email == "demo@tastory.dev"))
+    for key in ("construcao", "clube"):
+        crud.upsert_diary(db, user, discos[key].id, rating=5)
+    # Os discos do gosto e um filme brasileiro dos anos 70 têm o mesmo clima
+    for m in (discos["transa"], discos["refazenda"]):
+        m.moods = ["nostalgico"]
+    db.commit()
+    pairs = double_features(db, user, limit=4)
+    kinds = [p.kind for p in pairs]
+    assert len(set(kinds[:2])) == len(kinds[:2])  # os primeiros pares são de tipos diferentes
+    assert all(not (p.kind == "taste" and "Trilha sonora" in p.album.genres) for p in pairs)

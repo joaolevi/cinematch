@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "../api";
-import WishBox from "../components/WishBox";
+import WishBox, { togglePiece } from "../components/WishBox";
 import type { Wish } from "../types";
 
 const LEVE: Wish = {
@@ -22,7 +22,7 @@ const NADA: Wish = { ...LEVE, type: null, mood: null, occasion: null, understood
 afterEach(cleanup);
 
 function ask(text: string) {
-  fireEvent.change(screen.getByLabelText("Peça do seu jeito:"), { target: { value: text } });
+  fireEvent.change(screen.getByLabelText("Pede aí:"), { target: { value: text } });
   fireEvent.click(screen.getByRole("button", { name: "Pedir" }));
 }
 
@@ -57,11 +57,31 @@ describe("Peça do seu jeito (RFF25)", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Limpar o pedido" }));
 
     expect(onWish).toHaveBeenLastCalledWith(null);
-    expect((screen.getByLabelText("Peça do seu jeito:") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("Pede aí:") as HTMLInputElement).value).toBe("");
   });
 
   it("não pede nada com o campo vazio", () => {
     render(<WishBox onWish={vi.fn()} />);
     expect((screen.getByRole("button", { name: "Pedir" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("monta o pedido com as peças e mostra o que ele vai virar antes de pedir", async () => {
+    const understand = vi.spyOn(api, "understand").mockResolvedValue(LEVE);
+    const onWish = vi.fn();
+    render(<WishBox big onWish={onWish} />);
+    fireEvent.click(screen.getByRole("button", { name: "+ leve" }));
+    fireEvent.click(screen.getByRole("button", { name: "+ em família" }));
+
+    expect((screen.getByLabelText("Pede aí") as HTMLInputElement).value).toBe("leve em família");
+    expect(screen.getByRole("button", { name: "✓ leve" }).getAttribute("aria-pressed")).toBe("true");
+    await screen.findByText("Vai virar:");
+    expect(understand).toHaveBeenCalledWith("leve em família");
+    expect(onWish).not.toHaveBeenCalled(); // a prévia não mexe nos filtros
+  });
+
+  it("a peça clicada de novo sai do pedido", () => {
+    expect(togglePiece("algo leve com amigos", "leve")).toBe("algo com amigos");
+    expect(togglePiece("", "a dois")).toBe("a dois");
+    expect(togglePiece("terror", "até 2h")).toBe("terror até 2h");
   });
 });

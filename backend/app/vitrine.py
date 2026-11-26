@@ -205,6 +205,13 @@ EPISODE_NOTES = {(1, 10): "Agora entendi a caverna. Preciso de um caderno para o
 # Um disco pela metade, para o "Continuar ouvindo": as quatro primeiras faixas, algumas com nota
 LISTENING = ("Acabou chorare", [(1, 1, 5.0), (1, 2, 4.5), (1, 3, None), (1, 4, 5.0)])
 
+# Indicações para a Visitante: (quem indica, título, tipo, recado)
+SUGGESTIONS = [
+    ("davi", "Ex Machina: Instinto Artificial", M, "Você curtiu Ruptura, vai pirar com esse."),
+    ("bia", "Princesa Mononoke", M, "O mais bonito do Miyazaki, sério."),
+    ("marina", "Corra!", M, None),
+]
+
 # Quem a Visitante segue (a Júlia fica de fora, para aparecer em "Quem seguir") e quem segue de volta
 FOLLOWS = [("visitante", "marina"), ("visitante", "davi"), ("visitante", "bia"), ("visitante", "tomas"),
            ("marina", "visitante"), ("davi", "visitante"), ("bia", "visitante"),
@@ -434,6 +441,56 @@ def build_vitrine(db: Session) -> dict:
             at = min(posted + timedelta(hours=hours), now - timedelta(minutes=5))
             db.add(ReviewComment(entry_id=entry.id, user_id=uid, text=text, created_at=at))
         comments += 1
+
+    # Indicações e avisos para a Visitante, para o sino e o Início já mostrarem algo na demonstração
+    from .models import Notification, Suggestion
+
+    visitante = users["visitante"].id
+    for slug, title, kind, note in SUGGESTIONS:
+        media = _media(db, title, kind)
+        if media is None:
+            continue
+        if not db.scalar(select(Suggestion).where(Suggestion.from_id == users[slug].id, Suggestion.to_id == visitante,
+                                                  Suggestion.media_id == media.id)):
+            db.add(Suggestion(from_id=users[slug].id, to_id=visitante, media_id=media.id, note=note,
+                              created_at=now - timedelta(hours=2)))
+            db.add(Notification(user_id=visitante, kind="indicou", actor_id=users[slug].id, media_id=media.id, text=note,
+                                created_at=now - timedelta(hours=2)))
+    # Criar lembrança juntos: a Bia chama a Visitante para sábado; a Visitante e o Davi já viram juntos ontem
+    from .models import Invite
+
+    for sender, receiver, title, kind, days, note, status in [
+        ("bia", "visitante", "Your Name", M, 2, "Sessão de anime no sábado? Eu levo a pipoca.", "pending"),
+        ("visitante", "davi", "2001: Uma Odisseia no Espaço", M, -1, "Clássico no telão, topa?", "accepted"),
+    ]:
+        media = _media(db, title, kind)
+        if media is None:
+            continue
+        frm, to = users[sender].id, users[receiver].id
+        if not db.scalar(select(Invite).where(Invite.from_id == frm, Invite.to_id == to, Invite.media_id == media.id)):
+            db.add(Invite(from_id=frm, to_id=to, media_id=media.id, day=date.today() + timedelta(days=days), note=note,
+                          status=status, created_at=now - timedelta(days=2)))
+            db.add(Notification(user_id=to, kind="convidou", actor_id=frm, media_id=media.id, text=note,
+                                created_at=now - timedelta(days=2)))
+            if status == "accepted":
+                db.add(Notification(user_id=frm, kind="aceitou", actor_id=to, media_id=media.id,
+                                    created_at=now - timedelta(days=1, hours=20)))
+
+    if not db.scalar(select(Notification).where(Notification.user_id == visitante, Notification.kind.in_(("seguiu", "curtiu")))):
+        for a, b in FOLLOWS:
+            if b == "visitante":
+                db.add(Notification(user_id=visitante, kind="seguiu", actor_id=users[a].id, created_at=now - timedelta(days=1)))
+        for owner, title, likers in LIKES:
+            entry = entries[owner].get(title)
+            if owner == "visitante" and entry:
+                for liker in likers[:2]:
+                    db.add(Notification(user_id=visitante, kind="curtiu", actor_id=users[liker].id, media_id=entry.media_id,
+                                        entry_id=entry.id, created_at=now - timedelta(hours=5)))
+        for owner, title, author, text, _ in COMMENTS:
+            entry = entries[owner].get(title)
+            if owner == "visitante" and entry and author != "visitante":
+                db.add(Notification(user_id=visitante, kind="comentou", actor_id=users[author].id, media_id=entry.media_id,
+                                    entry_id=entry.id, text=text, created_at=now - timedelta(hours=4)))
 
     db.commit()
     return {

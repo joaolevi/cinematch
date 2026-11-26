@@ -194,6 +194,7 @@ export default function ListsPage() {
   return (
     <div>
       <h1 className="text-3xl font-bold">Listas</h1>
+      <p className="font-hand text-2xl font-bold text-accent">o que eu quero ver, ouvir e guardar</p>
       {error && <p className="mt-4 text-red-300">{error}</p>}
 
       {/* Cada lista tem uma capa com os pôsteres em leque, como as listas do Letterboxd; a escolhida fica marcada */}

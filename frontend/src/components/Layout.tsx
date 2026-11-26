@@ -6,6 +6,7 @@ import { tabColor } from "../ui";
 import QuickLog from "./QuickLog";
 import SeenStamp from "./SeenStamp";
 import Toast from "./Toast";
+import Notifications from "./Notifications";
 import UserMenu from "./UserMenu";
 
 /** Aba de fichário presa na borda de baixo do cabeçalho, cada uma com a sua cor. A aberta se emenda com a página. */
@@ -133,6 +134,7 @@ export default function Layout() {
             >
               + Registrar
             </button>
+            <Notifications />
             <UserMenu />
           </div>
         </div>

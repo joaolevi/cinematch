@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import DiaryTable, { monthLabel } from "../components/DiaryTable";
 import MediaCard from "../components/MediaCard";
+import RetroPage from "./RetroPage";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
 import QuickRate from "../components/QuickRate";
@@ -25,6 +26,9 @@ import {
 import type { DiaryEntry } from "../types";
 import { DIARY_GRID, TAPE_COLORS, tabColor } from "../ui";
 import { usePageTitle } from "../usePageTitle";
+import { CountUp } from "../motion";
+
+type DiaryTab = "linha" | "gosto" | "retrospectiva";
 
 const RANKING_SIZE = 10;
 const FOLDED_START = 8; // quantos títulos de um grupo sem data aparecem antes de "Ver os N títulos"
@@ -40,7 +44,7 @@ function Ranking({ title, entries, color }: { title: string; entries: DiaryEntry
       <h2 className={`font-display text-xl font-bold ${color}`}>{title}</h2>
       <ol className="mt-5 flex gap-5 overflow-x-auto px-1 pt-2 pb-3 md:grid md:grid-cols-5 md:overflow-visible xl:grid-cols-10">
         {entries.map((e, position) => (
-          <li key={e.id} className="group w-28 shrink-0 md:w-auto">
+          <li key={e.id} className="sticker-drop group w-28 shrink-0 md:w-auto" style={{ "--i": position } as CSSProperties}>
             <Link to={`/media/${e.media.id}`} className="block" title={e.media.title}>
               <Polaroid position={position} caption={`nº ${position + 1}`} album={e.media.type === "album"}>
                 <Poster media={e.media} compact rounded="rounded-[2px]" />
@@ -75,7 +79,9 @@ function Summary({ entries }: { entries: DiaryEntry[] }) {
     <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
       {notes.slice(0, 3).map((note) => (
         <span key={note.label}>
-          <strong className="font-display text-lg text-cream">{note.value}</strong> {note.label}
+          <strong className="font-display text-lg text-cream">
+            <CountUp value={note.value} />
+          </strong> {note.label}
         </span>
       ))}
       <Link to={`/pessoas/${user?.id}`} className="font-semibold text-accent hover:underline">
@@ -111,8 +117,9 @@ export default function DiaryPage() {
   };
   const [params, setParams] = useSearchParams();
   const tabs = useRef<HTMLDivElement>(null);
-  const tab = params.get("aba") === "gosto" ? "gosto" : "linha";
-  usePageTitle(tab === "gosto" ? "Meu gosto" : "Meu diário");
+  const aba = params.get("aba");
+  const tab: DiaryTab = aba === "gosto" ? "gosto" : aba === "retrospectiva" ? "retrospectiva" : "linha";
+  usePageTitle(tab === "gosto" ? "Meu gosto" : tab === "retrospectiva" ? "Minha retrospectiva" : "Meu diário");
 
   const load = () =>
     api
@@ -154,8 +161,8 @@ export default function DiaryPage() {
     };
   }, [periodEntries]);
 
-  function openTab(key: "linha" | "gosto") {
-    setParams(key === "gosto" ? { aba: "gosto" } : {}, { replace: true });
+  function openTab(key: DiaryTab) {
+    setParams(key === "linha" ? {} : { aba: key }, { replace: true });
   }
 
   /** Clicar em um gráfico mostra esses títulos na linha do tempo. */
@@ -193,12 +200,13 @@ export default function DiaryPage() {
           ref={tabs}
           role="tablist"
           aria-label="O que ver no diário"
-          className="mt-10 flex scroll-mt-28 gap-1 border-b border-line"
+          className="mt-10 flex scroll-mt-28 gap-1 overflow-x-auto border-b border-line [scrollbar-width:none]"
         >
           {(
             [
               ["linha", "Linha do tempo"],
               ["gosto", "Em números"],
+              ["retrospectiva", "Retrospectiva"],
             ] as const
           ).map(([key, label]) => (
             <button
@@ -206,12 +214,18 @@ export default function DiaryPage() {
               role="tab"
               aria-selected={tab === key}
               onClick={() => openTab(key)}
-              className="nb-tab"
-              style={tabColor(key === "linha" ? 0 : 2)}
+              className="nb-tab shrink-0"
+              style={tabColor(key === "linha" ? 0 : key === "gosto" ? 2 : 1)}
             >
               {label}
             </button>
           ))}
+        </div>
+      )}
+
+      {tab === "retrospectiva" && (
+        <div role="tabpanel" className="mt-6">
+          <RetroPage embedded />
         </div>
       )}
 
@@ -232,9 +246,9 @@ export default function DiaryPage() {
             <Link to="/meu-gosto" className="btn-ghost ml-auto px-4 py-1.5 text-sm">
               Corrigir meu gosto
             </Link>
-            <Link to="/retrospectiva" className="btn-ghost px-4 py-1.5 text-sm">
+            <button className="btn-ghost px-4 py-1.5 text-sm" onClick={() => openTab("retrospectiva")}>
               Ver minha retrospectiva
-            </Link>
+            </button>
           </div>
 
           {periodEntries.length === 0 ? (

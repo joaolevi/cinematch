@@ -9,6 +9,7 @@ from ..auth import get_current_user
 from ..db import get_db
 from ..models import DiaryEntry, Media, User
 from ..schemas import DiaryIn, DiaryOut, DiaryUpdate
+from ..services.notifications import notify_watchlist_owners
 
 router = APIRouter(prefix="/diary", tags=["diário"])
 
@@ -47,11 +48,15 @@ def register_consumption(
     está assistindo (RFF24); registrar de novo com `status="seen"` marca que terminou."""
     media = crud.get_media_or_404(db, data.media_id)
     _check_progress(media, data.status, data.season)
+    is_new = db.scalar(select(DiaryEntry.id).where(DiaryEntry.user_id == user.id, DiaryEntry.media_id == data.media_id)) is None
     entry = crud.upsert_diary(
         db, user, data.media_id, rating=data.rating, review=data.review, consumed_at=data.consumed_at,
         status=data.status, season=data.season,
     )
     entry.spoiler = data.spoiler
+    if is_new:
+        db.flush()
+        notify_watchlist_owners(db, user, entry)
     db.commit()
     db.refresh(entry)
     return entry

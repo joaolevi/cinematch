@@ -1,7 +1,7 @@
 """Pacote Acesso do DCU: Cadastrar Conta, Fazer Login, Definir Preferências Iniciais."""
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import crud
@@ -19,13 +19,11 @@ def register(data: RegisterIn, db: Session = Depends(get_db)):
     email = data.email.lower()
     if db.scalar(select(User).where(User.email == email)):
         raise HTTPException(status_code=409, detail="E-mail já cadastrado")
-    # Teste A/B: alterna os grupos conforme a ordem de cadastro
-    n_users = db.scalar(select(func.count()).select_from(User)) or 0
     user = User(
         name=data.name.strip(),
         email=email,
         password_hash=hash_password(data.password),
-        ab_group="A" if n_users % 2 == 0 else "B",
+        ab_group="A",  # o A/B acabou na entrega final (D29): todo mundo recebe o híbrido
         in_experiments=data.in_experiments,  # consentimento dado no cadastro (RNFF08)
     )
     db.add(user)

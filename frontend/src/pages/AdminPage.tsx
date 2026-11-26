@@ -9,6 +9,7 @@ import type { AdminComment, AdminReport, AdminReview, AdminUser, ExternalTitle, 
 import { TAPE_COLORS, tabColor } from "../ui";
 import { usePageTitle } from "../usePageTitle";
 import HandNote from "../components/HandNote";
+import { CountUp } from "../motion";
 
 type Tab = "metrics" | "users" | "catalog" | "moderation";
 
@@ -76,11 +77,13 @@ function VariantCard({ m, label, note }: { m: VariantMetrics; label: string; not
     <div className="card p-5">
       <p className="text-xs font-semibold tracking-wider text-muted uppercase">{label}</p>
       <p className="font-hand text-lg leading-5 text-accent">{note}</p>
-      <p className="mt-3 text-4xl font-extrabold text-accent">{pct(m.acceptance_rate)}</p>
+      <p className="mt-3 text-4xl font-extrabold text-accent">
+        <CountUp value={pct(m.acceptance_rate)} />
+      </p>
       <p className="text-sm text-stone-300">{inWords(m.acceptance_rate)}</p>
       {/* O que aconteceu com as sugestões exibidas, em uma barra só */}
       {/* A barra usa a taxa de aceitação: Quero ver e Já vi no mesmo título contam uma vez só */}
-      <div className="mt-4 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-bg" aria-hidden>
+      <div className="bar-grow mt-4 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-bg" aria-hidden>
         <div className="bg-accent" style={{ width: `${m.acceptance_rate * 100}%` }} title={`Aceitas: ${pct(m.acceptance_rate)}`} />
         <div className="bg-[#76655b]" style={{ width: share(m.dismiss) }} title={`Não me interesso: ${m.dismiss}`} />
       </div>
@@ -145,15 +148,7 @@ function MetricsTab() {
 
   if (error) return <p className="text-red-300">{error}</p>;
   if (!m) return <HandNote>Somando os números...</HandNote>;
-  const [a, b] = m.by_variant;
   const warning = dataWarning(m);
-  const diff = Math.round((a.acceptance_rate - b.acceptance_rate) * 100);
-  const comparison =
-    a.shown === 0 || b.shown === 0
-      ? "Ainda falta um dos grupos ver sugestões para dar para comparar."
-      : diff === 0
-        ? "Os dois grupos aceitaram na mesma proporção."
-        : `O grupo A, com o recomendador híbrido, aceitou ${Math.abs(diff)} ${Math.abs(diff) === 1 ? "ponto" : "pontos"} ${diff > 0 ? "a mais" : "a menos"} que o grupo B.`;
   return (
     <div>
       {/* O resumo vem primeiro, numa folha, em frases; os números detalhados ficam embaixo */}
@@ -162,27 +157,17 @@ function MetricsTab() {
         <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Em resumo:</p>
         <p className="font-display text-2xl leading-tight font-bold">{inWords(m.overall.acceptance_rate)}</p>
         <ul className="mt-2 font-hand text-xl leading-8 font-semibold opacity-85">
-          <li>
-            → {comparison}
-            {m.trending_shown > 0 &&
-              ` A comparação deixa de fora ${plural(m.trending_shown, "sugestão Em alta", "sugestões Em alta")}, que são iguais nos dois grupos.`}
-          </li>
           <li>→ Satisfação: {satisfactionInWords(m.overall).toLowerCase()}</li>
-          {m.opted_out > 0 && (
-            <li>
-              → {plural(m.opted_out, "pessoa saiu", "pessoas saíram")} dos experimentos e ficam fora da comparação.
-            </li>
-          )}
+          <li>→ Todo mundo recebe o recomendador completo, o híbrido: o teste A/B acabou na entrega final, em 26/11.</li>
           <li>
             → {warning.title}: {warning.text}
           </li>
         </ul>
       </section>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <VariantCard m={m.overall} label="Todo mundo" note="todas as sugestões, inclusive as Em alta" />
-        <VariantCard m={a} label="Grupo A (híbrido)" note="só as personalizadas: gosto da pessoa + gosto parecido" />
-        <VariantCard m={b} label="Grupo B (só conteúdo)" note="só as personalizadas: gosto da pessoa" />
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <VariantCard m={m.overall} label="Todas as sugestões" note="inclusive as Em alta, de quem ainda não tem histórico" />
+        <VariantCard m={m.by_variant[0]} label="Só as personalizadas" note="pelo gosto da pessoa e de quem curte coisas parecidas" />
       </div>
       <div className="mt-4 flex flex-wrap gap-6 text-sm text-muted">
         <span>Pessoas reais: {m.real_users}</span>
@@ -243,19 +228,9 @@ function MetricsTab() {
               A aceitação mede interesse; a satisfação, se a pessoa gostou.
             </li>
             <li>
-              <b>Grupo A:</b> recebe o recomendador híbrido, que junta as características dos títulos com o que
-              pessoas de gosto parecido curtiram.
-            </li>
-            <li>
-              <b>Grupo B:</b> recebe só as características dos títulos. Serve de comparação.
-            </li>
-            <li>
-              Os grupos são comparados só pelas sugestões personalizadas. As "Em alta", de quem ainda não tem
-              histórico, são iguais nos dois grupos e entram só na taxa de todo mundo.
-            </li>
-            <li>
-              Cada pessoa entra em um grupo ao se cadastrar. Quem sai dos experimentos, em Minha conta ou em Como
-              recomendamos, recebe as sugestões completas e fica fora da comparação, mas continua na taxa de todo mundo.
+              <b>Recomendador:</b> todo mundo recebe o híbrido, que junta as características dos títulos com o que
+              pessoas de gosto parecido curtiram. Até 26/11 houve um teste A/B contra a versão só de conteúdo; os testes
+              com o MovieLens (EXP01 e EXP04) já mostravam o híbrido à frente, e na entrega final ele ficou para todos.
             </li>
             <li>O que alguém registra pelo + Registrar não entra na taxa: não veio de uma sugestão.</li>
           </ul>
@@ -318,7 +293,6 @@ function UsersTab() {
     const when = (iso: string) => new Date(iso.endsWith("Z") ? iso : `${iso}Z`).getTime();
     const shown = items.reduce((sum, u) => sum + u.shown, 0);
     const accepted = items.reduce((sum, u) => sum + u.accepted, 0);
-    const groupA = items.filter((u) => u.ab_group === "A").length;
     return [
       { value: String(data?.total ?? 0), label: kind === "simulated" ? "pessoas simuladas" : "pessoas" },
       { value: String(items.filter((u) => when(u.created_at) >= since).length), label: `chegaram nos últimos ${ACTIVE_DAYS} dias` },
@@ -327,7 +301,6 @@ function UsersTab() {
       { value: String(items.reduce((sum, u) => sum + u.diary_entries, 0)), label: "registros no diário" },
       { value: String(items.reduce((sum, u) => sum + u.reviews, 0)), label: "resenhas escritas" },
       { value: shown ? `${Math.round((accepted / shown) * 100)}%` : "–", label: "das sugestões vistas foram aceitas" },
-      { value: `${groupA} · ${items.length - groupA}`, label: "no grupo A · no grupo B" },
     ].map((note, i) => ({ ...note, color: NOTE_COLORS[i % NOTE_COLORS.length] }));
   }, [data, kind]);
 
@@ -347,7 +320,9 @@ function UsersTab() {
             className="postit flex aspect-[4/3] flex-col justify-center px-3 text-center"
             style={{ "--note": note.color, rotate: `${[-2, 1.5, -1, 2, -1.5, 1, -2, 1.5][i]}deg` } as CSSProperties}
           >
-            <span className="font-hand text-4xl leading-none font-bold">{note.value}</span>
+            <span className="font-hand text-4xl leading-none font-bold">
+              <CountUp value={note.value} />
+            </span>
             <span className="mt-1 font-hand text-lg leading-5 font-semibold">{note.label}</span>
           </li>
         ))}
@@ -392,7 +367,6 @@ function UsersTab() {
             <thead className="text-xs tracking-wider text-muted uppercase">
               <tr className="border-b border-line">
                 <th className="py-2 pr-4 font-semibold">Pessoa</th>
-                <th className="py-2 pr-4 font-semibold">Grupo</th>
                 <th className="py-2 pr-4 font-semibold">Entrou em</th>
                 <th className="py-2 pr-4 text-right font-semibold">Diário</th>
                 <th className="py-2 pr-4 text-right font-semibold">Resenhas</th>
@@ -417,7 +391,6 @@ function UsersTab() {
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 pr-4 text-stone-300">{u.ab_group === "A" ? "A · híbrido" : "B · só conteúdo"}</td>
                   <td className="py-3 pr-4 text-stone-300">{formatDate(u.created_at.slice(0, 10))}</td>
                   <td className="py-3 pr-4 text-right tabular-nums">{u.diary_entries}</td>
                   <td className="py-3 pr-4 text-right tabular-nums">{u.reviews}</td>

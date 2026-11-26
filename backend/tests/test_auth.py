@@ -34,12 +34,13 @@ def test_protected_route_requires_token(client):
     assert client.get("/recommendations").status_code == 401
 
 
-def test_ab_groups_alternate(client):
+def test_todo_mundo_entra_no_completo(client):
+    """Sem A/B na entrega final (D29): toda conta nova recebe o recomendador completo."""
     groups = set()
     for i in range(4):
         h = register(client, email=f"ab{i}@teste.com")
         groups.add(client.get("/me", headers=h).json()["ab_group"])
-    assert groups == {"A", "B"}
+    assert groups == {"A"}
 
 
 def test_password_limit_is_72_bytes(client):

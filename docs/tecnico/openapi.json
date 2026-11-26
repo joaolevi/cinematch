@@ -5815,6 +5815,374 @@
         }
       }
     },
+    "/media/{media_id}/suggest": {
+      "post": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Suggest",
+        "description": "Indicar um filme, uma série ou um disco para pessoas que você segue, com um recado opcional. Cada pessoa recebe\numa notificação. Indicar de novo o mesmo título para a mesma pessoa só troca o recado. Quem já registrou o título\nno diário não recebe.",
+        "operationId": "suggest_media__media_id__suggest_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/suggestions": {
+      "get": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Received",
+        "description": "As indicações que a pessoa recebeu, da mais nova para a mais antiga, sem o que ela já registrou no diário.",
+        "operationId": "received_me_suggestions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SuggestionOut"
+                  },
+                  "title": "Response Received Me Suggestions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/notifications": {
+      "get": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Notifications",
+        "description": "Os avisos da pessoa, do mais novo para o mais antigo, e quantos ainda não foram lidos.",
+        "operationId": "notifications_me_notifications_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 30,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/notifications/{notification_id}/read": {
+      "post": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Mark One Read",
+        "description": "Marca um aviso como lido, quando a pessoa abre o que ele mostra.",
+        "operationId": "mark_one_read_me_notifications__notification_id__read_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "notification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Notification Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/notifications/read": {
+      "post": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Mark Read",
+        "description": "Marca todos os avisos como lidos.",
+        "operationId": "mark_read_me_notifications_read_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/media/{media_id}/invite": {
+      "post": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Invite",
+        "description": "Criar lembrança juntos: chamar alguém que você segue para ver ou ouvir o título, com um dia combinado e um recado,\nse quiser. A pessoa recebe um aviso. Chamar de novo a mesma pessoa para o mesmo título troca o dia e o recado e\nvolta a esperar a resposta.",
+        "operationId": "invite_media__media_id__invite_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "media_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Media Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/invites": {
+      "get": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "My Invites",
+        "description": "As lembranças da pessoa: os convites recebidos esperando resposta, os combinados (dos dois lados) e os enviados\nque ainda esperam. Os recusados e os que passaram há mais de duas semanas saem.",
+        "operationId": "my_invites_me_invites_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitesOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/invites/{invite_id}": {
+      "put": {
+        "tags": [
+          "indicações e notificações"
+        ],
+        "summary": "Answer Invite",
+        "description": "Responder um convite: topar (o título vai para o Quero ver, e quem chamou recebe um aviso) ou agora não.",
+        "operationId": "answer_invite_invites__invite_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invite_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Invite Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteAnswerIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -7737,6 +8105,158 @@
         ],
         "title": "ImpressionsIn"
       },
+      "InviteAnswerIn": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "declined"
+            ],
+            "title": "Answer",
+            "description": "accepted: topou; declined: agora não"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer"
+        ],
+        "title": "InviteAnswerIn"
+      },
+      "InviteIn": {
+        "properties": {
+          "to": {
+            "type": "integer",
+            "title": "To",
+            "description": "O id de quem você chama"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day",
+            "description": "O dia combinado, se já tiver"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 280
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Um recado, se quiser"
+          }
+        },
+        "type": "object",
+        "required": [
+          "to"
+        ],
+        "title": "InviteIn",
+        "description": "Criar lembrança juntos: chamar alguém que você segue para ver ou ouvir um título."
+      },
+      "InviteOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/PersonOut"
+          },
+          "receiver": {
+            "$ref": "#/components/schemas/PersonOut"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "accepted",
+              "declined"
+            ],
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "mine": {
+            "type": "boolean",
+            "title": "Mine",
+            "description": "Se quem pede foi quem chamou"
+          },
+          "registered": {
+            "type": "boolean",
+            "title": "Registered",
+            "description": "Se quem pede já registrou o título no diário"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "media",
+          "sender",
+          "receiver",
+          "status",
+          "created_at",
+          "mine",
+          "registered"
+        ],
+        "title": "InviteOut"
+      },
+      "InvitesOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InviteOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "InvitesOut",
+        "description": "As lembranças de quem pede: os convites recebidos e os enviados que ainda importam."
+      },
       "LetterboxdIn": {
         "properties": {
           "files": {
@@ -8966,6 +9486,107 @@
         "type": "object",
         "title": "MyStatus"
       },
+      "NotificationOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "seguiu",
+              "curtiu",
+              "comentou",
+              "indicou",
+              "registrou",
+              "convidou",
+              "aceitou"
+            ],
+            "title": "Kind"
+          },
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "media": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MediaOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "entry_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entry Id"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "read": {
+            "type": "boolean",
+            "title": "Read"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "read",
+          "created_at"
+        ],
+        "title": "NotificationOut"
+      },
+      "NotificationsOut": {
+        "properties": {
+          "unread": {
+            "type": "integer",
+            "title": "Unread"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unread",
+          "items"
+        ],
+        "title": "NotificationsOut"
+      },
       "OccasionOut": {
         "properties": {
           "key": {
@@ -8995,7 +9616,7 @@
           "kind": {
             "type": "string",
             "title": "Kind",
-            "description": "A ponte: soundtrack, composer, same_person, biopic ou documentary"
+            "description": "A ponte: soundtrack, composer, same_person, biopic, documentary ou taste (um disco do gosto musical da pessoa que combina com o filme pelo clima, gênero, década, país ou idioma)"
           },
           "reason": {
             "type": "string",
@@ -9891,6 +10512,53 @@
         ],
         "title": "StreamingOut"
       },
+      "SuggestIn": {
+        "properties": {
+          "to": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "To",
+            "description": "Os ids de quem recebe"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 280
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Um recado, se quiser"
+          }
+        },
+        "type": "object",
+        "required": [
+          "to"
+        ],
+        "title": "SuggestIn",
+        "description": "Indicar um título para uma ou mais pessoas que você segue."
+      },
+      "SuggestOut": {
+        "properties": {
+          "sent": {
+            "type": "integer",
+            "title": "Sent",
+            "description": "Para quantas pessoas a indicação foi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent"
+        ],
+        "title": "SuggestOut"
+      },
       "SuggestedPersonOut": {
         "properties": {
           "id": {
@@ -9919,6 +10587,51 @@
         ],
         "title": "SuggestedPersonOut",
         "description": "Alguém para seguir, pelo gosto parecido (RFF15)."
+      },
+      "SuggestionOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "media": {
+            "$ref": "#/components/schemas/MediaOut"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/PersonOut"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "in_watchlist": {
+            "type": "boolean",
+            "title": "In Watchlist",
+            "description": "Se o título já está no Quero ver de quem recebeu"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "media",
+          "sender",
+          "created_at",
+          "in_watchlist"
+        ],
+        "title": "SuggestionOut",
+        "description": "Uma indicação recebida."
       },
       "SyncOut": {
         "properties": {

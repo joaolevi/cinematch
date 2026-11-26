@@ -1,7 +1,7 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.config import Settings
-from app.models import ItemNeighbor, Media, RecEvent
+from app.models import ItemNeighbor, Media, RecEvent, User
 from app.seed import create_synthetic_users
 from app.services import recommender
 
@@ -209,19 +209,16 @@ def test_hybrid_strategy_with_collaborative_data(client, db):
     assert feed["strategy"] == "hybrid"
 
 
-def test_group_b_uses_content_only(client, db):
+def test_conta_antiga_do_grupo_b_recebe_o_hibrido(client, db):
+    """Quem ficou no grupo B antes do fim do A/B (D29) passa a receber o híbrido, com o colaborativo."""
     create_synthetic_users(db, per_persona=3)
-    headers = None
-    for i in range(3):
-        h = register(client, email=f"b{i}@teste.com")
-        if client.get("/me", headers=h).json()["ab_group"] == "B":
-            headers = h
-            break
-    assert headers is not None
+    headers = register(client, email="b0@teste.com")
+    db.execute(update(User).where(User.email == "b0@teste.com").values(ab_group="B"))
+    db.commit()
     mid = media_id_by_title(client, headers, "Toy Story")
     client.post("/diary", json={"media_id": mid, "rating": 5}, headers=headers)
     feed = client.get("/recommendations", headers=headers).json()
-    assert feed["variant"] == "B" and feed["strategy"] == "content"
+    assert feed["variant"] == "A" and feed["strategy"] == "hybrid"
 
 
 def test_preferred_creator_guides_feed_and_reason(client, user_headers):

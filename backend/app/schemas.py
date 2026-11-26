@@ -326,7 +326,10 @@ class PairOut(BaseModel):
 
     video: RecommendationOut
     album: MediaOut
-    kind: str = Field(description="A ponte: soundtrack, composer, same_person, biopic ou documentary")
+    kind: str = Field(
+        description="A ponte: soundtrack, composer, same_person, biopic, documentary ou taste (um disco do gosto musical "
+        "da pessoa que combina com o filme pelo clima, gênero, década, país ou idioma)"
+    )
     reason: str = Field(description='Por que o disco acompanha o filme, como "A trilha sonora de Interestelar"')
 
 
@@ -914,6 +917,75 @@ class MixOut(BaseModel):
     title: str
     subtitle: str
     items: list["MediaOut"]
+
+
+class SuggestIn(BaseModel):
+    """Indicar um título para uma ou mais pessoas que você segue."""
+
+    to: list[int] = Field(min_length=1, max_length=10, description="Os ids de quem recebe")
+    note: str | None = Field(default=None, max_length=280, description="Um recado, se quiser")
+
+
+class SuggestOut(BaseModel):
+    sent: int = Field(description="Para quantas pessoas a indicação foi")
+
+
+class SuggestionOut(BaseModel):
+    """Uma indicação recebida."""
+
+    id: int
+    media: "MediaOut"
+    sender: "PersonOut"
+    note: str | None = None
+    created_at: datetime
+    in_watchlist: bool = Field(description="Se o título já está no Quero ver de quem recebeu")
+
+
+class InviteIn(BaseModel):
+    """Criar lembrança juntos: chamar alguém que você segue para ver ou ouvir um título."""
+
+    to: int = Field(description="O id de quem você chama")
+    day: date | None = Field(default=None, description="O dia combinado, se já tiver")
+    note: str | None = Field(default=None, max_length=280, description="Um recado, se quiser")
+
+
+class InviteAnswerIn(BaseModel):
+    answer: Literal["accepted", "declined"] = Field(description="accepted: topou; declined: agora não")
+
+
+class InviteOut(BaseModel):
+    id: int
+    media: "MediaOut"
+    sender: "PersonOut"
+    receiver: "PersonOut"
+    day: date | None = None
+    note: str | None = None
+    status: Literal["pending", "accepted", "declined"]
+    created_at: datetime
+    mine: bool = Field(description="Se quem pede foi quem chamou")
+    registered: bool = Field(description="Se quem pede já registrou o título no diário")
+
+
+class InvitesOut(BaseModel):
+    """As lembranças de quem pede: os convites recebidos e os enviados que ainda importam."""
+
+    items: list[InviteOut]
+
+
+class NotificationOut(BaseModel):
+    id: int
+    kind: Literal["seguiu", "curtiu", "comentou", "indicou", "registrou", "convidou", "aceitou"]
+    actor: "PersonOut | None" = None
+    media: "MediaOut | None" = None
+    entry_id: int | None = None
+    text: str | None = None
+    read: bool
+    created_at: datetime
+
+
+class NotificationsOut(BaseModel):
+    unread: int
+    items: list[NotificationOut]
 
 
 class PartRef(BaseModel):

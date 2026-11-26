@@ -57,8 +57,10 @@ class User(Base):
 
     @property
     def variant(self) -> str:
-        """O grupo que vale nas sugestões e nos eventos: "A", "B" ou "-" para quem saiu dos experimentos."""
-        return self.ab_group if self.in_experiments else "-"
+        """O grupo que vale nas sugestões e nos eventos. O teste A/B acabou em 26/11/2026, na entrega final (D29): todo
+        mundo recebe o recomendador completo, o híbrido (grupo "A"). `ab_group` e `in_experiments` ficam no banco, para
+        o histórico do que foi medido até lá."""
+        return "A"
 
     preferences: Mapped[list["UserPreference"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
@@ -327,6 +329,63 @@ class ReviewReport(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     entry: Mapped[DiaryEntry] = relationship()
+
+
+class Suggestion(Base):
+    """Uma indicação: alguém indica um filme, uma série ou um disco para quem segue, com um recado opcional."""
+
+    __tablename__ = "suggestions"
+    __table_args__ = (UniqueConstraint("from_id", "to_id", "media_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    from_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    to_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    media_id: Mapped[int] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"))
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    sender: Mapped[User] = relationship(foreign_keys=[from_id])
+    media: Mapped[Media] = relationship()
+
+
+class Invite(Base):
+    """Criar lembrança juntos: um convite para ver ou ouvir um título com alguém que você segue, com uma data opcional.
+    A pessoa topa ou diz que agora não; depois da data, os dois recebem o "Como foi?" para registrar no diário."""
+
+    __tablename__ = "invites"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    from_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    to_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    media_id: Mapped[int] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"))
+    day: Mapped[date | None] = mapped_column(Date, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(10), default="pending", server_default="pending")  # pending | accepted | declined
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    sender: Mapped[User] = relationship(foreign_keys=[from_id])
+    receiver: Mapped[User] = relationship(foreign_keys=[to_id])
+    media: Mapped[Media] = relationship()
+
+
+class Notification(Base):
+    """Um aviso para a pessoa: alguém a seguiu, curtiu ou comentou a resenha dela, indicou algo para ela, ou alguém que
+    ela segue registrou um título que está no Quero ver dela."""
+
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(20))  # seguiu | curtiu | comentou | indicou | registrou | convidou | aceitou
+    actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    media_id: Mapped[int | None] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"), nullable=True)
+    entry_id: Mapped[int | None] = mapped_column(ForeignKey("diary_entries.id", ondelete="CASCADE"), nullable=True)
+    text: Mapped[str | None] = mapped_column(Text, nullable=True)  # o recado da indicação ou o começo do comentário
+    read: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+    actor: Mapped[User | None] = relationship(foreign_keys=[actor_id])
+    media: Mapped[Media | None] = relationship()
 
 
 class TasteAdjustment(Base):

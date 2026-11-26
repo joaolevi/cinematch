@@ -74,7 +74,7 @@ function FacetRow({
       </span>
       <span className="flex items-center gap-2">
         <span className="h-2 flex-1 overflow-hidden rounded-full bg-bg">
-          <span className="block h-full rounded-full bg-accent" style={{ width: `${Math.max((facet.share / (top || 1)) * 100, 2)}%` }} />
+          <span className="bar-grow block h-full rounded-full bg-accent" style={{ width: `${Math.max((facet.share / (top || 1)) * 100, 2)}%` }} />
         </span>
         <span className="w-20 text-xs text-muted sm:w-24">{state ?? `${Math.round(facet.share * 100)}%`}</span>
       </span>

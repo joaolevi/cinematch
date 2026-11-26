@@ -91,7 +91,10 @@ export default function SearchPage() {
   return (
     <div>
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-bold">{heading}</h1>
+        <div>
+          <h1 className="text-3xl font-bold">{heading}</h1>
+          <p className="font-hand text-2xl font-bold text-accent">filmes, séries, discos e pessoas</p>
+        </div>
         {person && (
           <button className="btn-ghost px-3 py-1 text-xs" onClick={() => setFilter("pessoa", "")}>
             Limpar filtro

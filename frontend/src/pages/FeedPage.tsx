@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { sessionNow } from "../session";
 import DoubleFeature from "../components/DoubleFeature";
 import Highlight, { Buttons, DismissButton, OnMyServices } from "../components/Highlight";
 import Carousel from "../components/Carousel";
@@ -24,6 +25,7 @@ import HandNote from "../components/HandNote";
 import WishBox from "../components/WishBox";
 import { Avatar } from "../components/WatchedBy";
 import ListName from "../components/ListName";
+import { jump, Popcorn } from "../motion";
 
 const PAGE = 30; // em fileiras, 30 sugestões formam fileiras de gênero com pelo menos 3 títulos
 const MIN_ROW = 3; // fileira com menos que isso não vale a pena: os títulos vão para "Mais sugestões"
@@ -123,7 +125,8 @@ function Mixes({ mixes }: { mixes: Mix[] }) {
   );
 }
 
-const TONIGHT_MINUTES = 150; // "Hoje à noite": cabe numa noite, até 2h30
+// A Sessão pipoca acompanha a hora do dia (session.ts): a duração muda de manhã, à tarde, à noite e de madrugada
+const SESSION = sessionNow();
 const MAX_COMPANIONS = 4; // quem pede e mais quatro pessoas (RFF28)
 
 /** "Levi", "Levi e Bia", "Levi, Bia e Caio" */
@@ -192,9 +195,12 @@ export default function FeedPage() {
   const [discovery, setDiscovery] = useState<Discovery>("taste");
   // Momento (RFF20): clima e duração máxima; vazio e 0 = qualquer um
   const [mood, setMood] = useState("");
-  const [maxMinutes, setMaxMinutes] = useState(0);
+  // Do Início dá para chegar já com a Sessão pipoca ligada (?hoje=1) ou com um pedido feito (?pedido=...)
+  const [params] = useSearchParams();
+  const fromTonight = params.get("hoje") === "1";
+  const [maxMinutes, setMaxMinutes] = useState(fromTonight ? SESSION.minutes : 0);
   const [occasion, setOccasion] = useState("");
-  const [onlyMine, setOnlyMine] = useState(false); // só nos meus serviços (RFF21)
+  const [onlyMine, setOnlyMine] = useState(fromTonight && (user?.services.length ?? 0) > 0); // só nos meus serviços (RFF21)
   const moods = useMoods();
   const [occasions, setOccasions] = useState<Occasion[]>([]);
   // Para ver ou ouvir junto (RFF28): quem eu sigo e quem escolhi para hoje
@@ -217,6 +223,7 @@ export default function FeedPage() {
   const hasServices = (user?.services.length ?? 0) > 0;
   // O painel de pedir e filtrar pode ser escondido, e a escolha fica neste navegador. Sem escolha, ele começa aberto
   // no computador e recolhido no celular, para a primeira sugestão aparecer sem rolar
+  const [popcorn, setPopcorn] = useState(0); // cada vez que a Sessão pipoca liga, uma leva de pipocas
   const [showFilters, setShowFiltersState] = useState(() => {
     try {
       const saved = localStorage.getItem("tastory.paravoce.filtros");
@@ -236,7 +243,7 @@ export default function FeedPage() {
   };
   const activeFilters =
     [discovery !== "taste", mood, maxMinutes, occasion, onlyMine, companions.length > 0].filter(Boolean).length;
-  const tonight = maxMinutes === TONIGHT_MINUTES && onlyMine === hasServices;
+  const tonight = maxMinutes === SESSION.minutes && onlyMine === hasServices;
   function clearFilters() {
     setDiscovery("taste");
     setMood("");
@@ -481,6 +488,7 @@ export default function FeedPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Para você, {user?.name.split(" ")[0]}</h1>
+          <p className="font-hand text-2xl font-bold text-accent">sempre com o porquê</p>
           {feed && (
             <p className="mt-1 text-sm text-muted">
               {together
@@ -509,12 +517,102 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* Um painel só para pedir e filtrar: o pedido em português em cima e, embaixo, três grupos com título */}
+      {/* Os destaques do Tastory ficam à vista: pedir em português, "Hoje à noite" e ver junto com alguém. O resto dos
+          filtros fica no painel de baixo, que se esconde */}
+      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <section aria-label="Pedir do seu jeito" className="rise relative overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-surface via-surface/80 to-accent/10 p-5 sm:p-6">
+          <WishBox big onWish={applyWish} initial={params.get("pedido") ?? undefined} />
+        </section>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+          {type !== "album" && (
+            <button
+              aria-pressed={tonight}
+              onClick={(e) => {
+                if (tonight) {
+                  setMaxMinutes(0);
+                  setOnlyMine(false);
+                } else {
+                  setMaxMinutes(SESSION.minutes);
+                  setOnlyMine(hasServices);
+                  // Ligou: umas pipocas pulam e o cartão dá um pulinho
+                  setPopcorn(popcorn + 1);
+                  jump(e.currentTarget);
+                }
+              }}
+              style={{ "--i": 1 } as React.CSSProperties}
+              className={`rise group relative cursor-pointer rounded-2xl border bg-gradient-to-br p-4 text-left transition ${SESSION.sky} ${
+                tonight ? "border-accent" : "border-line hover:border-accent/60"
+              }`}
+            >
+              <Popcorn key={popcorn} burst={popcorn} />
+              {/* O céu de agora: o ícone da hora do dia e, à noite, umas estrelas */}
+              <span aria-hidden className="float absolute top-3 right-4 text-3xl" style={{ "--tilt": "-12deg" } as React.CSSProperties}>
+                {SESSION.icon}
+              </span>
+              {SESSION.stars && (
+                <>
+                  <span aria-hidden className="absolute top-8 right-16 h-1 w-1 rounded-full bg-cream/70" />
+                  <span aria-hidden className="absolute top-4 right-24 h-0.5 w-0.5 rounded-full bg-cream/60" />
+                </>
+              )}
+              <span className="block font-hand text-2xl leading-7 font-bold text-accent">Sessão pipoca</span>
+              <span className="mt-1 block pr-10 text-sm text-stone-300">
+                Agora {SESSION.when}: {SESSION.text}
+                {hasServices && ", nos seus serviços"}
+              </span>
+              <span className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-bold ${tonight ? "bg-accent text-bg" : "bg-white/10 text-cream group-hover:bg-accent group-hover:text-bg"}`}>
+                {tonight ? "Ligado" : "Ligar"}
+              </span>
+            </button>
+          )}
+          <section
+            aria-label="Gosto em dupla"
+            style={{ "--i": 2 } as React.CSSProperties}
+            className={`rise rounded-2xl border p-4 ${together ? "border-accent bg-accent/10" : "border-line bg-surface/70"}`}
+          >
+            <p className="font-hand text-2xl leading-7 font-bold text-accent">Gosto em dupla</p>
+            <p className="mt-1 text-sm text-stone-300">
+              {together ? `Sugestões para você e ${chosen.map((p) => p.name.split(" ")[0]).join(" e ")}` : "Sugestões que agradam aos dois"}
+            </p>
+            {following.length === 0 ? (
+              <Link to="/comunidade/pessoas" className="mt-2 inline-block text-xs text-muted underline hover:text-accent">
+                Seguir alguém para ver junto
+              </Link>
+            ) : (
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                {following.slice(0, 6).map((person) => {
+                  const on = companions.includes(person.id);
+                  return (
+                    <button
+                      key={person.id}
+                      aria-pressed={on}
+                      aria-label={`${on ? "Tirar" : "Ver junto com"} ${person.name}`}
+                      title={person.name}
+                      disabled={!on && companions.length >= MAX_COMPANIONS}
+                      onClick={() => setCompanions(on ? companions.filter((id) => id !== person.id) : [...companions, person.id])}
+                      className={`cursor-pointer rounded-full p-0.5 transition hover:-translate-y-0.5 disabled:opacity-40 ${on ? "ring-2 ring-accent" : "ring-1 ring-line"}`}
+                    >
+                      <Avatar name={person.name} userId={person.id} size="h-9 w-9 text-sm" />
+                    </button>
+                  );
+                })}
+                {together && (
+                  <button className="ml-1 text-xs text-muted underline hover:text-accent" onClick={() => setCompanions([])}>
+                    Só para mim
+                  </button>
+                )}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+
+      {/* Os outros filtros: quanto sair do óbvio e o momento (clima, ocasião, duração, serviços) */}
       <section aria-label="Ajustar as sugestões" className={`mt-5 rounded-2xl border border-line bg-surface/70 ${showFilters ? "p-4 sm:p-5" : "px-4 py-2.5 sm:px-5"}`}>
         {/* A linha de cima esconde e mostra o painel. Escondido, ela diz quantos filtros estão ligados */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="font-hand text-xl leading-7 font-bold text-accent">
-            Pedir e filtrar
+            Mais filtros
             {!showFilters && activeFilters > 0 && (
               <span className="ml-2 font-sans text-sm font-semibold text-stone-300">
                 {activeFilters} {activeFilters === 1 ? "filtro ligado" : "filtros ligados"}
@@ -531,8 +629,7 @@ export default function FeedPage() {
           </button>
         </div>
         <div id="filtros-do-feed" className={showFilters ? "mt-3" : "hidden"}>
-        <WishBox onWish={applyWish} />
-        <div className="mt-4 grid gap-5 border-t border-line pt-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-0 lg:divide-x lg:divide-line">
+        <div className="grid gap-5 border-t border-line pt-4 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-0 lg:divide-x lg:divide-line">
           {type !== "album" && !together && (
             <FilterGroup title="Quanto sair do óbvio">
               <Segmented
@@ -549,24 +646,6 @@ export default function FeedPage() {
           )}
 
           <FilterGroup title="Para agora">
-            {type !== "album" && (
-              <button
-                aria-pressed={tonight}
-                title={hasServices ? "Até 2h30 e só nos seus serviços" : "Até 2h30. Marque seus serviços para ver só o que você tem"}
-                onClick={() => {
-                  if (tonight) {
-                    setMaxMinutes(0);
-                    setOnlyMine(false);
-                  } else {
-                    setMaxMinutes(TONIGHT_MINUTES);
-                    setOnlyMine(hasServices);
-                  }
-                }}
-                className={`chip cursor-pointer px-3 py-1 text-sm ${tonight ? "border-accent bg-accent/15 text-accent" : ""}`}
-              >
-                🌙 Hoje à noite
-              </button>
-            )}
             <label className="sr-only" htmlFor="clima">
               Clima
             </label>
@@ -633,36 +712,6 @@ export default function FeedPage() {
             )}
           </FilterGroup>
 
-          <FilterGroup title="Junto com">
-            {following.length === 0 ? (
-              <Link to="/comunidade" className="text-xs text-muted underline hover:text-accent">
-                Seguir alguém na Comunidade para ver junto
-              </Link>
-            ) : (
-              <>
-                {following.map((person) => {
-                  const on = companions.includes(person.id);
-                  return (
-                    <button
-                      key={person.id}
-                      aria-pressed={on}
-                      disabled={!on && companions.length >= MAX_COMPANIONS}
-                      onClick={() => setCompanions(on ? companions.filter((id) => id !== person.id) : [...companions, person.id])}
-                      className={`chip flex cursor-pointer items-center gap-1.5 py-0.5 pr-3 pl-0.5 text-sm ${on ? "border-accent bg-accent/15 text-accent" : ""}`}
-                    >
-                      <Avatar name={person.name} userId={person.id} size="h-6 w-6 text-xs" />
-                      {person.name.split(" ")[0]}
-                    </button>
-                  );
-                })}
-                {together && (
-                  <button className="text-xs text-muted underline hover:text-accent" onClick={() => setCompanions([])}>
-                    Ver só para mim
-                  </button>
-                )}
-              </>
-            )}
-          </FilterGroup>
         </div>
         </div>
         {activeFilters > 0 && (
@@ -723,7 +772,7 @@ export default function FeedPage() {
               </h2>
               <Carousel label={row.title}>
                 {row.items.map((rec) => (
-                  <div key={rec.media.id} className="flex w-44 shrink-0 snap-start pt-2 sm:w-48">
+                  <div key={rec.media.id} className="flex w-44 shrink-0 snap-start pt-2 sm:w-48 [&>*]:w-full">
                     {card(rec)}
                   </div>
                 ))}
