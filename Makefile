@@ -1,6 +1,6 @@
 # Atalhos do projeto. Rode `make` para ver a lista.
 .DEFAULT_GOAL := help
-.PHONY: help api demo up down logs deps test test-offline seed migrate migration albuns openapi prod-up prod-logs prod-seed prod-movielens prod-albuns backup duracoes servicos prod-duracoes prod-servicos cinebiografias prod-cinebiografias series-parecidas prod-series-parecidas
+.PHONY: help api demo up down logs deps test test-offline seed migrate migration albuns openapi prod-up prod-logs prod-seed prod-movielens prod-albuns backup duracoes servicos prod-duracoes prod-servicos cinebiografias prod-cinebiografias series-parecidas prod-series-parecidas vitrine prod-vitrine
 
 PROD := docker compose -f docker-compose.prod.yml --env-file .env.production
 PYTHON := ../.venv/bin/python
@@ -38,8 +38,11 @@ test: deps ## Roda todos os testes, da API e da interface
 test-offline: deps ## Roda os testes que não usam o TMDB real
 	cd backend && $(PYTHON) -m pytest -q -m "not integration"
 
-seed: deps ## Recria o banco SQLite local
+seed: deps ## Recria o banco SQLite local, com a vitrine (conta demo cheia e pessoas de exemplo)
 	cd backend && $(PYTHON) -m scripts.seed
+
+vitrine: deps ## Preenche o banco local com a vitrine, sem apagar nada
+	cd backend && $(PYTHON) -m scripts.vitrine
 
 migrate: deps ## Aplica as migrações pendentes no banco local
 	cd backend && $(PYTHON) -m alembic upgrade head
@@ -75,7 +78,10 @@ prod-logs: ## Acompanha os logs do sistema publicado
 
 prod-seed: ## Apaga e recarrega o banco publicado (exige CONFIRMAR=sim)
 	@test "$(CONFIRMAR)" = "sim" || { echo "Este comando apaga todas as tabelas. Para rodar: make prod-seed CONFIRMAR=sim"; exit 1; }
-	$(PROD) exec api python -m scripts.seed --no-sim --no-synthetic --tmdb
+	$(PROD) exec api python -m scripts.seed --no-sim --no-synthetic --tmdb --sem-vitrine
+
+prod-vitrine: ## Preenche o banco publicado com a vitrine, sem apagar nada
+	$(PROD) exec api python -m scripts.vitrine
 
 prod-movielens: ## Carrega o MovieLens (exige DATA=/caminho/ml-32m)
 	@test -n "$(DATA)" || { echo "Informe a pasta: make prod-movielens DATA=/caminho/ml-32m"; exit 1; }

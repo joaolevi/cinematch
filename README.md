@@ -78,6 +78,13 @@ Na primeira execução o banco SQLite (`backend/tastory.db`) é criado e populad
 o catálogo mockado. Para recriar do zero: `cd backend && python -m scripts.seed`. O banco muda por migrações
 (`backend/migrations/`): veja "Mudanças no banco" no [CONTRIBUTING](CONTRIBUTING.md#mudanças-no-banco).
 
+O seed também monta a **vitrine** (`backend/app/vitrine.py`), para ver o sistema com dados: a conta demo
+(`demo@tastory.dev`) ganha diário com filmes, séries e discos, Quero ver, uma lista, os cinco favoritos, nota nos
+episódios de Dark e o desafio do mês pela metade; e cinco pessoas de exemplo (`@vitrine.tastory.dev`, com a senha da
+demo) entram com resenhas, curtidas e comentários na Comunidade. As datas são relativas ao dia em que o seed roda.
+Para preencher um banco que já existe, sem apagar nada: `make vitrine` (pode rodar de novo, nada se repete). Para
+recriar sem ela: `python -m scripts.seed --sem-vitrine`. As pessoas de exemplo ficam fora das métricas de pessoas reais.
+
 ### Atalhos com make
 
 No Linux, no macOS ou no WSL, `make` lista os atalhos do projeto. Os principais são `make up`, `make down`, `make test`,

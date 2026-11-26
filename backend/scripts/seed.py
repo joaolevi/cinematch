@@ -4,6 +4,7 @@ Uso (a partir de backend/):
     python -m scripts.seed            # apaga e recria tudo (catálogo + usuários + simulação A/B)
     python -m scripts.seed --no-sim   # sem simular interações A/B
     python -m scripts.seed --tmdb     # além do mock, importa os populares do TMDB e completa pôsteres (precisa da chave)
+    python -m scripts.seed --sem-vitrine  # sem a conta demo cheia e as pessoas de exemplo
 """
 
 import argparse
@@ -23,6 +24,7 @@ def main() -> None:
     parser.add_argument("--no-sim", action="store_true", help="não simula o teste A/B")
     parser.add_argument("--no-synthetic", action="store_true", help="não cria usuários sintéticos")
     parser.add_argument("--tmdb", action="store_true", help="importa também os populares do TMDB")
+    parser.add_argument("--sem-vitrine", action="store_true", help="não preenche a conta demo nem cria as pessoas de exemplo")
     args = parser.parse_args()
 
     if problems := settings.production_problems():
@@ -31,7 +33,7 @@ def main() -> None:
     apagar_banco(engine)
     atualizar_banco(engine)
     with SessionLocal() as db:
-        summary = seed_all(db, synthetic=not args.no_synthetic, simulate=not args.no_sim)
+        summary = seed_all(db, synthetic=not args.no_synthetic, simulate=not args.no_sim, vitrine=not args.sem_vitrine)
         if args.tmdb:
             if not settings.tmdb_api_key:
                 print("Aviso: TASTORY_TMDB_API_KEY não configurada; pulando o TMDB.")
