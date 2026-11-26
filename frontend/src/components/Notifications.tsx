@@ -20,7 +20,11 @@ function describe(n: AppNotification): { text: React.ReactNode; to: string } {
     case "comentou":
       return { text: <>{who} comentou a sua resenha de {title}</>, to: `${media}?aba=resenhas` };
     case "indicou":
-      return { text: <>{who} indicou {title} para você</>, to: media };
+      return { text: <>{who} deixou um bilhete: {title}</>, to: media };
+    case "convidou":
+      return { text: <>{who} quer criar uma lembrança com você: {title}</>, to: "/#lembrancas" };
+    case "aceitou":
+      return { text: <>{who} topou a lembrança: {title}</>, to: "/#lembrancas" };
     default:
       return {
         text: (
@@ -33,7 +37,9 @@ function describe(n: AppNotification): { text: React.ReactNode; to: string } {
   }
 }
 
-const ICON: Record<AppNotification["kind"], string> = { seguiu: "👋", curtiu: "♥", comentou: "💬", indicou: "🎁", registrou: "👀" };
+const ICON: Record<AppNotification["kind"], string> = {
+  seguiu: "👋", curtiu: "♥", comentou: "💬", indicou: "📝", registrou: "👀", convidou: "🍿", aceitou: "🎉",
+};
 
 /** O sino, com o número de avisos não lidos, e o painel com os avisos. Abrir o painel marca todos como lidos. */
 export default function Notifications() {

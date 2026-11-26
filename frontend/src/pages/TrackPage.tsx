@@ -26,7 +26,16 @@ export default function TrackPage() {
 
   usePageTitle(track ? `${track.title} · ${track.album.title}` : undefined);
 
-  if (error) return <HandNote>{error}</HandNote>;
+  if (error)
+    return (
+      <div className="mx-auto max-w-4xl">
+        <h1 className="text-2xl font-bold">Não deu para abrir a faixa</h1>
+        <HandNote className="mt-2">{error}</HandNote>
+        <Link to={`/media/${id}`} className="mt-4 inline-block text-sm font-bold text-accent hover:underline">
+          ← Voltar para o álbum
+        </Link>
+      </div>
+    );
   if (!track) return <HandNote>Abrindo a faixa...</HandNote>;
 
   const artists = track.artists.length ? track.artists : track.album.creators;

@@ -456,7 +456,27 @@ def build_vitrine(db: Session) -> dict:
                               created_at=now - timedelta(hours=2)))
             db.add(Notification(user_id=visitante, kind="indicou", actor_id=users[slug].id, media_id=media.id, text=note,
                                 created_at=now - timedelta(hours=2)))
-    if not db.scalar(select(Notification).where(Notification.user_id == visitante, Notification.kind != "indicou")):
+    # Criar lembrança juntos: a Bia chama a Visitante para sábado; a Visitante e o Davi já viram juntos ontem
+    from .models import Invite
+
+    for sender, receiver, title, kind, days, note, status in [
+        ("bia", "visitante", "Your Name", M, 2, "Sessão de anime no sábado? Eu levo a pipoca.", "pending"),
+        ("visitante", "davi", "2001: Uma Odisseia no Espaço", M, -1, "Clássico no telão, topa?", "accepted"),
+    ]:
+        media = _media(db, title, kind)
+        if media is None:
+            continue
+        frm, to = users[sender].id, users[receiver].id
+        if not db.scalar(select(Invite).where(Invite.from_id == frm, Invite.to_id == to, Invite.media_id == media.id)):
+            db.add(Invite(from_id=frm, to_id=to, media_id=media.id, day=date.today() + timedelta(days=days), note=note,
+                          status=status, created_at=now - timedelta(days=2)))
+            db.add(Notification(user_id=to, kind="convidou", actor_id=frm, media_id=media.id, text=note,
+                                created_at=now - timedelta(days=2)))
+            if status == "accepted":
+                db.add(Notification(user_id=frm, kind="aceitou", actor_id=to, media_id=media.id,
+                                    created_at=now - timedelta(days=1, hours=20)))
+
+    if not db.scalar(select(Notification).where(Notification.user_id == visitante, Notification.kind.in_(("seguiu", "curtiu")))):
         for a, b in FOLLOWS:
             if b == "visitante":
                 db.add(Notification(user_id=visitante, kind="seguiu", actor_id=users[a].id, created_at=now - timedelta(days=1)))

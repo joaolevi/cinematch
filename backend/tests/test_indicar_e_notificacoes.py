@@ -70,3 +70,35 @@ def test_avisos_de_curtida_comentario_e_quero_ver(client, user_headers, db):
     assert avisos(client, ana)["unread"] == 0
     assert all(i["actor"]["id"] != ana_id for i in avisos(client, ana)["items"] if i["actor"])
     assert client.get("/me/notifications").status_code == 401
+
+
+def test_criar_lembranca_juntos(client, user_headers, db):
+    from datetime import date, timedelta
+
+    ana = register(client, "Ana", "ana@teste.com")
+    ana_id = uid(db, "Ana")
+    dark = mid(db, "Dark")
+    assert client.post(f"/media/{dark}/invite", json={"to": ana_id}, headers=user_headers).status_code == 400  # não segue
+    client.put(f"/users/{ana_id}/follow", headers=user_headers)
+    sabado = (date.today() + timedelta(days=2)).isoformat()
+    r = client.post(f"/media/{dark}/invite", json={"to": ana_id, "day": sabado, "note": "Maratona?"}, headers=user_headers)
+    assert r.status_code == 201 and r.json()["status"] == "pending" and r.json()["mine"] is True
+
+    recebido = client.get("/me/invites", headers=ana).json()["items"][0]
+    assert (recebido["sender"]["name"], recebido["day"], recebido["note"], recebido["mine"]) == ("Fulano", sabado, "Maratona?", False)
+    assert avisos(client, ana)["items"][0]["kind"] == "convidou"
+
+    # Só quem foi chamado responde; topar põe no Quero ver e avisa quem chamou
+    assert client.put(f"/invites/{recebido['id']}", json={"answer": "accepted"}, headers=user_headers).status_code == 404
+    r = client.put(f"/invites/{recebido['id']}", json={"answer": "accepted"}, headers=ana)
+    assert r.json()["status"] == "accepted"
+    assert any(i["media"]["title"] == "Dark" for i in client.get("/lists", headers=ana).json()[0]["items"])
+    assert avisos(client, user_headers)["items"][0]["kind"] == "aceitou"
+
+    # Agora não: sai das duas listas
+    m = mid(db, "Matrix")
+    outro = client.post(f"/media/{m}/invite", json={"to": ana_id}, headers=user_headers).json()
+    client.put(f"/invites/{outro['id']}", json={"answer": "declined"}, headers=ana)
+    assert {i["media"]["title"] for i in client.get("/me/invites", headers=ana).json()["items"]} == {"Dark"}
+    ontem_de_semana_passada = (date.today() - timedelta(days=8)).isoformat()
+    assert client.post(f"/media/{m}/invite", json={"to": ana_id, "day": ontem_de_semana_passada}, headers=user_headers).status_code == 422

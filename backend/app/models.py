@@ -348,6 +348,26 @@ class Suggestion(Base):
     media: Mapped[Media] = relationship()
 
 
+class Invite(Base):
+    """Criar lembrança juntos: um convite para ver ou ouvir um título com alguém que você segue, com uma data opcional.
+    A pessoa topa ou diz que agora não; depois da data, os dois recebem o "Como foi?" para registrar no diário."""
+
+    __tablename__ = "invites"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    from_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    to_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    media_id: Mapped[int] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"))
+    day: Mapped[date | None] = mapped_column(Date, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(10), default="pending", server_default="pending")  # pending | accepted | declined
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    sender: Mapped[User] = relationship(foreign_keys=[from_id])
+    receiver: Mapped[User] = relationship(foreign_keys=[to_id])
+    media: Mapped[Media] = relationship()
+
+
 class Notification(Base):
     """Um aviso para a pessoa: alguém a seguiu, curtiu ou comentou a resenha dela, indicou algo para ela, ou alguém que
     ela segue registrou um título que está no Quero ver dela."""
@@ -356,7 +376,7 @@ class Notification(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    kind: Mapped[str] = mapped_column(String(20))  # seguiu | curtiu | comentou | indicou | registrou
+    kind: Mapped[str] = mapped_column(String(20))  # seguiu | curtiu | comentou | indicou | registrou | convidou | aceitou
     actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     media_id: Mapped[int | None] = mapped_column(ForeignKey("media.id", ondelete="CASCADE"), nullable=True)
     entry_id: Mapped[int | None] = mapped_column(ForeignKey("diary_entries.id", ondelete="CASCADE"), nullable=True)

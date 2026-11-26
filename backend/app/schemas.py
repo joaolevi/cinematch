@@ -941,9 +941,40 @@ class SuggestionOut(BaseModel):
     in_watchlist: bool = Field(description="Se o título já está no Quero ver de quem recebeu")
 
 
+class InviteIn(BaseModel):
+    """Criar lembrança juntos: chamar alguém que você segue para ver ou ouvir um título."""
+
+    to: int = Field(description="O id de quem você chama")
+    day: date | None = Field(default=None, description="O dia combinado, se já tiver")
+    note: str | None = Field(default=None, max_length=280, description="Um recado, se quiser")
+
+
+class InviteAnswerIn(BaseModel):
+    answer: Literal["accepted", "declined"] = Field(description="accepted: topou; declined: agora não")
+
+
+class InviteOut(BaseModel):
+    id: int
+    media: "MediaOut"
+    sender: "PersonOut"
+    receiver: "PersonOut"
+    day: date | None = None
+    note: str | None = None
+    status: Literal["pending", "accepted", "declined"]
+    created_at: datetime
+    mine: bool = Field(description="Se quem pede foi quem chamou")
+    registered: bool = Field(description="Se quem pede já registrou o título no diário")
+
+
+class InvitesOut(BaseModel):
+    """As lembranças de quem pede: os convites recebidos e os enviados que ainda importam."""
+
+    items: list[InviteOut]
+
+
 class NotificationOut(BaseModel):
     id: int
-    kind: Literal["seguiu", "curtiu", "comentou", "indicou", "registrou"]
+    kind: Literal["seguiu", "curtiu", "comentou", "indicou", "registrou", "convidou", "aceitou"]
     actor: "PersonOut | None" = None
     media: "MediaOut | None" = None
     entry_id: int | None = None

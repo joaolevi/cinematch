@@ -11,6 +11,7 @@ import ArrivalsNote from "../components/ArrivalsNote";
 import ChallengeCard from "../components/ChallengeCard";
 import ContinueWatching from "../components/ContinueWatching";
 import ReceivedSuggestions from "../components/ReceivedSuggestions";
+import Memories from "../components/Memories";
 import { DoubleFeatureOfTheDay, Shortcuts } from "../components/HomeSpotlights";
 import TopTen from "../components/TopTen";
 import RateReminder from "../components/RateReminder";
@@ -283,6 +284,8 @@ export default function HomePage() {
 
       {/* O que só o Tastory faz, a um clique: pedir em português, "Hoje à noite" e o gosto em uma frase */}
       <Shortcuts diary={diary} />
+
+      <Memories />
 
       <ReceivedSuggestions />
 

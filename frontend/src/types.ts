@@ -153,13 +153,27 @@ export interface Member {
 /** Um aviso: alguém seguiu, curtiu, comentou, indicou ou registrou algo do seu Quero ver */
 export interface AppNotification {
   id: number;
-  kind: "seguiu" | "curtiu" | "comentou" | "indicou" | "registrou";
+  kind: "seguiu" | "curtiu" | "comentou" | "indicou" | "registrou" | "convidou" | "aceitou";
   actor: Person | null;
   media: Media | null;
   entry_id: number | null;
   text: string | null;
   read: boolean;
   created_at: string;
+}
+
+/** Criar lembrança juntos: um convite para ver ou ouvir com alguém */
+export interface Invite {
+  id: number;
+  media: Media;
+  sender: Person;
+  receiver: Person;
+  day: string | null;
+  note: string | null;
+  status: "pending" | "accepted" | "declined";
+  created_at: string;
+  mine: boolean;
+  registered: boolean;
 }
 
 /** Uma indicação recebida */
