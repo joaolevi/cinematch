@@ -125,7 +125,8 @@ export function Shortcuts({ diary }: { diary: DiaryEntry[] | null }) {
   );
 }
 
-const KIND_LABEL: Record<Pair["kind"], string> = {
+const KIND_LABEL: Record<string, string> = {
+  taste: "Pelo que você ouve",
   soundtrack: "A trilha sonora",
   composer: "Do mesmo compositor",
   same_person: "Quem atua também canta",
@@ -189,7 +190,7 @@ export function DoubleFeatureOfTheDay() {
             </Link>
           </p>
           <p className="mt-3 inline-flex flex-wrap items-center gap-2 text-sm">
-            <span className="rounded-full bg-accent/15 px-3 py-1 font-semibold text-accent">{KIND_LABEL[pair.kind]}</span>
+            <span className="rounded-full bg-accent/15 px-3 py-1 font-semibold text-accent">{KIND_LABEL[pair.kind] ?? "Ligados pela música"}</span>
             <span className="text-stone-300">{pair.reason}</span>
           </p>
           <p className="mt-2 text-xs text-muted">

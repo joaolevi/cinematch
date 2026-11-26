@@ -21,8 +21,11 @@ def test_sessao_dupla_junta_filme_e_disco_por_ponte_forte(client, user_headers, 
     assert len({p["album"]["id"] for p in pares}) == len(pares)  # cada disco uma vez
     assert "Ex Machina: Instinto Artificial" not in {p["video"]["media"]["title"] for p in pares}
     inter = next(p for p in pares if p["video"]["media"]["title"] == "Interestelar")
-    assert inter["album"]["title"] == "Interstellar" and inter["kind"] == "soundtrack"  # a trilha vence o compositor
-    assert inter["reason"] == "A trilha sonora de Interestelar"
+    # Os pares variam o tipo de ponte: se outro filme já ficou com a trilha, Interestelar vem pelo compositor
+    assert (inter["kind"], inter["album"]["title"]) in {("soundtrack", "Interstellar"), ("composer", "Inception"), ("composer", "Dune")}
+    assert inter["reason"] in {"A trilha sonora de Interestelar", "Hans Zimmer compôs a trilha de Interestelar"}
+    kinds = [p["kind"] for p in pares]
+    assert len(kinds) < 2 or kinds[0] != kinds[1]  # os dois primeiros pares não repetem o tipo de ponte
 
     sem = client.get("/recommendations/pairs", params={"exclude": [title(db, "Interestelar").id]}, headers=user_headers)
     assert "Interestelar" not in {p["video"]["media"]["title"] for p in sem.json()}

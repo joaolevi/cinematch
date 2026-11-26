@@ -598,6 +598,7 @@ def mix_albums(feed: list[Recommendation], albums: list[Recommendation], limit: 
 # ---------------------------------------------------------------- sessão dupla (RFF27)
 PAIR_KINDS = ("soundtrack", "biopic", "documentary", "same_person", "composer")  # só pontes fortes formam par
 PAIR_POOL = 40  # quantas sugestões de filmes e séries entram na busca por pares
+TASTE_POOL = 30  # quantos discos do gosto musical entram na busca por pares "pelo que você ouve"
 
 
 @dataclass
@@ -620,7 +621,22 @@ def pair_reason(video: Media, link: Link) -> str:
         return f"{link.label}, do elenco de {video.title}, também canta"
     if link.kind == "biopic":
         return f"{video.title} conta a história de {link.label}"
+    if link.kind == "taste":
+        return f"Do jeito que você ouve, e combina com {video.title}: {link.label}"
     return f"{video.title} é um documentário sobre {link.label}"
+
+
+def taste_link(video: Media, album: Media, moods: dict[str, str]) -> Link | None:
+    """Um disco do gosto musical da pessoa que combina com o filme: o mesmo clima, ou dois sinais fracos juntos
+    (gênero, década, país, idioma). O clima em comum vem antes, porque é o que mais se sente ao ver e ouvir."""
+    shared = [m for m in video.moods or [] if m in (album.moods or [])]
+    weak = weak_link(video, album)
+    if shared:
+        label = f"o mesmo clima, {moods.get(shared[0], shared[0]).lower()}"
+        return Link("taste", 0.6 + (weak.weight if weak else 0), label + (f", {weak.label}" if weak else ""))
+    if weak:
+        return Link("taste", 0.4 + weak.weight, weak.label)
+    return None
 
 
 def double_features(
@@ -642,17 +658,56 @@ def double_features(
         if link.kind in PAIR_KINDS and other_id not in seen and (album_allow is None or other_id in album_allow):
             by_video.setdefault(video_id, []).append((other_id, link))
     albums = {m.id: m for m in db.scalars(select(Media).where(Media.id.in_({o for v in by_video.values() for o, _ in v})))}
-    pairs: list[Pair] = []
-    used: set[int] = set()
+
+    # Discos do gosto musical da pessoa (os parecidos com o que ela ouve e os do que ela disse curtir): viram par quando
+    # combinam com o filme. É assim que a música dela entra na sessão dupla, e não só a trilha do filme
+    # A trilha de outro filme fica de fora: ela pertence ao filme dela, e o par pareceria engano
+    taste = [
+        r.media for r in album_suggestions(db, user.id, seen, TASTE_POOL, allow=album_allow)
+        if r.strategy == "content" and SOUNDTRACK_GENRE not in (r.media.genres or [])
+    ]
+    from .moods import BY_KEY as MOOD_LABELS
+
+    mood_names = {k: v.label for k, v in MOOD_LABELS.items()}
     for rec in videos:
-        options = [(albums[o], link) for o, link in by_video.get(rec.media.id, []) if o in albums and o not in used]
-        if not options:
-            continue
-        album, link = max(options, key=lambda x: (x[1].weight, x[0].popularity))
-        used.add(album.id)
+        for album in taste:
+            link = taste_link(rec.media, album, mood_names)
+            if link:
+                by_video.setdefault(rec.media.id, []).append((album.id, link))
+                albums[album.id] = album
+
+    options = [
+        (rank, albums[o], link)
+        for rank, rec in enumerate(videos)
+        for o, link in by_video.get(rec.media.id, [])
+        if o in albums
+    ]
+    pairs: list[Pair] = []
+    used_albums: set[int] = set()
+    used_videos: set[int] = set()
+
+    def take(rank: int, album: Media, link: Link) -> None:
+        rec = videos[rank]
+        used_albums.add(album.id)
+        used_videos.add(rec.media.id)
         pairs.append(Pair(rec, album, link.kind, pair_reason(rec.media, link)))
+
+    # Primeiro, um par de cada tipo de ponte, do filme mais bem sugerido para o menos: trilha, compositor, cinebiografia,
+    # quem canta, pelo que você ouve... Depois, se faltar, os melhores que sobrarem. Antes, a trilha sempre ganhava
+    best_first = sorted(options, key=lambda x: (x[0], -x[2].weight, -x[1].popularity))
+    kinds_used: set[str] = set()
+    for rank, album, link in best_first:
         if len(pairs) == limit:
             break
+        if link.kind in kinds_used or album.id in used_albums or videos[rank].media.id in used_videos:
+            continue
+        kinds_used.add(link.kind)
+        take(rank, album, link)
+    for rank, album, link in best_first:
+        if len(pairs) == limit:
+            break
+        if album.id not in used_albums and videos[rank].media.id not in used_videos:
+            take(rank, album, link)
     return pairs
 
 

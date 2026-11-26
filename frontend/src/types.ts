@@ -324,7 +324,7 @@ export interface Challenge {
 export interface Pair {
   video: Recommendation;
   album: Media;
-  kind: "soundtrack" | "composer" | "same_person" | "biopic" | "documentary";
+  kind: "soundtrack" | "composer" | "same_person" | "biopic" | "documentary" | "taste";
   reason: string;
 }
 

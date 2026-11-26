@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
+import { HeartDoodle, SquiggleDoodle, StarDoodle } from "../components/Doodles";
 import HandNote from "../components/HandNote";
 import Polaroid from "../components/Polaroid";
 import Poster from "../components/Poster";
-import { StarsDisplay } from "../components/Stars";
 import { formatRating } from "../format";
-import { genreList, monthName, periodName, retroOf, retroPeriods, type RetroPeriod } from "../retro";
+import { monthName, periodName, retroOf, retroPeriods, type RetroPeriod } from "../retro";
 import { drawRetroCard } from "../retroCard";
 import type { DiaryEntry } from "../types";
 import { TAPE_COLORS } from "../ui";
@@ -14,6 +14,15 @@ import { usePageTitle } from "../usePageTitle";
 
 const INK = "text-[#2b211c]";
 const RED_INK = "text-[#b9452f]";
+
+/** Onde cada polaroide dos preferidos fica colada na página: espalhadas, inclinadas, umas por cima das outras. */
+const COLLAGE: CSSProperties[] = [
+  { left: "0%", top: "8%", rotate: "-6deg" },
+  { left: "26%", top: "0%", rotate: "4deg" },
+  { left: "52%", top: "10%", rotate: "-3deg" },
+  { left: "14%", top: "44%", rotate: "5deg" },
+  { left: "42%", top: "48%", rotate: "-7deg" },
+];
 
 /** O período da URL (?ano=2026&mes=11), ou o ano mais recente com registros datados. */
 function periodFrom(params: URLSearchParams, years: { year: number; months: number[] }[]): RetroPeriod | null {
@@ -67,6 +76,14 @@ export default function RetroPage() {
   const file = card ? new File([card.blob], fileName, { type: "image/png" }) : null;
   const canShare = !!file && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] });
   const months = years.find((y) => y.year === period?.year)?.months ?? [];
+  const count = (type: string) => retro?.entries.filter((e) => e.media.type === type).length ?? 0;
+  const stickers = (
+    [
+      [count("movie"), count("movie") === 1 ? "filme" : "filmes", "#8fb3c9"],
+      [count("series"), count("series") === 1 ? "série" : "séries", "#c2a8e6"],
+      [count("album"), count("album") === 1 ? "disco" : "discos", "#8fc09d"],
+    ] as [number, string, string][]
+  ).filter(([n]) => n > 0);
 
   return (
     <div>
@@ -124,44 +141,110 @@ export default function RetroPage() {
           ) : (
             <>
               <section className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-                <div className={`paper relative -rotate-[0.3deg] rounded-sm py-7 pr-6 pl-14 sm:pr-8 sm:pl-16 ${INK}`}>
+                {/* Uma página de caderno colada: o carimbo do tipo, a frase do gosto, adesivos com as contagens, fitas com os
+                    gêneros, post-its com os números e as polaroides dos preferidos, com desenhos à mão em volta */}
+                <div className={`paper relative overflow-hidden rounded-sm py-8 pr-6 pl-14 sm:pr-8 sm:pl-16 ${INK}`}>
                   <span aria-hidden className="tape -top-2.5 left-12 -rotate-6" style={{ background: TAPE_COLORS[0] }} />
-                  <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Em {periodName(period)}, eu fui:</p>
-                  <p className="mt-1 inline-block -rotate-2 rounded-lg border-4 border-[#b9452f] px-4 py-1 font-display text-3xl font-bold text-[#b9452f] sm:text-4xl">
-                    {retro.archetype.name}
-                  </p>
-                  <p className="mt-2 font-hand text-2xl leading-8 font-semibold">{retro.archetype.text}</p>
+                  <StarDoodle className="absolute top-6 right-8 h-12 w-12 rotate-12 text-[#d9a13b]" />
+                  <SquiggleDoodle className="absolute bottom-5 left-16 h-4 w-28 text-[#b9452f]/60" />
 
-                  {retro.taste && (
-                    <p className="mt-5 font-display text-2xl leading-tight font-bold sm:text-3xl">
-                      Sou do time <mark className="marker">{retro.taste.highlight}</mark>
-                      {retro.taste.decade && (
-                        <>
-                          {" "}
-                          dos{" "}
-                          <mark className="marker" style={{ "--marker": "rgb(232 115 90 / 0.5)" } as CSSProperties}>
-                            {retro.taste.decade}
-                          </mark>
-                        </>
+                  <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                    <div>
+                      <p className={`font-hand text-2xl leading-8 font-bold ${RED_INK}`}>Em {periodName(period)}, eu fui:</p>
+                      <p className="rise mt-1 inline-block -rotate-3 rounded-lg border-4 border-[#b9452f] px-4 py-1 font-display text-3xl font-bold text-[#b9452f] sm:text-4xl">
+                        {retro.archetype.name}
+                      </p>
+                      <p className="mt-2 font-hand text-xl leading-7 font-semibold opacity-80">{retro.archetype.text}</p>
+
+                      {retro.taste && (
+                        <p className="mt-6 font-display text-2xl leading-tight font-bold sm:text-3xl">
+                          Sou do time <mark className="marker marker-draw">{retro.taste.highlight}</mark>
+                          {retro.taste.decade && (
+                            <>
+                              {" "}
+                              dos{" "}
+                              <mark className="marker marker-draw" style={{ "--marker": "rgb(232 115 90 / 0.5)" } as CSSProperties}>
+                                {retro.taste.decade}
+                              </mark>
+                            </>
+                          )}
+                          .
+                        </p>
                       )}
-                      .
-                    </p>
-                  )}
-                  <ul className="mt-3 font-hand text-2xl leading-8 font-semibold opacity-85">
-                    <li>→ {retro.counts}</li>
-                    {undated > 0 && (
-                      <li>→ {undated === 1 ? "1 registro sem data ficou de fora." : `${undated} registros sem data ficaram de fora.`}</li>
-                    )}
-                    {retro.genres.length > 0 && <li>→ No que eu vi, fui do time {genreList(retro.genres)}.</li>}
-                    {retro.musicGenres.length > 0 && <li>→ No que eu ouvi, fui do time {genreList(retro.musicGenres)}.</li>}
-                    {retro.age != null && (
-                      <li>
-                        → A idade do meu gosto: {retro.age === 1 ? "1 ano" : `${retro.age} anos`}, a idade média do que eu vi
-                        e ouvi.
-                      </li>
-                    )}
-                    {retro.average != null && <li>→ Minha nota média: {formatRating(retro.average)}.</li>}
-                  </ul>
+
+                      {/* As contagens viram adesivos redondos, nas cores de filme, série e disco */}
+                      <ul className="mt-6 flex flex-wrap gap-3" aria-label="O que eu vi e ouvi">
+                        {stickers.map(([n, label, color], i) => (
+                          <li
+                            key={label}
+                            className="rise grid h-20 w-20 place-items-center rounded-full text-center leading-none font-bold text-stone-900 shadow-[0_3px_8px_rgb(0_0_0/0.25)]"
+                            style={{ background: color, rotate: `${[-8, 5, -3][i % 3]}deg`, "--i": i } as CSSProperties}
+                          >
+                            <span>
+                              <span className="block font-display text-2xl">{n}</span>
+                              <span className="font-hand text-sm">{label}</span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {/* Os gêneros em fitas adesivas: o que eu vi e o que eu ouvi */}
+                      {(retro.genres.length > 0 || retro.musicGenres.length > 0) && (
+                        <div className="mt-6 flex flex-wrap items-center gap-2" aria-label="Meus gêneros">
+                          {[...retro.genres.map((g) => [g, "vi"] as const), ...retro.musicGenres.map((g) => [g, "ouvi"] as const)].map(([g, how], i) => (
+                            <span
+                              key={`${how}-${g}`}
+                              className="rise px-3 py-1 font-hand text-lg leading-6 font-bold"
+                              style={{
+                                background: how === "vi" ? "rgb(242 179 61 / 0.55)" : "rgb(127 165 139 / 0.6)",
+                                rotate: `${[-2, 1.5, -1, 2][i % 4]}deg`,
+                                clipPath: "polygon(2% 0, 98% 4%, 100% 96%, 0 100%)",
+                                "--i": i + 3,
+                              } as CSSProperties}
+                              title={how === "vi" ? "No que eu vi" : "No que eu ouvi"}
+                            >
+                              {how === "ouvi" ? "♪ " : ""}
+                              {g.toLowerCase()}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* À direita: os preferidos em polaroides espalhadas e, colados no meio, os post-its */}
+                    <div className="relative min-h-80">
+                      <ul className="relative h-80" aria-label={`Os que eu mais amei em ${periodName(period)}`}>
+                        {retro.loved.slice(0, 5).map((e, i) => (
+                          <li
+                            key={e.id}
+                            className="group absolute w-24 transition hover:z-20 hover:scale-105 sm:w-32"
+                            style={{ ...COLLAGE[i], zIndex: i + 1 } as CSSProperties}
+                          >
+                            <Link to={`/media/${e.media.id}`} className="block" title={e.media.title}>
+                              <Polaroid position={i} tape caption={`nº ${i + 1}`} album={e.media.type === "album"} straightenOnHover={false}>
+                                <Poster media={e.media} compact rounded="rounded-[2px]" />
+                              </Polaroid>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                      <HeartDoodle className="absolute -top-2 left-1/2 h-9 w-9 -rotate-12 text-[#e8735a]" />
+                      <div className="mt-4 flex flex-wrap gap-3 xl:absolute xl:right-0 xl:bottom-0 xl:mt-0">
+                        {retro.average != null && (
+                          <p className="postit flex h-24 w-24 flex-col justify-center text-center" style={{ "--note": "#f6d27a", rotate: "4deg" } as CSSProperties}>
+                            <span className="font-hand text-3xl leading-none font-bold">{formatRating(retro.average)}</span>
+                            <span className="font-hand text-sm leading-4 font-semibold">nota média</span>
+                          </p>
+                        )}
+                        {retro.age != null && (
+                          <p className="postit flex h-24 w-24 flex-col justify-center text-center" style={{ "--note": "#b7d1b9", rotate: "-5deg" } as CSSProperties}>
+                            <span className="font-hand text-3xl leading-none font-bold">{retro.age}</span>
+                            <span className="font-hand text-sm leading-4 font-semibold">anos: a idade do meu gosto</span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -175,6 +258,11 @@ export default function RetroPage() {
                     />
                   ) : (
                     <HandNote className="mt-3">Desenhando o cartão...</HandNote>
+                  )}
+                  {undated > 0 && (
+                    <p className="mt-3 text-xs text-muted">
+                      {undated === 1 ? "1 registro sem data ficou de fora." : `${undated} registros sem data ficaram de fora.`}
+                    </p>
                   )}
                   <div className="mt-4 flex flex-wrap gap-3">
                     {card && (
@@ -194,26 +282,6 @@ export default function RetroPage() {
                 </div>
               </section>
 
-              {retro.loved.length > 0 && (
-                <section className="mt-12">
-                  <h2 className="font-display text-xl font-bold text-accent">Os que eu mais amei em {periodName(period)}</h2>
-                  <ol className="mt-5 flex gap-5 overflow-x-auto px-1 pt-2 pb-3 md:grid md:grid-cols-5 md:overflow-visible">
-                    {retro.loved.map((e, position) => (
-                      <li key={e.id} className="group w-32 shrink-0 md:w-auto md:max-w-48">
-                        <Link to={`/media/${e.media.id}`} className="block" title={e.media.title}>
-                          <Polaroid position={position} caption={`nº ${position + 1}`} album={e.media.type === "album"}>
-                            <Poster media={e.media} compact rounded="rounded-[2px]" />
-                          </Polaroid>
-                        </Link>
-                        <p className="mt-2 truncate text-center text-xs font-semibold">{e.media.title}</p>
-                        <div className="mt-0.5 flex justify-center">
-                          <StarsDisplay value={e.rating} size={13} />
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                </section>
-              )}
 
               {retro.revisited.length > 0 && (
                 <section className="mt-10">

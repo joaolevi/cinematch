@@ -8995,7 +8995,7 @@
           "kind": {
             "type": "string",
             "title": "Kind",
-            "description": "A ponte: soundtrack, composer, same_person, biopic ou documentary"
+            "description": "A ponte: soundtrack, composer, same_person, biopic, documentary ou taste (um disco do gosto musical da pessoa que combina com o filme pelo clima, gênero, década, país ou idioma)"
           },
           "reason": {
             "type": "string",

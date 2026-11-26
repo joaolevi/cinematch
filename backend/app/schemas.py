@@ -326,7 +326,10 @@ class PairOut(BaseModel):
 
     video: RecommendationOut
     album: MediaOut
-    kind: str = Field(description="A ponte: soundtrack, composer, same_person, biopic ou documentary")
+    kind: str = Field(
+        description="A ponte: soundtrack, composer, same_person, biopic, documentary ou taste (um disco do gosto musical "
+        "da pessoa que combina com o filme pelo clima, gênero, década, país ou idioma)"
+    )
     reason: str = Field(description='Por que o disco acompanha o filme, como "A trilha sonora de Interestelar"')
 
 
